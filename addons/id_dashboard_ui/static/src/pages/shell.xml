@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8"?><templates xml:space="preserve"><t t-name="id_dashboard_ui.Shell"><div t-att-class="'id-dash-host id-dash--'+props.dashboard.toLowerCase()"><t t-component="Page" data="props.data" onApply="props.onApply" onDrill="props.onDrill"/></div></t></templates>

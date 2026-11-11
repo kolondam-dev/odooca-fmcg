@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.KpiCard">
+    <div style="min-width:0;background:#fff;border:1px solid #d5e0f2;border-radius:6px;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <span style="flex:none;width:30px;height:30px;margin:-1px 0 0 -1px;background:#102f6b;color:#fff;border-radius:6px 0 8px 0;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" viewBox="0 0 24 24">
+            <path t-attf-d="{{ v.icon }}"/>
+          </svg>
+        </span>
+        <span style="flex:1;min-width:0;font-size:11.5px;color:#52627f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+          <t t-out="v.label"/>
+        </span>
+        <button t-att-disabled="!props.kpi.drill" t-on-click="() => props.onDrill?.(props.kpi.drill)" style="all:unset;cursor:pointer;flex:none;width:26px;height:26px;margin-right:4px;display:flex;align-items:center;justify-content:center;color:#52627f" t-attf-aria-label="{{ v.menuLabel }}">
+          <svg width="16" height="16" fill="currentColor" aria-hidden="true" viewBox="0 0 24 24">
+            <circle cx="12" cy="5" r="1.8"/>
+            <circle cx="12" cy="12" r="1.8"/>
+            <circle cx="12" cy="19" r="1.8"/>
+          </svg>
+        </button>
+      </div>
+      <div style="padding:4px 12px 10px">
+        <div style="position:relative;height:46px;display:flex;align-items:flex-end;padding-bottom:4px">
+          <svg aria-hidden="true" style="position:absolute;right:0;bottom:0;width:72%;height:100%" viewBox="0 0 100 38" preserveAspectRatio="none">
+            <defs>
+              <linearGradient x1="0" y1="0" x2="100" y2="0" t-attf-id="{{ v.gid }}" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-opacity="0" t-attf-stop-color="{{ v.col }}"/>
+                <stop offset=".25" stop-opacity=".6" t-attf-stop-color="{{ v.col }}"/>
+                <stop offset="1" stop-opacity=".6" t-attf-stop-color="{{ v.col }}"/>
+              </linearGradient>
+            </defs>
+            <polyline fill="none" stroke-width="2" style="vector-effect:non-scaling-stroke" t-attf-points="{{ v.pts }}" t-att-stroke="'url(#' + v.gid + ')'"/>
+          </svg>
+          <div style="position:relative;display:flex;align-items:baseline;gap:3px;white-space:nowrap">
+            <t t-if="v.hasPre">
+              <span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">
+                <t t-out="v.pre"/>
+              </span>
+              <span aria-hidden="true" style="font-size:13px;color:#52627f;margin:0 2px">→</span>
+            </t>
+            <t t-if="v.hasCur">
+              <span style="font-size:12px;font-weight:600;color:#52627f">
+                <t t-out="v.cur"/>
+              </span>
+            </t>
+            <span style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px">
+              <t t-out="v.num"/>
+            </span>
+            <span style="font-size:12px;font-weight:600;color:#52627f">
+              <t t-out="v.unit"/>
+            </span>
+          </div>
+        </div>
+        <t t-if="v.hasBar">
+          <div style="position:relative;height:6px;background:var(--ac3);border-radius:3px;margin:2px 4px 4px 0">
+            <div t-attf-style="width:{{ v.bar }}%;height:6px;background:var(--ac);border-radius:3px"/>
+            <div style="position:absolute;left:100%;top:-3px;width:2px;height:12px;background:var(--dk)"/>
+          </div>
+        </t>
+        <hr style="border:0;border-top:1px solid #d5e0f2;margin:6px 0"/>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;min-width:0">
+          <span t-attf-style="display:inline-flex;align-items:center;gap:3px;color:{{ v.col }};font-weight:600;flex:none">
+            <svg t-if="v.delta" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" viewBox="0 0 24 24">
+              <path t-attf-d="{{ v.arrow }}"/>
+            </svg>
+            <t t-out="v.delta"/>
+          </span>
+          <span style="color:#52627f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            <t t-out="v.txt"/>
+          </span>
+        </div>
+      </div>
+    </div>
+  </t>
+</templates>

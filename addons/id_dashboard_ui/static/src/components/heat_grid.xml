@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.HeatGrid">
+    <div t-attf-style="{{ v.card }}box-sizing:border-box;height:{{ v.hh }};display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+      <t t-if="v.showTitle">
+        <h3 style="margin:0 0 10px;font-size:13px;font-weight:600;border-left:3px solid var(--ac);padding-left:8px">
+          <t t-out="v.title"/>
+        </h3>
+      </t>
+      <div t-attf-style="flex:1;min-height:0;display:grid;grid-template-columns:{{ v.gtc }};grid-auto-rows:minmax(26px,1fr);gap:3px">
+        <t t-foreach="v.cells" t-as="c" t-key="c_index">
+          <div t-attf-style="display:flex;align-items:center;justify-content:{{ c.j }};padding:0 8px;border-radius:3px;font-size:11.5px;font-variant-numeric:tabular-nums;background:{{ c.bg }};color:{{ c.c }};font-weight:{{ c.fw }}">
+            <t t-out="c.t"/>
+          </div>
+        </t>
+      </div>
+      <t t-if="v.showNote">
+        <div style="font-size:10.5px;color:#52627f;margin-top:6px">
+          <t t-out="v.note"/>
+        </div>
+      </t>
+    </div>
+  </t>
+</templates>

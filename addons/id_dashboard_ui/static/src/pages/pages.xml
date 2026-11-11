@@ -1,0 +1,618 @@
+<?xml version='1.0' encoding='utf-8'?>
+<templates xml:space="preserve">
+  <t t-name="id_dashboard_ui.D1">
+    <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d1">
+      <DashHeader title="&quot;Sales Performance &amp; Salesforce Productivity&quot;" sub="v.sub" role="v.role" sync="v.sync"/>
+      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px" class="id-dash-kpis">
+          <t t-foreach="v.kpis" t-as="k" t-key="k_index">
+            <t t-if="!v.__available || v.__available[&quot;D1.0&quot;] !== false">
+              <KpiCard kpi="k" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D1.0">
+                <b t-out="&quot;KpiCard&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </t>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px" class="id-dash-row">
+          <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+            <t t-if="!v.__available || v.__available[&quot;D1.1&quot;] !== false">
+              <BarRows rows="v.principal" rowH="28" height="&quot;190&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Net revenue by principal"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D1.1">
+                <b t-out="&quot;Omset netto per principal&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+            <t t-if="!v.__available || v.__available[&quot;D1.2&quot;] !== false">
+              <BarRows rows="v.channel" rowH="28" height="&quot;190&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Net revenue by channel"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D1.2">
+                <b t-out="&quot;Omset netto per channel&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </div>
+          <t t-if="!v.__available || v.__available[&quot;D1.3&quot;] !== false">
+            <CoveragePanel title="v.coverTitle" legend="v.mapLegend" crumbs="v.mapCrumbs" headR="v.mapHead" vals="v.areaVals" vb="v.vb" off="v.off" rows="v.area" foot="v.areaFoot" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D1.3">
+              <b t-out="v.coverTitle"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr);gap:12px" class="id-dash-row">
+          <t t-if="!v.__available || v.__available[&quot;D1.4&quot;] !== false">
+            <TrendChart series="v.trend" legend="v.trendLegend" target="v.config.panel6.target" min="v.config.panel6.min" max="v.config.panel6.max" ticks="v.trendTicks" xl="v.trendX" height="&quot;310&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Daily revenue trend" unit="v.revenueUnit"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D1.4">
+              <b t-out="&quot;Tren omset harian&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D1.5&quot;] !== false">
+            <ComboChart bars="v.mBars" line="v.mLine" barMax="v.config.panel7.barMax" lineMin="v.config.panel7.lineMin" lineMax="v.config.panel7.lineMax" limit="v.mLimit" height="&quot;310&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Monthly revenue and discount" note="v.monthlyNote" lineColor="&quot;#1a7f4b&quot;"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D1.5">
+              <b t-out="&quot;Omset dan diskon bulanan&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:12px" class="id-dash-row">
+          <t t-if="!v.__available || v.__available[&quot;D1.6&quot;] !== false">
+            <DataTable cols="v.tcols" rows="v.trows" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Top 8 salespeople"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D1.6">
+              <b t-out="&quot;Top 8 salesman&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D1.7&quot;] !== false">
+            <Scatter pts="v.sp" xr="v.spx" yr="v.spy" xt="v.spxt" yt="v.spyt" xl="&quot;Calls per assigned day&quot;" yl="&quot;Net SO (IDR million)&quot;" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Salesperson productivity" note.translate="Bubble size = active outlets."/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D1.7">
+              <b t-out="&quot;Salesperson productivity&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+      </main>
+    </div>
+  </t>
+  <t t-name="id_dashboard_ui.D2">
+    <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d2">
+      <DashHeader title="&quot;Outlet &amp; SKU Penetration&quot;" sub="v.sub" role="v.role" sync="v.sync"/>
+      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <div class="id-dash-kpis" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
+          <t t-foreach="v.kpis" t-as="k" t-key="k_index">
+            <t t-if="!v.__available || v.__available[&quot;D2.0&quot;] !== false">
+              <KpiCard kpi="k" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D2.0">
+                <b t-out="&quot;KpiCard&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D2.1&quot;] !== false">
+            <CoveragePanel title="v.coverTitle" vals="v.areaVals" vb="v.vb" off="v.off" rows="v.area" foot="v.areaFoot" th="v.th" suffix="&quot;%&quot;" onEvent="props.onEvent" onDrill="props.onDrill" headR.translate="Active % · active/registered" legend.translate="Active outlets (%)"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D2.1">
+              <b t-out="v.coverTitle"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <div class="id-dash-stack">
+            <t t-if="!v.__available || v.__available[&quot;D2.2&quot;] !== false">
+              <Bullet title="&quot;Numeric distribution vs target&quot;" rows="v.nd" max="v.config.panel4.max" height="&quot;190&quot;" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D2.2">
+                <b t-out="&quot;Numeric distribution vs target&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+            <t t-if="!v.__available || v.__available[&quot;D2.3&quot;] !== false">
+              <Donut items="v.chn" ct="v.config.panel5.ct" cs="v.config.panel5.cs" height="&quot;210&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Active outlets by channel"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D2.3">
+                <b t-out="&quot;Komposisi outlet aktif per channel&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </div>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D2.4&quot;] !== false">
+            <HeatGrid title="&quot;Numeric distribution: brand × channel&quot;" rows="v.hRows" cols="v.hCols" vals="v.hVals" unit="&quot;%&quot;" lo="&quot;30&quot;" hi="&quot;95&quot;" height="&quot;300&quot;" onEvent="props.onEvent" onDrill="props.onDrill" note.translate="Darker = higher penetration."/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D2.4">
+              <b t-out="&quot;Numeric distribution: brand × channel&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D2.5&quot;] !== false">
+            <BarRows rows="v.sku" height="&quot;300&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Focus SKU outlet penetration"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D2.5">
+              <b t-out="&quot;SKU fokus: penetrasi outlet&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D2.6&quot;] !== false">
+            <TrendChart series="v.trend" legend="v.trendLegend" min="v.config.panel8.min" max="v.config.panel8.max" ticks="v.trendTicks" xl="v.trendX" height="&quot;300&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Weekly active outlets" unit.translate="active outlets"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D2.6">
+              <b t-out="&quot;Outlet aktif mingguan&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D2.7&quot;] !== false">
+            <DataTable cols="v.ccols" rows="v.crows" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Outlets at risk of churn (no order ≥ 21 days)" note.translate="Select a row to open the outlet profile (L2 drill-down)."/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D2.7">
+              <b t-out="&quot;Outlet berpotensi churn (tidak order ≥ 21 hari)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+      </main>
+    </div>
+  </t>
+  <t t-name="id_dashboard_ui.D3">
+    <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d3">
+      <DashHeader title="&quot;Delivery &amp; Fleet Performance&quot;" sub="v.sub" role="v.role" sync="v.sync"/>
+      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <div class="id-dash-row" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D3.0&quot;] !== false">
+            <Gauge cfg="v.gauges[0]" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D3.0">
+              <b t-out="&quot;Gauge&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D3.1&quot;] !== false">
+            <Gauge cfg="v.gauges[1]" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D3.1">
+              <b t-out="&quot;Gauge&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D3.2&quot;] !== false">
+            <Gauge cfg="v.gauges[2]" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D3.2">
+              <b t-out="&quot;Gauge&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D3.3&quot;] !== false">
+            <BarRows rows="v.funnel" height="&quot;190&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Delivery funnel (DO)"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D3.3">
+              <b t-out="&quot;Funnel pengiriman (DO)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div class="id-dash-kpis" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px">
+          <t t-foreach="v.kpis" t-as="k" t-key="k_index">
+            <t t-if="!v.__available || v.__available[&quot;D3.4&quot;] !== false">
+              <KpiCard kpi="k" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D3.4">
+                <b t-out="&quot;KpiCard&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1.2fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D3.5&quot;] !== false">
+            <DataTable cols="v.fcols" rows="v.frows" height="&quot;420&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title="v.fleetTitle"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D3.5">
+              <b t-out="&quot;Kinerja armada&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <div class="id-dash-stack">
+            <t t-if="!v.__available || v.__available[&quot;D3.6&quot;] !== false">
+              <Donut items="v.cost" ct="v.config.panel8.ct" cs="v.config.panel8.cs" height="&quot;200&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Logistics cost by category"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D3.6">
+                <b t-out="&quot;Biaya logistik per kelompok (Rp 53,5 jt)&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+            <t t-if="!v.__available || v.__available[&quot;D3.7&quot;] !== false">
+              <TrendChart series="v.trend" legend="v.trendLegend" target="v.config.panel9.target" min="v.config.panel9.min" max="v.config.panel9.max" ticks="v.trendTicks" xl="v.trendX" height="&quot;208&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Daily on-time delivery" unit.translate="% on-time"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D3.7">
+                <b t-out="&quot;On-time delivery harian&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </div>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D3.8&quot;] !== false">
+            <CoveragePanel title="v.coverTitle" vals="v.areaVals" vb="v.vb" off="v.off" rows="v.area" foot="v.areaFoot" headR="&quot;Drop · %&quot;" th="v.th" legend="&quot;Drop (unit)&quot;" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D3.8">
+              <b t-out="v.coverTitle"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D3.9&quot;] !== false">
+            <ComboChart bars="v.mBars" line="v.mLine" barMax="v.config.panel11.barMax" lineMin="v.config.panel11.lineMin" lineMax="v.config.panel11.lineMax" limit="v.mLimit" height="&quot;310&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Monthly cost per drop and OTD" note.translate="Bars: cost per drop, IDR thousand · Line: on-time delivery %"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D3.9">
+              <b t-out="&quot;Biaya per drop dan OTD bulanan&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <t t-if="!v.__available || v.__available[&quot;D3.10&quot;] !== false">
+          <DataTable cols="v.acols" rows="v.arows" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Action required: compliance and delivery"/>
+        </t>
+        <t t-else="">
+          <section class="id-dash-card id-unavailable" data-slot="D3.10">
+            <b t-out="&quot;Perlu tindakan: kepatuhan dan pengiriman&quot;"/>
+            <span>Not available for this source and scope</span>
+          </section>
+        </t>
+      </main>
+    </div>
+  </t>
+  <t t-name="id_dashboard_ui.D4">
+    <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d4">
+      <DashHeader title="&quot;Inventory Health &amp; Warehouse&quot;" sub="v.sub" role="v.role" sync="v.sync"/>
+      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D4.0&quot;] !== false">
+            <Donut items="v.expiryItems" ct="v.config.panel2.ct" cs="v.config.panel2.cs" height="&quot;250&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Stock by expiry horizon"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D4.0">
+              <b t-out="&quot;Komposisi stok per umur ED&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D4.1&quot;] !== false">
+            <StackBars rows="v.warehouseExpiry" legend="v.expiryLegend" height="&quot;250&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Expiry horizon by warehouse (IDR million)"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D4.1">
+              <b t-out="&quot;Umur ED per gudang (Rp juta)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div class="id-dash-kpis" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+          <t t-foreach="v.kpis" t-as="k" t-key="k_index">
+            <t t-if="!v.__available || v.__available[&quot;D4.2&quot;] !== false">
+              <KpiCard kpi="k" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D4.2">
+                <b t-out="&quot;KpiCard&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D4.3&quot;] !== false">
+            <HeatGrid rows="v.hRows" cols="v.hCols" vals="v.hVals" lo="&quot;0&quot;" hi="&quot;90&quot;" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Class × trend matrix (SKU count)" note.translate="ABC class by value; movement trend over 3 months."/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D4.3">
+              <b t-out="&quot;Matriks kelas × tren (jumlah SKU)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D4.4&quot;] !== false">
+            <BarRows rows="v.slow" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Slow moving: largest exposed value"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D4.4">
+              <b t-out="&quot;Slow moving: nilai terkait terbesar&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D4.5&quot;] !== false">
+            <TrendChart series="v.trend" legend="v.trendLegend" target="v.config.panel7.target" min="v.config.panel7.min" max="v.config.panel7.max" ticks="v.trendTicks" xl="v.trendX" height="&quot;310&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Weekly days of inventory" unit.translate="days"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D4.5">
+              <b t-out="&quot;Days of inventory mingguan&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D4.6&quot;] !== false">
+            <DataTable cols="v.gcols" rows="v.grows" height="&quot;310&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Warehouse summary"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D4.6">
+              <b t-out="&quot;Ringkasan per gudang&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D4.7&quot;] !== false">
+            <DataTable cols="v.acols" rows="v.arows" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Action required: FEFO, expiry, safety stock, stock count"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D4.7">
+              <b t-out="&quot;Perlu tindakan: FEFO, ED, safety stock, opname&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+      </main>
+    </div>
+  </t>
+  <t t-name="id_dashboard_ui.D5">
+    <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d5">
+      <DashHeader title="&quot;Receivables &amp; Cash Collection&quot;" sub="v.sub" role="v.role" sync="v.sync"/>
+      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D5.0&quot;] !== false">
+            <Waterfall steps="v.rollForward" height="&quot;290&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Receivables roll-forward (IDR billion)"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D5.0">
+              <b t-out="&quot;Roll-forward piutang (Rp miliar)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D5.1&quot;] !== false">
+            <Donut items="v.arP" ct="v.config.panel3.ct" cs="v.config.panel3.cs" height="&quot;290&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="AR by principal"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D5.1">
+              <b t-out="&quot;AR per principal&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div class="id-dash-kpis" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+          <t t-foreach="v.kpis" t-as="k" t-key="k_index">
+            <t t-if="!v.__available || v.__available[&quot;D5.2&quot;] !== false">
+              <KpiCard kpi="k" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D5.2">
+                <b t-out="&quot;KpiCard&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D5.3&quot;] !== false">
+            <StackBars rows="v.channelAging" legend="v.agingLegend" height="&quot;290&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="AR aging by channel (IDR million)"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D5.3">
+              <b t-out="&quot;Aging piutang per channel (Rp juta)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D5.4&quot;] !== false">
+            <Bullet rows="v.creditBullets" max="v.config.panel6.max" height="&quot;290&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Credit exposure vs limit (%)"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D5.4">
+              <b t-out="&quot;Eksposur kredit vs limit (%, 5 limit)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D5.5&quot;] !== false">
+            <TrendChart series="v.trend" legend="v.trendLegend" target="v.config.panel7.target" min="v.config.panel7.min" max="v.config.panel7.max" ticks="v.trendTicks" xl="v.trendX" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Daily collections" unit.translate="IDR million / day"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D5.5">
+              <b t-out="&quot;Collection harian&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D5.6&quot;] !== false">
+            <DataTable cols="v.scols" rows="v.srows" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Unmatched deposits and Money in Transit" note.translate="Transfer evidence requires confirmation against the bank statement before validation."/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D5.6">
+              <b t-out="&quot;Setoran belum cocok dan Money in Transit&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+      </main>
+    </div>
+  </t>
+  <t t-name="id_dashboard_ui.D6">
+    <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d6">
+      <DashHeader title="&quot;Demand &amp; Replenishment Planning&quot;" sub="v.sub" role="v.role" sync="v.sync"/>
+      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D6.0&quot;] !== false">
+            <TrendChart series="v.trend" legend="v.trendLegend" min="v.config.panel2.min" max="v.config.panel2.max" ticks="v.trendTicks" xl="v.trendX" height="&quot;430&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Weekly actual vs forecast (IDR million)" unit.translate="IDR million / week"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D6.0">
+              <b t-out="&quot;Aktual vs forecast mingguan (nilai Rp juta)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <div class="id-dash-stack">
+            <t t-if="!v.__available || v.__available[&quot;D6.1&quot;] !== false">
+              <Gauge cfg="v.gauges[0]" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D6.1">
+                <b t-out="&quot;Gauge&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+            <t t-if="!v.__available || v.__available[&quot;D6.2&quot;] !== false">
+              <Gauge cfg="v.gauges[1]" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D6.2">
+                <b t-out="&quot;Gauge&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </div>
+        </div>
+        <div class="id-dash-kpis" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px">
+          <t t-foreach="v.kpis" t-as="k" t-key="k_index">
+            <t t-if="!v.__available || v.__available[&quot;D6.3&quot;] !== false">
+              <KpiCard kpi="k" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            </t>
+            <t t-else="">
+              <section class="id-dash-card id-unavailable" data-slot="D6.3">
+                <b t-out="&quot;KpiCard&quot;"/>
+                <span>Not available for this source and scope</span>
+              </section>
+            </t>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D6.4&quot;] !== false">
+            <ComboChart bars="v.cBars" line="v.cLine" barMax="v.config.panel6.barMax" lineMin="v.config.panel6.lineMin" lineMax="v.config.panel6.lineMax" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="4-week projected cash-in" note.translate="Bars: cash-in, IDR billion · Line: cumulative %"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D6.4">
+              <b t-out="&quot;Proyeksi cash-in 4 minggu&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D6.5&quot;] !== false">
+            <Bullet rows="v.acc" max="v.config.panel7.max" height="&quot;300&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Forecast accuracy by principal"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D6.5">
+              <b t-out="&quot;Akurasi forecast per principal&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D6.6&quot;] !== false">
+            <HeatGrid rows="v.hRows" cols="v.hCols" vals="v.hVals" lo="&quot;90&quot;" hi="&quot;125&quot;" height="&quot;300&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="Seasonality index (Nov = 100)" note.translate="Darker = higher seasonal demand."/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D6.6">
+              <b t-out="&quot;Indeks musiman (Nov = 100)&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <div class="id-dash-row" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px;">
+          <t t-if="!v.__available || v.__available[&quot;D6.7&quot;] !== false">
+            <BarRows rows="v.risk" height="&quot;300&quot;" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="SKUs at risk of stockout"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D6.7">
+              <b t-out="&quot;SKU berisiko stockout&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D6.8&quot;] !== false">
+            <DataTable cols="v.pcols" rows="v.prows" note="v.config.panel10.note" onEvent="props.onEvent" onDrill="props.onDrill" title.translate="PO recommendations by principal"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D6.8">
+              <b t-out="&quot;Rekomendasi PO per principal&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+      </main>
+    </div>
+  </t>
+  <t t-name="id_dashboard_ui.D7">
+    <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d7">
+      <DashHeader title="v.drillTitles.panel0" sub="v.sub" role="v.role" sync="v.sync"/>
+      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <Breadcrumb crumbs="v.crumbs" onEvent="props.onEvent" onDrill="props.onDrill"/>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 340px;gap:12px;align-items:start" class="id-dash-row">
+          <t t-if="!v.__available || v.__available[&quot;D7.0&quot;] !== false">
+            <BarRows title="v.drillTitles.panel3" rows="v.brands" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D7.0">
+              <b t-out="&quot;Drill-down&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D7.1&quot;] !== false">
+            <DataTable title="v.drillTitles.panel4" cols="v.scols" rows="v.srows" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D7.1">
+              <b t-out="&quot;Drill-down&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+          <t t-if="!v.__available || v.__available[&quot;D7.2&quot;] !== false">
+            <EntityPanel title="v.drillTitles.panel5" mini="v.mini" sparkTitle="&quot;Omset harian&quot;" spark="v.spark" ex="v.ex" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill"/>
+          </t>
+          <t t-else="">
+            <section class="id-dash-card id-unavailable" data-slot="D7.2">
+              <b t-out="&quot;Drill-down&quot;"/>
+              <span>Not available for this source and scope</span>
+            </section>
+          </t>
+        </div>
+        <t t-if="!v.__available || v.__available[&quot;D7.3&quot;] !== false">
+          <DataTable title="v.drillTitles.panel6" cols="v.dcols" rows="v.drows" onEvent="props.onEvent" onDrill="props.onDrill"/>
+        </t>
+        <t t-else="">
+          <section class="id-dash-card id-unavailable" data-slot="D7.3">
+            <b t-out="&quot;Drill-down&quot;"/>
+            <span>Not available for this source and scope</span>
+          </section>
+        </t>
+      </main>
+    </div>
+  </t>
+</templates>

@@ -65,6 +65,19 @@ jobs:
           if grep -E " (ERROR|CRITICAL) |Traceback" odoo.log; then
             echo "Ditemukan ERROR/Traceback pada log"; exit 1
           fi
+      - name: D1 redesign install and upgrade on isolated database
+        run: |
+          set -o pipefail
+          docker run --rm -v d1-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
+            set -e
+            odoo -d d1_ci --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
+              -i id_dashboard_redesign,id_mobile_api --test-tags /id_dashboard_redesign --stop-after-init
+            odoo -d d1_ci --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" \
+              -u id_dashboard_ui,id_dashboard_redesign --test-tags /id_dashboard_redesign --stop-after-init
+          ' 2>&1 | tee d1-redesign.log
+          if grep -E ' (ERROR|CRITICAL) |Traceback' d1-redesign.log; then exit 1; fi
       - name: Disposable mobile staging provisioning shell smoke
         run: |
           set -o pipefail
@@ -178,12 +191,62 @@ jobs:
         env:
           UI_TEST_PASSWORD: ci-ui
         run: python docs/ui/e2e/dashboard_visual.py http://localhost:8069
+      - name: Prepare representative native D1 visual fixtures
+        env:
+          D1_TEST_PASSWORD: ci-d1-visual
+        run: |
+          set -o pipefail
+          mkdir -p d1-visual
+          docker run --rm -i -v d1-filestore:/var/lib/odoo --network host \
+            -e D1_TEST_PASSWORD --entrypoint bash fmcg-odoo:ci -c '
+            odoo shell -d d1_ci --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ui/d1_visual_fixture.py | tee d1-visual/fixture.log
+          python -c 'import json,pathlib; p=pathlib.Path("d1-visual"); d=json.loads(next(x.split("D1_VISUAL_FIXTURE=",1)[1] for x in (p/"fixture.log").read_text().splitlines() if x.startswith("D1_VISUAL_FIXTURE="))); (p/"fixture.json").write_text(json.dumps(d,indent=2))'
+      - name: Start isolated D1 webclient
+        run: |
+          docker run -d --name d1-visual -v d1-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
+            exec odoo -d d1_ci --db-filter "^d1_ci$" --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --http-interface 127.0.0.1 --http-port 8071 --max-cron-threads 0
+          '
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:8071/web/login; then break; fi
+            sleep 2
+          done
+          curl -sf -o /dev/null http://localhost:8071/web/login
+          docker exec d1-visual python3 /opt/scripts/ui/d1_runtime_sources.py > d1-visual/runtime-source.json
+          echo "D1_IMAGE_DIGEST=$(docker inspect --format='{{.Image}}' d1-visual)" >> "$GITHUB_ENV"
+      - name: Native D1 browser, screenshots, role and numeric reconciliation
+        env:
+          D1_TEST_PASSWORD: ci-d1-visual
+          D1_BASE_URL: http://127.0.0.1:8071
+          D1_DB: d1_ci
+          D1_SCREENSHOT_DIR: d1-visual
+          D1_EXPECTATIONS_FILE: d1-visual/fixture.json
+          D1_RUNTIME_SOURCES_FILE: d1-visual/runtime-source.json
+          D1_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -o pipefail
+          pip install pillow==11.1.0
+          python scripts/ui/test_d1_browser.py 2>&1 | tee d1-visual/browser.log
+          python -c 'import json; r=json.load(open("d1-visual/report.json")); assert r["status"] == "PASS" and len(r["screenshots"]) >= 20'
       - name: UI runtime diagnostics
         if: always()
         run: |
           docker logs ui-smoke > ui-runtime.log 2>&1 || true
+          mkdir -p d1-visual
+          docker logs d1-visual > d1-visual/server.log 2>&1 || true
+          docker rm -f d1-visual || true
+          docker volume rm d1-filestore || true
           docker rm -f ui-smoke || true
           docker volume rm ui-filestore || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: d1-native-visual-${{ github.event.pull_request.head.sha || github.sha }}
+          path: d1-visual/
+          if-no-files-found: error
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -1,0 +1,369 @@
+# Indonesian translations for odooca-fmcg.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the odooca-fmcg project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: odooca-fmcg VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-10 22:12+0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: id\n"
+"Language-Team: id <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.10.3\n"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "A period is required."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Invalid dashboard dates."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Select an ordered date range of at most 366 days."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Working-day alignment requires an approved company calendar. Turn alignment off."
+msgstr "Penyelarasan hari kerja membutuhkan kalender perusahaan. Matikan penyelarasan."
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Unknown comparison mode."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Only D1 is enabled in this release."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Select companies with the same currency before aggregating sales."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "The filter catalogue exceeds 10,000 entries; narrow the company scope."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Sales / User"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Unknown dashboard filter."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Invalid filter selection."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Filter identifiers must be positive integers."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "A selected filter is no longer accessible. Review the selection."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Expected a D1 query."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Invalid D1 query."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Too many sales lines; narrow the period or filters."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Too many orders; narrow the period or filters."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Call metrics are unavailable for product or geographic slices."
+msgstr "Metrik call tidak tersedia untuk irisan produk atau wilayah."
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Unassigned"
+msgstr "Belum dipetakan"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "No complete target partition for this exact scope and period."
+msgstr "Belum ada target lengkap untuk scope dan periode persis ini."
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Refunds require accounting read access."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/models/dashboard_bridge.py
+msgid "Too many refund lines; narrow the period or filters."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "billion"
+msgstr "miliar"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "million"
+msgstr "juta"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Confirmed sales orders · ex-tax · WITA"
+msgstr "Sales order terkonfirmasi · DPP · WITA"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "City / regency coverage"
+msgstr "Coverage kabupaten / kota"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "SO net, IDR million. Unassigned locations remain in the ranking."
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "million / calendar day"
+msgstr "juta / hari kalender"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+#, python-format
+msgid "billion; line: discount as % of gross SO"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Gross SO (ex-tax)"
+msgstr "Gross SO (DPP)"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Posted customer refunds"
+msgstr "Refund pelanggan posted"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Invoice date · separate from SO net"
+msgstr "Tanggal faktur · terpisah dari netto SO"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Net SO (ex-tax)"
+msgstr "Netto SO (DPP)"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Gross less native line discount"
+msgstr "Gross dikurangi diskon native baris"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Target achievement"
+msgstr "Capaian target"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Exact period and complete salesperson scope"
+msgstr "Periode persis dan scope salesman lengkap"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Native SO discount"
+msgstr "Diskon native SO"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Effective call"
+msgstr "Effective call"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Calls / assigned workday"
+msgstr "Call / hari tugas salesman"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Accepted visits / readable assigned salesperson-days"
+msgstr "Kunjungan diterima / hari tugas salesman terbaca"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Average SO value"
+msgstr "Rata-rata nilai SO"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Selected period"
+msgstr "Periode terpilih"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Salesperson"
+msgstr "Salesman"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Net SO (million)"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Orders"
+msgstr "Order"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Active outlets"
+msgstr "Outlet aktif"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "EC %"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "Channel"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "Coverage area"
+msgstr "Area coverage"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "City / regency"
+msgstr "Kabupaten / kota"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "Principal"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "Brand"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "SKU"
+msgstr ""
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "Company"
+msgstr "Perusahaan"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "Filters"
+msgstr "Filter"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/action.js
+msgid "Source documents"
+msgstr "Dokumen sumber"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Effective call · own scope"
+msgstr "Effective call · scope sendiri"
+
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: addons/id_dashboard_redesign/static/src/adapters.js
+msgid "Calls / assigned day · own scope"
+msgstr "Call / hari tugas · scope sendiri"
