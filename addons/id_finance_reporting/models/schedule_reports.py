@@ -298,7 +298,6 @@ class FinanceFxRevaluation(models.AbstractModel):
             partial["functional_counterpart"] = self._is_functional_counterpart(
                 debit_leg, credit_leg, company,
             )
-            partial["write_off"] = self._is_write_off(debit_leg, credit_leg)
         return partials
 
     @staticmethod
@@ -356,37 +355,36 @@ class FinanceFxRevaluation(models.AbstractModel):
                 "debit_leg": debit_leg or {},
                 "credit_leg": credit_leg or {},
                 "move_id": debit_move.id,
+                "move_ids": sorted({debit_move.id, credit_move.id}),
                 "reversed_entry_id": debit_move.reversed_entry_id.id
                 or credit_move.reversed_entry_id.id or None,
                 "is_reversal": bool(debit_move.reversal_move_ids or credit_move.reversal_move_ids),
                 # Classification is finalised after out-of-filter counterparts are
                 # resolved; a missing leg is NOT a functional counterpart.
                 "functional_counterpart": False,
-                "write_off": self._is_write_off(debit_leg, credit_leg),
+                "write_off": self._is_write_off_move(debit_move) or self._is_write_off_move(credit_move),
             })
         return payloads
 
-    def _is_write_off(self, debit_leg, credit_leg):
-        """Detect a settlement routed through a non-reconcilable expense line.
+    def _is_write_off_move(self, move):
+        """True when a plain entry mixes a monetary line with a non-monetary one.
 
-        A write-off closes a receivable/payable against an expense account and
-        carries no foreign-currency settlement, so it must not produce realized
-        FX. Detection needs the partial to *link* a monetary line and an expense
-        line; an ordinary FX settlement keeps both legs on monetary accounts.
+        In Odoo a write-off reconciles AR against AR: the expense lives on a
+        separate line of the same entry, so looking for an expense *leg* on the
+        partial never matches. The signal is the counterpart move itself.
         """
-        if not debit_leg or not credit_leg:
+        if move.move_type != "entry":
             return False
-        monetary = (
+        account_types = move.line_ids.mapped("account_id.account_type")
+        monetary = {
             "asset_receivable", "liability_payable", "asset_cash",
             "liability_credit_card", "asset_current", "liability_current",
             "asset_non_current", "liability_non_current",
+        }
+        return any(t and t not in monetary for t in account_types) and any(
+            t in monetary for t in account_types
         )
-        types = {debit_leg.get("account_type"), credit_leg.get("account_type")}
-        has_expense = any(
-            account_type and account_type not in monetary for account_type in types
-        )
-        has_monetary = any(account_type in monetary for account_type in types)
-        return bool(has_expense and has_monetary)
+
 
     def _rate_lookup(self, company):
         currency_model = self.env["res.currency"]

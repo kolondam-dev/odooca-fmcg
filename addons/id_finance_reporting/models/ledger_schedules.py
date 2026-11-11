@@ -283,11 +283,12 @@ def _net_reversals(partials, round_amount):
         normals = [p for p in group if not p.get("is_reversal")]
         for reversal in reversals:
             target = reversal.get("reversed_entry_id")
+            if target is None:
+                continue
             match = next(
                 (
                     candidate for candidate in normals
-                    if target is not None
-                    and candidate.get("move_id") == target
+                    if target in (candidate.get("move_ids") or (candidate.get("move_id"),))
                     and id(candidate) not in cancelled
                 ),
                 None,
