@@ -262,7 +262,7 @@ Odoo, yang memilih `expense_currency_exchange_account_id` bila `amount > 0` dan
 | **Residual per tanggal** | Posisi terbuka direkonstruksi dari `balance`/`amount_currency` dikurangi partial bertanggal, **bukan** dari `amount_residual` saat ini. |
 | **Multi-partial** | Dijumlahkan per partial (`Σ realized_partial`). Untuk tiap baris: `Σ |p.amount| ≤ |balance|`; bila terlampaui, baris menjadi `over_reconciled` dan **dilaporkan**, bukan dipotong diam-diam. |
 | **Write-off** | Partial yang dikenali sebagai write-off (leg pada akun beban) **tidak** menghasilkan realized FX; dilaporkan terpisah di `write_off_rows` agar tidak menciptakan gain/loss palsu. |
-| **Reversal** | Partial pada move yang di-reverse dicocokkan **eksplisit**: `reversed_entry_id` dibandingkan dengan `move_id` kandidat dalam pasangan yang sama. Hanya pasangan yang cocok yang saling membatalkan; reversal tanpa pasangan **tetap** dijumlahkan agar tidak menghilangkan FX tanpa bukti. |
+| **Reversal** | Partial dikelompokkan menurut **keterhubungan baris** (`debit_line_id`/`credit_line_id`), bukan menurut pasangan `(debit, credit)` yang persis: reversal membuat baris baru, sehingga partial asal dan partial balik tidak pernah berbagi pasangan yang sama. Pembatalan baru dilakukan bila tautan move cocok **dua arah** — `reversed_entry_id` bisa tersimpan di move balik, sementara move asal hanya tahu `reversal_move_ids`. Reversal tanpa pasangan **tetap** dijumlahkan agar tidak menghilangkan FX tanpa bukti. |
 | **Kaki mata uang fungsional** | Bernilai benar hanya bila satu kaki benar-benar bermata uang fungsional. Kaki yang tersaring keluar dimuat ulang untuk klasifikasi dan dilaporkan di `functional_counterpart_rows`, tidak dihitung dan tidak dibuang diam-diam. |
 | **Tanpa `exchange_move_id`** | Tetap dihitung dari formula. `exchange_move_id` adalah **bukti posting**, bukan syarat perhitungan. Nilainya masuk `realized_unposted_rows` dan **di luar** tie-out. |
 | **`amount_currency == 0` pada kaki non-fungsional** | Data tidak lengkap; menjadi exception `missing_currency_amount`, formula tidak dijalankan untuk partial itu. |
@@ -318,6 +318,22 @@ scope, dan `gl_tie_out.scope_limited = True` menandai hal itu secara eksplisit.
 Tanpa pembatasan ini, realized terfilter akan dibandingkan dengan seluruh GL
 exchange perusahaan dan selalu gagal secara palsu.
 
+**Scope tie-out ditentukan sebelum klasifikasi.** Cakupan `exchange_move_id`
+diambil dari **seluruh partial terpilih**, bukan dari partial yang lolos menjadi
+baris realized. Sebelumnya cakupan dibangun sambil menghitung realized, sehingga
+partial yang dilewati klasifikasi (functional counterpart, write-off, atau
+exception bernominal) ikut menghapus jurnal exchange-nya dari pembanding. Dua
+sisi menjadi kosong dan laporan menyatakan `balanced = True` tanpa bukti apa pun.
+Cakupan adalah sifat *seleksi*, bukan sifat *hasil klasifikasi*, sehingga
+dipisah menjadi dua field:
+
+- `tied_exchange_move_ids` — cakupan pembanding; dari partial terpilih;
+- `realized_exchange_move_ids` — bukti yang benar-benar menopang baris realized.
+
+`gl_tie_out` juga gagal dengan issue `missing_exchange_evidence` bila cakupan
+menyebut adanya exchange move tetapi pembanding kosong, **termasuk ketika
+realized nol** — justru itulah bentuk lolos-vakum yang harus dicegah.
+
 **Kaki di luar filter tetap dimuat untuk klasifikasi.** Sebuah partial bisa
 menyentuh baris terpilih sementara kakinya yang lain berada di jurnal yang
 tersaring keluar oleh `journal_ids`. Menganggap kaki yang tidak dimuat sebagai
@@ -331,10 +347,25 @@ Karena itu kaki tersebut dimuat ulang (baca-saja) semata untuk klasifikasi:
 - bila kaki tetap tidak dapat dimuat, partial menjadi exception bernominal
   `missing_currency_amount`, bukan dianggap nol.
 
-**Comparator kosong tidak pernah lolos.** Bila realized bernilai bukan nol
-tetapi tidak ada saldo exchange yang dapat dibandingkan, `gl_tie_out` gagal
-dengan issue `missing_exchange_evidence`. Hanya kasus realized nol tanpa
-comparator yang sah-sah saja kosong.
+**Comparator kosong tidak pernah lolos.** Bila cakupan menyebut adanya exchange
+move tetapi tidak ada saldo exchange yang dapat dibandingkan, `gl_tie_out` gagal
+dengan issue `missing_exchange_evidence`. Hanya kasus cakupan kosong yang
+sah-sah saja memiliki comparator kosong.
+
+**Perilaku Odoo pada reversal [F].** Dibaca dari `account/models/account_move.py`
+19.0 (`_reverse_moves`) dan dibuktikan pada fixture native:
+
+| Mode | Partial asal (invoice ↔ settlement) | Partial baru | `reversal_move_ids` |
+|---|---|---|---|
+| `cancel=False` | **tetap ada**, settlement tidak dibatalkan | move balik berdiri sendiri, tidak direkonsiliasi | terisi pada move settlement |
+| `cancel=True` | **dihapus** oleh `remove_move_reconcile()` | satu partial: baris move balik ↔ baris settlement | terisi pada move settlement |
+
+Konsekuensinya: pada `cancel=True` Odoo sendiri yang membatalkan rekonsiliasi,
+sehingga tidak ada dua partial berdampingan yang perlu saling meniadakan. Netting
+di FIN38 karena itu berfungsi sebagai **penjaga data sisa** (mis. data migrasi
+atau rekonsiliasi manual), bukan mekanisme utama. Yang wajib dibuktikan native
+adalah: pair benar-benar terbentuk, tidak ada double count, dan nominal realized
+sesuai kontrak — bukan bahwa cabang netting menyala.
 
 **Bukti numerik dua arah** (wajib menjadi fixture test, bukan angka hard-coded):
 

@@ -634,6 +634,39 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                 "FIN38 write-off must not also appear in realized rows",
             )
 
+            # P1: the comparator scope must come from the selected partials, not
+            # from the ones that survived classification. Recompute the selection
+            # straight from the database and require an exact match.
+            monetary_lines = env["account.move.line"].search([
+                ("company_id", "=", company.id),
+                ("date", "<=", "2026-08-31"),
+                ("parent_state", "=", "posted"),
+                ("display_type", "not in", ["line_note", "line_section", "line_subsection"]),
+                ("account_id.account_type", "in", [
+                    "asset_receivable", "liability_payable", "asset_cash",
+                    "liability_credit_card", "asset_current", "liability_current",
+                    "asset_non_current", "liability_non_current",
+                ]),
+            ])
+            in_scope_partials = env["account.partial.reconcile"].search([
+                ("company_id", "=", company.id),
+                ("max_date", "<=", "2026-08-31"),
+                "|",
+                ("debit_move_id", "in", monetary_lines.ids),
+                ("credit_move_id", "in", monetary_lines.ids),
+            ])
+            in_scope_partials.check_access("read")
+            expected_scope = {
+                record.exchange_move_id.id for record in in_scope_partials
+                if record.exchange_move_id
+            }
+            require(
+                set(write_off_snapshot["tied_exchange_move_ids"]) == expected_scope,
+                "FIN38 comparator scope must equal the exchange moves of the selected "
+                f"partials: {set(write_off_snapshot['tied_exchange_move_ids'])} "
+                f"!= {expected_scope}",
+            )
+
             # Reversal proof. The native log must show that a reversal really
             # produces a pair, and that netting yields the expected number. Both
             # were previously asserted only by absence of duplicate rows, which a
@@ -645,11 +678,54 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
                     for row in diagnostics),
                 f"reversal fixture must produce a reversed partial: {diagnostics}",
             )
+            # cancel=True ("reverse and reconcile") deletes the original partial and
+            # reconciles the mirror move against the settlement line. That pair must
+            # exist and must carry no exchange move of its own.
+            cancel_pair = [
+                row for row in diagnostics
+                if {row["debit_move_id"], row["credit_move_id"]}
+                == {fixture["cancel_settle"].id, fixture["cancel_reversal"].id}
+            ]
             require(
-                any(row["debit_reversed_entry"] or row["credit_reversed_entry"]
-                    for row in diagnostics),
-                "reverse-and-reconcile must leave a reversed_entry link: "
-                f"{diagnostics}",
+                len(cancel_pair) == 1,
+                f"reverse-and-reconcile must form exactly one reversal pair: {cancel_pair}",
+            )
+            require(
+                cancel_pair[0]["exchange_move_id"] is None,
+                "a fully reversed settlement must not carry exchange evidence",
+            )
+            require(
+                cancel_pair[0]["debit_reversed_entry"] == fixture["cancel_settle"].id
+                or cancel_pair[0]["credit_reversed_entry"] == fixture["cancel_settle"].id,
+                "the reversal pair must link back to the settlement it reversed: "
+                f"{cancel_pair[0]}",
+            )
+            # The cancelled settlement must not resurface as realized FX, and the
+            # cancel=False settlement must still be there: it was never undone.
+            cancel_line_ids = {
+                row["debit_line_id"] for row in cancel_pair
+            } | {row["credit_line_id"] for row in cancel_pair}
+            realized_line_ids = {
+                row["debit_line_id"] for row in write_off_snapshot["realized_rows"]
+            } | {row["credit_line_id"] for row in write_off_snapshot["realized_rows"]}
+            require(
+                not cancel_line_ids & realized_line_ids,
+                f"a reversed settlement must not produce realized FX: {cancel_line_ids & realized_line_ids}",
+            )
+            expected_pairs = {
+                (row["debit_line_id"], row["credit_line_id"])
+                for row in write_off_snapshot["realized_rows"]
+            }
+            require(
+                len(expected_pairs) == len(write_off_snapshot["realized_rows"]),
+                "a reconciled pair must not be counted twice",
+            )
+            # Locked nominal: main settlement -100000, cancel=False settlement
+            # -20000 still standing, cancelled settlement 0, write-off 0.
+            require(
+                round_amt(write_off_snapshot["realized_posted_total"]) == round_amt(-120_000),
+                "FIN38 realized total must equal the reconciled settlements only, got "
+                f"{write_off_snapshot['realized_posted_total']}",
             )
 
 
