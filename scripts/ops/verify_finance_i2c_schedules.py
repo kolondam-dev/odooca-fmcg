@@ -7,13 +7,14 @@ Currency / FX revaluation). The independent oracle reads posted
 accounts directly and never calls the production helpers. Everything runs
 inside a savepoint and is rolled back.
 
-FIN37 scope note: the straight-line recognition path needs the OCA
+FIN37 scope note: the straight-line recognition path reads the OCA
 ``account_invoice_start_end_dates`` metadata (``start_date``/``end_date`` on
-``account.move.line``), which is not installed in this disposable database yet.
-The native assertions here therefore verify the **fail-closed** contract: with
-no metadata the report must produce only nominal exceptions, never an assumed
-schedule, and must still tie to the control balance. The recognition arithmetic
-is covered by ``tests/test_finance_i2c_schedules.py``.
+``account.move.line``). The module is pinned in ``oca.lock`` and installed in
+this disposable database, so the assertions below verify the allocation on a
+real posted schedule (310000 over July, 150000 recognised at mid-July), keep
+the **fail-closed** contract for lines without metadata (nominal exception,
+never an assumed schedule), and reproduce the module constraint that rejects
+incomplete or reversed date pairs before anything reaches the ledger.
 """
 
 from collections import defaultdict
@@ -21,6 +22,8 @@ from datetime import date
 import json
 from pathlib import Path
 import sys
+
+from odoo.exceptions import ValidationError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent) if "__file__" in globals() else "/opt/scripts/ops")
 import verify_finance_i2_ledgers_core as i2a  # noqa: E402
@@ -470,7 +473,10 @@ def check_fin37(env, fixture, evidence, check_hard_coded=False):
             "company": company.name, "scale": scale, "report": "FIN37",
             "as_of": as_of, "result": "PASS",
         })
-        if check_hard_coded and not oracle["has_metadata"]:
+        if check_hard_coded:
+            # The A/B fixtures post their lines without start_date/end_date, so
+            # the fail-closed contract must still hold with the OCA metadata
+            # module installed: no allocation, every line a nominal exception.
             require(
                 snapshot["rows"] == [],
                 "FIN37 must not allocate without start_date/end_date metadata",
@@ -482,6 +488,208 @@ def check_fin37(env, fixture, evidence, check_hard_coded=False):
             require(
                 snapshot["exception_total"] == snapshot["control_total"],
                 "FIN37 exceptions must carry the full control balance when nothing is allocatable",
+            )
+
+
+def build_schedule_fixture(env, suffix):
+    """Posted schedule lines with and without OCA date metadata.
+
+    The OCA ``account_invoice_start_end_dates`` module (pinned in ``oca.lock``)
+    adds ``start_date``/``end_date`` to ``account.move.line``. Three extra
+    expense lines on an I2a fixture company cover the native cases:
+
+    - July window 310000 over 2026-07-01..2026-07-31: 15 of 31 days elapsed at
+      2026-07-15, so 150000 is recognised and 160000 remains;
+    - a June window that closed before every cutoff: fully recognised;
+    - a posted line without dates: an exception for itself only.
+
+    Every fixture line sits inside a single calendar month on purpose, so the
+    production month buckets and the oracle's day-proration agree exactly.
+    """
+    company, accounts, journals, partner, scale, docs = i2a.build_i2a_fixture(
+        env, suffix, 1,
+    )
+
+    def entry(ref, when, lines):
+        move = env["account.move"].with_company(company).create({
+            "company_id": company.id,
+            "journal_id": journals["general"].id,
+            "date": when,
+            "ref": f"I2C-{ref}-{suffix}",
+            "move_type": "entry",
+            "line_ids": lines,
+        })
+        move.action_post()
+        return move
+
+    july = entry("SCHEDULE-JULY", "2026-07-01", [
+        (0, 0, {
+            "name": "July accrual", "account_id": accounts["expense"].id,
+            "debit": 310_000 * scale, "credit": 0,
+            "start_date": "2026-07-01", "end_date": "2026-07-31",
+        }),
+        (0, 0, {
+            "name": "July accrual", "account_id": accounts["cash"].id,
+            "debit": 0, "credit": 310_000 * scale,
+        }),
+    ])
+    june = entry("SCHEDULE-JUNE", "2026-06-15", [
+        (0, 0, {
+            "name": "June accrual", "account_id": accounts["expense"].id,
+            "debit": 30_000 * scale, "credit": 0,
+            "start_date": "2026-06-01", "end_date": "2026-06-30",
+        }),
+        (0, 0, {
+            "name": "June accrual", "account_id": accounts["cash"].id,
+            "debit": 0, "credit": 30_000 * scale,
+        }),
+    ])
+    bare = entry("SCHEDULE-BARE", "2026-07-20", [
+        (0, 0, {
+            "name": "Metadata-less accrual", "account_id": accounts["expense"].id,
+            "debit": 9_000 * scale, "credit": 0,
+        }),
+        (0, 0, {
+            "name": "Metadata-less accrual", "account_id": accounts["cash"].id,
+            "debit": 0, "credit": 9_000 * scale,
+        }),
+    ])
+
+    def expense_line(move):
+        return move.line_ids.filtered(lambda line: line.account_id == accounts["expense"])
+
+    return {
+        "company": company,
+        "accounts": accounts,
+        "journals": journals,
+        "partner": partner,
+        "scale": scale,
+        "docs": docs,
+        "july_move": july,
+        "june_move": june,
+        "bare_move": bare,
+        "july_line": expense_line(july),
+        "june_line": expense_line(june),
+        "bare_line": expense_line(bare),
+    }
+
+
+def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
+    """Prove FIN37 allocates a real posted schedule, not only exceptions."""
+    company = fixture["company"]
+    accounts = fixture["accounts"]
+    scale = fixture["scale"]
+    models = env(context=dict(env.context, allowed_company_ids=[company.id]))
+    for as_of in ("2026-07-15", "2026-07-31", "2026-08-31"):
+        oracle = independent_accrual(env, company, accounts["expense"], as_of)
+        snapshot = models["id.finance.accrual.schedule"]._snapshot(
+            company.id, as_of, account_ids=[accounts["expense"].id],
+        )
+        assert_accrual(snapshot, oracle)
+        evidence["cases"].append({
+            "company": company.name, "scale": scale, "report": "FIN37",
+            "as_of": as_of, "metadata": oracle["has_metadata"], "result": "PASS",
+        })
+        if not check_hard_coded:
+            continue
+        require(
+            snapshot["schedule_metadata_available"] is True,
+            "FIN37 must expose the OCA schedule metadata pinned in oca.lock",
+        )
+        rows = {row["line_id"]: row for row in snapshot["rows"]}
+        exceptions = {row["line_id"]: row["reason"] for row in snapshot["exceptions"]}
+        july_id = fixture["july_line"].id
+        june_id = fixture["june_line"].id
+        bare_id = fixture["bare_line"].id
+        require(
+            july_id in rows and june_id in rows,
+            f"FIN37 must allocate the metadata-bearing lines: rows={sorted(rows)} "
+            f"exceptions={sorted(exceptions)}",
+        )
+        require(
+            rows[july_id]["balance"] == 310_000 * scale,
+            f"FIN37 July schedule balance mismatch: {rows[july_id]}",
+        )
+        # Recognition is capped at the window end: the June window closed before
+        # every cutoff in the list.
+        require(
+            rows[june_id]["recognized_to_date"] == 30_000 * scale,
+            f"FIN37 must recognise a closed window in full: {rows[june_id]}",
+        )
+        if as_of == "2026-07-15":
+            require(
+                rows[july_id]["recognized_to_date"] == 150_000 * scale,
+                "FIN37 must prorate 310000 over the 31-day July window: "
+                f"{rows[july_id]}",
+            )
+            require(
+                snapshot["recognized_total"] == 180_000 * scale,
+                "FIN37 recognised total must be the allocated amounts only: "
+                f"{snapshot['recognized_total']}",
+            )
+            require(
+                bare_id not in exceptions,
+                "FIN37 must not include a line dated after the cutoff",
+            )
+        else:
+            require(
+                rows[july_id]["recognized_to_date"] == 310_000 * scale,
+                "FIN37 must recognise the July window in full at month end: "
+                f"{rows[july_id]}",
+            )
+            require(
+                exceptions.get(bare_id) == MISSING_SCHEDULE,
+                "FIN37 must keep only the metadata-less line as an exception: "
+                f"{exceptions}",
+            )
+
+
+def check_schedule_constraints(env, fixture, evidence):
+    """Reproduce the OCA module constraints on invalid date pairs.
+
+    The module's own tests expect ValidationError straight from create() for a
+    reversed pair and for a line carrying only one date. Each attempt runs in a
+    savepoint so the rejected record never reaches the ledger.
+    """
+    company = fixture["company"]
+    accounts = fixture["accounts"]
+    journals = fixture["journals"]
+    cases = (
+        ("start_date_without_end_date", {"start_date": "2026-07-05"}),
+        ("end_date_without_start_date", {"end_date": "2026-07-05"}),
+        ("start_after_end", {"start_date": "2026-07-10", "end_date": "2026-07-01"}),
+    )
+    for label, dates in cases:
+        try:
+            with env.cr.savepoint():
+                env["account.move"].with_company(company).create({
+                    "company_id": company.id,
+                    "journal_id": journals["general"].id,
+                    "date": "2026-07-05",
+                    "ref": f"I2C-INVALID-{label}",
+                    "move_type": "entry",
+                    "line_ids": [
+                        (0, 0, {
+                            "name": "invalid schedule",
+                            "account_id": accounts["expense"].id,
+                            "debit": 1, "credit": 0,
+                            **dates,
+                        }),
+                        (0, 0, {
+                            "name": "invalid schedule",
+                            "account_id": accounts["cash"].id,
+                            "debit": 0, "credit": 1,
+                        }),
+                    ],
+                })
+        except ValidationError:
+            env.invalidate_all()
+            evidence["counterexamples"].append({
+                "case": f"schedule_{label}", "result": "REJECTED",
+            })
+        else:
+            raise AssertionError(
+                f"OCA schedule constraint accepted an invalid date pair: {label}"
             )
 
 
@@ -871,7 +1079,10 @@ def run(env):
         env.cr.dbname == "finance_i0_reports_disposable",
         "I2c verification requires exact disposable reports database",
     )
-    for addon in ("account_financial_report", "id_finance_reporting", "id_finance_foundation"):
+    for addon in (
+        "account_financial_report", "account_invoice_start_end_dates",
+        "id_finance_reporting", "id_finance_foundation",
+    ):
         require(
             env["ir.module.module"].search_count([
                 ("name", "=", addon), ("state", "=", "installed"),
@@ -892,9 +1103,12 @@ def run(env):
         with env.cr.savepoint():
             fix_a = i2a.build_i2a_fixture(env, "A", 1)
             fix_b = i2a.build_i2a_fixture(env, "B", 7)
+            sched = build_schedule_fixture(env, "S")
             fx = build_fx_fixture(env, "X")
             check_fin37(env, fix_a, evidence, check_hard_coded=True)
             check_fin37(env, fix_b, evidence)
+            check_fin37_schedule(env, sched, evidence, check_hard_coded=True)
+            check_schedule_constraints(env, sched, evidence)
             check_fin38(env, fx, evidence, check_hard_coded=True)
             check_security(env, fix_a, fix_b, evidence)
             check_tamper(env, fix_a, evidence)
