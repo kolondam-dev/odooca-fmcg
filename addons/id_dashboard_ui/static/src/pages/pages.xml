@@ -39,7 +39,7 @@
             </t>
           </div>
           <t t-if="!v.__available || v.__available[&quot;D1.3&quot;] !== false">
-            <CoveragePanel title="v.coverTitle" legend="v.mapLegend" crumbs="v.mapCrumbs" headR="v.mapHead" vals="v.areaVals" vb="v.vb" off="v.off" rows="v.area" foot="v.areaFoot" onEvent="props.onEvent" onDrill="props.onDrill"/>
+            <CoveragePanel geoLoad="v.geoLoad" geoAmounts="v.geoAmounts" title="v.coverTitle" legend="v.mapLegend" crumbs="v.mapCrumbs" headR="v.mapHead" vals="v.areaVals" vb="v.vb" off="v.off" rows="v.area" foot="v.areaFoot" onEvent="props.onEvent" onDrill="props.onDrill"/>
           </t>
           <t t-else="">
             <section class="id-dash-card id-unavailable" data-slot="D1.3">

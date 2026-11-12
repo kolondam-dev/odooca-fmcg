@@ -3,6 +3,29 @@
 **Diverifikasi:** [F] Pin ADR diambil ulang langsung dari OCA pada SHA yang sama: manifest 19.0.1.0.0, LGPL-3, `depends: account`, installable; constraint modul menolak tanggal tidak lengkap/terbalik dan test modul sendiri mengharapkan ValidationError dari `create()`. [F] Aritmetika produksi (`build_accrual_schedules`, bucket bulanan) dan oracle skrip (prorata harian) dibandingkan lokal pada tiga as-of: identik — 15 Juli 150.000/160.000, 31 Juli dan 31 Agustus 310.000 penuh, Juni 30.000 penuh, `unexplained_difference` 0. [F] `ruff` PASS; `check_manifests.py` PASS (14 addon); 106 tes finance PASS.
 **Belum diuji:** [BU] Bukti native `FINANCE_I2C_SCHEDULES=PASS` dengan modul terpasang menunggu CI exact-SHA PR ini (log `ok account-closing@8ce0077f` dan instalasi pada profil `reports`); FIN38 non-sintetis tetap terbuka; `REPORT_CATALOG.csv` FIN37/FIN38 tetap `BELUM_DITERIMA`. Tidak mengubah `deploy/init.sh`/`INIT_MODULES`, seed, atau data demo.
 **Signature:** Task managed by Agent-Opencode at 2026-11-12T08:24:55+07:00
+## 2026-11-11T23:52:54+07:00 — claude-design (Claude-Dev1) — PR #118: Biaya toko idempoten lintas buka-ulang/muat-ulang (review #5859275471)
+
+- Akar masalah: status retry hanya di `useRef` sehingga hilang saat formulir ditutup/dimuat ulang, dan nominal yang bisa diedit membuat submit kedua menghasilkan UUID baru -> duplikat.
+- Perbaikan: rencana batch (`batch_id` + UUID tetap per komponen + payload) disimpan ke draft lokal SEBELUM kirim; antrean outbox menjadi sumber kebenaran komponen mana yang sudah masuk; `submitPending` hanya mengirim yang belum ada di antrean; draft dihapus setelah semua komponen masuk.
+- UI: saat rencana tertunda dibuka ulang, isian read-only + callout, tombol menjadi 'Lanjutkan simpan biaya'.
+- `App.submit` menerima UUID opsional (diteruskan ke `engine.enqueue`).
+- Tes: unit retry + tes integrasi FieldStore/Outbox nyata (gagal komponen ke-2, tutup store, buka ulang, tepat satu entri per komponen). Backend tidak berubah.
+
+## 2026-11-11T19:48:31+07:00 — claude-design (Claude-Dev1) — PR #118: perbaikan review Setor uang + Biaya toko
+
+**Berubah:** P1 Biaya toko idempoten saat retry (`domain/outlet-expense.ts` `submitPending`: komponen yang sudah masuk antrean dilewati; tes unit kegagalan di komponen kedua → satu entri per komponen). P2 `CashDepositSchema.evidence` memakai `LocalExpenseEvidenceSchema` (`true` dan objek kosong ditolak); e2e Setor uang lewat UI: bukti kosong, selisih tanpa catatan, tersimpan, dan flag mati (fixture `useLegacyServer`). Merge `origin/main` (konflik hanya HANDOFF); openapi diekspor ulang.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 477, e2e phone+tablet 192 lulus. **Belum diuji:** [BU] CI pada HEAD hasil integrasi.
+
+## 2026-11-11T19:09:55+07:00 — claude-design (Claude-Dev1) — Fase 3B-4: Setor uang + Biaya toko (terkunci flag)
+
+**Berubah:** layar Setor uang (dari layar Akhiri trip) dan Biaya toko (dari kunjungan aktif) sesuai mockup; kontrak USULAN `delivery.cash_deposit.submit` (`domain/cash-deposit.ts`), kategori `store_*` scope outlet; flag server `features.cash_deposit_v1` / `outlet_expense_v1` (mock demo ON, LIVE tidak ada = tombol kirim terkunci + callout). openapi diekspor ulang; tes unit + e2e `store-expense`. K18 di DS_RECONCILIATION memuat kontrak usulan dan syarat sebelum flag ON.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 476, e2e phone+tablet 188 lulus. **Belum diuji:** [BU] CI, e2e Setor uang lewat UI (hanya tes unit skema), backend.
+**Utang backend:** handler kedua perintah/kategori, validasi receipt_uuids, approval biaya toko; foto nota per komponen dan Foto penutup trip.
+## 2026-11-11T19:04:48+07:00 — Codex-Dashboard — Scroll dan drill-down peta D1
+
+**Berubah:** Kontainer aksi D1 dapat digulir. Peta dan ranking mengikuti kabupaten/kota → kecamatan → kelurahan/desa, dengan tombol kembali satu tingkat. Ranking memakai periode, filter, dan akses penjualan D1.
+
+**Diverifikasi:** [F] Playwright lokal dengan Odoo 19, mode sidebar dan klasik, scroll mouse, klik poligon Manado, navigasi kecamatan dan desa, serta kembali dua kali. CI browser menambahkan pemeriksaan rekonsiliasi ranking.
 
 ## 2026-11-11T18:51:40+07:00 — Agent-Opencode — I2c/PR112: pembatalan reversal wajib pasangan unik
 **Berubah:** `addons/id_finance_reporting/models/ledger_schedules.py` (`_split_reversal_pairs` mengembalikan `(pairs, singles, ambiguous)`; pembatalan hanya bila dua partial saling menjadi satu-satunya kandidat dalam komponen hubungannya; selain itu seluruh baris tetap dihitung dan masuk `reversal_exceptions` sebagai `multiple_reversal_candidates` dengan daftar kandidat per partial); `tests/test_finance_i2c_schedules.py` (106 tes, termasuk uji independensi urutan [1,2,3] vs [3,2,1]); `docs/finance/I2C_DISCOVERY_ADR.md` (syarat keunikan pasangan).

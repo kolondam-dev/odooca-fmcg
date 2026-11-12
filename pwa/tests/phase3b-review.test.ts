@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { orderSummary } from "../src/components/CloseVisitScreen";
 import {
     fieldExpenseV2Enabled,
@@ -147,8 +147,156 @@ describe("review #114", () => {
             cash: 1150,
             transfer: 2000,
             cost: 70000,
+            cashReceiptUuids: expect.any(Array),
         });
         expect(tripMoney(q, "u", "2026-11-10", "B").cash).toBe(5000);
         expect(tripMoney(q, "x", "2026-11-10", "A").cash).toBe(0);
+    });
+});
+
+import { CashDepositSchema } from "../src/domain/cash-deposit";
+describe("setor uang", () => {
+    const base = {
+        deposit_version: 1,
+        trip_id: "DO-001",
+        business_date: "2026-11-10",
+        cash_expected: "5700000",
+        cash_deposited: "5700000",
+        receipt_uuids: [],
+        evidence: {
+            id: "44444444-4444-4444-8444-444444444444",
+            latitude: 1.4,
+            longitude: 124.8,
+            accuracy: 5,
+            capturedAt: "2026-11-10T01:00:00.000Z",
+        },
+    };
+    it("selisih wajib catatan dan foto bukti wajib", () => {
+        expect(CashDepositSchema.safeParse(base).success).toBe(true);
+        expect(
+            CashDepositSchema.safeParse({ ...base, cash_deposited: "5600000" })
+                .success,
+        ).toBe(false);
+        expect(
+            CashDepositSchema.safeParse({
+                ...base,
+                cash_deposited: "5600000",
+                difference_note: "Kurang Rp100.000 untuk BBM",
+            }).success,
+        ).toBe(true);
+        for (const bad of [undefined, true, {}, { id: "x" }])
+            expect(
+                CashDepositSchema.safeParse({ ...base, evidence: bad }).success,
+            ).toBe(false);
+    });
+});
+
+import {
+    isStoreBatch,
+    submitPending,
+    type StoreBatchItem,
+} from "../src/domain/outlet-expense";
+describe("biaya toko retry", () => {
+    const item = (key: string): StoreBatchItem => ({
+        key,
+        uuid: crypto.randomUUID(),
+        payload: { amount: "1000" },
+        label: key,
+    });
+    it("gagal di komponen kedua lalu buka ulang: satu entri per komponen", async () => {
+        const plan = ["parkir", "kuli", "retribusi"].map(item);
+        const queue = new Set<string>(); // antrean = sumber kebenaran, bertahan lintas buka ulang
+        let failKuli = true;
+        const send = async (i: StoreBatchItem) => {
+            if (i.key === "kuli" && failKuli) throw new Error("gagal simpan");
+            queue.add(i.uuid);
+        };
+        await expect(submitPending(plan, queue, send)).rejects.toThrow();
+        expect([...queue]).toEqual([plan[0]!.uuid]);
+        // formulir ditutup/dimuat ulang: rencana (UUID tetap) dibaca dari draft
+        const restored = JSON.parse(JSON.stringify(plan)) as StoreBatchItem[];
+        failKuli = false;
+        await submitPending(restored, queue, send);
+        expect(queue.size).toBe(3);
+        await submitPending(restored, queue, send); // kirim ulang lagi: tetap 3
+        expect(queue.size).toBe(3);
+    });
+    it("mengenali rencana batch yang valid", () => {
+        expect(isStoreBatch({ batch_id: "b", items: [item("a")] })).toBe(true);
+        expect(isStoreBatch({ batch_id: "b", items: [{}] })).toBe(false);
+        expect(isStoreBatch(undefined)).toBe(false);
+    });
+});
+
+describe("biaya toko: rencana batch tersimpan + outbox nyata", () => {
+    it("gagal di komponen ke-2, tutup & buka ulang: tepat satu entri per komponen", async () => {
+        const { FieldStore } = await import("../src/storage/store");
+        const { Outbox } = await import("../src/domain/outbox");
+        const { storeBatchKey } = await import("../src/domain/outlet-expense");
+        const name = `biaya-${crypto.randomUUID()}`;
+        const provider = {
+            mode: "demo",
+            bootstrap: vi.fn(),
+            snapshot: vi.fn(),
+            submit: vi.fn(),
+        } as never;
+        const plan = {
+            batch_id: crypto.randomUUID(),
+            items: ["store_parking", "store_unloading", "store_levy"].map(
+                (key) => ({
+                    key,
+                    uuid: crypto.randomUUID(),
+                    payload: { amount: "1000", category: key },
+                    label: key,
+                }),
+            ),
+        };
+        const draftKey = storeBatchKey("OUT-1", "2026-11-11");
+        // Sesi 1: rencana disimpan dulu, komponen ke-2 gagal saat enqueue.
+        const s1 = new FieldStore(name);
+        await s1.draft("u", draftKey, plan);
+        const ob1 = new Outbox(s1, "u", provider);
+        await expect(
+            submitPending(
+                plan.items,
+                new Set((await s1.list("u")).map((q) => q.command.client_uuid)),
+                async (item) => {
+                    if (item.key === "store_unloading")
+                        throw new Error("gagal simpan");
+                    await ob1.enqueue(
+                        "field_expense.request",
+                        item.payload,
+                        item.label,
+                        item.uuid as never,
+                    );
+                },
+            ),
+        ).rejects.toThrow("gagal simpan");
+        await s1.close();
+        // Sesi 2 (form dibuka ulang): rencana dibaca dari draft, antrean jadi sumber kebenaran.
+        const s2 = new FieldStore(name);
+        const restored = await s2.draft("u", draftKey);
+        expect(isStoreBatch(restored)).toBe(true);
+        const ob2 = new Outbox(s2, "u", provider);
+        const send = async (item: StoreBatchItem) => {
+            await ob2.enqueue(
+                "field_expense.request",
+                item.payload,
+                item.label,
+                item.uuid as never,
+            );
+        };
+        const items = (restored as typeof plan).items;
+        for (let i = 0; i < 2; i++)
+            await submitPending(
+                items,
+                new Set((await s2.list("u")).map((q) => q.command.client_uuid)),
+                send,
+            );
+        await s2.removeDraft("u", draftKey);
+        const uuids = (await s2.list("u")).map((q) => q.command.client_uuid);
+        expect(uuids.sort()).toEqual(plan.items.map((i) => i.uuid).sort());
+        expect(await s2.draft("u", draftKey)).toBeUndefined();
+        await s2.close();
     });
 });

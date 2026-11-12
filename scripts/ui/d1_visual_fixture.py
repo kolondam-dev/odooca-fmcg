@@ -45,8 +45,13 @@ for i in range(8):
     district = env["id.district"].search([("city_id.kode_kemendagri", "=", code)], limit=1)
     if not district:
         raise AssertionError(f"Missing seeded district for {code}")
+    village = env["id.subdistrict"]
+    if code == "71.71":
+        village = env.ref("id_base.subdistrict_calaca")
+        district = village.district_id
     outlets = env["res.partner"].create([{"name": f"D1 QA Outlet {i + 1}-{j}",
-        "district_id": district.id, "channel_id": channels[i % 4].id} for j in range(2 + i % 4)])
+        "district_id": district.id, "subdistrict_id": village.id, "channel_id": channels[i % 4].id}
+        for j in range(2 + i % 4)])
     own = {"gross": 0, "discount": 0, "net": 0, "orders": 28}
     for day in range(1, 29):
         outlet = outlets[(day - 1) % len(outlets)]

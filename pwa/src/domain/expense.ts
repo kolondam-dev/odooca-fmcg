@@ -9,6 +9,11 @@ export const ExpenseRequestSchema = z
             "meal",
             "lodging",
             "emergency",
+            // Biaya operasional toko (Biaya_toko), scope outlet.
+            "store_parking",
+            "store_unloading",
+            "store_levy",
+            "store_other",
             // Legacy (antrean/riwayat lama + biaya toko/DO).
             "fuel_planned",
             "fuel_emergency",
@@ -79,4 +84,13 @@ export function fieldExpenseV2Enabled(snapshot: {
     features?: { field_expense_v2?: boolean };
 }) {
     return snapshot.features?.field_expense_v2 === true;
+}
+
+/** Gerbang kontrak biaya operasional toko (kategori `store_*`). */
+export const OUTLET_EXPENSE_UNSUPPORTED =
+    "Server belum mendukung biaya operasional toko dari PWA. Biaya belum dapat dikirim.";
+export function outletExpenseEnabled(snapshot: {
+    features?: { outlet_expense_v1?: boolean };
+}) {
+    return snapshot.features?.outlet_expense_v1 === true;
 }
