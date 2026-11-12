@@ -271,8 +271,9 @@ jobs:
         run: |
           set -euo pipefail
           grep -q "install_account_financial_report_v1: memasang" init1.log
-          if grep -q "install_account_financial_report_v1: memasang" init2.log; then
-            echo "Blok instalasi berjalan lagi setelah restart"; exit 1
+          count="$(grep -c "install_account_financial_report_v1: memasang" init2.log || true)"
+          if [ "$count" != "1" ]; then
+            echo "Marker blok setelah restart: $count (harus 1 dari boot pertama)"; exit 1
           fi
           q() {
             docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo \
