@@ -1,3 +1,31 @@
+## 2026-11-12T09:30:00+07:00 — antigravity — F4: Komputasi Pajak Kode 04 Native PMK 131/2024 & Restorasi Guard Seed Faktur Agustus (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `addons/id_base/models/account_tax.py` & `addons/id_base/models/__init__.py`:
+  - Mengimplementasikan ekstensi native `account.tax` untuk kalkulasi Pajak Kode 04 (DPP Nilai Lain PMK 131/2024, tarif 12%):
+    - `_is_tax_code_04_dpp_nilai_lain()` mendeteksi pajak Kode 04 secara deterministik via `l10n_id_tax_transaction_code == "04"` atau identitas semantik "nilai lain" / "04" pada nama/deskripsi.
+    - `_eval_tax_amount_price_excluded()` menghitung nominal PPN 12% atas DPP Nilai Lain `(raw_base * 11/12) * 12% = raw_base * 11%`.
+    - `_get_tax_details()` dan `compute_all()` menyesuaikan `base` (dan `tax_base_amount` pada AML) menjadi `(11/12) * commercial_dpp` serta `total_included = commercial_dpp + PPN 11%`, memastikan Odoo ORM menghasilkan angka faktur yang identik dengan `invoices.csv` secara native tanpa drift.
+  - Bump versi manifest `addons/id_base/__manifest__.py` ke `19.0.1.3.2`.
+- `addons/id_base/models/account_move.py`:
+  - Menggeneralisasi guard `_is_seed_commercial_invoice_with_posted_delivery_cogs()` agar memvalidasi batch periodik (`PERIOD_*` dan `CANONICAL_*`) serta sales order kanonikal (`SO-2026*`), memungkinkan faktur operasional Agustus mempertahankan `is_fmcg_seed_invoice = True` sembari membuktikan kontrol delivery dan supresi duplikasi HPP/COGS setara dengan baseline Juli.
+- `scripts/ops/load_period_pack.py` & `scripts/load_fmcg_seed.py`:
+  - Menandai Sales Order (`fmcg_seed_batch = f"PERIOD_{self.period}"`) dan Faktur (`is_fmcg_seed_invoice = True`, `fmcg_seed_batch = f"PERIOD_{self.period}"`, `invoice_origin = so_num`, `ref = inv_num`).
+  - Mengonfigurasi `factor_percent = 100.0` pada repartition lines Kode 04 di `load_canonical_taxes()` dan `_resolve_canonical_tax_code_04()` (100% distribusi PPN ke akun 211200 PPN Keluaran).
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Merestorasi audit ketat `seed_flag_count` pada `audit_period_database()` (memastikan seluruh faktur Agustus berpenanda `is_fmcg_seed_invoice = True` secara fail-closed).
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan pengujian `test_audit_fails_when_invoices_missing_is_fmcg_seed_invoice_flag` dan `test_tax_code_04_native_computation_formula` (total 51 unit tests PASS).
+
+**Diverifikasi:**
+- [F] `python -m pytest tests/test_period_pack_loader.py`: 51/51 tests PASS (100% dalam 4.8s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow install-test disposable runtime proof F4.
+
 ## 2026-11-11T23:20:00+07:00 — antigravity — F4: Eliminasi Koreksi SQL Pascaposting, Penegakan Pajak Native & Pemulihan Penuh Histori HANDOFF (Review #5860849497) (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

@@ -1407,17 +1407,16 @@ class GenericPeriodPackLoader:
                 f"Ambiguous Tax Code 04 configuration: Multiple global taxes matched: {[getattr(t, 'name', '') for t in matching_04]}"
             )
 
-        factor_nl = (11.0 / 12.0) * 100.0
         inv_reps = getattr(tax_rec, "invoice_repartition_line_ids", None)
         if inv_reps:
             for rep in inv_reps:
-                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - factor_nl) > 0.01:
-                    rep.sudo().write({"factor_percent": factor_nl})
+                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - 100.0) > 0.01:
+                    rep.sudo().write({"factor_percent": 100.0})
         ref_reps = getattr(tax_rec, "refund_repartition_line_ids", None)
         if ref_reps:
             for rep in ref_reps:
-                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - factor_nl) > 0.01:
-                    rep.sudo().write({"factor_percent": factor_nl})
+                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - 100.0) > 0.01:
+                    rep.sudo().write({"factor_percent": 100.0})
 
         if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
             self.env.invalidate_all()
@@ -1466,6 +1465,8 @@ class GenericPeriodPackLoader:
                 "company_id": self.company.id,
                 "date_order": so_row["date_order"],
             }
+            if hasattr(SaleOrder, "_fields") and "fmcg_seed_batch" in SaleOrder._fields:
+                so_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
 
             sol_data = []
             for lrow in lines_by_so.get(so_num, []):
@@ -1610,9 +1611,15 @@ class GenericPeriodPackLoader:
             if inv:
                 inv_vals = {
                     "payment_reference": inv_num,
+                    "ref": inv_num,
                     "invoice_date": inv_row["date_invoice"],
                     "invoice_date_due": inv_row["due_date"],
+                    "invoice_origin": so_num,
                 }
+                if "is_fmcg_seed_invoice" in inv._fields:
+                    inv_vals["is_fmcg_seed_invoice"] = True
+                if "fmcg_seed_batch" in inv._fields:
+                    inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
                 if "l10n_id_tax_transaction_code" in inv._fields:
                     inv_vals["l10n_id_tax_transaction_code"] = "04"
                 inv.write(inv_vals)

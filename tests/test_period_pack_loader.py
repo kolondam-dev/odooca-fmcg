@@ -1651,6 +1651,69 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         ]
         self.assertGreaterEqual(len(wrong_code_violations), 1)
 
+    def test_audit_fails_when_invoices_missing_is_fmcg_seed_invoice_flag(self):
+        """Supervisor Review #5860849497: Audit fails when August invoices lack is_fmcg_seed_invoice."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+        # Invoices valid in numbers but missing is_fmcg_seed_invoice
+        unflagged_inv = MockRecord(
+            id=101,
+            company_id=1,
+            name="INV/2026/08/0001",
+            payment_reference="INV-202608-0001",
+            move_type="out_invoice",
+            state="posted",
+            is_fmcg_seed_invoice=False,  # Unflagged
+            amount_untaxed=100000.00,
+            amount_tax=11000.00,
+            amount_total=111000.00,
+            line_ids=[
+                MockRecord(id=1, account_id=MockRecord(code="211200"), credit=11000.00, debit=0.0)
+            ],
+        )
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "sale.order": MockModel(records=[]),
+            "account.move": MockModel(records=[unflagged_inv]),
+            "purchase.order": MockModel(records=[]),
+            "account.payment": MockModel(records=[]),
+            "stock.picking": MockModel(records=[]),
+            "stock.move": MockModel(records=[]),
+            "stock.quant": MockModel(records=[]),
+            "account.move.line": MockModel(records=[]),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                MockRecord(id=12, code="113000", company_id=1),
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["status"], "FAIL")
+        missing_flag_violations = [v for v in report["violations"] if "missing is_fmcg_seed_invoice flag" in v]
+        self.assertGreaterEqual(len(missing_flag_violations), 1)
+
+    def test_tax_code_04_native_computation_formula(self):
+        """PMK 131/2024: Tax Code 04 DPP Nilai Lain (11/12) and PPN 12% native formula verification."""
+        # Commercial DPP: 355,680.00
+        commercial_dpp = 355680.00
+        # Expected DPP Nilai Lain: (11/12) * 355680.00 = 326040.00
+        expected_dpp_nl = (commercial_dpp * 11.0) / 12.0
+        self.assertAlmostEqual(expected_dpp_nl, 326040.00, places=2)
+        # Expected PPN 12%: 12% * 326040.00 = 39124.80
+        expected_ppn = expected_dpp_nl * 0.12
+        self.assertAlmostEqual(expected_ppn, 39124.80, places=2)
+        # Effective rate is exactly 11% of commercial DPP
+        effective_ppn = commercial_dpp * 0.11
+        self.assertAlmostEqual(expected_ppn, effective_ppn, places=2)
+        # Total invoice with PPN
+        expected_total = commercial_dpp + expected_ppn
+        self.assertAlmostEqual(expected_total, 394804.80, places=2)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2481,3 +2481,13 @@
   * Pemulihan Histori HANDOFF: Mengintegrasikan seluruh 209 entri dan memulihkan 1.272 baris upstream tanpa kehilangan tanggal historis (0 substantive deletions).
 - Verifikasi Penuh: 81/81 pytest PASS; ruff check clean; check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-11T23:20:00+07:00
+
+
+[2026-11-12T09:30:00+07:00] [INFO] F4: Komputasi Pajak Kode 04 Native PMK 131/2024 & Restorasi Guard Seed Faktur Agustus
+- Resolusi Drift Akuntansi Faktur Agustus Native Odoo ORM (Supervisor Review #5860849497):
+  * Ekstensi Native account.tax di id_base: Mengimplementasikan models/account_tax.py yang meng-override _eval_tax_amount_price_excluded, _get_tax_details, dan compute_all untuk Pajak Kode 04 DPP Nilai Lain PMK 131/2024. Menjamin dasar pengenaan pajak (tax_base_amount) otomatis bernilai (11/12) x commercial DPP (Rp 326.040,00) dan PPN Keluaran bernilai 12% x DPP Nilai Lain (Rp 39.124,80) dengan total faktur Rp 394.804,80 secara murni dihitung native oleh Odoo ORM tanpa SQL direct update atau context bypass.
+  * Generalisasi Guard HPP/COGS id_base: Memperluas batch validasi di account_move._is_seed_commercial_invoice_with_posted_delivery_cogs() untuk mendukung batch PERIOD_* dan SO-2026*, mengembalikan penanda is_fmcg_seed_invoice=True pada faktur Agustus dan membuktikan kontrol delivery DO STJ serta supresi duplikasi HPP tetap setara.
+  * Restorasi Audit Seed Flag: Mengembalikan pengecekan seed_flag_count pada verify_disposable_period_pack.py audit_period_database().
+  * Repartition Line Factor: Memastikan factor_percent bernilai 100.0 (distribusi penuh 100% PPN ke akun 211200).
+- Verifikasi Penuh: pytest test_period_pack_loader (51/51 PASS); ruff check PASS clean; check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-12T09:30:00+07:00
