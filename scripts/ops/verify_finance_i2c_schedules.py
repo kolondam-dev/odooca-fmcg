@@ -606,6 +606,18 @@ def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
             f"FIN37 must allocate the metadata-bearing lines: rows={sorted(rows)} "
             f"exceptions={sorted(exceptions)}",
         )
+        # Record the allocated figures in the evidence payload, not only in the
+        # assertion: the CI log must show what was recognised, not just PASS.
+        evidence.setdefault("schedule_cases", []).append({
+            "as_of": as_of,
+            "july_balance": rows[july_id]["balance"],
+            "july_recognized": rows[july_id]["recognized_to_date"],
+            "june_recognized": rows[june_id]["recognized_to_date"],
+            "recognized_total": snapshot["recognized_total"],
+            "exception_total": snapshot["exception_total"],
+            "unexplained_difference": snapshot["unexplained_difference"],
+            "bare_exception": exceptions.get(bare_id),
+        })
         require(
             rows[july_id]["balance"] == 310_000 * scale,
             f"FIN37 July schedule balance mismatch: {rows[july_id]}",
