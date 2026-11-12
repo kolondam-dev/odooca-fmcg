@@ -10,9 +10,11 @@
 - [F] Aritmetika murni tanpa ORM berada di
   `addons/id_finance_reporting/models/ledger_schedules.py`; lapisan laporan
   yang membatasi query ada di `models/schedule_reports.py`.
-- [F] Paket ini **tidak** menandai `REPORT_CATALOG.csv` `FIN37`/`FIN38` sebagai
-  `ACCEPTED`, tidak mengubah `oca.lock`, `deploy/init.sh`, `INIT_MODULES`, maupun
-  data demo Railway.
+- [F] Paket awal (PR #112) **tidak** menandai `REPORT_CATALOG.csv`
+  `FIN37`/`FIN38` sebagai `ACCEPTED`, tidak mengubah `oca.lock`,
+  `deploy/init.sh`, `INIT_MODULES`, maupun data demo Railway. Pin OCA metadata
+  ditambahkan kemudian pada 2026-11-12 (lihat "Pin metadata OCA"); katalog,
+  `init.sh`, `INIT_MODULES`, dan data demo tetap tidak berubah.
 
 ## FIN37 — Accrual / Prepayment / Deferred schedules
 
@@ -92,7 +94,10 @@ pada `finance_i0_reports_disposable` di dalam savepoint. Oracle independen
 membaca AML posted, `account.partial.reconcile`, dan akun exchange perusahaan
 tanpa memanggil helper produksi. Fixture FX membentuk faktur 100 USD @15.000 dan
 pembayaran 100 USD @16.000 yang direkonsiliasi penuh, sehingga Odoo memposting
-exchange gain −100.000.
+exchange gain −100.000. Sejak pin metadata (2026-11-12) skrip juga membangun
+tiga baris beban ber-jadwal untuk FIN37 (jendela Juli, jendela Juni, dan baris
+tanpa metadata) dan membuktikan alokasi 150.000/160.000 pada 15 Juli secara
+native; lihat "Pin metadata OCA".
 
 Counterexample wajib: tamper seimbang ditolak FIN37 lalu rollback memulihkan
 baseline; Finance Reader ditolak untuk perusahaan/jurnal/partner lain; Sales
@@ -100,9 +105,33 @@ ditolak pada kedua model.
 
 ## Gate yang masih terbuka
 
-- [BU] CI native exact-SHA untuk runner baru (langkah
-  `FINANCE_I2C_SCHEDULES=PASS`).
-- [BU] Pin `account_invoice_start_end_dates` agar FIN37 dapat mengalokasikan
-  jadwal nyata; tanpa pin, laporan benar tetapi seluruhnya menjadi exception.
+- [F] CI native exact-SHA runner I2c: `FINANCE_I2C_SCHEDULES=PASS` pada
+  `7c34d0d` (run `43015490944`, 14/14 check) dan pada merge `05bdf7a`.
+- [F] Pin `account_invoice_start_end_dates` (2026-11-12): lihat bagian
+  "Pin metadata OCA" di bawah — alokasi jadwal native kini terbukti.
 - [BU] Verifikasi FIN38 terhadap jurnal exchange native pada data non-sintetis.
 - [F] `REPORT_CATALOG.csv` `FIN37`/`FIN38` tetap `BELUM_DITERIMA`.
+
+## Pin metadata OCA (FIN37 native, 2026-11-12)
+
+- [F] `oca.lock` mengunci `OCA/account-closing` @
+  `8ce0077fd0762d49e928ea7520555341d7936a9e` (branch 19.0); modul
+  `account_invoice_start_end_dates` v19.0.1.0.0, LGPL-3,
+  `depends: account`, terpasang pada profil CI `reports` di
+  `finance_i0_reports_disposable`.
+- [F] Bukti native (bukan helper/unit): baris posted 310.000 dengan jendela
+  01–31 Juli menghasilkan `recognized_to_date` 150.000 dan sisa 160.000 pada
+  as-of 15 Juli; jendela Juni yang sudah tutup terpengenal penuh 30.000;
+  `unexplained_difference = 0`.
+- [F] Fail-closed tetap berlaku dengan modul terpasang: baris tanpa metadata
+  menjadi exception `missing_schedule_metadata` hanya untuk baris itu, dan
+  perusahaan fixture tanpa tanggal tetap tanpa alokasi.
+- [F] Counterexample constraint modul: baris dengan satu tanggal saja atau
+  `start > end` ditolak `ValidationError` sebelum masuk ledger (savepoint per
+  percobaan) — sama dengan ekspektasi test modul itu sendiri.
+- [F] Aritmetika produksi (bucket bulanan) dan oracle skrip (prorata harian)
+  dibuktikan identik pada ketiga as-of untuk fixture ini (semua jendela berada
+  dalam satu bulan kalender).
+- [BU] Tetap terbuka: FIN38 pada data exchange non-sintetis; bukti XLSX/PDF
+  dan negatif ACL sesuai `ACCEPTANCE_CONTRACT.md` §E; sign-off Finance
+  Controller; `REPORT_CATALOG.csv` `FIN37`/`FIN38` tetap `BELUM_DITERIMA`.

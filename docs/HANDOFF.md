@@ -45,6 +45,11 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow install-test disposable runtime proof F4.
 
+## 2026-11-12T08:24:55+07:00 — Agent-Opencode — I2c/1.1: pin account_invoice_start_end_dates (FIN37 native)
+**Berubah:** `oca.lock` (+`account-closing 19.0 8ce0077fd0762d49e928ea7520555341d7936a9e`); `.github/workflows/finance-i0-spike.yml` (profil `reports` + `account_invoice_start_end_dates`); `scripts/ops/verify_finance_i2c_schedules.py` (wajibkan modul terpasang; fixture jadwal 310.000 Juli + 30.000 Juni + baris tanpa metadata; counterexample constraint start/end; fail-closed A/B kini selalu dijalankan); `docs/finance/I2C_FIN37_FIN38.md` (gate pin ditutup + bagian bukti).
+**Diverifikasi:** [F] Pin ADR diambil ulang langsung dari OCA pada SHA yang sama: manifest 19.0.1.0.0, LGPL-3, `depends: account`, installable; constraint modul menolak tanggal tidak lengkap/terbalik dan test modul sendiri mengharapkan ValidationError dari `create()`. [F] Aritmetika produksi (`build_accrual_schedules`, bucket bulanan) dan oracle skrip (prorata harian) dibandingkan lokal pada tiga as-of: identik — 15 Juli 150.000/160.000, 31 Juli dan 31 Agustus 310.000 penuh, Juni 30.000 penuh, `unexplained_difference` 0. [F] `ruff` PASS; `check_manifests.py` PASS (14 addon); 106 tes finance PASS.
+**Belum diuji:** [BU] Bukti native `FINANCE_I2C_SCHEDULES=PASS` dengan modul terpasang menunggu CI exact-SHA PR ini (log `ok account-closing@8ce0077f` dan instalasi pada profil `reports`); FIN38 non-sintetis tetap terbuka; `REPORT_CATALOG.csv` FIN37/FIN38 tetap `BELUM_DITERIMA`. Tidak mengubah `deploy/init.sh`/`INIT_MODULES`, seed, atau data demo.
+**Signature:** Task managed by Agent-Opencode at 2026-11-12T08:24:55+07:00
 ## 2026-11-11T23:52:54+07:00 — claude-design (Claude-Dev1) — PR #118: Biaya toko idempoten lintas buka-ulang/muat-ulang (review #5859275471)
 
 - Akar masalah: status retry hanya di `useRef` sehingga hilang saat formulir ditutup/dimuat ulang, dan nominal yang bisa diedit membuat submit kedua menghasilkan UUID baru -> duplikat.
