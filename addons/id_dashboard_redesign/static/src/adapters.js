@@ -21,7 +21,7 @@ export function adaptSource(dashboard, response, scope = {}) {
         coverTitle: _t("City / regency coverage"), areaFoot: raw.currency + " " + _t("million. Map: North Sulawesi; ranking includes unassigned and out-of-map locations."),
         mapLegend: raw.currency + " " + _t("million"), mapHead: raw.currency + " " + _t("million") + " · %",
         mapCrumbs: [_t("North Sulawesi"), _t("City / regency")],
-        geoAmounts: raw.geo || {}, config: { panel6: {}, panel7: {} }, cityDrills: {},
+        geoAmounts: raw.geo || {}, geoPartners: raw.geo_partners || {}, geoDomain: raw.line_domain, config: { panel6: {}, panel7: {} }, cityDrills: {},
         revenueUnit: raw.currency + " " + _t("million / calendar day"),
         monthlyNote: raw.currency + " " + _t("billion; line: discount as % of gross SO") + " · " + _t("Five months through selected end date"),
     };
@@ -63,6 +63,7 @@ export function adaptSource(dashboard, response, scope = {}) {
         }
         value.kpis[index].drill = { model: "sale.order.line", domain: raw.line_domain };
     }
+    value.kpis[4].drill = { model: "sale.order.line", domain: [...raw.line_domain, ["discount", "!=", 0]] };
     const bars = rows => rows.map(r => ({ n: r.name, v: r.net / 1e6, t: fmt(r.net / 1e6) + " · " + fmt((rate(r.net, t.net) ?? NaN) * 100) + "%", drill: r.drill }));
     value.principal = bars(raw.principal);
     value.channel = bars(raw.channel);

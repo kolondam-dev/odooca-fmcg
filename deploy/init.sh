@@ -152,10 +152,10 @@ if ! has_mark upgrade_modules_v3 || [ "${FORCE_UPGRADE:-0}" = "1" ]; then
   odoo_run -i "$INIT_MODULES" -u "$INIT_MODULES" --stop-after-init
 fi
 
-if [ "$upgrade_modules" = "1" ] || ! has_mark install_dashboard_d1_v2; then
-  log "install_dashboard_d1_v2: memasang atau mengupdate id_dashboard_redesign..."
+if [ "$upgrade_modules" = "1" ] || ! has_mark install_dashboard_d1_v3; then
+  log "install_dashboard_d1_v3: memasang atau mengupdate id_dashboard_redesign..."
   odoo_run -i id_dashboard_redesign -u id_dashboard_redesign --stop-after-init
-  set_mark install_dashboard_d1_v2
+  set_mark install_dashboard_d1_v3
 fi
 
 # Mark the upgrade complete only after D1 has reclaimed the sales action.

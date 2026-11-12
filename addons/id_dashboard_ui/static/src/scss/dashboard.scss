@@ -56,3 +56,30 @@
     padding: 8px;
     svg { display: block; width: 100%; height: 285px; }
 }
+
+.id-dash-host {
+    .id-dash-kpi { position: relative; }
+    .id-dash-kpi.is-drillable {
+        transition: box-shadow 140ms ease, transform 140ms ease;
+        &:hover, &:focus-within {
+            box-shadow: 0 4px 14px rgba(11, 42, 102, .15);
+            transform: translateY(-1px);
+        }
+        &:active { transform: translateY(0); }
+        @media (prefers-reduced-motion: reduce) {
+            transition: none;
+            transform: none;
+            &:hover, &:focus-within, &:active { transform: none; }
+        }
+    }
+    .id-dash-kpi-hit {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        border: 0;
+        border-radius: inherit;
+        background: transparent;
+        cursor: pointer;
+    }
+    .id-geo-map, .id-geo-submap svg { touch-action: pan-y; }
+}
