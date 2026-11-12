@@ -251,7 +251,10 @@ with sync_playwright() as playwright:
         capture(own_page, "own-sales-role-1440")
         full_dashboard(own_page, "own-sales-role-1440")
         check(own_page.locator(".id-d1-scroll").is_visible(), "Dashboards menu opens D1 for Sales")
-        no_sales_page = own_browser.new_page(viewport={"width": 1440, "height": 1000})
+        own_browser.close()
+        no_sales_browser = playwright.chromium.launch(executable_path=os.environ.get("D1_BROWSER"),
+            headless=True, args=["--no-sandbox", "--single-process"])
+        no_sales_page = no_sales_browser.new_page(viewport={"width": 1440, "height": 1000})
         no_sales_page.goto(base + "/web/login?db=" + database)
         no_sales_page.locator("input[name=login]").fill("d1-visual-no-sales")
         no_sales_page.locator("input[name=password]").fill(os.environ["D1_TEST_PASSWORD"])
@@ -260,7 +263,7 @@ with sync_playwright() as playwright:
         click_dashboards_menu(no_sales_page)
         no_sales_page.locator(".o_spreadsheet_dashboard_action").wait_for()
         check(not no_sales_page.locator(".id-d1-scroll").count(), "Dashboards menu keeps Odoo for non-Sales")
-        own_browser.close()
+        no_sales_browser.close()
         set_page(page)
     check(not errors, "No browser JS errors")
     REPORT["status"] = "PASS"
