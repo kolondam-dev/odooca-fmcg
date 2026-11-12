@@ -5,7 +5,7 @@
   - Mengimplementasikan ekstensi native `account.tax` untuk kalkulasi Pajak Kode 04 (DPP Nilai Lain PMK 131/2024, tarif 12%):
     - `_is_tax_code_04_dpp_nilai_lain()` mendeteksi pajak Kode 04 secara deterministik via `l10n_id_tax_transaction_code == "04"` atau identitas semantik "nilai lain" / "04" pada nama/deskripsi.
     - `_eval_tax_amount_price_excluded()` menghitung nominal PPN 12% atas DPP Nilai Lain `(raw_base * 11/12) * 12% = raw_base * 11%`.
-    - `_get_tax_details()` dan `compute_all()` menyesuaikan `base` (dan `tax_base_amount` pada AML) menjadi `(11/12) * commercial_dpp` serta `total_included = commercial_dpp + PPN 11%`, memastikan Odoo ORM menghasilkan angka faktur yang identik dengan `invoices.csv` secara native tanpa drift.
+    - `_get_tax_details()` dan `compute_all()` (menggunakan generic `*args, **kwargs` untuk kompatibilitas signature penuh Odoo 19) menyesuaikan `base` (dan `tax_base_amount` pada AML) menjadi `(11/12) * commercial_dpp` serta `total_included = commercial_dpp + PPN 11%`, memastikan Odoo ORM menghasilkan angka faktur yang identik dengan `invoices.csv` secara native tanpa drift.
   - Bump versi manifest `addons/id_base/__manifest__.py` ke `19.0.1.3.2`.
 - `addons/id_base/models/account_move.py`:
   - Menggeneralisasi guard `_is_seed_commercial_invoice_with_posted_delivery_cogs()` agar memvalidasi batch periodik (`PERIOD_*` dan `CANONICAL_*`) serta sales order kanonikal (`SO-2026*`), memungkinkan faktur operasional Agustus mempertahankan `is_fmcg_seed_invoice = True` sembari membuktikan kontrol delivery dan supresi duplikasi HPP/COGS setara dengan baseline Juli.

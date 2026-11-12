@@ -44,32 +44,9 @@ class AccountTax(models.Model):
             return super()._eval_tax_amount_price_included(batch, raw_base, evaluation_context)
         return super()._eval_tax_amount_price_included(batch, raw_base, evaluation_context)
 
-    def _get_tax_details(
-        self,
-        price_unit,
-        quantity,
-        precision_rounding=0.01,
-        rounding_method="round_per_line",
-        product=None,
-        product_uom=None,
-        special_mode=False,
-        manual_tax_amounts=None,
-        filter_tax_function=None,
-        document_tax_mode=None,
-    ):
+    def _get_tax_details(self, *args, **kwargs):
         """Memastikan data dasar pajak (tax_base_amount / base) dan tax_amount disesuaikan ke DPP Nilai Lain (11/12)."""
-        res = super()._get_tax_details(
-            price_unit,
-            quantity,
-            precision_rounding=precision_rounding,
-            rounding_method=rounding_method,
-            product=product,
-            product_uom=product_uom,
-            special_mode=special_mode,
-            manual_tax_amounts=manual_tax_amounts,
-            filter_tax_function=filter_tax_function,
-            document_tax_mode=document_tax_mode,
-        )
+        res = super()._get_tax_details(*args, **kwargs)
         if not isinstance(res, dict):
             return res
 
@@ -123,30 +100,9 @@ class AccountTax(models.Model):
 
         return res
 
-    def compute_all(
-        self,
-        price_unit,
-        currency=None,
-        quantity=1.0,
-        product=None,
-        partner=None,
-        is_refund=False,
-        handle_price_include=True,
-        include_caba_tags=False,
-        **kwargs,
-    ):
+    def compute_all(self, *args, **kwargs):
         """Override compute_all untuk menjamin integritas DPP Nilai Lain (11/12) dan PPN 12%."""
-        res = super().compute_all(
-            price_unit,
-            currency=currency,
-            quantity=quantity,
-            product=product,
-            partner=partner,
-            is_refund=is_refund,
-            handle_price_include=handle_price_include,
-            include_caba_tags=include_caba_tags,
-            **kwargs,
-        )
+        res = super().compute_all(*args, **kwargs)
         if not isinstance(res, dict) or "taxes" not in res:
             return res
 
