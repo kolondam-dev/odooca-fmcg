@@ -29,7 +29,7 @@ if [ "$(id -u)" = "0" ]; then
   fi
 fi
 
-INIT_MODULES="${INIT_MODULES:-id_base,id_approval,id_ui,id_ui_shell,id_ui_form,id_promo_governance,id_mobile_api,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,l10n_id,fleet,hr,uom,product_expiry,stock_account}"
+INIT_MODULES="${INIT_MODULES:-id_base,id_approval,id_ui,id_ui_shell,id_ui_form,id_promo_governance,id_mobile_api,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,l10n_id,fleet,hr,uom,product_expiry,stock_account,account_financial_report}"
 export PGHOST PGPORT PGUSER PGPASSWORD PGDATABASE
 case "$ODOO_DB_USER" in postgres) log "ODOO_DB_USER tidak boleh 'postgres'"; exit 1;; esac
 case "$ODOO_DB_USER$ODOO_DB_PASSWORD$PGDATABASE" in *\'*|*\"*|*\\*) log "kutip/backslash tidak diizinkan pada user, password, atau nama DB"; exit 1;; esac
@@ -156,6 +156,15 @@ if [ "$upgrade_modules" = "1" ] || ! has_mark install_dashboard_d1_v3; then
   log "install_dashboard_d1_v3: memasang atau mengupdate id_dashboard_redesign..."
   odoo_run -i id_dashboard_redesign -u id_dashboard_redesign --stop-after-init
   set_mark install_dashboard_d1_v3
+fi
+
+# 4c. Pasang laporan keuangan OCA pada database yang sudah berjalan.
+# Modul sudah tersedia di image (oca.lock); blok bermark ini menginstalnya tanpa
+# FORCE_UPGRADE dan tanpa meng-upgrade seluruh INIT_MODULES.
+if ! has_mark install_account_financial_report_v1; then
+  log "install_account_financial_report_v1: memasang account_financial_report..."
+  odoo_run -i account_financial_report --stop-after-init
+  set_mark install_account_financial_report_v1
 fi
 
 # Mark the upgrade complete only after D1 has reclaimed the sales action.
