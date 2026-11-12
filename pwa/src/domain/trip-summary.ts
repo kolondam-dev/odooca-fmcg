@@ -46,5 +46,13 @@ export function tripMoney(
                 payloadOf(q).scheduled_date === businessDate,
         )
         .reduce((a, q) => a + money(payloadOf(q).amount), 0);
-    return { cash: by("cash"), transfer: by("transfer"), cost };
+    const cashReceiptUuids = receipts
+        .filter((q) => payloadOf(q).method === "cash")
+        .map((q) => q.command.client_uuid);
+    return {
+        cash: by("cash"),
+        transfer: by("transfer"),
+        cost,
+        cashReceiptUuids,
+    };
 }

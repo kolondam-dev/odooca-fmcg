@@ -3,6 +3,11 @@ import { MockProvider } from "../../src/data/mock";
 import "fake-indexeddb/auto";
 (globalThis as Record<string, unknown>).__DEMO__ = true;
 const actors = new WeakMap<Page, string>();
+const legacyServers = new WeakSet<Page>();
+/** Simulasikan server tanpa kapabilitas baru (`features` tidak dikirim) pada halaman ini. */
+export function useLegacyServer(page: Page) {
+    legacyServers.add(page);
+}
 export async function changeTestAccount(page: Page, actor: string) {
     actors.set(page, actor);
     if (await page.evaluate(() => navigator.onLine))
@@ -158,6 +163,7 @@ export const test = base.extend({
             await route.fulfill({
                 json: {
                     ...snapshot,
+                    ...(legacyServers.has(page) ? { features: undefined } : {}),
                     updatedAt: now,
                     scope: { ...snapshot.scope, business_date: date },
                     office: {

@@ -1,4 +1,5 @@
 import { VisitPhotoField } from "./VisitPhotoField";
+import { BiayaTokoScreen } from "./BiayaTokoScreen";
 import { CloseVisitScreen } from "./CloseVisitScreen";
 import { EvidenceCapture } from "./Evidence";
 import { CheckinMap } from "./CheckinMap";
@@ -35,6 +36,8 @@ export function VisitPanel({
     changed,
     order,
     display,
+    snapshot,
+    submit,
     dialogType,
     finishSignal = 0,
     back,
@@ -48,6 +51,13 @@ export function VisitPanel({
     changed: () => void;
     order: () => void;
     display: () => void;
+    snapshot: Snapshot;
+    submit: (
+        type: "field_expense.request",
+        payload: Record<string, unknown>,
+        label: string,
+        keepOpen?: boolean,
+    ) => Promise<unknown>;
     /** Jenis dialog yang sedang terbuka; berubah saat layar Display/Order menutup. */
     dialogType?: string;
     /** Naik setiap kali Hasil kirim meminta lanjut ke Selesai kunjungan. */
@@ -55,6 +65,7 @@ export function VisitPanel({
     back: () => void;
 }) {
     const [sheet, setSheet] = useState(false);
+    const [cost, setCost] = useState(false);
     const [displayDone, setDisplayDone] = useState(false);
     useEffect(() => {
         if (finishSignal > 0) setSheet(true);
@@ -520,6 +531,14 @@ export function VisitPanel({
                     onClick={canOrder ? order : undefined}
                 />
             </Card>
+            <Card tight>
+                <ListRow
+                    icon="receipt"
+                    title="Biaya toko"
+                    sub="Parkir, kuli bongkar, retribusi · scope toko"
+                    onClick={() => setCost(true)}
+                />
+            </Card>
             {info?.selected?.check_in_evidence && (
                 <details class="visit-photo-history">
                     <summary>Bukti foto check-in tersimpan</summary>
@@ -545,6 +564,17 @@ export function VisitPanel({
                 </details>
             )}
             {errorNote}
+            {cost && (
+                <BiayaTokoScreen
+                    snapshot={snapshot}
+                    outlet={outlet}
+                    businessDate={info?.active?.context.business_date ?? ""}
+                    owner={owner}
+                    store={store}
+                    submit={submit}
+                    close={() => setCost(false)}
+                />
+            )}
             {sheet && !closed && (
                 <CloseVisitScreen
                     outlet={outlet}

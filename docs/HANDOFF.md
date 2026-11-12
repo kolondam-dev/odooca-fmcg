@@ -26,6 +26,14 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow install-test disposable runtime proof F4.
 
+## 2026-11-11T23:52:54+07:00 — claude-design (Claude-Dev1) — PR #118: Biaya toko idempoten lintas buka-ulang/muat-ulang (review #5859275471)
+
+- Akar masalah: status retry hanya di `useRef` sehingga hilang saat formulir ditutup/dimuat ulang, dan nominal yang bisa diedit membuat submit kedua menghasilkan UUID baru -> duplikat.
+- Perbaikan: rencana batch (`batch_id` + UUID tetap per komponen + payload) disimpan ke draft lokal SEBELUM kirim; antrean outbox menjadi sumber kebenaran komponen mana yang sudah masuk; `submitPending` hanya mengirim yang belum ada di antrean; draft dihapus setelah semua komponen masuk.
+- UI: saat rencana tertunda dibuka ulang, isian read-only + callout, tombol menjadi 'Lanjutkan simpan biaya'.
+- `App.submit` menerima UUID opsional (diteruskan ke `engine.enqueue`).
+- Tes: unit retry + tes integrasi FieldStore/Outbox nyata (gagal komponen ke-2, tutup store, buka ulang, tepat satu entri per komponen). Backend tidak berubah.
+
 ## 2026-11-11T23:20:00+07:00 — antigravity — F4: Eliminasi Koreksi SQL Pascaposting, Penegakan Pajak Native & Pemulihan Penuh Histori HANDOFF (Review #5860849497) (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**
@@ -102,6 +110,16 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
 
+## 2026-11-11T19:48:31+07:00 — claude-design (Claude-Dev1) — PR #118: perbaikan review Setor uang + Biaya toko
+
+**Berubah:** P1 Biaya toko idempoten saat retry (`domain/outlet-expense.ts` `submitPending`: komponen yang sudah masuk antrean dilewati; tes unit kegagalan di komponen kedua → satu entri per komponen). P2 `CashDepositSchema.evidence` memakai `LocalExpenseEvidenceSchema` (`true` dan objek kosong ditolak); e2e Setor uang lewat UI: bukti kosong, selisih tanpa catatan, tersimpan, dan flag mati (fixture `useLegacyServer`). Merge `origin/main` (konflik hanya HANDOFF); openapi diekspor ulang.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 477, e2e phone+tablet 192 lulus. **Belum diuji:** [BU] CI pada HEAD hasil integrasi.
+
+## 2026-11-11T19:09:55+07:00 — claude-design (Claude-Dev1) — Fase 3B-4: Setor uang + Biaya toko (terkunci flag)
+
+**Berubah:** layar Setor uang (dari layar Akhiri trip) dan Biaya toko (dari kunjungan aktif) sesuai mockup; kontrak USULAN `delivery.cash_deposit.submit` (`domain/cash-deposit.ts`), kategori `store_*` scope outlet; flag server `features.cash_deposit_v1` / `outlet_expense_v1` (mock demo ON, LIVE tidak ada = tombol kirim terkunci + callout). openapi diekspor ulang; tes unit + e2e `store-expense`. K18 di DS_RECONCILIATION memuat kontrak usulan dan syarat sebelum flag ON.
+**Diverifikasi:** [F] format, tsc, contracts:check, vitest 476, e2e phone+tablet 188 lulus. **Belum diuji:** [BU] CI, e2e Setor uang lewat UI (hanya tes unit skema), backend.
+**Utang backend:** handler kedua perintah/kategori, validasi receipt_uuids, approval biaya toko; foto nota per komponen dan Foto penutup trip.
 ## 2026-11-11T19:04:48+07:00 — Codex-Dashboard — Scroll dan drill-down peta D1
 
 **Berubah:** Kontainer aksi D1 dapat digulir. Peta dan ranking mengikuti kabupaten/kota → kecamatan → kelurahan/desa, dengan tombol kembali satu tingkat. Ranking memakai periode, filter, dan akses penjualan D1.
