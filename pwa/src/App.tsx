@@ -495,6 +495,7 @@ function Workspace({
         payload: Record<string, unknown>,
         label: string,
         keepOpen?: boolean,
+        uuid?: ReturnType<typeof crypto.randomUUID>,
     ) {
         if (type.startsWith("sales.")) {
             if (!dailyReady)
@@ -514,7 +515,7 @@ function Workspace({
                       payload,
                       await captureVisitLocation(),
                   )
-                : await engine.enqueue(type, payload, label);
+                : await engine.enqueue(type, payload, label, uuid);
         if (!keepOpen) setDialog(undefined);
         setToast(
             "Tersimpan di perangkat. " +
@@ -697,6 +698,8 @@ function Workspace({
                                                 if (navigator.onLine)
                                                     void engine.flush();
                                             }}
+                                            snapshot={snapshot}
+                                            submit={submit}
                                             order={() => openOrder(visitOutlet)}
                                             display={() =>
                                                 setDialog({
@@ -755,6 +758,8 @@ function Workspace({
                                     queue={queue}
                                     engine={engine}
                                     changed={() => void refresh()}
+                                    snapshot={snapshot}
+                                    submit={submit}
                                 />
                                 <CollectionWorkspace
                                     key={owner}

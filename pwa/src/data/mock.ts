@@ -217,7 +217,12 @@ export class MockProvider implements FieldProvider {
                     stock: 40,
                 },
             ],
-            features: { order_pricing_v2: true, field_expense_v2: true },
+            features: {
+                order_pricing_v2: true,
+                field_expense_v2: true,
+                cash_deposit_v1: true,
+                outlet_expense_v1: true,
+            },
             extra_call_outlets: [
                 {
                     id: "demo-extra-1",
@@ -400,6 +405,7 @@ export class MockProvider implements FieldProvider {
             "sales.order.revise",
             "delivery.pod.submit",
             "collection.receipt.submit",
+            "delivery.cash_deposit.submit",
             "field_expense.request",
             "field_expense.realization.submit",
             "sales.extra_call.request",
