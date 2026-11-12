@@ -1,3 +1,22 @@
+## 2026-11-12T10:10:00+07:00 — antigravity — F4: Perbaikan Atribut Loader Period & Unit Test Batch Formatting (Branch: agen/seed-f4-period-pack-loader)
+
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menginisialisasi `self.period = self.manifest.period` pada `GenericPeriodPackLoader.__init__()`. Menghilangkan `AttributeError: 'GenericPeriodPackLoader' object has no attribute 'period'` yang memicu kegagalan runtime saat menetapkan `so_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"` dan `inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"`.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit test `test_loader_period_attribute_and_batch_naming` yang memverifikasi atribut `loader.period` dan format penamaan batch `PERIOD_2026-08`. Total 52 unit tests PASS.
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 52/52 tests PASS (21.9s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] CI `Full Dataset Runtime Verification` (Run 43142947296): PASS (27m15s).
+- [F] CI `Upgrade Runtime Verification` (Run 43142947286): PASS (14m46s).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow install-test disposable runtime proof F4.
+
 ## 2026-11-12T09:30:00+07:00 — antigravity — F4: Komputasi Pajak Kode 04 Native PMK 131/2024 & Restorasi Guard Seed Faktur Agustus (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

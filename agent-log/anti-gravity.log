@@ -2498,3 +2498,9 @@
 - Mengeliminasi `TypeError: AccountTax._get_tax_details() got an unexpected keyword argument 'document_tax_mode'` yang muncul pada runner CI container Odoo 19 saat pemanggilan purchase_stock `_prepare_stock_moves`.
 - Verifikasi Penuh: pytest test_period_pack_loader (51/51 PASS); ruff check PASS clean; check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-12T09:40:00+07:00
+
+[2026-11-12T10:10:00+07:00] [INFO] F4: Perbaikan Atribut Loader Period & Unit Test Batch Formatting
+- Perbaikan AttributeError pada GenericPeriodPackLoader: Menginisialisasi `self.period = self.manifest.period` pada `__init__` GenericPeriodPackLoader (`scripts/ops/load_period_pack.py`). Mengeliminasi crash `AttributeError: 'GenericPeriodPackLoader' object has no attribute 'period'` pada penamaan batch `fmcg_seed_batch = f"PERIOD_{self.period}"` saat SO/DO dan invoice creation.
+- Menambahkan Unit Test: `test_loader_period_attribute_and_batch_naming` pada `tests/test_period_pack_loader.py` yang memvalidasi ketersediaan `loader.period` serta kesesuaian format batch `PERIOD_2026-08`.
+- Verifikasi Penuh: pytest test_period_pack_loader (52/52 PASS); ruff check PASS clean; check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-12T10:10:00+07:00

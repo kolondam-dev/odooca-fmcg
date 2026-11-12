@@ -323,6 +323,7 @@ class GenericPeriodPackLoader:
 
         # 1. Manifest verification
         self.manifest = PeriodPackManifest(self.pack_dir)
+        self.period = self.manifest.period
         self.manifest.verify_checksums(strict=strict)
         self.reader = reader or PeriodPackReader(self.pack_dir)
 

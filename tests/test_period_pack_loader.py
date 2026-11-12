@@ -1714,6 +1714,15 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         expected_total = commercial_dpp + expected_ppn
         self.assertAlmostEqual(expected_total, 394804.80, places=2)
 
+    def test_loader_period_attribute_and_batch_naming(self):
+        """Verify loader exposes period attribute and correct PERIOD_ batch formatting."""
+        env = MockEnv({})
+        loader = GenericPeriodPackLoader(env, AUG_PACK_DIR, dry_run=True, strict=True)
+        self.assertEqual(loader.period, "2026-08")
+        self.assertEqual(loader.manifest.period, "2026-08")
+        expected_batch = f"PERIOD_{loader.period}"
+        self.assertEqual(expected_batch, "PERIOD_2026-08")
+
 
 if __name__ == "__main__":
     unittest.main()
