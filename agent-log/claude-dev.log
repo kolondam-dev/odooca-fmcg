@@ -398,3 +398,11 @@
 - Verifikasi lokal: 106 tes finance PASS; ruff PASS; check_manifests PASS (14 addon).
 - [BU] Native untuk kasus kandidat-ganda belum (butuh rekonsiliasi manual berganda); pin FIN37 belum; data FX non-sintetis belum. Tidak ada deploy/mutasi DB live. REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA.
 - Task managed by Agent-Opencode at 2026-11-11T18:51:40+07:00
+[2026-11-12T08:24:55+07:00] [INFO] I2c/1.1: pin account_invoice_start_end_dates untuk bukti alokasi FIN37
+- oca.lock + account-closing 19.0 8ce0077f...; profil CI reports + account_invoice_start_end_dates; verify script mewajibkan modul terpasang.
+- Fixture native baru: 310.000 (01-31 Juli) -> 150.000 terpengenal pada 15 Juli, sisa 160.000; 30.000 (Juni tutup) -> penuh; 9.000 tanpa tanggal -> exception missing_schedule_metadata hanya untuk baris itu.
+- Counterexample constraint modul (hanya satu tanggal, start>end) -> ValidationError pada create; tiap percobaan dalam savepoint sehingga tidak masuk ledger.
+- Fail-closed A/B (tanpa tanggal) kini dijalankan selalu, bukan hanya saat modul tidak terpasang.
+- Bukti lokal: oracle dan helper produksi identik pada 15/31 Juli dan 31 Agustus (bucket bulanan vs prorata harian untuk jendela satu bulan); ruff PASS; check_manifests PASS (14 addon); 106 tes finance PASS.
+- [BU] Native exact-SHA menunggu CI PR ini; FIN38 non-sintetis tetap terbuka; REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA. Tidak ada deploy/mutasi DB live; INIT_MODULES tidak berubah.
+- Task managed by Agent-Opencode at 2026-11-12T08:24:55+07:00
