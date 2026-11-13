@@ -20,6 +20,7 @@ import {
 import { DeliveryTaskEditor } from "./DeliveryTaskEditor";
 import type { ExpenseSubmit } from "./BiayaTokoScreen";
 import type { Snapshot } from "../domain/contracts";
+import { businessRejected } from "../domain/outbox-state";
 import { useBackLayer } from "../ui/navigation";
 import {
     Button,
@@ -99,10 +100,13 @@ export function DeliveryWorkspace({
             active = false;
         };
     }, [owner, cache]);
-    /** DO selesai hanya bila POD di antrean bersumber manifest yang sama (bukan sisa hari/manifest lain). */
+    /**
+     * DO selesai hanya bila ada POD di antrean yang bersumber manifest sama (bukan sisa hari/manifest lain)
+     * dan tidak ditolak server. POD ditolak masih butuh koreksi; koreksi valid (anak) baru menghitung selesai.
+     */
     const sources = new Set(
         queue.flatMap((r) =>
-            r.command.type === "delivery.pod.submit"
+            r.command.type === "delivery.pod.submit" && !businessRejected(r)
                 ? [JSON.stringify(r.command.payload.source)]
                 : [],
         ),

@@ -1,3 +1,9 @@
+## 2026-11-13T10:15:16+07:00 — claude-design (Claude-Dev1) — PR #124: POD ditolak server tidak lagi dihitung selesai (review #5885182618)
+
+- Akar masalah: `DeliveryWorkspace.isDone` mencocokkan sumber manifest tetapi ikut menghitung entri outbox `rejected`; progres trip naik dan tombol check-in melompati toko yang PODnya masih perlu koreksi.
+- Perbaikan: entri `businessRejected` dikecualikan; koreksi valid (anak, sumber sama) yang menghitung selesai. POD menunggu sinkronisasi tetap dihitung (perilaku offline tidak berubah).
+- Tes: `delivery.spec` (phone+tablet) memeriksa 0/2 setelah penolakan, toko tetap 'Berikutnya' dan koreksi terjangkau, lalu 1/2 setelah koreksi.
+
 ## 2026-11-13T08:50:36+07:00 — claude-design (Claude-Dev1) — Fase 3B-5: Delivery (49–51) dan POD (53–56) mengikuti DS
 
 - Alur baru: daftar DO -> daftar toko -> check-in -> hub toko -> serah terima (Terima semua/Sebagian/Tolak) -> hasil POD; Biaya toko dibuka dari hub.

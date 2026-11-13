@@ -1,6 +1,7 @@
 import { switchPersona } from "./delivery-helpers";
 import { syncNow, activity, openActivity } from "./visit-helpers";
 import {
+    backFromTask,
     closeDeliveryScreens,
     ensureDaily,
     openDeliveryTask,
@@ -152,6 +153,22 @@ test("business rejection opens offline correction draft and preserves immutable 
     await expect(
         task.getByRole("button", { name: "Koreksi POD ditolak" }),
     ).toBeVisible();
+    // Dua toko dalam satu trip: POD ditolak server tidak menghitung selesai; koreksi tetap terjangkau.
+    const trip = page.getByRole("button", { name: /^Buka TRIP/ });
+    await expect(trip).toContainText("0/2 toko selesai");
+    await backFromTask(page);
+    await expect(
+        page.getByRole("button", { name: /^Check-in toko · / }),
+    ).toContainText("Toko Sinar Pagi");
+    await expect(
+        page
+            .getByRole("region", { name: /^Daftar toko / })
+            .getByText("Berikutnya", { exact: true }),
+    ).toHaveCount(1);
+    task = await openDeliveryTask(page, "DEMO-DO-001");
+    await expect(
+        task.getByRole("button", { name: "Koreksi POD ditolak" }),
+    ).toBeVisible();
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
@@ -183,6 +200,8 @@ test("business rejection opens offline correction draft and preserves immutable 
     await expect(
         task.getByText("Riwayat POD (2)", { exact: true }),
     ).toBeVisible();
+    // Koreksi valid (anak) menghitung selesai; induk ditolak tidak dihitung ganda.
+    await expect(trip).toContainText("1/2 toko selesai");
     await expect(
         task.getByRole("button", { name: "Koreksi POD ditolak" }),
     ).toHaveCount(0);

@@ -260,3 +260,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-13T08:50:37+07:00] [INFO] Fase 3B-5: Delivery dan POD mengikuti DS
 - - Alur DO->toko->check-in->hub->serah terima; utang K19; backend tidak berubah
 - Task managed by claude-design agent at 2026-11-13T08:50:37+07:00
+
+[2026-11-13T10:15:16+07:00] [INFO] PR #124: POD ditolak tidak dihitung selesai
+- - isDone mengecualikan businessRejected; tes 0/2 -> 1/2
+- Task managed by claude-design agent at 2026-11-13T10:15:16+07:00
