@@ -118,7 +118,7 @@ class TestNativeFmcgFefo(TransactionCase):
         ])
         Quant = self.env["stock.quant"]
         for lot in lots:
-            Quant._update_available_quantity(product, location, 10, lot_id=lot.id)
+            Quant._update_available_quantity(product, location, 10, lot_id=lot)
 
         move = self.env["stock.move"].create({
             "name": "FMCG FEFO Reservation Test",
@@ -159,6 +159,7 @@ class TestNativeFmcgFefo(TransactionCase):
             "name": "LOT-FEFO-LOADER-BACKFILL",
             "product_id": product.id,
             "company_id": self.company.id,
+            "expiration_date": False,
         })
 
         adapter = object.__new__(CanonicalPerpetualAdapter)
