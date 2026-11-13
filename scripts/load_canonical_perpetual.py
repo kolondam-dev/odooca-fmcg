@@ -1223,6 +1223,9 @@ class CanonicalPerpetualAdapter:
                             lot_vals["expiration_date"] = exp_date
                         lot_obj = StockLot.create(lot_vals)
 
+                if lot_obj and exp_date:
+                    self._ensure_lot_expiry(lot_obj, exp_date)
+
                 sku_demands["lots"][lot_num] = {
                     "qty_units": qty_units,
                     "expiry_date": exp_date,
