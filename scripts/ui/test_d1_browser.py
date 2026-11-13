@@ -192,6 +192,11 @@ with sync_playwright() as playwright:
     page.locator(".o_data_row").first.wait_for()
     check("D1 QA" in page.locator("body").inner_text(), "Scoped drill opens native order lines")
     capture(page, "scoped-native-drill-1440")
+    page.get_by_role("link", name="Sales Performance & Salesforce Productivity").click()
+    page.locator(".id-dashboard-controls[data-query]").wait_for()
+    restored = json.loads(page.locator(".id-dashboard-controls").get_attribute("data-query"))
+    check(restored["period"] == applied["period"], "D1 breadcrumb restores the applied period")
+    check(len(restored["filters"]["sku"]["ids"]) == 1, "D1 breadcrumb restores the SKU filter")
     if expectations := os.environ.get("D1_EXPECTATIONS_FILE"):
         evidence = json.loads(Path(expectations).read_text())
         wanted = evidence["expected"]
