@@ -1,7 +1,22 @@
+import importlib.util
+from pathlib import Path
+
 from odoo import fields
 from odoo.tests.common import TransactionCase
 
-from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter
+
+def _load_canonical_perpetual_adapter():
+    # Dockerfile installs repository scripts under /opt/scripts, outside sys.path.
+    script_path = Path(__file__).resolve().parents[2].parent / "scripts" / "load_canonical_perpetual.py"
+    spec = importlib.util.spec_from_file_location("fmcg_canonical_perpetual_loader", script_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load canonical perpetual loader from {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.CanonicalPerpetualAdapter
+
+
+CanonicalPerpetualAdapter = _load_canonical_perpetual_adapter()
 
 
 class TestNativeFmcgFefo(TransactionCase):
