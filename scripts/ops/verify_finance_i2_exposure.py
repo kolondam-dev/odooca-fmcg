@@ -6,6 +6,7 @@ services covered by I2a/I2b/I2c already have numeric oracles; this script only
 proves the part those oracles cannot see:
 
 * every custom report type can actually be executed from the UI entry point;
+* stored report markup is sanitized server-side even on a direct ORM write;
 * the actions, menus and views needed to open it exist;
 * an accounting reader can run them, while Sales and Driver cannot.
 
@@ -211,6 +212,41 @@ def check_roles(env, company):
     return evidence
 
 
+def check_html_sanitization(env, company):
+    """A direct ORM write must not persist active markup for a Finance Reader.
+
+    ``readonly`` only locks the form widget, and the Accounting Readonly group
+    holds create/write on this transient model, so the field itself must
+    sanitize. The report preview must still keep its whitelisted table tags.
+    """
+    _user, reader = actor(env, "html_reader", company, ["account.group_account_readonly"])
+    field = env["id.finance.report.wizard"]._fields["result_html"]
+    require(getattr(field, "sanitize", False) is True, "result_html must sanitize stored markup")
+
+    record = wizard(reader, company, "audit_trail", {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+    markup = (
+        "<script>alert('xss')</script>"
+        "<img src=x onerror=\"alert('xss')\">"
+        "<a href=\"javascript:alert('xss')\">go</a>"
+        "<table class=\"table\"><tbody><tr><td>report-cell</td></tr></tbody></table>"
+    )
+    record.write({"result_html": markup})
+    record.invalidate_recordset(["result_html"])
+    stored = (record.result_html or "").lower()
+    for needle in ("<script", "onerror", "javascript:"):
+        require(needle not in stored, f"Sanitizer kept active markup: {needle}")
+    require("<table" in stored, "Sanitizer removed the report table")
+    require("report-cell" in stored, "Sanitizer removed the report cell text")
+
+    preview = wizard(reader, company, "audit_trail", {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+    preview.action_run()
+    require("<table" in (preview.result_html or "").lower(), "Reader preview lost its report table")
+    return [
+        {"case": "reader_direct_write_sanitized", "result": "PASS"},
+        {"case": "reader_preview_keeps_table", "result": "PASS"},
+    ]
+
+
 def run(env):
     require(env.cr.dbname == DISPOSABLE_DB, "Exposure evidence requires the exact disposable reports database")
     companies_before = set(env["res.company"].search([]).ids)
@@ -223,6 +259,7 @@ def run(env):
             company = fixture[0]
             evidence["runs"] = check_wizard_runs(env, company)
             evidence["roles"] = check_roles(env, company)
+            evidence["sanitization"] = check_html_sanitization(env, company)
             raise RollbackFixture()
     except RollbackFixture:
         env.invalidate_all()

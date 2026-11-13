@@ -136,7 +136,12 @@ class FinanceReportWizard(models.TransientModel):
     )
 
     result_summary = fields.Char(readonly=True)
-    result_html = fields.Html(readonly=True, sanitize=False)
+    # Stored markup is sanitized server-side: ``readonly`` only locks the UI, and
+    # the Accounting Readonly group has create/write on this transient model.
+    # Keeping ``sanitize=True`` means a direct ORM write cannot persist active
+    # markup, while the whitelisted report tags (div/table/thead/tbody/tr/th/td/
+    # p/pre) still render.
+    result_html = fields.Html(readonly=True, sanitize=True)
     result_json = fields.Text(readonly=True)
     generated_at = fields.Datetime(readonly=True)
 

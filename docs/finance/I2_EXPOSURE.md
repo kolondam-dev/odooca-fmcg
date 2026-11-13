@@ -43,6 +43,12 @@ Versi: `id_finance_reporting` `19.0.1.4.0`, `id_finance_foundation`
   ditampilkan, bukan disamarkan sebagai angka penuh.
 - **Semua teks di-escape.** Pratinjau memakai `html.escape`; tidak ada HTML
   dari data pengguna yang dirender mentah.
+- **Markup disanitasi di server.** `result_html` memakai `sanitize=True`.
+  `readonly=True` hanya mengunci widget, sementara grup Accounting Readonly
+  punya create/write pada model transient ini; tanpa sanitasi, penulisan
+  langsung lewat ORM bisa menyimpan `<script>`/`onerror`. Tag laporan
+  (`div`, `table`, `thead`, `tbody`, `tr`, `th`, `td`, `p`, `pre`) tetap
+  diizinkan sehingga tabel tidak hilang.
 - **Tanpa data rekaan.** Laporan yang sumbernya kosong menampilkan "No rows.",
   bukan nol atau angka pengganti.
 
@@ -68,6 +74,14 @@ Keluaran CI (`FINANCE_I2_EXPOSURE`): 8/8 `wizard_run_*` PASS, 9/9
 `sales_service_denied`, `driver_wizard_denied`, `driver_service_denied`,
 `reader_foreign_company_denied` semuanya `ACCESS_DENIED`, dan
 `fixture_rollback` PASS.
+
+Bukti sanitasi (`sanitization`) pada review #5886476944:
+
+- `reader_direct_write_sanitized` — Finance Reader menulis `<script>`,
+  `onerror`, dan `href="javascript:"` langsung lewat ORM; hasil baca tidak
+  memuat ketiganya.
+- `reader_preview_keeps_table` — hasil laporan yang sah tetap memuat
+  `<table>`, jadi sanitasi tidak memotong tampilan.
 
 Satu kegagalan pada percobaan pertama: `ir.ui.menu.groups_id` sudah berganti
 nama menjadi `group_ids` di Odoo 19; skrip diperbaiki (`34452fe`) dan run
