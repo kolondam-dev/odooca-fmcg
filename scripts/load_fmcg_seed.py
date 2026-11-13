@@ -309,9 +309,15 @@ def load_products():
 
             prod = ProductTemplate.search([("default_code", "=", code)], limit=1)
             if prod:
-                prod.write(vals)
+                # Existing inventory UoM is immutable from the seed loader's perspective.
+                # Validate before ANY product write, then omit uom_id from the update payload.
+                prod.assert_fmcg_seed_inventory_uom(uom_unit)
+                update_vals = dict(vals)
+                update_vals.pop("uom_id", None)
+                prod.write(update_vals)
                 count_updated += 1
             else:
+                # New SKU starts with the canonical inventory UoM.
                 prod = ProductTemplate.create(vals)
                 count_created += 1
 
