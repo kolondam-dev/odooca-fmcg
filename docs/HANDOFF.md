@@ -1,3 +1,20 @@
+## 2026-11-13T16:15:00+07:00 — antigravity — F4: Penyelarasan Tanggal Move Efektif Pasca-Validasi & Koreksi Healthcheck Postgres CI (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Mengimplementasikan penulisan tanggal efektif historis pasca-validasi pada `_validate_picking_safely()`: Odoo 19 secara native menimpa `date_done`, `scheduled_date`, `stock.move.date`, dan `stock.move.line.date` dengan waktu berjalan saat ini (`fields.Datetime.now()`) pada saat `button_validate()`. Loader kini menyelaraskan kembali tanggal efektif historis (`date_time_str`) pada picking, move, dan move line segera setelah status picking mencapai `done`.
+  - Pada `_sync_native_stock_accounting()`, memastikan tanggal pada pergerakan stok (`stock.move.date`) secara persisten selaras dengan tanggal akuntansi entri valuasi (`account.move.date`).
+  - Pada `_apply_invoices()`, menambahkan pengecekan pra-posting faktur yang memverifikasi seluruh underlying moves pengiriman terhubung ke jurnal valuasi STJ dan memiliki tanggal yang identik dengan jurnal valuasi HPP terkait, sehingga mengeliminasi error guard `[id_base] Tanggal jurnal valuasi '2026-08-01' tidak cocok dengan tanggal pergerakan stok '2026-11-13'!`.
+- `.github/workflows/ci.yml` & `.github/workflows/finance-i0-spike.yml`:
+  - Memperbarui perintah health-check service container PostgreSQL dari `pg_isready -U odoo` menjadi `pg_isready -U odoo -d postgres`. Menghilangkan log berulang `FATAL: database "odoo" does not exist` yang membanjiri log container PostgreSQL pada setiap run CI.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS (27.0s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-13T16:15:00+07:00
+
 ## 2026-11-13T12:15:00+07:00 — antigravity — F4: Sinkronisasi Jurnal Valuasi Native Anglo-Saxon & Relasi Move Akuntansi (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

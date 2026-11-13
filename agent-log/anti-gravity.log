@@ -2555,3 +2555,23 @@
   * python -m ruff check .: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-13T12:15:00+07:00
+
+[2026-11-13T16:15:00+07:00] [INFO] F4: Penyelarasan Tanggal Move Efektif Pasca-Validasi & Koreksi Healthcheck Postgres CI
+- Resolusi Kegagalan CI install-test (Run 43371179989):
+  * Analisis Log Menyeluruh vs Log Postgres Healthcheck:
+    - Log container service PostgreSQL mencatat ribuan baris `FATAL: database "odoo" does not exist` setiap 5 detik. Hal ini disebabkan oleh `ci.yml` dan `finance-i0-spike.yml` mendefinisikan `POSTGRES_DB: postgres` tetapi menggunakan health-check command `pg_isready -U odoo` (yang secara default mencari database bernama sama dengan user, yakni `odoo`). Ini merupakan noise service container yang dibuang Docker ke log pada akhir job, bukan penyebab utama kegagalan langkah CI.
+    - Telah diperbaiki dengan menambahkan parameter database `-d postgres` (`pg_isready -U odoo -d postgres`) pada `.github/workflows/ci.yml` dan `.github/workflows/finance-i0-spike.yml`.
+  * Akar Masalah Sesungguhnya pada Langkah F4:
+    - Langkah `F4 Generic period pack loader runtime proof` gagal dengan exit code 1 pada baris 12877: `odoo.exceptions.UserError: [id_base] Tanggal jurnal valuasi '2026-08-01' tidak cocok dengan tanggal pergerakan stok '2026-11-13'!`.
+    - Mekanisme Internal Odoo 19: Pada saat `pick.button_validate()` dijalankan, Odoo 19 secara native menimpa `pick.date_done`, `pick.scheduled_date`, `stock.move.date`, dan `stock.move.line.date` dengan waktu berjalan saat ini (`fields.Datetime.now()`, yaitu `2026-11-13`).
+    - Karena sebelumnya penyelarasan tanggal loader dilakukan sebelum validasi, nilai `sm.date` tereset kembali ke `2026-11-13`. Sementara itu entri jurnal valuasi `cogs_am` diposting dengan tanggal akuntansi `2026-08-01`. Saat `inv_rec.action_post()` dipanggil, guard `id_base` mendeteksi ketidakcocokan antara tanggal jurnal HPP dan tanggal pergerakan stok.
+  * Solusi Implementasi:
+    - Menambahkan penulisan tanggal efektif historis (`date_time_str`) pada `pick`, `pick.move_line_ids`, dan `pick.move_ids` segera setelah `pick.button_validate()` mencapai status `done` pada `_validate_picking_safely()`.
+    - Memastikan `_sync_native_stock_accounting()` menyelaraskan `stock_move.date` ke tanggal target akuntansi.
+    - Menambahkan verifikasi dan penyelarasan defensif tanggal pergerakan stok DO sebelum `inv_rec.action_post()` pada `_apply_invoices()`.
+- Verifikasi Penuh:
+  * python -m unittest tests/test_period_pack_loader.py: 54/54 tests PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-13T16:15:00+07:00

@@ -2033,17 +2033,17 @@ class GenericPeriodPackLoader:
         if not pick:
             return
 
-        if getattr(pick, "state", "") != "done":
-            date_str = effective_date or getattr(pick, "scheduled_date", None)
-            date_only = str(date_str)[:10] if date_str else None
-            date_time_str = (
-                f"{date_only} 00:00:00"
-                if (date_only and len(str(date_str)) <= 10)
-                else str(date_str)
-                if date_str
-                else None
-            )
+        date_str = effective_date or getattr(pick, "scheduled_date", None) or getattr(pick, "date_done", None)
+        date_only = str(date_str)[:10] if date_str else None
+        date_time_str = (
+            f"{date_only} 00:00:00"
+            if (date_only and len(str(date_str)) <= 10)
+            else str(date_str)
+            if date_str
+            else None
+        )
 
+        if getattr(pick, "state", "") != "done":
             if date_time_str:
                 if hasattr(pick, "scheduled_date") and callable(getattr(pick, "write", None)):
                     try:
@@ -2134,6 +2134,49 @@ class GenericPeriodPackLoader:
                 f"gagal mencapai state 'done'! Status aktual: '{getattr(pick, 'state', 'unknown')}'"
             )
 
+        # Selaraskan tanggal efektif historis pada picking, move, move_line pasca-validasi
+        if date_time_str:
+            if callable(getattr(pick, "write", None)):
+                try:
+                    pick.write({"date_done": date_time_str, "scheduled_date": date_time_str})
+                except Exception as e:
+                    _logger.warning(f"post-validation write picking date non-fatal: {e}")
+            elif hasattr(pick, "date_done"):
+                try:
+                    pick.date_done = date_time_str
+                except Exception:
+                    pass
+
+            if hasattr(pick, "move_line_ids") and pick.move_line_ids:
+                if callable(getattr(pick.move_line_ids, "write", None)):
+                    try:
+                        pick.move_line_ids.write({"date": date_time_str})
+                    except Exception as e:
+                        _logger.warning(f"post-validation write move_line_ids date non-fatal: {e}")
+                else:
+                    for sml in _iter_records(pick.move_line_ids):
+                        if callable(getattr(sml, "write", None)):
+                            try:
+                                sml.write({"date": date_time_str})
+                            except Exception:
+                                pass
+
+            if hasattr(pick, "move_ids") and pick.move_ids:
+                for mv in pick.move_ids:
+                    if getattr(mv, "state", "") == "cancel":
+                        continue
+                    if callable(getattr(mv, "write", None)):
+                        try:
+                            mv.write({"date": date_time_str})
+                        except Exception as e:
+                            _logger.warning(f"post-validation write move date non-fatal: {e}")
+                    if hasattr(mv, "move_line_ids") and mv.move_line_ids:
+                        if callable(getattr(mv.move_line_ids, "write", None)):
+                            try:
+                                mv.move_line_ids.write({"date": date_time_str})
+                            except Exception:
+                                pass
+
         if hasattr(pick, "move_ids") and pick.move_ids:
             for sm in pick.move_ids:
                 sm_state = getattr(sm, "state", "")
@@ -2214,6 +2257,17 @@ class GenericPeriodPackLoader:
                         stock_move.account_move_id = primary_am
                     except Exception:
                         pass
+
+        # Pastikan tanggal pergerakan stok selaras dengan tanggal akuntansi
+        target_dt = date_time_str or (f"{date_only} 00:00:00" if date_only else None)
+        target_d = date_only or (str(date_time_str)[:10] if date_time_str else None)
+        if target_dt and callable(getattr(stock_move, "write", None)):
+            cur_sm_date = str(getattr(stock_move, "date", ""))[:10]
+            if cur_sm_date != target_d:
+                try:
+                    stock_move.write({"date": target_dt})
+                except Exception as e:
+                    _logger.warning(f"write date on stock.move in _sync_native_stock_accounting non-fatal: {e}")
 
         for am in found_ams:
             am_state = getattr(am, "state", "")
@@ -2396,6 +2450,27 @@ class GenericPeriodPackLoader:
                                     f"for {so_num} / DO '{getattr(pick, 'name', '')}' is not done "
                                     f"(state: '{sm_st}') before posting invoice {inv_num}!"
                                 )
+                            # Pastikan move telah tersinkronisasi akuntansi dan tanggalnya konsisten dengan jurnal valuasi
+                            self._sync_native_stock_accounting(
+                                sm,
+                                str(getattr(sm, "date", "")) or inv_row.get("date_invoice"),
+                                str(getattr(sm, "date", ""))[:10] if getattr(sm, "date", None) else inv_row.get("date_invoice"),
+                            )
+                            cogs_am = getattr(sm, "account_move_id", None)
+                            if cogs_am and getattr(cogs_am, "date", None):
+                                target_cogs_date = str(cogs_am.date)[:10]
+                                if str(getattr(sm, "date", ""))[:10] != target_cogs_date:
+                                    if callable(getattr(sm, "write", None)):
+                                        try:
+                                            sm.write({"date": f"{target_cogs_date} 00:00:00"})
+                                        except Exception:
+                                            pass
+                                    if hasattr(sm, "move_line_ids") and sm.move_line_ids:
+                                        if callable(getattr(sm.move_line_ids, "write", None)):
+                                            try:
+                                                sm.move_line_ids.write({"date": f"{target_cogs_date} 00:00:00"})
+                                            except Exception:
+                                                pass
 
             # Generate invoice from SO
             inv = so._create_invoices()
