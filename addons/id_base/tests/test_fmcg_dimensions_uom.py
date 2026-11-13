@@ -81,7 +81,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
         loader_path = repo_root / "scripts" / "load_fmcg_seed.py"
         source = loader_path.read_text(encoding="utf-8")
         # Import the script's definitions without invoking load_all() (which commits the test cursor).
-        source = source.rsplit("\\nload_all()", 1)[0]
+        source = source.rsplit("\nload_all()", 1)[0]
         with tempfile.TemporaryDirectory(prefix="fmcg-seed-uom-") as tmp:
             seed_dir = pathlib.Path(tmp)
             csv_path = seed_dir / "products_150.csv"
