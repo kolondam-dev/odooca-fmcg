@@ -70,7 +70,10 @@ class EnvStub:
 class TestFefoExpiryHelpers(unittest.TestCase):
     def setUp(self):
         self.adapter = AdapterStub()
-        self.adapter.stats = {"lot_expiry_backfilled": 0}
+        self.adapter.stats = {
+            "lot_expiry_backfilled": 0,
+            "expiry_products_enabled": 0,
+        }
 
     def test_enables_expiration_tracking_for_lot_tracked_canonical_products(self):
         template_model = TemplateModelStub()
