@@ -1,3 +1,11 @@
+## 2026-11-13T08:50:36+07:00 — claude-design (Claude-Dev1) — Fase 3B-5: Delivery (49–51) dan POD (53–56) mengikuti DS
+
+- Alur baru: daftar DO -> daftar toko -> check-in -> hub toko -> serah terima (Terima semua/Sebagian/Tolak) -> hasil POD; Biaya toko dibuka dari hub.
+- `DeliveryTaskEditor` kehilangan tampilan lama (details/drawer/wizard/preview); logika draft, koreksi, sumber manifest, riwayat tetap. Update state baris memakai functional update (menghindari tindih antar perubahan beruntun).
+- `DeliveryWorkspace`: kartu trip + `TripStores` (layar toko); selesai = POD antrean bersumber manifest identik. `DeliveryFee` dihapus (digantikan Biaya toko).
+- Tes: helper e2e baru (`openDeliveryTask`, `closeDeliveryScreens`, `backFromTask`); spec delivery/next-policy/review-regressions/route-workflow/sales-delivery-rules disesuaikan.
+- Utang tercatat di K19 (TTD, multi-satuan, foto per item, Tagihan -> fase Penagihan). Backend tidak berubah.
+
 ## 2026-11-11T23:52:54+07:00 — claude-design (Claude-Dev1) — PR #118: Biaya toko idempoten lintas buka-ulang/muat-ulang (review #5859275471)
 
 - Akar masalah: status retry hanya di `useRef` sehingga hilang saat formulir ditutup/dimuat ulang, dan nominal yang bisa diedit membuat submit kedua menghasilkan UUID baru -> duplikat.

@@ -1,21 +1,19 @@
 import { switchPersona } from "./delivery-helpers";
 import { syncNow, activity, openActivity } from "./visit-helpers";
-import { ensureDaily, startDelivery } from "./delivery-helpers";
+import {
+    closeDeliveryScreens,
+    ensureDaily,
+    openDeliveryTask,
+    saveDeliveryPhoto,
+    startDelivery,
+} from "./delivery-helpers";
 import { expect, test, type Page } from "./session-fixture";
 async function openDelivery(page: Page) {
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    const task = page
-        .locator("details")
-        .filter({ has: page.locator("summary", { hasText: "DEMO-DO-001" }) });
-    await task.locator(":scope > summary").click();
-    await expect(
-        task.getByText("Memulihkan data…", { exact: true }),
-    ).toHaveCount(0);
-    await startDelivery(task);
-    return task;
+    return openDeliveryTask(page, "DEMO-DO-001");
 }
 test("POD draft restores offline and queues only for review, with read-only proof", async ({
     page,
@@ -29,33 +27,12 @@ test("POD draft restores offline and queues only for review, with read-only proo
     });
     await page.goto("./");
     let task = await openDelivery(page);
-    await task.getByRole("button", { name: /^Tutup / }).click();
-    await task
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
+    await startDelivery(task);
     await expect(
-        task.getByRole("button", { name: "Ajukan POD untuk review" }),
+        task.getByRole("button", { name: "Selesai serah terima" }),
     ).toBeDisabled();
-    await task
-        .getByRole("button", { name: "Ubah penerimaan", exact: true })
-        .click();
     await task.getByLabel("Penerima", { exact: true }).fill("Budi Outlet");
-    if (await task.getByRole("dialog").isVisible())
-        await task.getByRole("button", { name: /^Tutup / }).click();
-    await task
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
-    await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
-    await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
-    await task
-        .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
-        .click();
-    await task
-        .getByRole("button", { name: "Simpan bukti lokal", exact: true })
-        .click();
-    await expect(
-        task.getByText("Foto dan lokasi tersimpan.", { exact: false }),
-    ).toBeVisible();
+    await saveDeliveryPhoto(task);
     await task
         .getByRole("button", { name: "Simpan draft POD", exact: true })
         .click();
@@ -65,21 +42,23 @@ test("POD draft restores offline and queues only for review, with read-only proo
     await context.setOffline(true);
     await page.reload();
     task = await openDelivery(page);
+    await startDelivery(task);
     await expect(task.getByLabel("Penerima", { exact: true })).toHaveValue(
         "Budi Outlet",
     );
-    await task.getByRole("button", { name: /^Tutup / }).click();
-    await task
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
     await expect(task.getByAltText("Pinpoint tanpa basemap")).toBeVisible();
-    await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
+    await task.getByRole("button", { name: "Selesai serah terima" }).click();
     await expect(task.getByText(/POD tersimpan ·/)).toBeVisible();
-    await expect(task.locator('input[type="file"]')).toHaveCount(0);
+    await expect(
+        page
+            .getByRole("region", { name: "Delivery DEMO-DO-001", exact: true })
+            .locator('input[type="file"]'),
+    ).toHaveCount(0);
     await page.screenshot({
         path: `test-results/pod-${test.info().project.name}.png`,
         fullPage: true,
     });
+    await closeDeliveryScreens(page);
     await context.setOffline(false);
     await openActivity(page);
     await expect(
@@ -101,26 +80,15 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
     });
     await page.goto("./");
     const task = await openDelivery(page);
+    await startDelivery(task);
     await task.getByLabel("Penerima", { exact: true }).fill("Budi Outlet");
-    if (await task.getByRole("dialog").isVisible())
-        await task.getByRole("button", { name: /^Tutup / }).click();
-    await task
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
-    await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
-    await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
-    await task
-        .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
-        .click();
-    await task
-        .getByRole("button", { name: "Simpan bukti lokal", exact: true })
-        .click();
-    await expect(task.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
+    await saveDeliveryPhoto(task);
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
     await context.setOffline(true);
-    await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
+    await task.getByRole("button", { name: "Selesai serah terima" }).click();
     await expect(task.getByText(/POD tersimpan ·/)).toBeVisible();
+    await closeDeliveryScreens(page);
     await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");
@@ -146,8 +114,9 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
         restored.getByText(/POD\/manifest\/foto tidak valid/),
     ).toBeVisible();
     await expect(
-        restored.getByRole("button", { name: "Ajukan POD untuk review" }),
+        restored.getByRole("button", { name: "Selesai serah terima" }),
     ).toHaveCount(0);
+    await closeDeliveryScreens(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await context.setOffline(false);
     const queue = await syncNow(page);
@@ -158,22 +127,6 @@ test("corrupt offline POD media blocks restore and reconnect sync", async ({
         queue.getByText("Menunggu approval", { exact: true }),
     ).toHaveCount(0);
 });
-async function savePodPhoto(task: ReturnType<Page["locator"]>) {
-    if (await task.getByRole("dialog").isVisible())
-        await task.getByRole("button", { name: /^Tutup / }).click();
-    await task
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
-    await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
-    await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
-    await task
-        .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
-        .click();
-    await task
-        .getByRole("button", { name: "Simpan bukti lokal", exact: true })
-        .click();
-    await expect(task.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
-}
 test("business rejection opens offline correction draft and preserves immutable parent", async ({
     page,
     context,
@@ -186,21 +139,16 @@ test("business rejection opens offline correction draft and preserves immutable 
     });
     await page.goto("./");
     const initial = await openDelivery(page);
-    await initial.getByRole("button", { name: /^Tutup / }).click();
-    await initial
-        .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
-        .click();
+    await startDelivery(initial);
+    await closeDeliveryScreens(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await page.getByLabel("Mode respons").selectOption("rejected");
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    let task = page
-        .locator(".delivery-task")
-        .filter({ hasText: "DEMO-DO-001" });
-    await task.locator("summary").first().click();
+    let task = await openDeliveryTask(page, "DEMO-DO-001");
     await startDelivery(task);
     await task.getByLabel("Penerima", { exact: true }).fill("Budi Lama");
-    await savePodPhoto(task);
-    await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
+    await saveDeliveryPhoto(task);
+    await task.getByRole("button", { name: "Selesai serah terima" }).click();
     await expect(
         task.getByRole("button", { name: "Koreksi POD ditolak" }),
     ).toBeVisible();
@@ -209,21 +157,14 @@ test("business rejection opens offline correction draft and preserves immutable 
     await context.setOffline(true);
     await task.getByRole("button", { name: "Koreksi POD ditolak" }).click();
     await startDelivery(task);
-    await task.getByRole("button", { name: /^Tutup / }).click();
-    await task
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
     await expect(
-        task.getByRole("button", { name: "Ajukan POD untuk review" }),
+        task.getByRole("button", { name: "Selesai serah terima" }),
     ).toBeDisabled();
-    await task
-        .getByRole("button", { name: "Ubah penerimaan", exact: true })
-        .click();
     await task.getByLabel("Penerima", { exact: true }).fill("Siti Benar");
     await task
         .getByLabel("Alasan koreksi", { exact: true })
         .fill("Nama penerima diperbaiki");
-    await savePodPhoto(task);
+    await saveDeliveryPhoto(task);
     await task
         .getByRole("button", { name: "Simpan draft POD", exact: true })
         .click();
@@ -238,18 +179,18 @@ test("business rejection opens offline correction draft and preserves immutable 
     await expect(
         task.getByLabel("Alasan koreksi", { exact: true }),
     ).toHaveValue("Nama penerima diperbaiki");
-    await task.getByRole("button", { name: /^Tutup / }).click();
-    await task
-        .getByRole("button", { name: "Close session", exact: true })
-        .click();
-    await task.getByRole("button", { name: "Ajukan POD untuk review" }).click();
+    await task.getByRole("button", { name: "Selesai serah terima" }).click();
     await expect(
         task.getByText("Riwayat POD (2)", { exact: true }),
     ).toBeVisible();
     await expect(
         task.getByRole("button", { name: "Koreksi POD ditolak" }),
     ).toHaveCount(0);
-    await expect(task.locator('input[type="file"]')).toHaveCount(0);
+    await expect(
+        page
+            .getByRole("region", { name: "Delivery DEMO-DO-001", exact: true })
+            .locator('input[type="file"]'),
+    ).toHaveCount(0);
     const rows = await page.evaluate(async () => {
         const db = await new Promise<IDBDatabase>((resolve) => {
             const r = indexedDB.open("fmcg-field-demo-v1");
@@ -277,6 +218,7 @@ test("business rejection opens offline correction draft and preserves immutable 
         path: `test-results/pod-correction-${test.info().project.name}.png`,
         fullPage: true,
     });
+    await closeDeliveryScreens(page);
     await context.setOffline(false);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     await openActivity(page);
