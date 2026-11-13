@@ -117,6 +117,43 @@ class TestFMCGDimensionsUoM(TransactionCase):
             24,
         )
 
+    def test_08_sales_line_defaults_base_uom_and_shows_breakdown(self):
+        product = self.env["product.template"].create({
+            "name": "Sales Line Sachet Test",
+            "default_code": "TEST-UOM-SALES",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        base_uom = self.env.ref("id_base.uom_sch")
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=10, carton_qty=120)
+        partner = self.env["res.partner"].create({"name": "FMCG UoM Test Customer"})
+        order = self.env["sale.order"].create({"partner_id": partner.id})
+        variant = product.product_variant_id
+
+        base_line = self.env["sale.order.line"].create({
+            "order_id": order.id,
+            "product_id": variant.id,
+            "product_uom_qty": 2,
+            "price_unit": 1500,
+        })
+        self.assertEqual(base_line.product_uom_id, base_uom)
+        self.assertEqual(base_line.fmcg_qty_breakdown, "2 Sachet (2 Sachet)")
+
+        carton_line = self.env["sale.order.line"].create({
+            "order_id": order.id,
+            "product_id": variant.id,
+            "product_uom_qty": 1.1,
+            "product_uom_id": product.fmcg_carton_uom_id.id,
+            "price_unit": 180000,
+        })
+        self.assertEqual(
+            carton_line.fmcg_qty_breakdown,
+            "1 Karton + 1 Inner + 2 Sachet (132 Sachet)",
+        )
+
     def test_07_configured_packaging_ratio_cannot_be_silently_changed(self):
         product = self.env["product.template"].create({
             "name": "Configured Ratio Test",
