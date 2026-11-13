@@ -1604,3 +1604,42 @@ select.ui-select {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
+
+/* Delivery/POD (3B-5): teks bantu, judul seksi, kartu tombol, deret aksi, fieldset tanpa bingkai. */
+.ui-sub {
+    margin: 0;
+    font: 400 14px/20px var(--font);
+    color: var(--c-mute);
+}
+.ui-h2 {
+    margin: 4px 0 0;
+    font: 700 15px/22px var(--font);
+    color: var(--c-ink);
+}
+.ui-card.ui-card--press {
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 44px;
+}
+.ui-row-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+.ui-row-actions > .ui-btn {
+    flex: 1;
+}
+.ui-fieldset {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}

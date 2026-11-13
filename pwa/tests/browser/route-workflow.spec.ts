@@ -6,6 +6,7 @@ import {
     ensureDaily,
     startDelivery,
     saveDeliveryPhoto,
+    openDeliveryTask,
 } from "./delivery-helpers";
 
 test("outlet list alone scrolls, full search filters dynamically and dismissal restores focus", async ({
@@ -153,46 +154,33 @@ test("sales check-in unlocks mini POS, preview submits through outbox then close
     ).toBeVisible();
 });
 
-test("delivery wizard, item reasons and separate DO/outlet costs persist without double charging", async ({
+test("delivery partial items, item reasons and Biaya toko persist without double charging", async ({
     page,
 }) => {
     await page.goto("./");
     await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    let task = page
-        .locator(".delivery-task")
-        .filter({ hasText: "DEMO-DO-001" });
-    await task.locator("summary").first().click();
+    let task = await openDeliveryTask(page, "DEMO-DO-001");
     await startDelivery(task);
+    // Biaya toko dibuka dari hub toko (kembali dulu dari layar serah terima).
     await task
-        .getByRole("button", { name: "Terima setengah", exact: true })
+        .getByRole("region", { name: "Serah terima DEMO-DO-001" })
+        .getByRole("button", { name: "Kembali" })
         .click();
+    await task.getByRole("button", { name: /^Biaya operasional toko/ }).click();
+    const biaya = page.getByRole("region", { name: "Biaya toko" });
+    await biaya.getByLabel("Parkir").fill("25000");
+    await biaya.getByRole("button", { name: /^Simpan biaya/ }).click();
+    await expect(biaya).toHaveCount(0);
+    await task.getByRole("button", { name: "Mulai serah terima" }).click();
+    await task.getByRole("button", { name: "Sebagian", exact: true }).click();
     await task.getByLabel("Penerima", { exact: true }).fill("PIC Outlet");
-    const choices = task.locator('select[aria-label^="Pilihan alasan item"]');
+    for (const field of await task.getByLabel(/^Diterima /).all())
+        await field.fill("1");
+    const choices = task.getByLabel(/^Alasan item .* \(wajib\)/);
     for (const field of await choices.all())
         await field.selectOption("ITEM RUSAK");
-    await task
-        .getByRole("button", { name: "Preview penerimaan", exact: true })
-        .click();
-    await expect(task.locator(".delivery-closing")).toContainText(
-        "DITERIMA PARSIAL",
-    );
-    for (const [scope, amount] of [
-        ["DO", "50000"],
-        ["toko", "25000"],
-    ]) {
-        const fee = task.getByRole("group", {
-            name: `Biaya ${scope}`,
-            exact: true,
-        });
-        await fee.getByLabel(`Nominal ${scope} (Rp)`).fill(amount);
-        await fee.getByLabel(`Catatan biaya ${scope}`).fill(`Bongkar ${scope}`);
-        await fee
-            .getByRole("button", { name: "Ajukan biaya", exact: true })
-            .click();
-        await expect(fee.getByRole("button")).toBeDisabled();
-    }
     await saveDeliveryPhoto(task);
     await task
         .getByRole("button", { name: "Simpan draft POD", exact: true })
@@ -214,43 +202,25 @@ test("delivery wizard, item reasons and separate DO/outlet costs persist without
             .filter((row) => row.command.type === "field_expense.request")
             .map((row) => row.command.payload);
     });
-    expect(fees).toHaveLength(2);
-    expect(
-        fees.find((fee) => fee.expense_scope === "delivery").delivery_id,
-    ).toBe("DEMO-DO-001");
-    expect(
-        fees.find((fee) => fee.expense_scope === "outlet").outlet_id,
-    ).toBeTruthy();
-    expect(
-        fees.find((fee) => fee.expense_scope === "outlet").delivery_id,
-    ).toBeNull();
+    expect(fees).toHaveLength(1);
+    expect(fees[0].expense_scope).toBe("outlet");
+    expect(fees[0].category).toBe("store_parking");
+    expect(fees[0].outlet_id).toBeTruthy();
+    expect(fees[0].delivery_id).toBeNull();
     await page.reload();
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    task = page.locator(".delivery-task").filter({ hasText: "DEMO-DO-001" });
-    await task.locator("summary").first().click();
-    await task
-        .getByRole("button", { name: "Open session", exact: true })
-        .click();
+    task = await openDeliveryTask(page, "DEMO-DO-001");
+    await task.getByRole("button", { name: "Mulai serah terima" }).click();
     for (const field of await task
-        .locator('select[aria-label^="Pilihan alasan item"]')
+        .getByLabel(/^Alasan item .* \(wajib\)/)
         .all())
         await expect(field).toHaveValue("ITEM RUSAK");
-    await task
-        .getByRole("button", { name: "Preview penerimaan", exact: true })
-        .click();
-    await expect(
-        task
-            .getByRole("group", { name: "Biaya toko", exact: true })
-            .getByRole("button"),
-    ).toBeDisabled();
     await page.screenshot({
         path: `test-results/delivery-flow-${test.info().project.name}.png`,
         fullPage: false,
     });
     await task
-        .getByRole("button", { name: "Ajukan POD untuk review", exact: true })
+        .getByRole("button", { name: "Selesai serah terima", exact: true })
         .click();
-    await expect(task.locator("summary").first()).toContainText(
-        "Session closed",
-    );
+    await expect(task.getByText(/Session closed/).first()).toBeVisible();
 });

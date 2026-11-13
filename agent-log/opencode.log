@@ -44,3 +44,38 @@
 - [BU] Instalasi pada DB demo berisi 1.324 invoice/2.619 JE belum dijalankan; CI exact-SHA menyusul; export XLSX/PDF dan VAT Report belum diuji.
 - [F] Katalog tetap 58/58 BELUM_DITERIMA; id_finance_foundation dan laporan custom tidak dipasang.
 - Task managed by Agent-Opencode at 2026-11-12T10:50:13+07:00
+
+[2026-11-13T09:00:00+07:00] [INFO] I2 exposure: wizard laporan, ACL, menu Finance Reports dan bukti peran
+- [F] Branch Opencode-finance-i2-exposure dari main 4f61086. Tambah TransientModel id.finance.report.wizard (8 jenis laporan: FIN04, FIN05/06, FIN07, FIN08/09, FIN37, FIN38, FIN51, FIN57) yang memanggil _snapshot dan menampilkan pratinjau HTML + payload JSON; semua teks di-escape, tabel dibatasi 300 baris/24 kolom.
+- [F] Tambah security/ir.model.access.csv (baca 12 model abstrak, CRUD wizard, grup account.group_account_readonly) dan views/finance_report_wizard_views.xml (1 form + 8 act_window). Submenu Finance Reports di id_finance_foundation memakai grup group_finance_reader. Versi: id_finance_reporting 19.0.1.4.0, id_finance_foundation 19.0.1.1.0.
+- [F] Tambah scripts/ops/verify_finance_i2_exposure.py + langkah CI: 8 jenis laporan dijalankan, report_id/HTML/JSON diperiksa, menu/action/view diverifikasi, Finance Reader boleh, Sales dan Driver ditolak pada wizard dan pada _snapshot langsung, reader ditolak untuk company lain; fixture di-rollback.
+- [F] Tambah docs/finance/I2_EXPOSURE.md, OWNER_DECISIONS.md (keputusan 1-5: lisensi B, FIN55 C, FIN56 A, payroll bertahap A, aktivasi demo bertahap A) dan LICENSING.md (matriks lisensi + analisis turunan AGPL + rencana perbaikan). README finance diperbarui; REPORT_CATALOG.csv tidak diubah.
+- [F] i18n id.po: 92 entri valid (72 reporting + 20 foundation); dua msgid duplikat lama digabung menjadi satu entri dengan dua referensi.
+- [F] Verifikasi lokal: ruff PASS, check_manifests PASS (14 addon), XML well-formed, YAML workflow valid, compileall OK, 13 tes formula I2c lulus.
+- [BU] Instalasi pada DB demo belum dijalankan. Export XLSX/PDF, geometri browser, tie-out angka per report ID, sign-off Finance Controller/QA, layar native list/pivot, aktivasi payroll, FIN36/55/56 dan I3-I8 masih terbuka. Katalog tetap 58/58 BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-13T09:00:00+07:00
+
+[2026-11-13T10:35:07+07:00] [INFO] CI I2 exposure hijau setelah perbaikan nama field menu Odoo 19
+- [F] Percobaan pertama gagal di langkah I2 exposure: AttributeError 'ir.ui.menu' object has no attribute 'groups_id'. Odoo 19 memakai group_ids; langkah install/upgrade, view, ACL dan wizard tidak pernah gagal.
+- [F] Skrip verify_finance_i2_exposure.py diperbaiki (group_ids; view.type == 'form' menggantikan pembacaan arch_db) lalu force-push 34452fe.
+- [F] Run 43357437999 langkah I2 exposure PASS: 8/8 wizard_run PASS, 9/9 menu/action/view PASS, reader_can_run PASS, sales/driver wizard+service dan reader lintas company ACCESS_DENIED, fixture_rollback PASS.
+- [F] PR #123 12/12 check hijau pada SHA 34452fe094da03f6d073d2585e9e1ff2db1f0abc (static, install-test, init-test, candidate-install-upgrade, upgrade runtime, invariant, seed, pwa).
+- [BU] Aktivasi DB demo, export XLSX/PDF, geometri browser, tie-out per report ID, sign-off, payroll, FIN36/55/56 dan I3-I8 masih terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-13T10:35:07+07:00
+
+[2026-11-13T12:15:51+07:00] [INFO] PR #123 HOLD: aktifkan sanitasi HTML hasil laporan + bukti tulis langsung
+- [F] Review #5886476944: result_html memakai sanitize=False sementara ACL wizard memberi grup Accounting Readonly create/write; readonly hanya mengunci UI, jadi penulisan ORM langsung melewati escape di _render().
+- [F] Perbaikan: result_html sanitize=True (default non-overridable) + komentar pertahanan berlapis di wizard. Preview tetap memakai html.escape.
+- [F] Tes baru di verify_finance_i2_exposure.py: sebagai Finance Reader tulis langsung <script>, <img onerror>, href=javascript: — hasil baca tidak memuat ketiganya; <table> dan teks sel tetap ada; preview laporan reader tetap memuat tabel.
+- [F] Odoo 19 html_sanitize: kill_tags script/style, safe_attrs_only, allow_tags mencakup table/thead/tbody/tr/th/td/div/p/pre dan atribut class, sehingga tabel laporan tidak terpotong.
+- [BU] Bukti CI dengan komponen sanitization menunggu run pada SHA hasil sinkronisasi dengan origin/main (branch tertinggal 4 commit).
+- [F] Katalog tetap 58/58 BELUM_DITERIMA; tanpa merge/deploy/verdict.
+- Task managed by Agent-Opencode at 2026-11-13T12:15:51+07:00
+
+[2026-11-13T12:46:38+07:00] [INFO] PR #123: sanitization PASS di CI pada fab0cbc, branch sinkron dengan main
+- [F] Run 43371935122 langkah I2 exposure PASS pada fab0cbca13c1c120b2dddbdf6ed41a5a28af8319; keluaran FINANCE_I2_EXPOSURE memuat sanitization reader_direct_write_sanitized PASS dan reader_preview_keeps_table PASS.
+- [F] Komponen lain pada run yang sama: 8/8 wizard_run_* PASS, 9/9 menu_action_* + wizard_form_view PASS, reader_can_run PASS, sales/driver wizard+service dan reader lintas company ACCESS_DENIED, fixture_rollback PASS.
+- [F] PR #123 12/12 check hijau pada fab0cbc (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift, Kontrak Runner Upgrade, invariant, seed, pwa-quality/container/browser/gate).
+- [F] Branch memuat main 488bd87 lewat merge fab0cbc; konflik hanya docs/HANDOFF.md, entri claude-design dan Agent-Opencode sama-sama dipertahankan urut waktu terbaru.
+- [BU] Aktivasi DB demo, export XLSX/PDF + guard formula injection, geometri browser, tie-out per report ID, sign-off, payroll, FIN36/55/56, I3-I8 tetap terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy/verdict.
+- Task managed by Agent-Opencode at 2026-11-13T12:46:38+07:00

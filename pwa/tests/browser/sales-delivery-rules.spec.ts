@@ -12,6 +12,8 @@ import {
     ensureDaily,
     saveDeliveryPhoto,
     startDelivery,
+    openDeliveryTask,
+    backFromTask,
 } from "./delivery-helpers";
 import {
     leaveClosedVisit,
@@ -143,39 +145,28 @@ test("multi-SKU partial requires line reasons, closes session offline and update
     ).toBeVisible();
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    const task = page
-        .locator(".delivery-task")
-        .filter({ hasText: "DEMO-DO-001" });
-    await task.locator("summary").first().click();
+    const task = await openDeliveryTask(page, "DEMO-DO-001");
     await expect(
         task.getByRole("button", { name: "Mulai sesi delivery", exact: true }),
     ).toBeVisible();
     await startDelivery(task);
     await task.getByLabel("Penerima", { exact: true }).fill("Budi Outlet");
-    await task
-        .getByLabel("Hasil serah terima", { exact: true })
-        .selectOption("partial");
-    await task
-        .getByLabel("Diterima Biskuit Kelapa 300 g (contoh)", { exact: true })
-        .fill("120");
+    await task.getByRole("button", { name: "Sebagian", exact: true }).click();
+    await task.getByLabel("Diterima Biskuit Kelapa 300 g (contoh)").fill("120");
     await saveDeliveryPhoto(task);
     await task
-        .getByRole("button", { name: "Ajukan POD untuk review", exact: true })
+        .getByRole("button", { name: "Selesai serah terima", exact: true })
         .click();
     await expect(
-        task.getByText("Alasan wajib direkam pada item terkait.", {
-            exact: true,
+        task.getByText("Pilih alasan untuk setiap item yang tidak diterima", {
+            exact: false,
         }),
     ).toBeVisible();
     await task
-        .getByRole("button", { name: "Ubah penerimaan", exact: true })
-        .click();
-    await task
-        .getByLabel("Alasan item Biskuit Kelapa 300 g (contoh)", {
+        .getByLabel("Catatan item Biskuit Kelapa 300 g (contoh)", {
             exact: true,
         })
         .fill("Kemasan rusak");
-    await task.getByRole("button", { name: /^Tutup / }).click();
     await task
         .getByRole("button", { name: "Simpan draft POD", exact: true })
         .click();
@@ -188,26 +179,23 @@ test("multi-SKU partial requires line reasons, closes session offline and update
     await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    const restored = page
-        .locator(".delivery-task")
-        .filter({ hasText: "DEMO-DO-001" });
-    await restored.locator("summary").first().click();
-    await restored
-        .getByRole("button", { name: "Open session", exact: true })
-        .click();
+    const restored = await openDeliveryTask(page, "DEMO-DO-001");
+    await restored.getByRole("button", { name: "Mulai serah terima" }).click();
     await expect(
-        restored.getByLabel("Alasan item Biskuit Kelapa 300 g (contoh)", {
+        restored.getByLabel("Catatan item Biskuit Kelapa 300 g (contoh)", {
             exact: true,
         }),
     ).toHaveValue("Kemasan rusak");
-    await restored.getByRole("button", { name: /^Tutup / }).click();
     await restored
-        .getByRole("button", { name: "Ajukan POD untuk review", exact: true })
+        .getByLabel("Alasan item Biskuit Kelapa 300 g (contoh) (wajib)")
+        .selectOption("ITEM RUSAK");
+    await restored
+        .getByRole("button", { name: "Selesai serah terima", exact: true })
         .click();
     await expect(restored.getByText(/Session closed/).first()).toBeVisible();
     await expect(restored.getByText(/Kemasan rusak/)).toBeVisible();
     await expect(
-        restored.getByText("Hasil: Received Partial", { exact: false }),
+        restored.getByText("Received Partial", { exact: false }).first(),
     ).toBeVisible();
     await page.screenshot({
         path: `test-results/partial-session-${test.info().project.name}.png`,
@@ -218,13 +206,8 @@ test("multi-SKU partial requires line reasons, closes session offline and update
         longitude: 124.825,
         accuracy: 3,
     });
-    const next = page
-        .locator(".delivery-task")
-        .filter({ hasText: "DEMO-DO-002" });
-    await task
-        .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
-        .click();
-    await next.locator("summary").first().click();
+    await backFromTask(page);
+    const next = await openDeliveryTask(page, "DEMO-DO-002");
     await startDelivery(next);
     await expect(next.getByText(/Sesi delivery aktif/)).toBeVisible();
 });

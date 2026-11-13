@@ -26,6 +26,12 @@ Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA da
    keuangan, profil aktivasi versioned, oracle native I2a (`FIN01`, `FIN02`,
    `FIN03`, `FIN04`, `FIN51`, `FIN57`), serta partner ledger AR/AP, open items
    as-of, dan aging bertanda (`FIN05`–`FIN09`).
+10. [I2 exposure](I2_EXPOSURE.md): wizard laporan, ACL, menu **Finance
+    Reports**, dan bukti peran Sales/Driver ditolak. Ini lapisan yang membuat
+    model laporan bisa dipakai, bukan penerimaan katalog.
+11. [Keputusan pemilik](OWNER_DECISIONS.md) dan [lisensi](LICENSING.md):
+    model AGPL-compliant, scope `FIN55`/`FIN56`/payroll, serta batas aktivasi
+    demo bertahap.
 
 ## Tiga putaran penyusunan rencana
 

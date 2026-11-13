@@ -1,13 +1,6 @@
 import { CheckinMap } from "./CheckinMap";
 import { useBackLayer } from "../ui/navigation";
-import { useRef } from "preact/hooks";
-import {
-    deliveryWorkKey,
-    restoreDeliveryWork,
-    receivedOutcome,
-} from "../domain/delivery-work";
-import { FullDrawer } from "./FullDrawer";
-import { DeliveryFee } from "./DeliveryFee";
+import { deliveryWorkKey, restoreDeliveryWork } from "../domain/delivery-work";
 import { MORNING_KEY } from "../domain/morning";
 import {
     DELIVERY_SESSION_KEY,
@@ -21,7 +14,7 @@ import {
 import { captureVisitLocation } from "../domain/visits";
 import { requireVisitFix } from "../domain/visit-validation";
 import type { VisitFix } from "../domain/visit-contracts";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { z } from "zod";
 import {
     DeliveryDoReasonSchema,
@@ -30,6 +23,7 @@ import {
     podKey,
     type DeliveryTask,
 } from "../domain/delivery-contracts";
+import type { Snapshot } from "../domain/contracts";
 import { businessRejected } from "../domain/outbox-state";
 import {
     assertPodTaskSource,
@@ -38,10 +32,30 @@ import {
     podLineage,
 } from "../domain/delivery";
 import { assertLocalEvidence } from "../domain/evidence-package";
-import { Icon } from "./Icon";
+import { Select } from "../ui";
+import {
+    ActionCaption,
+    Button,
+    Callout,
+    Card,
+    CardHead,
+    Chip,
+    Field,
+    KV,
+    ListRow,
+    RadioRow,
+    Screen,
+    ScreenHeader,
+    Segmented,
+    Textarea,
+    Tracker,
+} from "../ui";
+import { BiayaTokoScreen } from "./BiayaTokoScreen";
 import { EvidenceCapture, type EvidenceRef } from "./Evidence";
 import type { Outbox } from "../domain/outbox";
+import type { ExpenseSubmit } from "./BiayaTokoScreen";
 import type { FieldStore, QueueItem } from "../storage/store";
+type Mode = "full" | "partial" | "reject";
 export function DeliveryTaskEditor({
     task,
     store,
@@ -49,6 +63,10 @@ export function DeliveryTaskEditor({
     engine,
     changed,
     queue,
+    snapshot,
+    submit,
+    collect,
+    close,
 }: {
     task: DeliveryTask;
     store: FieldStore;
@@ -56,36 +74,17 @@ export function DeliveryTaskEditor({
     engine: Outbox;
     changed: () => void;
     queue: QueueItem[];
+    snapshot: Snapshot;
+    submit: ExpenseSubmit;
+    /** Membuka Penagihan toko ini; tidak ada bila toko tanpa tagihan. */
+    collect?: () => void;
+    close: () => void;
 }) {
-    const [phase, setPhase] = useState<"checkin" | "items" | "close">(
-        "checkin",
-    );
-    const [posOpen, setPosOpen] = useState(false);
-    const details = useRef<HTMLDetailsElement>(null);
-    const [expanded, setExpanded] = useState(false);
-    useBackLayer(expanded, () => {
-        if (details.current) details.current.open = false;
-        setExpanded(false);
-    });
-    function wizard(mode: "full" | "half" | "reject") {
-        const values = task.lines.map((line) => ({
-            id: line.id,
-            received:
-                mode === "full"
-                    ? line.quantity
-                    : mode === "half"
-                      ? Math.floor(line.quantity / 2)
-                      : 0,
-            reason: "",
-        }));
-        const total = values.reduce((sum, line) => sum + line.received, 0);
-        setDoReason("");
-        setLines(values);
-        setOutcome(
-            mode === "full" ? "delivered" : total ? "partial" : "rejected",
-        );
-        setReason(mode === "full" ? "Diterima semua" : "");
-    }
+    /** hub toko (Delivery_hub) -> layar serah terima (Pod_*) / Biaya toko. */
+    const [form, setForm] = useState(false);
+    const [biayaOpen, setBiayaOpen] = useState(false);
+    const [formError, setFormError] = useState("");
+    useBackLayer(true, close);
     const key = podKey(task);
     const [session, setSession] = useState<DeliveryPod["session"]>();
     const [opening, setOpening] = useState<EvidenceRef>();
@@ -275,26 +274,82 @@ export function DeliveryTaskEditor({
         lines,
     ]);
     function receive(index: number, value: number) {
-        const next = lines.map((line, i) =>
-            i === index
-                ? {
-                      ...line,
-                      received: Math.max(
-                          0,
-                          Math.min(
-                              task.lines[i].quantity,
-                              Math.trunc(value) || 0,
+        setLines((prev) =>
+            prev.map((line, i) =>
+                i === index
+                    ? {
+                          ...line,
+                          received: Math.max(
+                              0,
+                              Math.min(
+                                  task.lines[i].quantity,
+                                  Math.trunc(value) || 0,
+                              ),
                           ),
-                      ),
-                  }
-                : line,
+                      }
+                    : line,
+            ),
         );
-        const status = receivedOutcome(next, task.lines);
-        setLines(next);
-        setOutcome(status);
-        if (status === "delivered") setDoReason("");
-        if (status === "delivered" && !reason.trim())
-            setReason("Diterima semua");
+    }
+    /** Tab Terima semua / Sebagian / Tolak pada layar serah terima (DS: Pod_*). */
+    const mode: Mode =
+        outcome === "delivered"
+            ? "full"
+            : outcome === "partial"
+              ? "partial"
+              : "reject";
+    function chooseMode(next: Mode) {
+        if (next === mode) return;
+        setFormError("");
+        setDoReason("");
+        setRequestedDate("");
+        if (next === "partial") {
+            setOutcome("partial");
+            setLines(
+                task.lines.map((l) => ({
+                    id: l.id,
+                    received: l.quantity,
+                    reason: "",
+                })),
+            );
+            setReason("");
+            return;
+        }
+        const full = next === "full";
+        setOutcome(full ? "delivered" : "rejected");
+        setLines(
+            task.lines.map((l) => ({
+                id: l.id,
+                received: full ? l.quantity : 0,
+                reason: "",
+            })),
+        );
+        setReason(full ? "Diterima semua" : "");
+    }
+    /** Alasan DO pada mode Tolak; memetakan ke status delivery seperti dropdown lama. */
+    function chooseDoReason(selected: string) {
+        setFormError("");
+        setDoReason(selected);
+        setReason(selected);
+        if (selected === "REQUEST PENDING KIRIM") {
+            setOutcome("pending_requested");
+            setLines(
+                task.lines.map((line) => ({
+                    id: line.id,
+                    received: 0,
+                    reason: "",
+                })),
+            );
+            return;
+        }
+        const mapped: Record<string, string> = {
+            "TOKO TUTUP": "Toko Tutup",
+            "TOKO TIDAK PUNYA UANG": "Tidak bisa bayar",
+            "TOKO TIDAK DAPAT DIAKSES": "Toko tidak dapat diakses",
+            "TOKO TIDAK ORDER": "Kesalahan Order",
+        };
+        setOutcome(mapped[selected] ? "cancel_delivery" : "rejected");
+        if (mapped[selected]) setCancelReason(mapped[selected]);
     }
     async function startCorrection() {
         if (!saved) return;
@@ -366,7 +421,7 @@ export function DeliveryTaskEditor({
             setOpening(undefined);
             setPinpoint(undefined);
             setRevision(current);
-            setPhase("checkin");
+            setForm(false);
             setReady(true);
             setMessage("");
         } catch (e) {
@@ -407,46 +462,41 @@ export function DeliveryTaskEditor({
         }
     }
     useEffect(() => {
-        if (expanded && ready && !session && (!saved || revision))
-            void locateDelivery();
+        if (ready && !session && (!saved || revision)) void locateDelivery();
         return () => {
             locationGeneration.current++;
         };
-    }, [expanded, ready, opening, session, revision, saved]);
-    function previewReceipt() {
-        if (recipient.trim().length < 2) {
-            setMessage("Lengkapi nama penerima.");
-            return;
-        }
-        if (
-            outcome === "partial" &&
-            lines.some(
-                (line, index) =>
-                    line.received < task.lines[index].quantity &&
-                    (line.reason.trim() || line.item_reason || "").length < 3,
+    }, [ready, opening, session, revision, saved]);
+    /** Validasi form serah terima; mengembalikan pesan galat atau string kosong. */
+    function validateForm(): string {
+        if (recipient.trim().length < 2) return "Lengkapi nama penerima.";
+        if (outcome === "partial") {
+            if (!lines.some((l, i) => l.received < task.lines[i].quantity))
+                return "Mode Sebagian: kurangi jumlah diterima pada minimal satu item, atau pilih Terima semua.";
+            if (
+                lines.some(
+                    (line, index) =>
+                        line.received < task.lines[index].quantity &&
+                        (line.reason.trim() || line.item_reason || "").length <
+                            3,
+                )
             )
-        ) {
-            setMessage(
-                "Pilih alasan untuk setiap item yang tidak diterima lengkap.",
-            );
-            return;
-        }
-        if (outcome !== "partial" && reason.trim().length < 3) {
-            setMessage("Lengkapi alasan status DO.");
-            return;
-        }
+                return "Pilih alasan untuk setiap item yang tidak diterima lengkap.";
+        } else if (reason.trim().length < 3)
+            return mode === "reject"
+                ? "Pilih alasan penolakan."
+                : "Lengkapi catatan serah terima.";
         if (
             outcome === "pending_requested" &&
             !z.iso.date().safeParse(requestedDate).success
-        ) {
-            setMessage("Tentukan estimasi tanggal kirim.");
-            return;
-        }
-        setMessage("");
-        setPosOpen(false);
-        setPhase("close");
+        )
+            return "Tentukan estimasi tanggal kirim.";
+        return "";
     }
     async function action(send: boolean) {
+        const invalid = validateForm();
+        setFormError(invalid);
+        if (invalid) return;
         setBusy(true);
         setMessage("");
         try {
@@ -536,6 +586,7 @@ export function DeliveryTaskEditor({
                 setSaved(row);
                 setSession(undefined);
                 setRevision(undefined);
+                setForm(false);
                 setHistory(podLineage(await store.list(owner), owner, task.id));
                 changed();
                 void engine.flush();
@@ -554,751 +605,576 @@ export function DeliveryTaskEditor({
             setBusy(false);
         }
     }
-    return (
-        <details
-            ref={details}
-            onToggle={(e) => setExpanded(e.currentTarget.open)}
-            class="delivery-task"
-            aria-busy={(!ready && !message) || busy}
-        >
-            <summary>
-                <Icon name="store" size={20} /> {task.id} · {task.outlet}{" "}
-                {saved && !revision
-                    ? "· Session closed"
-                    : session
-                      ? "· Sesi aktif"
-                      : "· Belum dimulai"}
-            </summary>
-            <button
-                type="button"
-                class="secondary delivery-back"
-                onClick={(event) => {
-                    const details = event.currentTarget.closest("details");
-                    if (details) details.open = false;
-                }}
+    const done = !!saved && !revision;
+    const doReasonLabel = (r: string) =>
+        ({
+            "SKU TIDAK SESUAI ORDER": "SKU tidak sesuai order",
+            "REQUEST PENDING KIRIM": "Request pending kirim",
+        })[r] ?? r.charAt(0) + r.slice(1).toLowerCase();
+    const outcomeLabel = {
+        delivered: "Fully Received",
+        partial: "Received Partial",
+        rejected: "Rejected",
+        cancel_delivery: "Cancel Delivery",
+        pending_requested: "Pending Requested",
+    } as const;
+    const totalPcs = task.lines.reduce((a, l) => a + l.quantity, 0);
+    const drop = task.lines.map((l) => `${l.quantity} ${l.unit}`).join(", ");
+    const headerTitle = `${task.id} · ${task.outlet}`;
+    const note = message ? <Callout tone="info">{message}</Callout> : null;
+    const frame = "ui-screen--over ui-screen--top";
+
+    if (!ready)
+        return (
+            <Screen
+                label={`Delivery ${task.id}`}
+                class={frame}
+                header={<ScreenHeader title={headerTitle} onBack={close} />}
             >
-                Kembali ke daftar DO
-            </button>
-            <p class="delivery-address">{task.address}</p>
-            <nav class="workflow-tabs" aria-label={`Tahap ${task.id}`}>
-                <button
-                    aria-pressed={phase === "checkin"}
-                    onClick={() => setPhase("checkin")}
-                >
-                    Check-in toko
-                </button>
-                <button
-                    aria-pressed={phase === "items"}
-                    disabled={
-                        (task.workflow_version === 2 && !session) ||
-                        (!!saved && !revision)
-                    }
-                    onClick={() => {
-                        setPhase("items");
-                        setPosOpen(true);
-                    }}
-                >
-                    Open session
-                </button>
-                <button
-                    aria-pressed={phase === "close"}
-                    disabled={
-                        task.workflow_version === 2 &&
-                        !session &&
-                        (!saved || !!revision)
-                    }
-                    onClick={() => setPhase("close")}
-                >
-                    Close session
-                </button>
-            </nav>
-            {message && <p role="status">{message}</p>}
-            {saved && !revision ? (
-                <>
-                    <p>
-                        Session closed · POD tersimpan ·{" "}
-                        {saved.command.client_uuid.slice(0, 8)}. Status terbaru
-                        ada di Lainnya. Menunggu review; bukan picking selesai.
-                    </p>
-                    {businessRejected(saved) && (
-                        <button
-                            class="secondary"
-                            disabled={busy}
-                            onClick={() => void startCorrection()}
-                        >
-                            Koreksi POD ditolak
-                        </button>
-                    )}
-                    {history.length > 1 && (
-                        <details>
-                            <summary>Riwayat POD ({history.length})</summary>
-                            {history.map((h) => (
-                                <p key={h.key}>
-                                    {h.command.client_uuid.slice(0, 8)} ·{" "}
-                                    {
-                                        {
-                                            queued: "Menunggu sync",
-                                            sending: "Mengirim",
-                                            accepted: "Diterima simulator",
-                                            needs_approval: "Menunggu approval",
-                                            rejected: "Ditolak",
-                                            auth_required: "Sesi diperlukan",
-                                        }[h.state]
-                                    }{" "}
-                                    ·{" "}
-                                    {h.command.type === "delivery.pod.submit"
-                                        ? `${h.command.payload.recipient} · ${{ delivered: "Fully Received", partial: "Received Partial", rejected: "Rejected", cancel_delivery: "Cancel Delivery", pending_requested: "Pending Requested" }[h.command.payload.outcome]} · ${h.command.payload.lines
-                                              .map((l) => {
-                                                  const source =
-                                                      h.command.type ===
-                                                      "delivery.pod.submit"
-                                                          ? h.command.payload.source.lines.find(
-                                                                (s) =>
-                                                                    s.id ===
-                                                                    l.id,
-                                                            )
-                                                          : undefined;
-                                                  return `${source?.name ?? l.id}: ${l.received} ${source?.unit ?? "unit tidak tersedia"}`;
-                                              })
-                                              .join(
-                                                  "; ",
-                                              )}${h.command.payload.correction_reason ? ` · ${h.command.payload.correction_reason}` : ""}`
-                                        : ""}
-                                </p>
-                            ))}
-                        </details>
-                    )}
-                    {saved.command.type === "delivery.pod.submit" && (
-                        <>
-                            {saved.command.payload.correction_reason && (
-                                <p>
-                                    Alasan koreksi:{" "}
-                                    {saved.command.payload.correction_reason} ·
-                                    atas{" "}
-                                    {saved.command.payload.supersedes_uuid?.slice(
-                                        0,
-                                        8,
-                                    )}
-                                </p>
-                            )}
-                            <p>
-                                Penerima: {saved.command.payload.recipient} ·
-                                Hasil:{" "}
-                                {
-                                    {
-                                        delivered: "Fully Received",
-                                        partial: "Received Partial",
-                                        rejected: "Rejected",
-                                        cancel_delivery: "Cancel Delivery",
-                                        pending_requested: "Pending Requested",
-                                    }[saved.command.payload.outcome]
-                                }
-                            </p>
-                            <ul>
-                                {saved.command.payload.lines.map((line) => (
-                                    <li key={line.id}>
-                                        {
-                                            task.lines.find(
-                                                (l) => l.id === line.id,
-                                            )?.name
-                                        }
-                                        : {line.received} /{" "}
-                                        {
-                                            task.lines.find(
-                                                (l) => l.id === line.id,
-                                            )?.quantity
-                                        }{" "}
-                                        {
-                                            task.lines.find(
-                                                (l) => l.id === line.id,
-                                            )?.unit
-                                        }{" "}
-                                        · alasan:{" "}
-                                        {line.item_reason ??
-                                            line.reason ??
-                                            "legacy"}
-                                        {line.item_note &&
-                                        line.item_note !== line.item_reason
-                                            ? ` · ${line.item_note}`
-                                            : ""}
-                                    </li>
-                                ))}
-                            </ul>
-                            {saved.command.payload.reason && (
-                                <p>Catatan: {saved.command.payload.reason}</p>
-                            )}
-                            <EvidenceCapture
-                                store={store}
-                                owner={owner}
-                                existingRef={saved.command.payload.evidence}
-                                readOnly
-                                onChange={() => {}}
-                            />
-                        </>
-                    )}
-                </>
-            ) : ready ? (
-                <>
-                    {task.workflow_version === 2 && !session && (
-                        <fieldset disabled={busy} hidden={phase !== "checkin"}>
-                            <h3>Check-in toko</h3>
-                            <CheckinMap
-                                site={{
-                                    ...task.site,
-                                    name: task.outlet,
-                                    simulated: __DEMO__,
-                                }}
-                                fix={
-                                    locationPreview
-                                        ? {
-                                              ...locationPreview,
-                                              simulated: locationSimulated,
-                                          }
-                                        : undefined
-                                }
-                                compact
-                            />
-                            <EvidenceCapture
-                                store={store}
-                                owner={owner}
-                                existingRef={opening}
-                                onChange={(ref) => {
-                                    setOpening(ref);
-                                    setPinpoint(undefined);
-                                }}
-                            />
-                            <button
-                                class="secondary"
-                                disabled={locating || busy}
-                                onClick={() => void locateDelivery()}
-                            >
-                                Perbarui lokasi delivery
-                            </button>
-                            {pinpoint && (
-                                <p>
-                                    Pinpoint {pinpoint.latitude.toFixed(6)},{" "}
-                                    {pinpoint.longitude.toFixed(6)} · ±
-                                    {pinpoint.accuracy} m
-                                </p>
-                            )}
-                            <button
-                                class="primary"
-                                disabled={
-                                    !opening || !pinpoint || locating || busy
-                                }
-                                onClick={() => {
-                                    setBusy(true);
-                                    setMessage("");
-                                    void (async () => {
-                                        requireVisitFix(pinpoint!, task.site);
-                                        const daily = await store.draft(
-                                            owner,
-                                            MORNING_KEY,
-                                        );
-                                        const value =
-                                            DeliverySessionSchema.parse({
-                                                id: crypto.randomUUID(),
-                                                owner,
-                                                task_id: task.id,
-                                                opened_at:
-                                                    new Date().toISOString(),
-                                                opening,
-                                                pinpoint,
-                                                pinpoint_set_at: pinpointSetAt,
-                                                daily_source: daily,
-                                            });
-                                        setSession(
-                                            await store.openDeliverySession(
-                                                owner,
-                                                task,
-                                                value,
-                                            ),
-                                        );
-                                    })()
-                                        .catch((e) => setMessage(e.message))
-                                        .finally(() => setBusy(false));
-                                }}
-                            >
-                                Mulai sesi delivery
-                            </button>
-                        </fieldset>
-                    )}
-                    {(task.workflow_version !== 2 || session) && (
-                        <div>
-                            {posOpen && (
-                                <FullDrawer
-                                    title={`Items ${task.id}`}
-                                    close={() => {
-                                        setPosOpen(false);
-                                        setPhase("close");
-                                    }}
-                                >
-                                    <fieldset disabled={busy}>
-                                        {message && (
-                                            <p role="alert">{message}</p>
-                                        )}
-                                        <div class="delivery-wizard">
-                                            <button
-                                                type="button"
-                                                onClick={() => wizard("full")}
-                                            >
-                                                Terima semua
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => wizard("half")}
-                                            >
-                                                Terima setengah
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => wizard("reject")}
-                                            >
-                                                Tolak semua
-                                            </button>
-                                        </div>
-                                        {revision && (
-                                            <>
-                                                <p>
-                                                    Koreksi atas{" "}
-                                                    {revision.command.client_uuid.slice(
-                                                        0,
-                                                        8,
-                                                    )}
-                                                    . Pengajuan sebelumnya tetap
-                                                    tersimpan. Foto baru wajib.
-                                                </p>
-                                                <label>
-                                                    Alasan koreksi
-                                                    <textarea
-                                                        value={correctionReason}
-                                                        maxLength={500}
-                                                        onInput={(e) =>
-                                                            setCorrectionReason(
-                                                                e.currentTarget
-                                                                    .value,
-                                                            )
-                                                        }
-                                                    />
-                                                </label>
-                                                <button
-                                                    class="secondary"
-                                                    onClick={() =>
-                                                        setRevision(undefined)
-                                                    }
-                                                >
-                                                    Kembali ke POD tersimpan
-                                                </button>
-                                            </>
-                                        )}
-                                        {session && (
-                                            <p>
-                                                Sesi delivery aktif ·{" "}
-                                                {session.id.slice(0, 8)}
-                                            </p>
-                                        )}
-                                        <label>
-                                            Penerima
-                                            <input
-                                                value={recipient}
-                                                maxLength={100}
-                                                onInput={(e) =>
-                                                    setRecipient(
-                                                        e.currentTarget.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
-                                        <label>
-                                            Hasil serah terima
-                                            <select
-                                                aria-label="Hasil serah terima"
-                                                value={
-                                                    outcome ===
-                                                        "cancel_delivery" ||
-                                                    outcome ===
-                                                        "pending_requested"
-                                                        ? "rejected"
-                                                        : outcome
-                                                }
-                                                onChange={(e) => {
-                                                    const next = e.currentTarget
-                                                        .value as typeof outcome;
-                                                    setOutcome(next);
-                                                    setDoReason("");
-                                                    if (next === "delivered")
-                                                        setLines(
-                                                            task.lines.map(
-                                                                (l) => ({
-                                                                    id: l.id,
-                                                                    received:
-                                                                        l.quantity,
-                                                                    reason: "",
-                                                                }),
-                                                            ),
-                                                        );
-                                                    else if (next !== "partial")
-                                                        setLines(
-                                                            task.lines.map(
-                                                                (l) => ({
-                                                                    id: l.id,
-                                                                    received: 0,
-                                                                    reason: "",
-                                                                }),
-                                                            ),
-                                                        );
-                                                }}
-                                            >
-                                                <option value="delivered">
-                                                    DITERIMA SEMUA
-                                                </option>
-                                                <option value="partial">
-                                                    DITERIMA PARSIAL
-                                                </option>
-                                                <option value="rejected">
-                                                    DITOLAK SEMUA
-                                                </option>
-                                            </select>
-                                        </label>
-                                        {outcome !== "delivered" && (
-                                            <label>
-                                                Alasan DO
-                                                <select
-                                                    aria-label="Alasan DO"
-                                                    value={doReason}
-                                                    onChange={(event) => {
-                                                        const selected =
-                                                            event.currentTarget
-                                                                .value;
-                                                        setDoReason(selected);
-                                                        setReason(selected);
-                                                        if (
-                                                            selected ===
-                                                            "REQUEST PENDING KIRIM"
-                                                        ) {
-                                                            setOutcome(
-                                                                "pending_requested",
-                                                            );
-                                                            setLines(
-                                                                task.lines.map(
-                                                                    (line) => ({
-                                                                        id: line.id,
-                                                                        received: 0,
-                                                                        reason: "",
-                                                                    }),
-                                                                ),
-                                                            );
-                                                        } else if (
-                                                            outcome !==
-                                                            "partial"
-                                                        ) {
-                                                            const mapped: Record<
-                                                                string,
-                                                                string
-                                                            > = {
-                                                                "TOKO TUTUP":
-                                                                    "Toko Tutup",
-                                                                "TOKO TIDAK PUNYA UANG":
-                                                                    "Tidak bisa bayar",
-                                                                "TOKO TIDAK DAPAT DIAKSES":
-                                                                    "Toko tidak dapat diakses",
-                                                                "TOKO TIDAK ORDER":
-                                                                    "Kesalahan Order",
-                                                            };
-                                                            setOutcome(
-                                                                mapped[selected]
-                                                                    ? "cancel_delivery"
-                                                                    : "rejected",
-                                                            );
-                                                            if (
-                                                                mapped[selected]
-                                                            )
-                                                                setCancelReason(
-                                                                    mapped[
-                                                                        selected
-                                                                    ],
-                                                                );
-                                                        }
-                                                    }}
-                                                >
-                                                    <option value="">
-                                                        Pilih alasan DO
-                                                    </option>
-                                                    {DeliveryDoReasonSchema.options.map(
-                                                        (reason) => (
-                                                            <option
-                                                                key={reason}
-                                                            >
-                                                                {reason}
-                                                            </option>
-                                                        ),
-                                                    )}
-                                                </select>
-                                            </label>
-                                        )}
-                                        {outcome === "pending_requested" && (
-                                            <label>
-                                                Tanggal kirim ulang
-                                                <input
-                                                    aria-label="Tanggal kirim ulang"
-                                                    type="date"
-                                                    value={requestedDate}
-                                                    onInput={(e) =>
-                                                        setRequestedDate(
-                                                            e.currentTarget
-                                                                .value,
-                                                        )
-                                                    }
-                                                />
-                                                <small>
-                                                    Kurang dari3 hari: SPV; 3
-                                                    hari atau lebih: SPV +
-                                                    Branch Manager.
-                                                </small>
-                                            </label>
-                                        )}
-                                        {task.lines.map((l, i) => (
-                                            <label key={l.id}>
-                                                {l.name} · dikirim {l.quantity}{" "}
-                                                {l.unit}
-                                                <input
-                                                    disabled={
-                                                        outcome ===
-                                                            "pending_requested" ||
-                                                        outcome ===
-                                                            "cancel_delivery"
-                                                    }
-                                                    aria-label={`Diterima ${l.name}`}
-                                                    type="number"
-                                                    min={0}
-                                                    max={l.quantity}
-                                                    value={lines[i].received}
-                                                    onInput={(event) =>
-                                                        receive(
-                                                            i,
-                                                            Number(
-                                                                event
-                                                                    .currentTarget
-                                                                    .value,
-                                                            ),
-                                                        )
-                                                    }
-                                                />
-                                                <small>
-                                                    {outcome ===
-                                                        "cancel_delivery" ||
-                                                    outcome ===
-                                                        "pending_requested"
-                                                        ? "Belum diterima"
-                                                        : "Ditolak"}{" "}
-                                                    {l.quantity -
-                                                        lines[i].received}{" "}
-                                                    {l.unit}
-                                                </small>
-                                                {(outcome === "partial" ||
-                                                    outcome === "rejected") &&
-                                                    lines[i].received <
-                                                        l.quantity && (
-                                                        <>
-                                                            <select
-                                                                aria-label={`Pilihan alasan item ${l.name}`}
-                                                                value={
-                                                                    lines[i]
-                                                                        .item_reason ??
-                                                                    ""
-                                                                }
-                                                                onChange={(
-                                                                    event,
-                                                                ) =>
-                                                                    setLines(
-                                                                        lines.map(
-                                                                            (
-                                                                                line,
-                                                                                j,
-                                                                            ) =>
-                                                                                j ===
-                                                                                i
-                                                                                    ? {
-                                                                                          ...line,
-                                                                                          item_reason:
-                                                                                              event
-                                                                                                  .currentTarget
-                                                                                                  .value ||
-                                                                                              undefined,
-                                                                                          reason:
-                                                                                              event
-                                                                                                  .currentTarget
-                                                                                                  .value ||
-                                                                                              line.reason,
-                                                                                      }
-                                                                                    : line,
-                                                                        ),
-                                                                    )
-                                                                }
-                                                            >
-                                                                <option value="">
-                                                                    Pilih alasan
-                                                                    item
-                                                                </option>
-                                                                {DeliveryItemReasonSchema.options.map(
-                                                                    (
-                                                                        reason,
-                                                                    ) => (
-                                                                        <option
-                                                                            key={
-                                                                                reason
-                                                                            }
-                                                                        >
-                                                                            {
-                                                                                reason
-                                                                            }
-                                                                        </option>
-                                                                    ),
-                                                                )}
-                                                            </select>
-                                                            <textarea
-                                                                aria-label={`Alasan item ${l.name}`}
-                                                                required
-                                                                minLength={3}
-                                                                maxLength={500}
-                                                                value={
-                                                                    lines[i]
-                                                                        .reason
-                                                                }
-                                                                onInput={(e) =>
-                                                                    setLines(
-                                                                        lines.map(
-                                                                            (
-                                                                                a,
-                                                                                j,
-                                                                            ) =>
-                                                                                j ===
-                                                                                i
-                                                                                    ? {
-                                                                                          ...a,
-                                                                                          reason: e
-                                                                                              .currentTarget
-                                                                                              .value,
-                                                                                      }
-                                                                                    : a,
-                                                                        ),
-                                                                    )
-                                                                }
-                                                            />
-                                                        </>
-                                                    )}
-                                            </label>
-                                        ))}
-                                        <label>
-                                            {outcome === "partial"
-                                                ? "Catatan umum (alasan wajib per item terdampak)"
-                                                : "Alasan status (direkam ke semua item)"}
-                                            <textarea
-                                                value={reason}
-                                                maxLength={500}
-                                                onInput={(e) =>
-                                                    setReason(
-                                                        e.currentTarget.value,
-                                                    )
-                                                }
-                                            />
-                                        </label>
-                                        <button
-                                            type="button"
-                                            class="primary full"
-                                            onClick={previewReceipt}
-                                        >
-                                            Preview penerimaan
-                                        </button>
-                                    </fieldset>
-                                </FullDrawer>
-                            )}
-                            <div
-                                hidden={phase !== "close"}
-                                class="delivery-closing"
-                            >
-                                <h3>Ringkasan penerimaan</h3>
-                                <p>
-                                    {outcome === "delivered"
-                                        ? "DITERIMA SEMUA"
-                                        : outcome === "partial"
-                                          ? "DITERIMA PARSIAL"
-                                          : "DITOLAK SEMUA"}
-                                </p>
-                                <ul>
-                                    {task.lines.map((line, index) => (
-                                        <li key={line.id}>
-                                            {line.name}: {lines[index].received}{" "}
-                                            / {line.quantity} {line.unit}
-                                            {lines[index].item_reason &&
-                                                ` · ${lines[index].item_reason}`}
-                                            {lines[index].reason &&
-                                                lines[index].reason !==
-                                                    lines[index].item_reason &&
-                                                ` · ${lines[index].reason}`}
-                                        </li>
-                                    ))}
-                                </ul>
-                                <button
-                                    type="button"
-                                    class="secondary"
-                                    onClick={() => {
-                                        setPhase("items");
-                                        setPosOpen(true);
-                                    }}
-                                >
-                                    Ubah penerimaan
-                                </button>
-                                <label>
-                                    Catatan penutupan DO
-                                    <textarea
-                                        aria-label="Catatan penutupan DO"
-                                        maxLength={500}
-                                        value={reason}
-                                        onInput={(event) =>
-                                            setReason(event.currentTarget.value)
-                                        }
-                                    />
-                                </label>
-                                <DeliveryFee
-                                    {...{ task, store, owner, engine, changed }}
-                                    scope="delivery"
-                                />
-                                <DeliveryFee
-                                    {...{ task, store, owner, engine, changed }}
-                                    scope="outlet"
-                                />
-                                <EvidenceCapture
-                                    store={store}
-                                    owner={owner}
-                                    existingRef={photo}
-                                    onChange={setPhoto}
-                                />
-                                <button
-                                    class="secondary"
-                                    disabled={!photo}
-                                    onClick={() => void action(false)}
-                                >
-                                    Simpan draft POD
-                                </button>
-                                <button
-                                    class="primary"
-                                    disabled={!photo}
-                                    onClick={() => void action(true)}
-                                >
-                                    Ajukan POD untuk review
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </>
-            ) : (
-                <p>
+                <p aria-busy="true">
                     {message
                         ? "Data ditahan; perlu review."
                         : "Memulihkan data…"}
                 </p>
-            )}
-        </details>
+                {note}
+            </Screen>
+        );
+
+    /* 1. POD sudah tersimpan: ringkasan baca-saja, riwayat, koreksi bila ditolak. */
+    if (done && saved) {
+        const pod =
+            saved.command.type === "delivery.pod.submit"
+                ? saved.command.payload
+                : undefined;
+        return (
+            <Screen
+                label={`Delivery ${task.id}`}
+                class={frame}
+                header={
+                    <ScreenHeader
+                        title={headerTitle}
+                        onBack={close}
+                        status={{ tone: "ok", label: "Session closed" }}
+                    />
+                }
+                footer={
+                    businessRejected(saved) ? (
+                        <Button
+                            variant="sec"
+                            disabled={busy}
+                            onClick={() => void startCorrection()}
+                        >
+                            Koreksi POD ditolak
+                        </Button>
+                    ) : undefined
+                }
+            >
+                {note}
+                <Callout tone="info" icon="check">
+                    Session closed · POD tersimpan ·{" "}
+                    {saved.command.client_uuid.slice(0, 8)}. Status terbaru ada
+                    di Lainnya. Menunggu review; bukan picking selesai.
+                </Callout>
+                {pod ? (
+                    <Card>
+                        <CardHead
+                            title="Ringkasan penerimaan"
+                            status={{
+                                tone:
+                                    pod.outcome === "delivered" ? "ok" : "warn",
+                                label: outcomeLabel[pod.outcome],
+                            }}
+                        />
+                        <KV label="Penerima" value={pod.recipient} />
+                        {pod.correction_reason ? (
+                            <KV
+                                label="Alasan koreksi"
+                                value={`${pod.correction_reason} · atas ${pod.supersedes_uuid?.slice(0, 8)}`}
+                            />
+                        ) : null}
+                        {pod.lines.map((line) => {
+                            const src = task.lines.find(
+                                (l) => l.id === line.id,
+                            );
+                            return (
+                                <ListRow
+                                    key={line.id}
+                                    title={src?.name ?? line.id}
+                                    sub={`Diterima ${line.received} / ${src?.quantity} ${src?.unit} · alasan: ${line.item_reason ?? line.reason ?? "legacy"}${line.item_note && line.item_note !== line.item_reason ? ` · ${line.item_note}` : ""}`}
+                                    divider
+                                />
+                            );
+                        })}
+                        {pod.reason ? (
+                            <KV label="Catatan" value={pod.reason} />
+                        ) : null}
+                    </Card>
+                ) : null}
+                {pod ? (
+                    <Card>
+                        <EvidenceCapture
+                            store={store}
+                            owner={owner}
+                            existingRef={pod.evidence}
+                            readOnly
+                            onChange={() => {}}
+                        />
+                    </Card>
+                ) : null}
+                {history.length > 1 ? (
+                    <Card>
+                        <CardHead title={`Riwayat POD (${history.length})`} />
+                        {history.map((h) => (
+                            <ListRow
+                                key={h.key}
+                                divider
+                                title={`${h.command.client_uuid.slice(0, 8)} · ${
+                                    {
+                                        queued: "Menunggu sync",
+                                        sending: "Mengirim",
+                                        accepted: "Diterima simulator",
+                                        needs_approval: "Menunggu approval",
+                                        rejected: "Ditolak",
+                                        auth_required: "Sesi diperlukan",
+                                    }[h.state]
+                                }`}
+                                sub={
+                                    h.command.type === "delivery.pod.submit"
+                                        ? `${h.command.payload.recipient} · ${outcomeLabel[h.command.payload.outcome]} · ${h.command.payload.lines
+                                              .map((l) => {
+                                                  const src =
+                                                      h.command.type ===
+                                                      "delivery.pod.submit"
+                                                          ? h.command.payload.source.lines.find(
+                                                                (x) =>
+                                                                    x.id ===
+                                                                    l.id,
+                                                            )
+                                                          : undefined;
+                                                  return `${src?.name ?? l.id}: ${l.received} ${src?.unit ?? "unit tidak tersedia"}`;
+                                              })
+                                              .join(
+                                                  "; ",
+                                              )}${h.command.payload.correction_reason ? ` · ${h.command.payload.correction_reason}` : ""}`
+                                        : undefined
+                                }
+                            />
+                        ))}
+                    </Card>
+                ) : null}
+            </Screen>
+        );
+    }
+
+    /* 2. Check-in toko (workflow v2 tanpa sesi aktif). */
+    if (task.workflow_version === 2 && !session)
+        return (
+            <Screen
+                label={`Delivery ${task.id}`}
+                class={frame}
+                header={
+                    <ScreenHeader
+                        title={`Check-in · ${task.outlet}`}
+                        onBack={close}
+                    />
+                }
+                footer={
+                    <Button
+                        icon="pin"
+                        disabled={!opening || !pinpoint || locating || busy}
+                        onClick={() => {
+                            setBusy(true);
+                            setMessage("");
+                            void (async () => {
+                                requireVisitFix(pinpoint!, task.site);
+                                const daily = await store.draft(
+                                    owner,
+                                    MORNING_KEY,
+                                );
+                                const value = DeliverySessionSchema.parse({
+                                    id: crypto.randomUUID(),
+                                    owner,
+                                    task_id: task.id,
+                                    opened_at: new Date().toISOString(),
+                                    opening,
+                                    pinpoint,
+                                    pinpoint_set_at: pinpointSetAt,
+                                    daily_source: daily,
+                                });
+                                setSession(
+                                    await store.openDeliverySession(
+                                        owner,
+                                        task,
+                                        value,
+                                    ),
+                                );
+                            })()
+                                .catch((e) => setMessage(e.message))
+                                .finally(() => setBusy(false));
+                        }}
+                    >
+                        Mulai sesi delivery
+                    </Button>
+                }
+            >
+                {note}
+                <p class="ui-sub">{task.address}</p>
+                <Card>
+                    <CheckinMap
+                        site={{
+                            ...task.site,
+                            name: task.outlet,
+                            simulated: __DEMO__,
+                        }}
+                        fix={
+                            locationPreview
+                                ? {
+                                      ...locationPreview,
+                                      simulated: locationSimulated,
+                                  }
+                                : undefined
+                        }
+                        compact
+                    />
+                </Card>
+                <Card>
+                    <EvidenceCapture
+                        store={store}
+                        owner={owner}
+                        existingRef={opening}
+                        onChange={(ref) => {
+                            setOpening(ref);
+                            setPinpoint(undefined);
+                        }}
+                    />
+                </Card>
+                <Button
+                    variant="sec"
+                    size="md"
+                    disabled={locating || busy}
+                    onClick={() => void locateDelivery()}
+                >
+                    Perbarui lokasi delivery
+                </Button>
+                {pinpoint ? (
+                    <Callout tone="info" icon="pin">
+                        Pinpoint {pinpoint.latitude.toFixed(6)},{" "}
+                        {pinpoint.longitude.toFixed(6)} · ±{pinpoint.accuracy} m
+                    </Callout>
+                ) : null}
+            </Screen>
+        );
+
+    /* 3. Hub toko (Delivery_hub): tracker + langkah toko. */
+    const hub = (
+        <Screen
+            label={`Delivery ${task.id}`}
+            class={frame}
+            header={
+                <ScreenHeader
+                    title={headerTitle}
+                    onBack={close}
+                    status={{ tone: "info", label: "Berjalan" }}
+                />
+            }
+            sub={
+                <Tracker
+                    label={`Tahap ${task.id}`}
+                    steps={[
+                        { label: "Check-in", state: "done" },
+                        { label: "Serah terima", state: "cur" },
+                        { label: "Tagihan", state: "future" },
+                        { label: "Biaya", state: "future" },
+                        { label: "Selesai", state: "future" },
+                    ]}
+                />
+            }
+            footer={
+                <Button icon="truck" onClick={() => setForm(true)}>
+                    {revision ? "Mulai koreksi POD" : "Mulai serah terima"}
+                </Button>
+            }
+        >
+            {!form ? note : null}
+            {revision ? (
+                <Callout tone="warn">
+                    Koreksi atas {revision.command.client_uuid.slice(0, 8)}.
+                    Pengajuan sebelumnya tetap tersimpan. Foto baru wajib.
+                </Callout>
+            ) : null}
+            <Card tight>
+                <ListRow
+                    icon="truck"
+                    title="Serah terima"
+                    sub={`Drop ${drop} (${totalPcs.toLocaleString("id-ID")} unit)`}
+                    status={{ tone: "warn", label: "Belum" }}
+                />
+                {collect ? (
+                    <ListRow
+                        divider
+                        icon="wallet"
+                        title="Tagihan"
+                        sub="Catat pembayaran faktur toko"
+                        onClick={collect}
+                    />
+                ) : null}
+                <ListRow
+                    divider
+                    icon="receipt"
+                    title="Biaya operasional toko"
+                    sub="Parkir, kuli bongkar, retribusi"
+                    onClick={() => setBiayaOpen(true)}
+                />
+                <ListRow
+                    divider
+                    icon="camera"
+                    title="Foto bukti · tanda tangan opsional"
+                    sub="Di langkah serah terima"
+                    status={{ tone: "warn", label: "Wajib" }}
+                />
+            </Card>
+            {session ? (
+                <p class="ui-sub">
+                    Sesi delivery aktif · {session.id.slice(0, 8)}
+                </p>
+            ) : null}
+        </Screen>
+    );
+
+    /* 4. Serah terima (Pod_semua / Pod_sebagian / Pod_tolak). */
+    const days =
+        outcome === "pending_requested" &&
+        z.iso.date().safeParse(requestedDate).success
+            ? Math.round(
+                  (Date.parse(`${requestedDate}T00:00:00Z`) -
+                      Date.parse(`${task.business_date}T00:00:00Z`)) /
+                      86400000,
+              )
+            : undefined;
+    const serah = (
+        <Screen
+            label={`Serah terima ${task.id}`}
+            class={frame}
+            header={
+                <ScreenHeader
+                    title={`Serah terima · ${task.outlet}`}
+                    onBack={() => setForm(false)}
+                />
+            }
+            footer={
+                <>
+                    <Button
+                        icon="check"
+                        disabled={!photo || busy}
+                        onClick={() => void action(true)}
+                    >
+                        Selesai serah terima
+                    </Button>
+                    <Button
+                        variant="sec"
+                        size="md"
+                        disabled={!photo || busy}
+                        onClick={() => void action(false)}
+                    >
+                        Simpan draft POD
+                    </Button>
+                </>
+            }
+        >
+            <fieldset disabled={busy} class="ui-fieldset">
+                <Segmented<Mode>
+                    label="Hasil serah terima"
+                    value={mode}
+                    onChange={chooseMode}
+                    items={[
+                        { value: "full", label: "Terima semua" },
+                        { value: "partial", label: "Sebagian" },
+                        { value: "reject", label: "Tolak" },
+                    ]}
+                />
+                {note}
+                {revision ? (
+                    <Textarea
+                        label="Alasan koreksi"
+                        value={correctionReason}
+                        maxLength={500}
+                        onInput={setCorrectionReason}
+                    />
+                ) : null}
+                {mode === "full" ? (
+                    <Card>
+                        {task.lines.map((l, i) => (
+                            <ListRow
+                                key={l.id}
+                                divider={i > 0}
+                                title={l.name}
+                                sub={`Dipesan ${l.quantity} ${l.unit}`}
+                                status={{
+                                    tone: "ok",
+                                    label: `Diterima ${l.quantity} ${l.unit}`,
+                                }}
+                            />
+                        ))}
+                        <KV
+                            label="Total"
+                            value={`${totalPcs.toLocaleString("id-ID")} unit`}
+                        />
+                    </Card>
+                ) : null}
+                {mode === "partial"
+                    ? task.lines.map((l, i) => (
+                          <Card key={l.id}>
+                              <CardHead title={l.name} />
+                              <Field
+                                  label={`Diterima ${l.name}`}
+                                  value={lines[i].received}
+                                  inputMode="numeric"
+                                  maxLength={4}
+                                  hint={`Dipesan ${l.quantity} ${l.unit}${
+                                      lines[i].received < l.quantity
+                                          ? ` · ditolak ${l.quantity - lines[i].received}`
+                                          : ""
+                                  }`}
+                                  onInput={(v) =>
+                                      receive(i, Number(v.replace(/\D/g, "")))
+                                  }
+                              />
+                              {lines[i].received < l.quantity ? (
+                                  <>
+                                      <Select
+                                          label={`Alasan item ${l.name} (wajib)`}
+                                          value={lines[i].item_reason ?? ""}
+                                          placeholder="Pilih alasan item"
+                                          options={DeliveryItemReasonSchema.options.map(
+                                              (r) => ({
+                                                  value: r,
+                                                  label: r,
+                                              }),
+                                          )}
+                                          onChange={(v) =>
+                                              setLines((prev) =>
+                                                  prev.map((line, j) =>
+                                                      j === i
+                                                          ? {
+                                                                ...line,
+                                                                item_reason:
+                                                                    (v ||
+                                                                        undefined) as typeof line.item_reason,
+                                                            }
+                                                          : line,
+                                                  ),
+                                              )
+                                          }
+                                      />
+                                      <Field
+                                          label={`Catatan item ${l.name}`}
+                                          value={lines[i].reason}
+                                          maxLength={500}
+                                          onInput={(v) =>
+                                              setLines((prev) =>
+                                                  prev.map((a, j) =>
+                                                      j === i
+                                                          ? { ...a, reason: v }
+                                                          : a,
+                                                  ),
+                                              )
+                                          }
+                                      />
+                                  </>
+                              ) : null}
+                          </Card>
+                      ))
+                    : null}
+                {mode === "reject" ? (
+                    <>
+                        <Card>
+                            <KV
+                                label="Dipesan"
+                                value={`${totalPcs.toLocaleString("id-ID")} unit`}
+                            />
+                            <KV label="Diterima" value="0" />
+                            <Chip tone="bad">Ditolak semua</Chip>
+                        </Card>
+                        <Card>
+                            <CardHead title="Alasan penolakan" />
+                            {DeliveryDoReasonSchema.options.map((r) => (
+                                <RadioRow
+                                    key={r}
+                                    name={`alasan-do-${task.id}`}
+                                    value={r}
+                                    label={doReasonLabel(r)}
+                                    selected={doReason === r}
+                                    onSelect={chooseDoReason}
+                                />
+                            ))}
+                        </Card>
+                        {outcome === "pending_requested" ? (
+                            <Field
+                                label="Tanggal kirim ulang"
+                                type="date"
+                                value={requestedDate}
+                                onInput={setRequestedDate}
+                                hint={
+                                    days !== undefined
+                                        ? `${days} hari: ${days < 3 ? "butuh approval SPV." : "butuh approval SPV lalu Branch Manager."}`
+                                        : "Kurang dari 3 hari: SPV; 3 hari atau lebih: SPV lalu Branch Manager."
+                                }
+                            />
+                        ) : null}
+                    </>
+                ) : null}
+                <Field
+                    label="Penerima"
+                    value={recipient}
+                    maxLength={100}
+                    onInput={setRecipient}
+                />
+                <Textarea
+                    label={
+                        mode === "partial"
+                            ? "Catatan umum (alasan wajib per item terdampak)"
+                            : "Catatan serah terima"
+                    }
+                    value={reason}
+                    maxLength={500}
+                    onInput={setReason}
+                />
+                <Card>
+                    <EvidenceCapture
+                        store={store}
+                        owner={owner}
+                        existingRef={photo}
+                        onChange={setPhoto}
+                    />
+                </Card>
+                {formError ? (
+                    <Callout tone="bad" alert>
+                        {formError}
+                    </Callout>
+                ) : null}
+                {mode === "partial" ? (
+                    <ActionCaption>
+                        Alasan rusak atau expired wajib disertai foto.
+                    </ActionCaption>
+                ) : null}
+            </fieldset>
+        </Screen>
+    );
+    return (
+        <>
+            {hub}
+            {form ? serah : null}
+            {biayaOpen ? (
+                <BiayaTokoScreen
+                    snapshot={snapshot}
+                    outlet={{ id: task.outlet_id, name: task.outlet }}
+                    businessDate={task.business_date}
+                    owner={owner}
+                    store={store}
+                    submit={submit}
+                    close={() => setBiayaOpen(false)}
+                />
+            ) : null}
+        </>
     );
 }

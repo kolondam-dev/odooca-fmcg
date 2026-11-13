@@ -32,6 +32,7 @@ import {
 import { VisitPanel } from "./components/VisitPanel";
 import { SalesVisits, captureVisitLocation } from "./domain/visits";
 import { CollectionWorkspace } from "./components/CollectionWorkspace";
+import { collectionV2Enabled } from "./domain/collection-settlement";
 import { DeliveryWorkspace } from "./components/DeliveryWorkspace";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
@@ -495,7 +496,7 @@ function Workspace({
         payload: Record<string, unknown>,
         label: string,
         keepOpen?: boolean,
-        uuid?: ReturnType<typeof crypto.randomUUID>,
+        uuid?: string,
     ) {
         if (type.startsWith("sales.")) {
             if (!dailyReady)
@@ -515,7 +516,12 @@ function Workspace({
                       payload,
                       await captureVisitLocation(),
                   )
-                : await engine.enqueue(type, payload, label, uuid);
+                : await engine.enqueue(
+                      type,
+                      payload,
+                      label,
+                      uuid as ReturnType<typeof crypto.randomUUID> | undefined,
+                  );
         if (!keepOpen) setDialog(undefined);
         setToast(
             "Tersimpan di perangkat. " +
@@ -733,15 +739,6 @@ function Workspace({
                         )}
                         {page === "delivery" && dailyReady && (
                             <>
-                                <section class="trip-card">
-                                    <Icon name="truck" size={36} />
-                                    <div>
-                                        <strong>TRIP-DEMO-01</strong>
-                                        <p>
-                                            2 pengiriman · 20 karton · DB • DEMO
-                                        </p>
-                                    </div>
-                                </section>
                                 <DeliveryWorkspace
                                     key={owner}
                                     store={store}
@@ -749,6 +746,8 @@ function Workspace({
                                     provider={provider}
                                     engine={engine}
                                     queue={queue}
+                                    snapshot={snapshot}
+                                    submit={submit}
                                     changed={() => void refresh()}
                                 />
                                 <TripClosing
@@ -761,15 +760,18 @@ function Workspace({
                                     snapshot={snapshot}
                                     submit={submit}
                                 />
-                                <CollectionWorkspace
-                                    key={owner}
-                                    identity={identity}
-                                    provider={provider}
-                                    store={store}
-                                    engine={engine}
-                                    queue={queue}
-                                    changed={() => void refresh()}
-                                />
+                                {/* Alur v1 tetap jalur pencatatan sampai server menyatakan collection_v2. */}
+                                {!collectionV2Enabled(snapshot) ? (
+                                    <CollectionWorkspace
+                                        key={owner}
+                                        identity={identity}
+                                        provider={provider}
+                                        store={store}
+                                        engine={engine}
+                                        queue={queue}
+                                        changed={() => void refresh()}
+                                    />
+                                ) : null}
                                 <button
                                     class="secondary full"
                                     onClick={() =>
