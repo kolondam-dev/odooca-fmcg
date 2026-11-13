@@ -59,8 +59,12 @@ class TemplateModelStub:
         return self
 
 
-class EnvStub(dict):
-    pass
+class EnvStub:
+    def __init__(self, models):
+        self.models = models
+
+    def __getitem__(self, key):
+        return self.models[key]
 
 
 class TestFefoExpiryHelpers(unittest.TestCase):
