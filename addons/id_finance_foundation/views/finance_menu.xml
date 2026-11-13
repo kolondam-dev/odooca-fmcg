@@ -12,4 +12,32 @@
               action="account_financial_report.action_open_items_wizard"/>
     <menuitem id="menu_aged_partner_balance" name="Aged Partner Balance" parent="menu_finance" sequence="50"
               action="account_financial_report.action_aged_partner_balance_wizard"/>
+
+    <!-- Custom I2 reports: extra evidence and history the OCA modules do not provide. -->
+    <menuitem id="menu_finance_reports" name="Finance Reports" parent="menu_finance" sequence="60"
+              groups="group_finance_reader"/>
+    <menuitem id="menu_finance_report_audit_trail" name="Audit Trail (FIN04)"
+              parent="menu_finance_reports" sequence="10" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_audit_trail"/>
+    <menuitem id="menu_finance_report_partner_ledger" name="Partner Ledger AR/AP (FIN05/FIN06)"
+              parent="menu_finance_reports" sequence="15" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_partner_ledger"/>
+    <menuitem id="menu_finance_report_open_items" name="Open Items AR/AP (FIN07)"
+              parent="menu_finance_reports" sequence="20" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_open_items"/>
+    <menuitem id="menu_finance_report_aged_partner_balance" name="Aged Partner Balance (FIN08/FIN09)"
+              parent="menu_finance_reports" sequence="30" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_aged_partner_balance"/>
+    <menuitem id="menu_finance_report_combined_trial_balance" name="Combined Trial Balance (FIN51)"
+              parent="menu_finance_reports" sequence="40" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_combined_trial_balance"/>
+    <menuitem id="menu_finance_report_sales_purchase_register" name="Sales and Purchase Register (FIN57)"
+              parent="menu_finance_reports" sequence="50" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_sales_purchase_register"/>
+    <menuitem id="menu_finance_report_accrual_schedule" name="Accrual Schedules (FIN37)"
+              parent="menu_finance_reports" sequence="60" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_accrual_schedule"/>
+    <menuitem id="menu_finance_report_fx_revaluation" name="FX Revaluation (FIN38)"
+              parent="menu_finance_reports" sequence="70" groups="group_finance_reader"
+              action="id_finance_reporting.action_finance_report_fx_revaluation"/>
 </odoo>
