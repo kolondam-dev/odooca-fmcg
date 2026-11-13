@@ -85,6 +85,20 @@ class ProductTemplate(models.Model):
     carton_weight_kg = fields.Float(string="Berat Karton (kg)", digits=(12, 2))
     carton_barcode = fields.Char(string="Barcode Karton", copy=False, index=True)
 
+    def assert_fmcg_seed_inventory_uom(self, expected_uom):
+        """Fail closed when a seed replay would change an existing SKU's inventory UoM."""
+        self.ensure_one()
+        if not expected_uom:
+            raise ValidationError("UoM inventaris seed tidak ditemukan.")
+        if self.uom_id != expected_uom:
+            raise ValidationError(
+                f"UoM inventaris SKU {self.display_name} adalah "
+                f"'{self.uom_id.display_name}', bukan UoM seed "
+                f"'{expected_uom.display_name}'. Loader tidak akan mengubah UoM "
+                "SKU yang sudah ada; lakukan rekonsiliasi/migrasi terkontrol."
+            )
+        return True
+
     def write(self, vals):
         ratio_fields = {"inner_qty", "carton_qty"}
         if ratio_fields.intersection(vals):
