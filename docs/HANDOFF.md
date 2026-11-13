@@ -1,3 +1,26 @@
+## 2026-11-13T10:10:00+07:00 — antigravity — F4: Penyelarasan Alokasi Lot Deterministik Penerimaan PO & Validasi SML Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menambahkan helper defensif `_safe_fields`, `_rec_id`, dan `_iter_records` untuk kompatibilitas native Odoo 19 dan mock fixture.
+  - Menyelaraskan implementasi `_assign_lots_to_picking()` dengan pola kanonikal `load_canonical_perpetual.py`:
+    - Mengeliminasi `action_assign()` pra-alokasi lot pada picking yang dapat memicu pembuatan reservation line tanpa lot.
+    - Mengisi secara persisten field `lot_name`, `lot_id`, `quantity`, dan `picked: True` via `.write()` dan assignment fallback pada `stock.move.line`.
+    - Pada pembuatan move line baru via `StockMoveLine.create(ml_vals)`, menyertakan `picking_id`, `move_id`, `product_id`, `product_uom_id`, `location_id`, `location_dest_id`, `lot_id`, `lot_name`, `quantity`, dan `picked: True`.
+    - Meng-append record ke `pick.move_line_ids` dan `target_move.move_line_ids` in-memory.
+    - Menuliskan `picked: True` via `mv_rec.write({"picked": True})` pada seluruh `stock.move` terkait.
+    - Memanggil `self.env.invalidate_all()` pasca-alokasi lot guna membersihkan stale relational cache Odoo 19 sebelum validasi picking dijalankan.
+    - Menambahkan assertion audit fail-fast komprehensif (Step 3) untuk memvalidasi `actual_by_lot` vs `expected_lot_qty` dan total demand SKU sebelum `button_validate()`.
+  - Pada `_validate_picking_safely()`, menambahkan penulisan `date` pada seluruh `move_line_ids` (`stock.move.line`) untuk menjaga integritas audit date.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python -m unittest discover -s tests -p "test_*.py"`: 507/507 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-13T10:10:00+07:00
+
 ## 2026-11-13T08:40:00+07:00 — antigravity — F4: Penanganan Multi-Lot Picking & Validasi Delivery Sebelum Faktur (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

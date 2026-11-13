@@ -146,6 +146,54 @@ def _find_payment(AccountPayment: Any, company_id: Any, pay_refs: list[str], pay
     return None
 
 
+def _safe_fields(obj: Any) -> Any:
+    """Return _fields collection defensibly against boolean, mappingproxy, or None."""
+    f = getattr(obj, "_fields", None)
+    if f is not None and not isinstance(f, bool) and hasattr(f, "__contains__") and hasattr(f, "__iter__"):
+        if len(f) > 0:
+            return f
+    if hasattr(obj, "_vals") and isinstance(obj._vals, dict):
+        return set(obj._vals.keys()) | {
+            "date_done",
+            "date",
+            "origin",
+            "name",
+            "state",
+            "scheduled_date",
+            "memo",
+            "ref",
+            "picked",
+            "quantity",
+            "qty_done",
+            "lot_id",
+            "lot_name",
+        }
+    if f is not None and not isinstance(f, bool) and hasattr(f, "__contains__"):
+        return f
+    return {}
+
+
+def _rec_id(val: Any) -> Any:
+    """Extract integer ID from recordset, MockRecord, or integer."""
+    if hasattr(val, "id"):
+        return val.id
+    if isinstance(val, int):
+        return val
+    return False
+
+
+def _iter_records(res: Any) -> list:
+    """Convert search/recordset results or mock list into a list of records."""
+    if not res:
+        return []
+    if hasattr(res, "__iter__"):
+        try:
+            return list(res)
+        except TypeError:
+            pass
+    return [res]
+
+
 class ManifestVerificationError(Exception):
     """Raised when pack directory fails manifest integrity or checksum verification."""
 
@@ -1461,10 +1509,11 @@ class GenericPeriodPackLoader:
         return tax_rec
 
     def _assign_lots_to_picking(self, pick: Any, lines_data: List[Dict[str, Any]]) -> None:
-        """Map canonical source lots and target quantities into stock.move and stock.move.line.
+        """Map canonical source lots and target quantities into stock.move and stock.move.line deterministically.
 
-        Supports multi-lot split lines per SKU, cleans up extraneous/empty reservation lines,
-        and ensures picking move lines match period pack registers deterministically.
+        Supports multi-lot split lines per SKU, aggregates repeated lines for the same lot,
+        writes picked=True and quantity/lot_name/lot_id on moves and move_lines,
+        and fail-fast asserts exact lot->quantity mapping.
         """
         if not pick or getattr(pick, "state", "") in ("done", "cancel"):
             return
@@ -1472,12 +1521,6 @@ class GenericPeriodPackLoader:
         StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
         StockMoveLine = self.env["stock.move.line"].sudo() if "stock.move.line" in self.env else None
         Product = self.env["product.product"].sudo() if "product.product" in self.env else None
-
-        if hasattr(pick, "action_assign") and callable(pick.action_assign):
-            try:
-                pick.action_assign()
-            except Exception as e:
-                _logger.warning(f"action_assign on picking non-fatal: {e}")
 
         # 1. Group requirements per SKU and per Lot
         demands_by_sku: Dict[str, Dict[str, Any]] = {}
@@ -1496,7 +1539,7 @@ class GenericPeriodPackLoader:
 
             if sku not in demands_by_sku:
                 prod = None
-                if Product:
+                if Product is not None:
                     prod = Product.search([("default_code", "=", sku)], limit=1)
                 demands_by_sku[sku] = {
                     "prod": prod,
@@ -1509,19 +1552,25 @@ class GenericPeriodPackLoader:
 
             if lot_num not in sku_demands["lots"]:
                 lot_obj = None
+                lot_fields = _safe_fields(StockLot) if StockLot is not None else {}
                 if StockLot is not None and lot_num and sku_demands["prod"]:
-                    lot_obj = StockLot.search([
-                        ("name", "=", lot_num),
-                        ("product_id", "=", sku_demands["prod"].id),
-                        ("company_id", "in", [self.company.id, False]),
-                    ], limit=1)
+                    prod_rec = sku_demands["prod"]
+                    prod_rec_id = _rec_id(prod_rec)
+                    lot_obj = StockLot.search(
+                        [
+                            ("name", "=", lot_num),
+                            ("product_id", "=", prod_rec_id),
+                            ("company_id", "in", [_rec_id(getattr(self, "company", None)), False]),
+                        ],
+                        limit=1,
+                    )
                     if not lot_obj:
                         lot_vals = {
                             "name": lot_num,
-                            "product_id": sku_demands["prod"].id,
-                            "company_id": self.company.id,
+                            "product_id": prod_rec_id,
+                            "company_id": _rec_id(getattr(self, "company", None)),
                         }
-                        if exp_date and hasattr(StockLot, "_fields") and "expiration_date" in StockLot._fields:
+                        if exp_date and "expiration_date" in lot_fields:
                             lot_vals["expiration_date"] = exp_date
                         lot_obj = StockLot.create(lot_vals)
 
@@ -1533,16 +1582,20 @@ class GenericPeriodPackLoader:
             else:
                 sku_demands["lots"][lot_num]["qty_units"] += qty_units
 
+        # Field capabilities stock.move.line
+        sml_fields = _safe_fields(StockMoveLine) if StockMoveLine is not None else {}
+        has_quantity_field = "quantity" in sml_fields if sml_fields else True
+        has_qty_done_field = "qty_done" in sml_fields if sml_fields else True
+
         # 2. Allocate to moves and move_lines on the picking
         for sku, sku_demands in demands_by_sku.items():
             prod = sku_demands["prod"]
-            prod_id = prod.id if prod else None
+            prod_id = _rec_id(prod)
 
             matching_moves = []
             if hasattr(pick, "move_ids") and pick.move_ids:
-                for m in pick.move_ids:
-                    m_p_id = getattr(getattr(m, "product_id", None), "id", None)
-                    if m_p_id == prod_id or getattr(m, "product_id", None) == prod:
+                for m in _iter_records(pick.move_ids):
+                    if _rec_id(getattr(m, "product_id", None)) == prod_id:
                         matching_moves.append(m)
 
             if not matching_moves:
@@ -1550,9 +1603,8 @@ class GenericPeriodPackLoader:
 
             existing_lines = []
             if hasattr(pick, "move_line_ids") and pick.move_line_ids:
-                for ml in pick.move_line_ids:
-                    ml_p_id = getattr(getattr(ml, "product_id", None), "id", None)
-                    if ml_p_id == prod_id or getattr(ml, "product_id", None) == prod:
+                for ml in _iter_records(pick.move_line_ids):
+                    if _rec_id(getattr(ml, "product_id", None)) == prod_id:
                         existing_lines.append(ml)
 
             sorted_lot_items = sorted(sku_demands["lots"].items(), key=lambda x: str(x[0] or ""))
@@ -1561,7 +1613,7 @@ class GenericPeriodPackLoader:
             for idx, (lot_num, lot_info) in enumerate(sorted_lot_items):
                 target_qty = lot_info["qty_units"]
                 lot_obj = lot_info["lot_obj"]
-                target_lot_id = lot_obj.id if lot_obj else False
+                target_lot_id = _rec_id(lot_obj) if lot_obj else False
 
                 target_move = matching_moves[0]
                 if len(matching_moves) > 1:
@@ -1577,56 +1629,138 @@ class GenericPeriodPackLoader:
                     if matched_by_qty is not None:
                         target_move = matched_by_qty
                     else:
-                        for cand_mv in matching_moves:
-                            cid = getattr(cand_mv, "id", id(cand_mv))
-                            if cid not in used_move_ids:
-                                target_move = cand_mv
-                                break
+                        target_move = matching_moves[min(idx, len(matching_moves) - 1)]
                     used_move_ids.add(getattr(target_move, "id", id(target_move)))
-
-                if hasattr(target_move, "picked"):
-                    target_move.picked = True
 
                 if existing_lines:
                     ml = None
-                    target_mv_id = getattr(target_move, "id", None)
-                    for el_idx, el in enumerate(existing_lines):
-                        if getattr(getattr(el, "move_id", None), "id", None) == target_mv_id:
-                            ml = existing_lines.pop(el_idx)
-                            break
+                    if target_move is not None:
+                        target_mv_id = getattr(target_move, "id", None)
+                        for el_idx, el in enumerate(existing_lines):
+                            if _rec_id(getattr(el, "move_id", None)) == target_mv_id:
+                                ml = existing_lines.pop(el_idx)
+                                break
                     if ml is None:
                         ml = existing_lines.pop(0)
 
-                    upd_vals = {"quantity": target_qty, "picked": True}
-                    if target_lot_id:
-                        upd_vals["lot_id"] = target_lot_id
-                    if lot_num and hasattr(ml, "lot_name"):
+                    upd_vals = {}
+                    if lot_num and ("lot_name" in sml_fields or not sml_fields):
                         upd_vals["lot_name"] = lot_num
+                    if target_lot_id and ("lot_id" in sml_fields or not sml_fields):
+                        upd_vals["lot_id"] = target_lot_id
+                    if has_quantity_field:
+                        upd_vals["quantity"] = target_qty
+                    elif has_qty_done_field:
+                        upd_vals["qty_done"] = target_qty
+                    if "picked" in sml_fields or not sml_fields:
+                        upd_vals["picked"] = True
+
                     if callable(getattr(ml, "write", None)):
                         ml.write(upd_vals)
-                    else:
-                        for k, v in upd_vals.items():
-                            setattr(ml, k, v)
+                    if lot_obj and hasattr(ml, "lot_id"):
+                        ml.lot_id = lot_obj
+                    if lot_num and hasattr(ml, "lot_name"):
+                        ml.lot_name = lot_num
+                    if has_quantity_field and hasattr(ml, "quantity"):
+                        ml.quantity = target_qty
+                    if has_qty_done_field and hasattr(ml, "qty_done"):
+                        ml.qty_done = target_qty
+                    if hasattr(ml, "picked"):
+                        ml.picked = True
                 else:
                     if StockMoveLine is not None:
                         ml_vals = {
                             "picking_id": pick.id,
-                            "move_id": getattr(target_move, "id", False),
-                            "product_id": prod.id if prod else False,
+                            "move_id": getattr(target_move, "id", False) if target_move else False,
+                            "product_id": prod_id,
                             "lot_id": target_lot_id,
-                            "location_id": getattr(pick.location_id, "id", False),
-                            "location_dest_id": getattr(pick.location_dest_id, "id", False),
-                            "quantity": target_qty,
-                            "picked": True,
+                            "location_id": _rec_id(getattr(pick, "location_id", None)),
+                            "location_dest_id": _rec_id(getattr(pick, "location_dest_id", None)),
                         }
-                        if lot_num and hasattr(StockMoveLine, "_fields") and "lot_name" in StockMoveLine._fields:
+                        if lot_num and ("lot_name" in sml_fields or not sml_fields):
                             ml_vals["lot_name"] = lot_num
-                        StockMoveLine.create(ml_vals)
+                        uom_rec = getattr(prod, "uom_id", None)
+                        if uom_rec and hasattr(uom_rec, "id") and ("product_uom_id" in sml_fields or not sml_fields):
+                            ml_vals["product_uom_id"] = uom_rec.id
+                        if has_quantity_field:
+                            ml_vals["quantity"] = target_qty
+                        elif has_qty_done_field:
+                            ml_vals["qty_done"] = target_qty
+                        if "picked" in sml_fields or not sml_fields:
+                            ml_vals["picked"] = True
 
-            # Unlink any leftover/unused move lines for this SKU
+                        new_ml = StockMoveLine.create(ml_vals)
+                        if hasattr(pick, "move_line_ids") and hasattr(pick.move_line_ids, "append"):
+                            pick.move_line_ids.append(new_ml)
+                        if (
+                            target_move is not None
+                            and hasattr(target_move, "move_line_ids")
+                            and hasattr(target_move.move_line_ids, "append")
+                            and new_ml not in target_move.move_line_ids
+                        ):
+                            target_move.move_line_ids.append(new_ml)
+
             for unused_ml in existing_lines:
                 if callable(getattr(unused_ml, "unlink", None)):
                     unused_ml.unlink()
+                else:
+                    if hasattr(unused_ml, "quantity"):
+                        unused_ml.quantity = 0.0
+                    if hasattr(unused_ml, "qty_done"):
+                        unused_ml.qty_done = 0.0
+
+            for mv_rec in matching_moves:
+                if callable(getattr(mv_rec, "write", None)):
+                    mv_fields = _safe_fields(mv_rec)
+                    mv_upd = {}
+                    if "picked" in mv_fields or not mv_fields:
+                        mv_upd["picked"] = True
+                    if mv_upd:
+                        mv_rec.write(mv_upd)
+                elif hasattr(mv_rec, "picked"):
+                    mv_rec.picked = True
+
+        if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
+            self.env.invalidate_all()
+
+        # 3. Comprehensive lot->qty mapping assertion (fail-fast)
+        for sku, sku_demands in demands_by_sku.items():
+            prod = sku_demands["prod"]
+            prod_id = _rec_id(prod)
+            sku_lines = [
+                ml for ml in _iter_records(getattr(pick, "move_line_ids", None))
+                if _rec_id(getattr(ml, "product_id", None)) == prod_id
+            ]
+            actual_by_lot = {}
+            for ml in sku_lines:
+                l_id = _rec_id(getattr(ml, "lot_id", None))
+                rec_lot = getattr(ml, "lot_id", None)
+                l_name = getattr(ml, "lot_name", None) or (getattr(rec_lot, "name", None) if rec_lot else False)
+                l_key = l_name or l_id or "NO_LOT"
+                qty = float(getattr(ml, "quantity", getattr(ml, "qty_done", 0.0)))
+                actual_by_lot[l_key] = actual_by_lot.get(l_key, 0.0) + qty
+
+            for lot_num, lot_info in sku_demands["lots"].items():
+                expected_lot_qty = lot_info["qty_units"]
+                lot_key = lot_num or "NO_LOT"
+                lot_id_key = _rec_id(lot_info["lot_obj"]) if lot_info.get("lot_obj") else None
+                actual_lot_qty = actual_by_lot.get(lot_key)
+                if actual_lot_qty is None and lot_id_key is not None:
+                    actual_lot_qty = actual_by_lot.get(lot_id_key)
+                actual_lot_qty = actual_lot_qty if actual_lot_qty is not None else 0.0
+                if abs(actual_lot_qty - expected_lot_qty) > 0.001:
+                    raise StateInconsistencyError(
+                        f"FATAL: Lot quantity mismatch on picking '{getattr(pick, 'name', pick.id)}' "
+                        f"for SKU '{sku}', Lot '{lot_num}'! Expected: {expected_lot_qty}, Got: {actual_lot_qty} "
+                        f"(Actual lots map: {actual_by_lot})"
+                    )
+
+            total_actual_sku = sum(actual_by_lot.values())
+            if abs(total_actual_sku - sku_demands["total_units"]) > 0.001:
+                raise StateInconsistencyError(
+                    f"FATAL: Total units per SKU mismatch on picking '{getattr(pick, 'name', pick.id)}' "
+                    f"for SKU '{sku}'! Expected: {sku_demands['total_units']}, Got: {total_actual_sku}"
+                )
 
     def _validate_picking_safely(
         self, pick: Any, effective_date: Optional[str] = None, ref_num: Optional[str] = None
@@ -1667,6 +1801,13 @@ class GenericPeriodPackLoader:
                                 sm.write({"date": date_time_str})
                             except Exception as e:
                                 _logger.warning(f"write date on stock.move non-fatal: {e}")
+                if hasattr(pick, "move_line_ids") and pick.move_line_ids:
+                    for sml in _iter_records(pick.move_line_ids):
+                        if callable(getattr(sml, "write", None)):
+                            try:
+                                sml.write({"date": date_time_str})
+                            except Exception as e:
+                                _logger.warning(f"write date on stock.move.line non-fatal: {e}")
 
             val_ctx = {"skip_sms": True}
             if date_only:
