@@ -1838,8 +1838,12 @@ class CanonicalPerpetualAdapter:
             return
 
         print(" -> [1/7] Memuat Saldo Awal Persediaan Gudang Maumbi (1 Juli 2026)...")
+        self._ensure_expiry_product_configuration()
+        self._ensure_fefo_strategy()
         StockQuant = self.env["stock.quant"].sudo().with_context(inventory_mode=True)
         StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
+        if StockLot is None:
+            raise RuntimeError("[canonical_loader] FATAL: Model stock.lot wajib tersedia untuk traceability FMCG.")
 
         warehouse_loc = getattr(self, "wh_stock_loc", None)
         if not warehouse_loc:
@@ -1857,19 +1861,17 @@ class CanonicalPerpetualAdapter:
             qty_units = p_data["qty_units"]
             lot_name = p_data["lot_number"]
 
-            lot_id = False
-            if StockLot is not None:
-                lot = StockLot.search([("name", "=", lot_name), ("product_id", "=", prod.id)], limit=1)
-                if not lot:
-                    lot_vals = {
-                        "name": lot_name,
-                        "product_id": prod.id,
-                        "company_id": self.company.id,
-                    }
-                    if hasattr(StockLot, "_fields") and "expiration_date" in StockLot._fields:
-                        lot_vals["expiration_date"] = p_data["expiry_date"]
-                    lot = StockLot.create(lot_vals)
-                lot_id = lot.id
+            lot = StockLot.search([("name", "=", lot_name), ("product_id", "=", prod.id)], limit=1)
+            if not lot:
+                lot_vals = {
+                    "name": lot_name,
+                    "product_id": prod.id,
+                    "company_id": self.company.id,
+                    "expiration_date": f"{str(p_data['expiry_date'])[:10]} 00:00:00",
+                }
+                lot = StockLot.create(lot_vals)
+            self._ensure_lot_expiry(lot, p_data["expiry_date"])
+            lot_id = lot.id
 
             # Idempotency check: jika opening move atau quant untuk (product, location, lot) sudah pernah diproses
             StockMove = self.env["stock.move"].sudo() if "stock.move" in self.env else None
