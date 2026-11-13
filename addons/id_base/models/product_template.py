@@ -85,6 +85,34 @@ class ProductTemplate(models.Model):
     carton_weight_kg = fields.Float(string="Berat Karton (kg)", digits=(12, 2))
     carton_barcode = fields.Char(string="Barcode Karton", copy=False, index=True)
 
+    def write(self, vals):
+        ratio_fields = {"inner_qty", "carton_qty"}
+        if ratio_fields.intersection(vals):
+            for product in self:
+                if not product.fmcg_carton_uom_id:
+                    continue
+                new_inner = vals.get("inner_qty", product.inner_qty)
+                new_carton = vals.get("carton_qty", product.carton_qty)
+                if new_inner != product.inner_qty or new_carton != product.carton_qty:
+                    raise ValidationError(
+                        f"Rasio kemasan {product.display_name} sudah dipakai sebagai UoM transaksi. "
+                        "Perubahan harus melalui migrasi UoM terkontrol."
+                    )
+        return super().write(vals)
+
+    @api.constrains("inner_qty", "carton_qty")
+    def _check_fmcg_packaging_ratios(self):
+        for product in self:
+            if (
+                product.inner_qty < 1
+                or product.carton_qty < 1
+                or product.carton_qty % product.inner_qty
+            ):
+                raise ValidationError(
+                    f"Rasio kemasan SKU {product.default_code or product.display_name} tidak valid: "
+                    "carton_qty harus kelipatan inner_qty dan keduanya minimal 1."
+                )
+
     def _fmcg_get_or_create_uom(self, name, relative_uom, factor):
         """Get an immutable Odoo 19 UoM node for one exact packaging ratio."""
         Uom = self.env["uom.uom"].sudo()
