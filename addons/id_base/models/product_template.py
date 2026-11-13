@@ -100,19 +100,6 @@ class ProductTemplate(models.Model):
                     )
         return super().write(vals)
 
-    @api.constrains("inner_qty", "carton_qty")
-    def _check_fmcg_packaging_ratios(self):
-        for product in self:
-            if (
-                product.inner_qty < 1
-                or product.carton_qty < 1
-                or product.carton_qty % product.inner_qty
-            ):
-                raise ValidationError(
-                    f"Rasio kemasan SKU {product.default_code or product.display_name} tidak valid: "
-                    "carton_qty harus kelipatan inner_qty dan keduanya minimal 1."
-                )
-
     def _fmcg_get_or_create_uom(self, name, relative_uom, factor):
         """Get an immutable Odoo 19 UoM node for one exact packaging ratio."""
         Uom = self.env["uom.uom"].sudo()
@@ -148,6 +135,15 @@ class ProductTemplate(models.Model):
             raise ValidationError(
                 "Satuan label dasar FMCG harus memiliki faktor 1:1 terhadap UoM inventaris produk."
             )
+        if self.fmcg_carton_uom_id and (
+            self.fmcg_base_uom_id != base_uom
+            or self.inner_qty != inner_qty
+            or self.carton_qty != carton_qty
+        ):
+            raise ValidationError(
+                f"Konfigurasi kemasan {self.display_name} sudah digunakan. "
+                "Perubahan rasio memerlukan migrasi UoM terkontrol."
+            )
 
         expected_inner = False
         if inner_qty > 1:
@@ -180,6 +176,8 @@ class ProductTemplate(models.Model):
                 )
 
         self.write({
+            "inner_qty": inner_qty,
+            "carton_qty": carton_qty,
             "fmcg_base_uom_id": base_uom.id,
             "fmcg_inner_uom_id": expected_inner.id if expected_inner else False,
             "fmcg_carton_uom_id": expected_carton.id,
