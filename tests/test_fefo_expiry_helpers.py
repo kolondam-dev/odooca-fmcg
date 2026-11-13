@@ -29,12 +29,64 @@ class LotStub:
 
 class AdapterStub:
     _ensure_lot_expiry = CanonicalPerpetualAdapter._ensure_lot_expiry
+    _ensure_expiry_product_configuration = CanonicalPerpetualAdapter._ensure_expiry_product_configuration
+
+
+class TemplateStub:
+    _fields = {"tracking": object(), "use_expiration_date": object()}
+
+    def __init__(self, tracking="lot", use_expiration_date=False):
+        self.tracking = tracking
+        self.use_expiration_date = use_expiration_date
+
+    def write(self, vals):
+        for key, value in vals.items():
+            setattr(self, key, value)
+
+
+class ProductStub:
+    def __init__(self, template):
+        self.product_tmpl_id = template
+
+
+class TemplateModelStub:
+    _fields = {"tracking": object(), "use_expiration_date": object()}
+
+    def __init__(self):
+        self.templates = []
+
+    def sudo(self):
+        return self
+
+
+class EnvStub(dict):
+    pass
 
 
 class TestFefoExpiryHelpers(unittest.TestCase):
     def setUp(self):
         self.adapter = AdapterStub()
         self.adapter.stats = {"lot_expiry_backfilled": 0}
+
+    def test_enables_expiration_tracking_for_lot_tracked_canonical_products(self):
+        template_model = TemplateModelStub()
+        template = TemplateStub(tracking="lot", use_expiration_date=False)
+        self.adapter.env = EnvStub({"product.template": template_model})
+        self.adapter.product_by_code = {"SKU-1": ProductStub(template)}
+
+        self.adapter._ensure_expiry_product_configuration()
+
+        self.assertTrue(template.use_expiration_date)
+        self.assertEqual(self.adapter.stats.get("expiry_products_enabled"), 1)
+
+    def test_expiry_configuration_rejects_non_lot_tracked_product(self):
+        template_model = TemplateModelStub()
+        template = TemplateStub(tracking="none", use_expiration_date=False)
+        self.adapter.env = EnvStub({"product.template": template_model})
+        self.adapter.product_by_code = {"SKU-1": ProductStub(template)}
+
+        with self.assertRaisesRegex(RuntimeError, "tracking='lot'"):
+            self.adapter._ensure_expiry_product_configuration()
 
     def test_backfills_existing_lot_without_expiration_date(self):
         lot = LotStub(expiration_date=False, removal_date=False)
