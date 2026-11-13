@@ -30,6 +30,7 @@ Odoo 19 FEFO is native, not a custom SQL sort:
 - `product.template.use_expiration_date` must be enabled for the product.
 - `stock.lot.expiration_date` feeds computed `stock.lot.removal_date`.
 - FEFO quant ordering uses `removal_date, in_date, id`.
+- Expiry-aware stock moves pass their scheduled date as `with_expiration`; native quant gathering excludes lots whose `removal_date` is earlier than that date.
 - `stock.location.removal_strategy_id` can use the `product_expiry.removal_fefo` strategy.
 - A product category strategy overrides the location strategy; child locations can also override parent fallback.
 
