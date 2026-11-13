@@ -94,19 +94,32 @@ test("Penagihan: dua faktur satu bukti, sisa wajib alasan, tersimpan lalu tidak 
     ).toBeVisible();
 });
 
-test("Penagihan: server tanpa kapabilitas mengunci tombol kirim dan Giro tidak dapat dipilih", async ({
+test("Penagihan: tanpa collection_v2 jalur v1 tetap ada dan layar v2 tidak ditawarkan", async ({
     page,
 }) => {
     useLegacyServer(page);
     await toStores(page);
-    const penagihan = await openPenagihan(page);
-    await expect(penagihan.getByRole("alert")).toContainText(
-        "Server belum mendukung penagihan",
+    await expect(page.getByRole("button", { name: /^Tagihan / })).toHaveCount(
+        0,
     );
+    await page.getByRole("button", { name: "Kembali" }).last().click();
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    await page.getByRole("button", { name: "Delivery", exact: true }).click();
+    await expect(page.getByText(/SIM-TAGIHAN-1/).first()).toBeVisible();
+});
+
+test("Penagihan: Giro tidak dapat dipilih dan v1 tidak tampil saat collection_v2 aktif", async ({
+    page,
+}) => {
+    await toStores(page);
+    await page.getByRole("button", { name: "Kembali" }).last().click();
+    await expect(page.locator(".collection-task")).toHaveCount(0);
+    await page
+        .getByRole("button", { name: /^Buka TRIP/ })
+        .first()
+        .click();
+    const penagihan = await openPenagihan(page);
     await penagihan.getByRole("button", { name: /^Lanjut ke bukti/ }).click();
     const bukti = page.getByRole("region", { name: "Bukti penagihan" });
     await expect(bukti.getByRole("button", { name: "Giro" })).toBeDisabled();
-    await expect(
-        bukti.getByRole("button", { name: /^Simpan penagihan/ }),
-    ).toBeDisabled();
 });

@@ -18,6 +18,7 @@ import {
     type FieldProvider,
 } from "../domain/contracts";
 import { DeliveryTaskEditor } from "./DeliveryTaskEditor";
+import { collectionV2Enabled } from "../domain/collection-settlement";
 import { PenagihanScreen } from "./PenagihanScreen";
 import { useCollectionTasks } from "./useCollectionTasks";
 import type { Snapshot } from "../domain/contracts";
@@ -129,7 +130,9 @@ export function DeliveryWorkspace({
     const openTask = tasks?.find((t) => podKey(t) === taskOpen);
     const collectTask = tasks?.find((t) => podKey(t) === collectOpen);
     const receivablesOf = (t: DeliveryTask) =>
-        (collection ?? []).filter((c) => podKey(c.delivery) === podKey(t));
+        (collectionV2Enabled(snapshot) ? (collection ?? []) : []).filter(
+            (c) => podKey(c.delivery) === podKey(t),
+        );
     const next = openTrip?.find((t) => !isDone(t));
     return (
         <section aria-label="Delivery order hari ini">

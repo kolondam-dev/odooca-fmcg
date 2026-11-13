@@ -177,13 +177,13 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 
 **Selesai di PWA (alur mockup dipatuhi):** tombol "Tagihan" per toko di daftar toko dan baris "Tagihan" di hub toko → Penagihan_toko (centang faktur yang dibayar, nominal per faktur) → Penagihan_bukti (metode Tunai/Transfer, Giro terlihat tetapi nonaktif, nama pembayar, nomor tanda terima, referensi transfer, catatan, foto bukti wajib) → simpan. Satu bukti dapat melunasi banyak faktur. Faktur yang dibayar sebagian wajib alasan sisa (Tidak_tertagih: 4 alasan) dan janji bayar. Faktur yang sudah ada di antrean (tidak ditolak) tidak ditagih ulang. `tripMoney` (Setor uang/Akhiri trip) ikut menghitung alokasi penyelesaian per metode.
 
-**Kontrak usulan (belum didukung backend):** `collection.settlement.submit` (`settlement_version: 1`) berisi `allocations[]` dan `remainders[]` dalam satu perintah idempoten, dikunci `features.collection_v2`. Bila flag tidak ada: tombol simpan nonaktif + Callout peringatan. Flag tetap MATI di LIVE sampai backend dan tes integrasi ada.
+**Kontrak usulan (belum didukung backend):** `collection.settlement.submit` (`settlement_version: 1`) berisi `allocations[]` dan `remainders[]` dalam satu perintah idempoten, dikunci `features.collection_v2`. Bila flag tidak ada: layar v2 tidak ditawarkan dan alur v1 dipakai (tombol simpan v2 tetap nonaktif + Callout sebagai pengaman). Flag tetap MATI di LIVE sampai backend dan tes integrasi ada.
 
 **Utang:**
 - **Backend:** implementasi `collection.settlement.submit` (satu tanda terima banyak faktur, sisa + janji bayar, validasi saldo piutang Odoo sebenarnya; saldo di PWA hanya contoh) dan flag `collection_v2`.
 - **Giro:** nonaktif; butuh field nomor/jatuh tempo giro di kontrak.
 - **Alasan sisa:** dipilih inline per faktur, bukan BottomSheet terpisah seperti mockup Tidak_tertagih.
-- **Kontrak lama `collection.receipt.submit` (v1)** dan domain `collection*.ts` dipertahankan untuk antrean lama; UI lama (`CollectionWorkspace`) dihapus. Hapus v1 setelah backend v2 hidup.
+- **Kontrak lama `collection.receipt.submit` (v1)** dan domain `collection*.ts` dipertahankan untuk antrean lama; UI lama (`CollectionWorkspace`) **tetap menjadi jalur pencatatan saat `collection_v2` mati** (review #127 P1) dan disembunyikan hanya bila flag hidup; tombol Tagihan v2 hanya ditawarkan saat flag hidup. Hapus v1 setelah backend v2 hidup.
 - **Tracker hub:** langkah "Tagihan" belum berubah status otomatis.
 
 ## 3. Urutan integrasi yang disarankan
