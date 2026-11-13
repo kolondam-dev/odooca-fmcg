@@ -212,7 +212,7 @@ def load_hierarchical_categories():
 
 
 def load_products():
-    """Memuat 150 Master SKU FMCG ke product.template lengkap dengan dimensi fisik (Pcs & Karton)."""
+    """Memuat 150 Master SKU FMCG ke product.template beserta UoM dan hierarki kemasan native Odoo 19."""
     csv_file = seed_dir / "products_150.csv"
     if not csv_file.is_file():
         print(f"[seed_loader] SKIP: {csv_file} tidak ditemukan")
@@ -224,12 +224,18 @@ def load_products():
     Brand = env["id.brand"].sudo()
     Category = env["product.category"].sudo()
     Uom = env["uom.uom"].sudo()
-    Packaging = env["product.packaging"].sudo() if "product.packaging" in env else None
 
     # Preload Category Tree
     leaf_cat_map = load_hierarchical_categories()
 
     uom_unit = env.ref("uom.product_uom_unit", raise_if_not_found=False) or Uom.search([], limit=1)
+    base_uom_xmlids = {
+        "Pcs": "id_base.uom_pcs",
+        "Sachet": "id_base.uom_sch",
+        "Botol": "id_base.uom_btl",
+        "Pouch": "id_base.uom_pouch",
+        "Box": "id_base.uom_box",
+    }
 
     principal_map = {p.code: p for p in Principal.search([])}
     brand_map = {b.code: b for b in Brand.search([])}
@@ -282,7 +288,6 @@ def load_products():
                 "barcode": row.get("barcode") or False,
                 "description_sale": row.get("description", ""),
                 "uom_id": uom_unit.id if uom_unit else False,
-                "uom_po_id": uom_unit.id if uom_unit else False,
                 "sale_ok": True,
                 "purchase_ok": True,
             }
@@ -310,29 +315,21 @@ def load_products():
                 prod = ProductTemplate.create(vals)
                 count_created += 1
 
-            # Konfigurasi Packaging (Karton)
-            carton_qty = int(row.get("carton_qty", 1))
-            base_uom = row.get("base_uom", "Pcs")
-            if Packaging and carton_qty > 1:
-                try:
-                    variant = prod.product_variant_id or (
-                        prod.product_variant_ids and prod.product_variant_ids[0]
-                    )
-                    if variant:
-                        pkg_name = f"Karton ({carton_qty} {base_uom})"
-                        pkg = Packaging.search(
-                            [("product_id", "=", variant.id), ("qty", "=", float(carton_qty))],
-                            limit=1,
-                        )
-                        pkg_vals = {
-                            "name": pkg_name,
-                            "product_id": variant.id,
-                            "qty": float(carton_qty),
-                        }
-                        if not pkg:
-                            Packaging.create(pkg_vals)
-                except Exception as pkg_err:
-                    _logger.warning("Gagal membuat packaging untuk %s: %s", code, pkg_err)
+            # Odoo 19: packaging adalah UoM native yang ditautkan ke product.template.uom_ids.
+            # UoM inventaris (Units) sengaja tidak diubah agar saldo/riwayat tetap memakai basis lama.
+            base_uom_name = row.get("base_uom", "Pcs")
+            base_uom_xmlid = base_uom_xmlids.get(base_uom_name)
+            base_uom = env.ref(base_uom_xmlid, raise_if_not_found=False) if base_uom_xmlid else False
+            if not base_uom:
+                raise RuntimeError(
+                    f"[seed_loader] UoM dasar '{base_uom_name}' untuk SKU {code} "
+                    "tidak ditemukan; hentikan loader agar konfigurasi tidak parsial."
+                )
+            prod.configure_fmcg_packaging_uoms(
+                base_uom=base_uom,
+                inner_qty=int(row.get("inner_qty", 1)),
+                carton_qty=int(row.get("carton_qty", 1)),
+            )
 
     print(
         f"    Selesai: {count_created} dibuat, {count_updated} diperbarui "
