@@ -54,3 +54,11 @@
 - [F] Verifikasi lokal: ruff PASS, check_manifests PASS (14 addon), XML well-formed, YAML workflow valid, compileall OK, 13 tes formula I2c lulus.
 - [BU] Instalasi pada DB demo belum dijalankan. Export XLSX/PDF, geometri browser, tie-out angka per report ID, sign-off Finance Controller/QA, layar native list/pivot, aktivasi payroll, FIN36/55/56 dan I3-I8 masih terbuka. Katalog tetap 58/58 BELUM_DITERIMA.
 - Task managed by Agent-Opencode at 2026-11-13T09:00:00+07:00
+
+[2026-11-13T10:35:07+07:00] [INFO] CI I2 exposure hijau setelah perbaikan nama field menu Odoo 19
+- [F] Percobaan pertama gagal di langkah I2 exposure: AttributeError 'ir.ui.menu' object has no attribute 'groups_id'. Odoo 19 memakai group_ids; langkah install/upgrade, view, ACL dan wizard tidak pernah gagal.
+- [F] Skrip verify_finance_i2_exposure.py diperbaiki (group_ids; view.type == 'form' menggantikan pembacaan arch_db) lalu force-push 34452fe.
+- [F] Run 43357437999 langkah I2 exposure PASS: 8/8 wizard_run PASS, 9/9 menu/action/view PASS, reader_can_run PASS, sales/driver wizard+service dan reader lintas company ACCESS_DENIED, fixture_rollback PASS.
+- [F] PR #123 12/12 check hijau pada SHA 34452fe094da03f6d073d2585e9e1ff2db1f0abc (static, install-test, init-test, candidate-install-upgrade, upgrade runtime, invariant, seed, pwa).
+- [BU] Aktivasi DB demo, export XLSX/PDF, geometri browser, tie-out per report ID, sign-off, payroll, FIN36/55/56 dan I3-I8 masih terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-13T10:35:07+07:00

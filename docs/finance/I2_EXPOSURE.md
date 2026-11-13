@@ -49,7 +49,9 @@ Versi: `id_finance_reporting` `19.0.1.4.0`, `id_finance_foundation`
 ## Bukti yang dijalankan
 
 `scripts/ops/verify_finance_i2_exposure.py` pada
-`finance_i0_reports_disposable`:
+`finance_i0_reports_disposable`. **Status: PASS pada CI exact-SHA
+`34452fe094da03f6d073d2585e9e1ff2db1f0abc`**, run
+`43357437999` (langkah `I2 exposure`), dengan seluruh 12 check PR hijau.
 
 1. 8 jenis laporan dijalankan lewat wizard; `report_id` harus sesuai
    (`FIN04`, `FIN05`, `FIN07`, `FIN08`, `FIN37`, `FIN38`, `FIN51`, `FIN57`),
@@ -61,6 +63,16 @@ Versi: `id_finance_reporting` `19.0.1.4.0`, `id_finance_foundation`
    `_snapshot` langsung (scope server).
 5. Reader tidak bisa membaca company lain.
 
+Keluaran CI (`FINANCE_I2_EXPOSURE`): 8/8 `wizard_run_*` PASS, 9/9
+`menu_action_*` + view PASS, `reader_can_run` PASS, `sales_wizard_denied`,
+`sales_service_denied`, `driver_wizard_denied`, `driver_service_denied`,
+`reader_foreign_company_denied` semuanya `ACCESS_DENIED`, dan
+`fixture_rollback` PASS.
+
+Satu kegagalan pada percobaan pertama: `ir.ui.menu.groups_id` sudah berganti
+nama menjadi `group_ids` di Odoo 19; skrip diperbaiki (`34452fe`) dan run
+ulang hijau. Langkah install/upgrade wizard tidak pernah gagal.
+
 Fixture (company, akun, partner, user) dibuat di dalam savepoint dan
 di-rollback; skrip memeriksa tidak ada kebocoran company/user.
 
@@ -70,8 +82,8 @@ di-rollback; skrip memeriksa tidak ada kebocoran company/user.
 - [BU] Geometri browser desktop/tablet dan uji visual.
 - [BU] Tie-out angka per report ID terhadap oracle independen di database demo
   (oracle angka sudah ada di paket I2a/I2b/I2c, tetapi bukan penerimaan UI).
-- [BU] Aktivasi `id_finance_foundation` di database demo (menunggu CI hijau
-  pada SHA yang sama).
+- [BU] Aktivasi `id_finance_foundation` di database demo; prasyarat CI
+  disposable sudah hijau pada `34452fe`, aktivasi belum dijalankan.
 - [BU] Sign-off Finance Controller + QA per report ID.
 - [BU] Layar native list/pivot; saat ini pratinjau form + JSON.
 
