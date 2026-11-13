@@ -39,6 +39,15 @@ const EMPTY: Record<PartKey, string> = {
     store_other: "",
 };
 
+/** Penyerahan perintah ke antrean (App.submit), dipakai Biaya toko dari layar mana pun. */
+export type ExpenseSubmit = (
+    type: "field_expense.request",
+    payload: Record<string, unknown>,
+    label: string,
+    keepOpen?: boolean,
+    uuid?: string,
+) => Promise<unknown>;
+
 /**
  * Layar penuh Biaya operasional toko (DS: Biaya_toko). Satu `field_expense.request` scope outlet per
  * komponen terisi. Rencana batch (UUID tetap per komponen) disimpan di draft lokal sebelum kirim, sehingga
@@ -58,13 +67,7 @@ export function BiayaTokoScreen({
     businessDate: string;
     owner: string;
     store: FieldStore;
-    submit: (
-        type: "field_expense.request",
-        payload: Record<string, unknown>,
-        label: string,
-        keepOpen?: boolean,
-        uuid?: string,
-    ) => Promise<unknown>;
+    submit: ExpenseSubmit;
     close: () => void;
 }) {
     useBackLayer(true, close);

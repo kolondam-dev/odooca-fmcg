@@ -4,6 +4,7 @@ import {
     switchPersona,
     startDelivery,
     saveDeliveryPhoto,
+    openDeliveryTask,
 } from "./delivery-helpers";
 async function driver(page: Page) {
     await page.goto("./");
@@ -62,20 +63,18 @@ for (const reload of [false, true])
         await page
             .getByRole("button", { name: "Delivery", exact: true })
             .click();
-        await expect(page.locator(".delivery-task")).toHaveCount(2);
+        await expect(
+            page.getByRole("button", { name: /^Buka TRIP/ }),
+        ).toContainText("2 toko");
         await expect(
             page
-                .getByRole("heading", {
-                    name: "Serah terima pengiriman",
+                .getByRole("region", {
+                    name: "Delivery order hari ini",
                     exact: true,
                 })
-                .locator("..")
                 .getByRole("alert"),
         ).toHaveCount(0);
-        const task = page
-            .locator(".delivery-task")
-            .filter({ hasText: "DEMO-DO-001" });
-        await task.locator("summary").first().click();
+        const task = await openDeliveryTask(page, "DEMO-DO-001");
         await startDelivery(task);
         await task.getByLabel("Penerima", { exact: true }).fill("Budi Offline");
         await saveDeliveryPhoto(task);
@@ -136,7 +135,9 @@ for (const invalid of ["none", "owner", "day", "cache"] as const)
             await expect(page.getByRole("alert")).toContainText(
                 "Manifest tidak cocok",
             );
-        await expect(page.locator(".delivery-task")).toHaveCount(0);
+        await expect(
+            page.getByRole("button", { name: /^Buka TRIP/ }),
+        ).toHaveCount(0);
         expect(await readDrafts(page)).toEqual(before);
     });
 test("daily helper waits for deliberately held attendance persistence before sync", async ({
@@ -290,16 +291,13 @@ for (const legacy of [false, true])
         await page
             .getByRole("button", { name: "Delivery", exact: true })
             .click();
-        const task = page
-            .locator(".delivery-task")
-            .filter({ hasText: "DEMO-DO-001" });
-        await task.locator("summary").first().click();
+        const task = await openDeliveryTask(page, "DEMO-DO-001");
         await startDelivery(task);
         await task.getByLabel("Penerima", { exact: true }).fill("Budi Toko");
         await saveDeliveryPhoto(task);
         await task
             .getByRole("button", {
-                name: "Ajukan POD untuk review",
+                name: "Selesai serah terima",
                 exact: true,
             })
             .click();
@@ -313,24 +311,23 @@ for (const legacy of [false, true])
         await saveDeliveryPhoto(task);
         await task
             .getByRole("button", {
-                name: "Ajukan POD untuk review",
+                name: "Selesai serah terima",
                 exact: true,
             })
             .click();
-        const history = task.locator("details").filter({
-            has: page.locator("summary", { hasText: "Riwayat POD (2)" }),
-        });
-        await history.locator(":scope > summary").click();
-        for (const paragraph of await history.locator("p").all()) {
-            await expect(paragraph).toContainText(
+        const history = task
+            .locator(".ui-card")
+            .filter({ hasText: "Riwayat POD (2)" });
+        for (const row of await history.locator(".ui-row").all()) {
+            await expect(row).toContainText(
                 `Biskuit Kelapa 300 g (contoh): ${legacy ? 1 : 1440} ${legacy ? "karton" : "pcs"}`,
             );
-            await expect(paragraph).toContainText(
+            await expect(row).toContainText(
                 `Wafer Cokelat (contoh): ${legacy ? 2 : 144} ${legacy ? "karton" : "pcs"}`,
             );
-            await expect(paragraph).toContainText(
+            await expect(row).toContainText(
                 `Kopi Bubuk (contoh): ${legacy ? 3 : 144} ${legacy ? "karton" : "pcs"}`,
             );
         }
-        await expect(history.locator("p")).toHaveCount(2);
+        await expect(history.locator(".ui-row")).toHaveCount(2);
     });

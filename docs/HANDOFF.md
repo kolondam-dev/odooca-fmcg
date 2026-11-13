@@ -1,3 +1,17 @@
+## 2026-11-13T10:15:16+07:00 — claude-design (Claude-Dev1) — PR #124: POD ditolak server tidak lagi dihitung selesai (review #5885182618)
+
+- Akar masalah: `DeliveryWorkspace.isDone` mencocokkan sumber manifest tetapi ikut menghitung entri outbox `rejected`; progres trip naik dan tombol check-in melompati toko yang PODnya masih perlu koreksi.
+- Perbaikan: entri `businessRejected` dikecualikan; koreksi valid (anak, sumber sama) yang menghitung selesai. POD menunggu sinkronisasi tetap dihitung (perilaku offline tidak berubah).
+- Tes: `delivery.spec` (phone+tablet) memeriksa 0/2 setelah penolakan, toko tetap 'Berikutnya' dan koreksi terjangkau, lalu 1/2 setelah koreksi.
+
+## 2026-11-13T08:50:36+07:00 — claude-design (Claude-Dev1) — Fase 3B-5: Delivery (49–51) dan POD (53–56) mengikuti DS
+
+- Alur baru: daftar DO -> daftar toko -> check-in -> hub toko -> serah terima (Terima semua/Sebagian/Tolak) -> hasil POD; Biaya toko dibuka dari hub.
+- `DeliveryTaskEditor` kehilangan tampilan lama (details/drawer/wizard/preview); logika draft, koreksi, sumber manifest, riwayat tetap. Update state baris memakai functional update (menghindari tindih antar perubahan beruntun).
+- `DeliveryWorkspace`: kartu trip + `TripStores` (layar toko); selesai = POD antrean bersumber manifest identik. `DeliveryFee` dihapus (digantikan Biaya toko).
+- Tes: helper e2e baru (`openDeliveryTask`, `closeDeliveryScreens`, `backFromTask`); spec delivery/next-policy/review-regressions/route-workflow/sales-delivery-rules disesuaikan.
+- Utang tercatat di K19 (TTD, multi-satuan, foto per item, Tagihan -> fase Penagihan). Backend tidak berubah.
+
 ## 2026-11-12T10:50:13+07:00 — Agent-Opencode — Demo accounting: nyalakan account_financial_report
 **Berubah:** `deploy/init.sh` (`INIT_MODULES` + `account_financial_report`; blok bermark `install_account_financial_report_v1` untuk database yang sudah berjalan); `docs/finance/DEMO_ACCOUNTING_REPORTS.md` (baru); `docs/finance/README.md` (status dan indeks dokumen).
 **Diverifikasi:** [F] Manifest OCA pada pin `f48b4ea777c444256aa1c215ec3117d604b5feff`: `account_financial_report` v19.0.0.0.26, AGPL-3, `depends: account, date_range, report_xlsx`, installable; modul sudah tersedia di image karena root `Dockerfile` mengambil seluruh `oca.lock`. [F] Enam laporan: General Ledger, Journal Ledger, Trial Balance, Open Items, Aged Partner Balance, VAT Report; menu Accounting → Reporting → OCA accounting reports. [F] Data demo PT Manado Distribusi Utama (company ID 1, chart `id`, IDR) snapshot audit I0 5 November: 1.324 invoice pelanggan posted, 35 bill posted, 2.619 journal entry posted. [F] `bash -n` PASS; `ruff` PASS; `check_manifests.py` PASS (14 addon).
