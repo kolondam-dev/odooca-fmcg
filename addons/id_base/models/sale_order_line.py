@@ -33,7 +33,11 @@ class SaleOrderLine(models.Model):
             if not base_uom:
                 continue
             allowed_uoms = product.uom_id | product.uom_ids
-            if not line.product_uom_id or line.product_uom_id not in allowed_uoms:
+            if (
+                not line.product_uom_id
+                or line.product_uom_id == product.uom_id
+                or line.product_uom_id not in allowed_uoms
+            ):
                 line.product_uom_id = base_uom
 
     @api.depends(
