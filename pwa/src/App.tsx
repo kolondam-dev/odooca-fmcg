@@ -31,7 +31,6 @@ import {
 } from "./domain/contracts";
 import { VisitPanel } from "./components/VisitPanel";
 import { SalesVisits, captureVisitLocation } from "./domain/visits";
-import { CollectionWorkspace } from "./components/CollectionWorkspace";
 import { DeliveryWorkspace } from "./components/DeliveryWorkspace";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
@@ -758,15 +757,6 @@ function Workspace({
                                     changed={() => void refresh()}
                                     snapshot={snapshot}
                                     submit={submit}
-                                />
-                                <CollectionWorkspace
-                                    key={owner}
-                                    identity={identity}
-                                    provider={provider}
-                                    store={store}
-                                    engine={engine}
-                                    queue={queue}
-                                    changed={() => void refresh()}
                                 />
                                 <button
                                     class="secondary full"

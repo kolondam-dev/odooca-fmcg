@@ -3547,6 +3547,215 @@
               },
               "type": {
                 "type": "string",
+                "const": "collection.settlement.submit"
+              },
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "settlement_version": {
+                    "type": "number",
+                    "const": 1
+                  },
+                  "outlet_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "outlet": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "trip_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "business_date": {
+                    "type": "string",
+                    "format": "date",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                  },
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "cash",
+                      "transfer"
+                    ]
+                  },
+                  "payer": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "receipt_number": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 80,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9 /._-]*$"
+                  },
+                  "transfer_reference": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 80,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9 /._-]*$"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "evidence": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "packageHash": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "latitude": {
+                        "type": "number",
+                        "minimum": -90,
+                        "maximum": 90
+                      },
+                      "longitude": {
+                        "type": "number",
+                        "minimum": -180,
+                        "maximum": 180
+                      },
+                      "accuracy": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "capturedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "latitude",
+                      "longitude",
+                      "accuracy",
+                      "capturedAt"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "allocations": {
+                    "minItems": 1,
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "receivable_reference": {
+                          "type": "string",
+                          "minLength": 3,
+                          "maxLength": 80,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9 /._-]*$"
+                        },
+                        "amount_due": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]{0,11}$"
+                        },
+                        "amount": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]{0,11}$"
+                        }
+                      },
+                      "required": [
+                        "receivable_reference",
+                        "amount_due",
+                        "amount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "remainders": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "receivable_reference": {
+                          "type": "string",
+                          "minLength": 3,
+                          "maxLength": 80,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9 /._-]*$"
+                        },
+                        "reason": {
+                          "type": "string",
+                          "enum": [
+                            "Toko tidak punya uang",
+                            "Pemilik tidak di tempat",
+                            "Menunggu retur atau potongan",
+                            "Sengketa faktur"
+                          ]
+                        },
+                        "promise_date": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        }
+                      },
+                      "required": [
+                        "receivable_reference",
+                        "reason",
+                        "promise_date"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "settlement_version",
+                  "outlet_id",
+                  "outlet",
+                  "trip_id",
+                  "business_date",
+                  "method",
+                  "payer",
+                  "receipt_number",
+                  "notes",
+                  "evidence",
+                  "allocations",
+                  "remainders"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "schema_version",
+              "client_uuid",
+              "occurred_at",
+              "type",
+              "payload"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "type": "number",
+                "const": 1
+              },
+              "client_uuid": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "occurred_at": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+              },
+              "type": {
+                "type": "string",
                 "const": "sales.visit.check_in"
               },
               "payload": {
@@ -5802,6 +6011,9 @@
                 "type": "boolean"
               },
               "outlet_expense_v1": {
+                "type": "boolean"
+              },
+              "collection_v2": {
                 "type": "boolean"
               }
             },

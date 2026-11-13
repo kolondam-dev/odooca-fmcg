@@ -65,6 +65,7 @@ export function DeliveryTaskEditor({
     queue,
     snapshot,
     submit,
+    collect,
     close,
 }: {
     task: DeliveryTask;
@@ -75,6 +76,8 @@ export function DeliveryTaskEditor({
     queue: QueueItem[];
     snapshot: Snapshot;
     submit: ExpenseSubmit;
+    /** Membuka Penagihan toko ini; tidak ada bila toko tanpa tagihan. */
+    collect?: () => void;
     close: () => void;
 }) {
     /** hub toko (Delivery_hub) -> layar serah terima (Pod_*) / Biaya toko. */
@@ -906,6 +909,15 @@ export function DeliveryTaskEditor({
                     sub={`Drop ${drop} (${totalPcs.toLocaleString("id-ID")} unit)`}
                     status={{ tone: "warn", label: "Belum" }}
                 />
+                {collect ? (
+                    <ListRow
+                        divider
+                        icon="wallet"
+                        title="Tagihan"
+                        sub="Catat pembayaran faktur toko"
+                        onClick={collect}
+                    />
+                ) : null}
                 <ListRow
                     divider
                     icon="receipt"

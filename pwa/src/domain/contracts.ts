@@ -4,6 +4,7 @@ import {
     UnitLabelSchema,
 } from "./product-units.ts";
 import { CashDepositSchema } from "./cash-deposit.ts";
+import { CollectionSettlementSchema } from "./collection-settlement.ts";
 import { TripCloseSchema } from "./trip-close-contracts.ts";
 import { OrderRevisionSchema } from "./order-revision-contracts.ts";
 import {
@@ -41,6 +42,7 @@ export const CommandType = z.enum([
     "delivery.proof.submit",
     "delivery.pod.submit",
     "collection.receipt.submit",
+    "collection.settlement.submit",
     "hris.attendance.capture",
     "hris.leave.request",
     "field_expense.request",
@@ -90,6 +92,13 @@ export const CommandSchema = z.discriminatedUnion("type", [
     z
         .object({
             ...CommandEnvelope,
+            type: z.literal("collection.settlement.submit"),
+            payload: CollectionSettlementSchema,
+        })
+        .strict(),
+    z
+        .object({
+            ...CommandEnvelope,
             type: z.literal("sales.visit.check_in"),
             payload: VisitCheckInSchema,
         })
@@ -106,6 +115,7 @@ export const CommandSchema = z.discriminatedUnion("type", [
         type: CommandType.exclude([
             "delivery.trip.close",
             "delivery.cash_deposit.submit",
+            "collection.settlement.submit",
             "sales.order.revise",
             "delivery.pod.submit",
             "collection.receipt.submit",
@@ -228,6 +238,8 @@ export const SnapshotSchema = z
                 cash_deposit_v1: z.boolean().optional(),
                 /** Biaya operasional toko (kategori `store_*`, scope outlet). */
                 outlet_expense_v1: z.boolean().optional(),
+                /** Penyelesaian penagihan multi-faktur (`collection.settlement.submit`). */
+                collection_v2: z.boolean().optional(),
             })
             .optional(),
         /** Outlet di luar PJP yang boleh diajukan sebagai extra call (pencarian layar Extra call). */

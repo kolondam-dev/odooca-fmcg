@@ -15,6 +15,11 @@
 **Diverifikasi:** [F] Run `43357437999` langkah `I2 exposure` PASS: 8/8 `wizard_run_*`, 9/9 `menu_action_*` + view, `reader_can_run`, Sales/Driver ditolak pada wizard dan `_snapshot`, reader lintas company ditolak, `fixture_rollback` PASS. [F] PR #123 **12/12 check hijau** pada SHA `34452fe094da03f6d073d2585e9e1ff2db1f0abc` (static, install-test, init-test, `candidate-install-upgrade`, upgrade runtime + replay zero drift, invariant, seed, PWA). [F] Kegagalan pertama hanya nama field Odoo 19 (`groups_id` → `group_ids`); install/upgrade, ACL, view, dan wizard tidak pernah gagal.
 **Belum diuji:** [BU] Aktivasi `id_finance_foundation`/`id_finance_reporting` di DB demo; export XLSX/PDF; geometri browser; tie-out angka per report ID; sign-off Finance Controller/QA; payroll, FIN36/55/56, I3–I8. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-13T10:35:07+07:00
+## 2026-11-13T15:56:29+07:00 — claude-design (Claude-Dev1) — Fase 3B-6: Penagihan (30–33, 52) mengikuti DS
+
+- Penagihan_toko/bukti/Tidak_tertagih di PWA: `PenagihanScreen`, `useCollectionTasks`; tombol Tagihan di daftar toko + baris di hub; `CollectionWorkspace` dihapus.
+- Kontrak usulan `collection.settlement.submit` (multi-faktur satu bukti, sisa + janji bayar) dikunci flag `collection_v2` (mati di LIVE); `tripMoney` menghitung alokasi.
+- Tes: unit `collection-settlement.test.ts`, e2e `collection.spec.ts` ditulis ulang; utang di DS_RECONCILIATION K20.
 
 ## 2026-11-13T10:15:16+07:00 — claude-design (Claude-Dev1) — PR #124: POD ditolak server tidak lagi dihitung selesai (review #5885182618)
 
