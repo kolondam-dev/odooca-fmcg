@@ -538,8 +538,10 @@ class CanonicalPerpetualAdapter:
                 )
         else:
             if not callable(getattr(lot, "write", None)):
+                lot_label = getattr(lot, "name", lot)
                 raise RuntimeError(
-                    f"[canonical_loader] FATAL: Lot '{getattr(lot, 'name', lot)}' tidak mendukung write() untuk backfill."
+                    f"[canonical_loader] FATAL: Lot '{lot_label}' "
+                    "tidak mendukung write() untuk backfill."
                 )
             lot.write({"expiration_date": f"{expected_date} 00:00:00"})
             current_expiry = getattr(lot, "expiration_date", False)
