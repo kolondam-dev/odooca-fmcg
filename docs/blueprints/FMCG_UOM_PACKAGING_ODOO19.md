@@ -44,10 +44,14 @@ The source currently does not define the actual business name of the intermediat
 
 ## Implementation boundary
 
-This milestone adds the native product-level UoM hierarchy and keeps the existing inventory UoM unchanged. It does not yet change sales/purchase transaction defaults, add quantity breakdown columns to documents, or implement picking/packing/delivery reports.
+This milestone adds the native product-level UoM hierarchy and a Sales Order line extension:
+- new FMCG SO lines default to the SKU's readable base-unit label;
+- native product UoM choices include base, inner, and carton units;
+- each SO line displays a derived packaging breakdown from one canonical quantity;
+- inventory UoM remains unchanged, so stock moves continue to convert to the existing inventory basis.
 
-The next milestone must:
-- expose the product's base/inner/carton UoMs in the Sales Order selector;
-- preserve native conversion into the existing inventory UoM for stock moves;
-- show a derived breakdown from one canonical quantity on SO, picking, packing, delivery, and invoice documents;
-- configure vendor-specific purchase UoM through `product.supplierinfo.product_uom_id`, not a removed product-level field.
+Still outstanding:
+- vendor-specific purchase UoM through `product.supplierinfo.product_uom_id`;
+- quantity breakdown on invoice lines and stock documents;
+- Picking List, Packing List, and custom Delivery Order reports;
+- FEFO pick suggestions based on real lot expiry, availability, reservation, and location data.
