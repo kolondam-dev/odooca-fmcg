@@ -2575,3 +2575,22 @@
   * python -m ruff check .: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-13T16:15:00+07:00
+
+
+[2026-11-13T21:56:00+07:00] [INFO] F4: Pengikatan Pajak Kanonikal Kode 04 pada Baris Faktur & Klon Multi-path Filestore CI
+- Resolusi Kegagalan Runtime Drift Faktur pada CI install-test (Run 43398725769):
+  * Analisis Kegagalan:
+    - Seluruh alur PO, SO, DO, dan fault-injection probe (probe_batch_interruption, probe_ap_bill_mismatch) lulus 100%.
+    - Langkah runtime proof berhenti pada verifikasi invoice kanonikal: [FATAL] Runtime verification failed: Drift detected on Invoice INV-202608-0001: expected total 394804.80, found 355680.00.
+    - Nilai 355.680,00 adalah DPP komersial murni tanpa PPN (tax amount = 0,00), disebabkan baris faktur account.move.line yang di-generate dari SO belum mewarisi pajak kode 04 saat posting.
+  * Solusi Implementasi:
+    - Menghubungkan akun 211200 pada repartition line pajak kode 04 di _resolve_canonical_tax_code_04() dengan fallback try-except.
+    - Menetapkan tax_ids pada baris order sale.order.line secara komprehensif.
+    - Pada _apply_invoices(), mengaitkan canonical_tax_04 ke tax_ids pada baris produk draft invoice sebelum action_post(). Mekanisme native id_base menghitung DPP Nilai Lain 11/12 (326.040,00) dan PPN 12% (39.124,80) dengan total faktur tepat 394.804,80 tanpa pelanggaran invarian ORM.
+    - Memperkuat kloning filestore pada ci.yml dengan memeriksa path filestore standard dan XDG data dir.
+- Verifikasi Penuh:
+  * python -m unittest tests/test_period_pack_loader.py: 54/54 tests PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-13T21:56:00+07:00

@@ -1,3 +1,20 @@
+## 2026-11-13T21:56:00+07:00 — antigravity — F4: Pengikatan Pajak Kanonikal Kode 04 pada Baris Faktur & Klon Multi-path Filestore CI (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_resolve_canonical_tax_code_04()`, memastikan baris repartisi pajak faktur dan refund terhubung ke akun PPN Keluaran `211200` (`repartition_type == 'tax'`) serta factor percent 100%. Dilengkapi proteksi try-except agar fixture pengujian unit tanpa database lengkap tetap kompatibel.
+  - Pada `_apply_sales_orders_and_deliveries()`, memastikan nilai pajak diisi serempak pada `tax_id` dan `tax_ids` pada baris order penjualan sesuai skema model Odoo 19.
+  - Pada `_apply_invoices()`, menambahkan pengikatan eksplisit pajak kanonikal kode 04 (`canonical_tax_04`) pada `tax_ids` seluruh baris faktur produk (`account.move.line`) sesaat sebelum `inv_rec.action_post()`. Hal ini mengeliminasi drift faktur (sebelumnya `INV-202608-0001` menghasilkan total 355.680,00 tanpa PPN dari perkiraan 394.804,80) sehingga engine pajak `id_base` menghitung DPP Nilai Lain PMK 131/2024 (11/12 * 355.680 = 326.040) dan PPN 12% (39.124,80) secara persis dan native tanpa SQL overwrite.
+- `.github/workflows/ci.yml`:
+  - Memperbarui fungsi klon filestore database sekali pakai (`copy_filestore()`) untuk memeriksa `/var/lib/odoo/filestore` dan `/var/lib/odoo/.local/share/Odoo/filestore` saat menduplikasi database master ke `fmcg_period_master`, `fmcg_period_disposable_b`, dan `fmcg_period_disposable`.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-13T21:56:00+07:00
+
 ## 2026-11-13T16:15:00+07:00 — antigravity — F4: Penyelarasan Tanggal Move Efektif Pasca-Validasi & Koreksi Healthcheck Postgres CI (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

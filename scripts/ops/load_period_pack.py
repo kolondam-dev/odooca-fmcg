@@ -1696,16 +1696,35 @@ class GenericPeriodPackLoader:
                 f"Ambiguous Tax Code 04 configuration: Multiple global taxes matched: {[getattr(t, 'name', '') for t in matching_04]}"
             )
 
+        tax_out_acc = None
+        try:
+            tax_out_acc = self._resolve_account("211200")
+        except Exception:
+            tax_out_acc = None
         inv_reps = getattr(tax_rec, "invoice_repartition_line_ids", None)
         if inv_reps:
             for rep in inv_reps:
+                rep_vals = {}
                 if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - 100.0) > 0.01:
-                    rep.sudo().write({"factor_percent": 100.0})
+                    rep_vals["factor_percent"] = 100.0
+                if getattr(rep, "repartition_type", "") == "tax" and tax_out_acc:
+                    cur_acc = getattr(rep, "account_id", None)
+                    if not cur_acc or (hasattr(cur_acc, "id") and cur_acc.id != tax_out_acc.id):
+                        rep_vals["account_id"] = tax_out_acc.id
+                if rep_vals and hasattr(rep, "write"):
+                    rep.sudo().write(rep_vals)
         ref_reps = getattr(tax_rec, "refund_repartition_line_ids", None)
         if ref_reps:
             for rep in ref_reps:
+                rep_vals = {}
                 if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - 100.0) > 0.01:
-                    rep.sudo().write({"factor_percent": 100.0})
+                    rep_vals["factor_percent"] = 100.0
+                if getattr(rep, "repartition_type", "") == "tax" and tax_out_acc:
+                    cur_acc = getattr(rep, "account_id", None)
+                    if not cur_acc or (hasattr(cur_acc, "id") and cur_acc.id != tax_out_acc.id):
+                        rep_vals["account_id"] = tax_out_acc.id
+                if rep_vals and hasattr(rep, "write"):
+                    rep.sudo().write(rep_vals)
 
         if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
             self.env.invalidate_all()
@@ -2356,14 +2375,18 @@ class GenericPeriodPackLoader:
                     "discount": float(lrow.get("discount_pct", 0.0)),
                 }
                 sol_fields = getattr(self.env.get("sale.order.line"), "_fields", None)
-                if sol_fields is None:
-                    sol_vals["tax_id"] = [(6, 0, [canonical_tax_04.id])]
-                elif "tax_id" in sol_fields:
-                    sol_vals["tax_id"] = [(6, 0, [canonical_tax_04.id])]
-                elif "tax_ids" in sol_fields:
-                    sol_vals["tax_ids"] = [(6, 0, [canonical_tax_04.id])]
-                elif "taxes_id" in sol_fields:
-                    sol_vals["taxes_id"] = [(6, 0, [canonical_tax_04.id])]
+                if canonical_tax_04:
+                    tax_cmd = [(6, 0, [canonical_tax_04.id])]
+                    if sol_fields is None:
+                        sol_vals["tax_id"] = tax_cmd
+                        sol_vals["tax_ids"] = tax_cmd
+                    else:
+                        if "tax_ids" in sol_fields:
+                            sol_vals["tax_ids"] = tax_cmd
+                        if "tax_id" in sol_fields:
+                            sol_vals["tax_id"] = tax_cmd
+                        if "taxes_id" in sol_fields:
+                            sol_vals["taxes_id"] = tax_cmd
                 sol_data.append((0, 0, sol_vals))
             so_vals["order_line"] = sol_data
             so_rec = SaleOrder.create(so_vals)
@@ -2491,6 +2514,17 @@ class GenericPeriodPackLoader:
                 if "l10n_id_tax_transaction_code" in inv_rec._fields:
                     inv_vals["l10n_id_tax_transaction_code"] = "04"
                 inv_rec.write(inv_vals)
+
+                # Ensure canonical Tax Code 04 (DPP Nilai Lain 12%) is attached to all product invoice lines
+                canonical_tax_04 = self._resolve_canonical_tax_code_04()
+                if canonical_tax_04:
+                    inv_lines = getattr(inv_rec, "invoice_line_ids", [])
+                    for il in inv_lines:
+                        if getattr(il, "display_type", False) not in ("line_section", "line_note") and getattr(il, "product_id", False):
+                            cur_taxes = getattr(il, "tax_ids", None)
+                            if not cur_taxes or (hasattr(cur_taxes, "ids") and canonical_tax_04.id not in cur_taxes.ids):
+                                if callable(getattr(il, "write", None)):
+                                    il.write({"tax_ids": [(6, 0, [canonical_tax_04.id])]})
 
                 inv_rec.action_post()
 
