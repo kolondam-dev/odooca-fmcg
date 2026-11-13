@@ -1,3 +1,20 @@
+## 2026-11-13T23:55:00+07:00 — antigravity — F4: Kalibrasi Repartition Factor DPP Nilai Lain 11/12 (PMK 131/2024) & Persistensi Pajak SO Order Line (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/load_fmcg_seed.py`:
+  - Pada `load_canonical_taxes()`, mengonfigurasi `factor_percent = (11.0 / 12.0) * 100.0` (~91.6667%) pada repartition line bertipe `base` untuk Pajak Kode 04 (`invoice_repartition_line_ids` dan `refund_repartition_line_ids`), serta mempertahankan `factor_percent = 100.0` dan akun PPN Keluaran `211200` pada repartition line bertipe `tax`. Hal ini menjamin DPP Nilai Lain 11/12 dihitung tepat (326.040,00 dari nilai komersial 355.680,00) dan PPN 12% sebesar 39.124,80 (total 394.804,80) sesuai ketentuan PMK 131/2024.
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_resolve_canonical_tax_code_04()`, menerapkan aturan repartisi faktor yang sama (`base` = `(11/12)*100`, `tax` = `100.0` + akun `211200`).
+  - Pada `_apply_sales_orders_and_deliveries()`, menambahkan penulisan eksplisit `tax_id` pada setiap `order_line` pasca-eksekusi `SaleOrder.create()` sebelum `action_confirm()`, mencegah Odoo ORM compute engine menghapus konfigurasi pajak saat create.
+  - Pada `_apply_invoices()`, memastikan baris order penjualan tetap membawa `canonical_tax_04` sebelum memanggil `so._create_invoices()`, sehingga baris faktur dan akun pajak PPN 12% di-generate secara native oleh Odoo ORM tanpa drift numerik.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-13T23:55:00+07:00
+
 ## 2026-11-13T21:56:00+07:00 — antigravity — F4: Pengikatan Pajak Kanonikal Kode 04 pada Baris Faktur & Klon Multi-path Filestore CI (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

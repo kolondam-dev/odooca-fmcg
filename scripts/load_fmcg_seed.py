@@ -783,8 +783,9 @@ def load_canonical_taxes():
         if "l10n_id_tax_transaction_code" in AccountTax._fields:
             tax_vals["l10n_id_tax_transaction_code"] = "04"
         if tax_out_acc and "invoice_repartition_line_ids" in AccountTax._fields:
+            factor_dpp_nl = (11.0 / 12.0) * 100.0
             tax_vals["invoice_repartition_line_ids"] = [
-                (0, 0, {"repartition_type": "base", "factor_percent": 100.0}),
+                (0, 0, {"repartition_type": "base", "factor_percent": factor_dpp_nl}),
                 (0, 0, {
                     "repartition_type": "tax",
                     "factor_percent": 100.0,
@@ -792,7 +793,7 @@ def load_canonical_taxes():
                 }),
             ]
             tax_vals["refund_repartition_line_ids"] = [
-                (0, 0, {"repartition_type": "base", "factor_percent": 100.0}),
+                (0, 0, {"repartition_type": "base", "factor_percent": factor_dpp_nl}),
                 (0, 0, {
                     "repartition_type": "tax",
                     "factor_percent": 100.0,
@@ -803,12 +804,25 @@ def load_canonical_taxes():
         print(f"    Pajak kanonikal Kode 04 dibuat: {new_tax.name} (ID {new_tax.id})")
     else:
         if "invoice_repartition_line_ids" in AccountTax._fields:
+            factor_dpp_nl = (11.0 / 12.0) * 100.0
             for rep in getattr(existing_tax, "invoice_repartition_line_ids", []):
                 if hasattr(rep, "write"):
-                    rep.write({"factor_percent": 100.0})
+                    if getattr(rep, "repartition_type", "") == "base":
+                        rep.write({"factor_percent": factor_dpp_nl})
+                    elif getattr(rep, "repartition_type", "") == "tax":
+                        vals = {"factor_percent": 100.0}
+                        if tax_out_acc:
+                            vals["account_id"] = tax_out_acc.id
+                        rep.write(vals)
             for rep in getattr(existing_tax, "refund_repartition_line_ids", []):
                 if hasattr(rep, "write"):
-                    rep.write({"factor_percent": 100.0})
+                    if getattr(rep, "repartition_type", "") == "base":
+                        rep.write({"factor_percent": factor_dpp_nl})
+                    elif getattr(rep, "repartition_type", "") == "tax":
+                        vals = {"factor_percent": 100.0}
+                        if tax_out_acc:
+                            vals["account_id"] = tax_out_acc.id
+                        rep.write(vals)
         print(f"    Pajak kanonikal Kode 04 sudah terpasang: {existing_tax.name} (ID {existing_tax.id})")
 
 

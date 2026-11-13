@@ -2594,3 +2594,22 @@
   * python -m ruff check .: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-13T21:56:00+07:00
+
+[2026-11-13T23:55:00+07:00] [INFO] F4: Kalibrasi Repartition Factor DPP Nilai Lain 11/12 (PMK 131/2024) & Persistensi Pajak SO Order Line
+- Investigasi Mendalam Kegagalan install-test Langkah 10 (Run 43449145277):
+  * Fakta CI: Fault-injection probes (probe_batch_interruption dan probe_ap_bill_mismatch) LULUS dengan status PASS dan digest_matched: true.
+  * Root Cause Drift Faktur INV-202608-0001 (expected total 394804.80, found 355680.00):
+    1. Konfigurasi Tax Repartition: Pada account.tax untuk Pajak Kode 04, repartition line base sebelumnya menggunakan factor_percent = 100.0%. Untuk memenuhi regulasi PMK 131/2024 (DPP Nilai Lain 11/12), repartition line base wajib memiliki factor_percent = (11/12)*100 (91.6667%) agar tax_base_amount terefleksi tepat 326.040,00 dan PPN 12% sebesar 39.124,80 (total 394.804,80).
+    2. Overwrite Komputasi Odoo ORM: Saat SaleOrder.create(so_vals), Odoo ORM mengeksekusi _compute_tax_id() secara internal yang menghapus tax_id jika produk belum terasosiasi pajak default.
+    3. Akibatnya, saat so._create_invoices() dipanggil, draft faktur di-generate dengan tax_ids kosong.
+  * Solusi Implementasi:
+    1. Di scripts/load_fmcg_seed.py dan scripts/ops/load_period_pack.py: Mengonfigurasi factor_percent = (11.0 / 12.0) * 100.0 pada repartition line bertipe 'base' untuk Pajak Kode 04 (baik invoice maupun refund), serta factor_percent = 100.0 dan account_id = 211200 pada repartition line bertipe 'tax'.
+    2. Di scripts/ops/load_period_pack.py:
+       - Pada _apply_sales_orders_and_deliveries(), menetapkan sol.write({"tax_id": [(6, 0, [canonical_tax_04.id])]}) secara eksplisit pasca-create sebelum action_confirm().
+       - Pada _apply_invoices(), memastikan kembali SO line memiliki canonical_tax_04 sebelum so._create_invoices() dipanggil, sehingga invoice_line_ids dan tax lines dibuat secara native oleh Odoo ORM dengan total tepat 394.804,80.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 54/54 tests PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-13T23:55:00+07:00

@@ -1701,28 +1701,43 @@ class GenericPeriodPackLoader:
             tax_out_acc = self._resolve_account("211200")
         except Exception:
             tax_out_acc = None
+        factor_dpp_nl = (11.0 / 12.0) * 100.0
         inv_reps = getattr(tax_rec, "invoice_repartition_line_ids", None)
         if inv_reps:
             for rep in inv_reps:
                 rep_vals = {}
-                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - 100.0) > 0.01:
-                    rep_vals["factor_percent"] = 100.0
-                if getattr(rep, "repartition_type", "") == "tax" and tax_out_acc:
-                    cur_acc = getattr(rep, "account_id", None)
-                    if not cur_acc or (hasattr(cur_acc, "id") and cur_acc.id != tax_out_acc.id):
-                        rep_vals["account_id"] = tax_out_acc.id
+                rep_type = getattr(rep, "repartition_type", "")
+                if rep_type == "base":
+                    cur_f = float(getattr(rep, "factor_percent", 100.0) or 0.0)
+                    if abs(cur_f - factor_dpp_nl) > 0.01:
+                        rep_vals["factor_percent"] = factor_dpp_nl
+                elif rep_type == "tax":
+                    cur_f = float(getattr(rep, "factor_percent", 100.0) or 0.0)
+                    if abs(cur_f - 100.0) > 0.01:
+                        rep_vals["factor_percent"] = 100.0
+                    if tax_out_acc:
+                        cur_acc = getattr(rep, "account_id", None)
+                        if not cur_acc or (hasattr(cur_acc, "id") and cur_acc.id != tax_out_acc.id):
+                            rep_vals["account_id"] = tax_out_acc.id
                 if rep_vals and hasattr(rep, "write"):
                     rep.sudo().write(rep_vals)
         ref_reps = getattr(tax_rec, "refund_repartition_line_ids", None)
         if ref_reps:
             for rep in ref_reps:
                 rep_vals = {}
-                if hasattr(rep, "write") and abs(float(getattr(rep, "factor_percent", 100.0) or 0.0) - 100.0) > 0.01:
-                    rep_vals["factor_percent"] = 100.0
-                if getattr(rep, "repartition_type", "") == "tax" and tax_out_acc:
-                    cur_acc = getattr(rep, "account_id", None)
-                    if not cur_acc or (hasattr(cur_acc, "id") and cur_acc.id != tax_out_acc.id):
-                        rep_vals["account_id"] = tax_out_acc.id
+                rep_type = getattr(rep, "repartition_type", "")
+                if rep_type == "base":
+                    cur_f = float(getattr(rep, "factor_percent", 100.0) or 0.0)
+                    if abs(cur_f - factor_dpp_nl) > 0.01:
+                        rep_vals["factor_percent"] = factor_dpp_nl
+                elif rep_type == "tax":
+                    cur_f = float(getattr(rep, "factor_percent", 100.0) or 0.0)
+                    if abs(cur_f - 100.0) > 0.01:
+                        rep_vals["factor_percent"] = 100.0
+                    if tax_out_acc:
+                        cur_acc = getattr(rep, "account_id", None)
+                        if not cur_acc or (hasattr(cur_acc, "id") and cur_acc.id != tax_out_acc.id):
+                            rep_vals["account_id"] = tax_out_acc.id
                 if rep_vals and hasattr(rep, "write"):
                     rep.sudo().write(rep_vals)
 
@@ -2390,6 +2405,12 @@ class GenericPeriodPackLoader:
                 sol_data.append((0, 0, sol_vals))
             so_vals["order_line"] = sol_data
             so_rec = SaleOrder.create(so_vals)
+            if canonical_tax_04 and hasattr(so_rec, "order_line"):
+                for sol in so_rec.order_line:
+                    cur_t = getattr(sol, "tax_id", None)
+                    if not cur_t or (hasattr(cur_t, "ids") and canonical_tax_04.id not in cur_t.ids):
+                        if hasattr(sol, "write"):
+                            sol.write({"tax_id": [(6, 0, [canonical_tax_04.id])]})
             so_rec.with_context(fmcg_seed_load=True).action_confirm()
             so_count += 1
 
@@ -2495,6 +2516,15 @@ class GenericPeriodPackLoader:
                                             except Exception:
                                                 pass
 
+            # Ensure SO lines carry canonical Tax Code 04 before invoicing so _create_invoices inherits it
+            canonical_tax_04 = self._resolve_canonical_tax_code_04()
+            if canonical_tax_04 and hasattr(so, "order_line"):
+                for sol in so.order_line:
+                    cur_t = getattr(sol, "tax_id", None)
+                    if not cur_t or (hasattr(cur_t, "ids") and canonical_tax_04.id not in cur_t.ids):
+                        if hasattr(sol, "write"):
+                            sol.write({"tax_id": [(6, 0, [canonical_tax_04.id])]})
+
             # Generate invoice from SO
             inv = so._create_invoices()
             if inv:
@@ -2516,15 +2546,21 @@ class GenericPeriodPackLoader:
                 inv_rec.write(inv_vals)
 
                 # Ensure canonical Tax Code 04 (DPP Nilai Lain 12%) is attached to all product invoice lines
-                canonical_tax_04 = self._resolve_canonical_tax_code_04()
                 if canonical_tax_04:
                     inv_lines = getattr(inv_rec, "invoice_line_ids", [])
+                    needs_recompute = False
                     for il in inv_lines:
                         if getattr(il, "display_type", False) not in ("line_section", "line_note") and getattr(il, "product_id", False):
                             cur_taxes = getattr(il, "tax_ids", None)
                             if not cur_taxes or (hasattr(cur_taxes, "ids") and canonical_tax_04.id not in cur_taxes.ids):
                                 if callable(getattr(il, "write", None)):
                                     il.write({"tax_ids": [(6, 0, [canonical_tax_04.id])]})
+                                    needs_recompute = True
+                    if needs_recompute and hasattr(inv_rec, "_compute_tax_totals"):
+                        try:
+                            inv_rec._compute_tax_totals()
+                        except Exception:
+                            pass
 
                 inv_rec.action_post()
 
