@@ -46,13 +46,17 @@ test("authenticated driver with one assigned outlet opens daily sync and consist
         page.getByRole("button", { name: "Sales", exact: true }),
     ).toHaveCount(0);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    await expect(page.locator(".delivery-task")).toHaveCount(1);
-    await expect(page.locator(".delivery-task")).toContainText(
-        "Assigned Only Store",
+    // Satu toko ditugaskan: kartu trip menyebut "1 toko"; daftar toko memuat nama dan alamat outlet itu.
+    await expect(page.getByRole("button", { name: /^Buka TRIP/ })).toHaveCount(
+        1,
     );
-    await expect(page.locator(".delivery-task")).toContainText(
-        "Assigned Only Address",
-    );
+    await expect(
+        page.getByRole("button", { name: /^Buka TRIP/ }),
+    ).toContainText("1 toko");
+    await page.getByRole("button", { name: /^Buka TRIP/ }).click();
+    const stores = page.getByRole("region", { name: /^Daftar toko / });
+    await expect(stores).toContainText("Assigned Only Store");
+    await expect(stores).toContainText("Assigned Only Address");
 });
 
 test("sales account retains its Sales menu", async ({ page }) => {

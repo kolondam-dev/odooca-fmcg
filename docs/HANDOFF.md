@@ -10,11 +10,25 @@
 **Belum diuji:** [BU] Aktivasi `id_finance_foundation`/`id_finance_reporting` di DB demo; export XLSX/PDF; geometri browser; tie-out angka per report ID; sign-off Finance Controller/QA; payroll, FIN36/55/56, I3–I8. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-13T10:35:07+07:00
 
+## 2026-11-13T10:15:16+07:00 — claude-design (Claude-Dev1) — PR #124: POD ditolak server tidak lagi dihitung selesai (review #5885182618)
+
+- Akar masalah: `DeliveryWorkspace.isDone` mencocokkan sumber manifest tetapi ikut menghitung entri outbox `rejected`; progres trip naik dan tombol check-in melompati toko yang PODnya masih perlu koreksi.
+- Perbaikan: entri `businessRejected` dikecualikan; koreksi valid (anak, sumber sama) yang menghitung selesai. POD menunggu sinkronisasi tetap dihitung (perilaku offline tidak berubah).
+- Tes: `delivery.spec` (phone+tablet) memeriksa 0/2 setelah penolakan, toko tetap 'Berikutnya' dan koreksi terjangkau, lalu 1/2 setelah koreksi.
+
 ## 2026-11-13T09:00:00+07:00 — Agent-Opencode — I2 exposure: wizard laporan, ACL, menu Finance Reports
 **Berubah:** `addons/id_finance_reporting/wizards/finance_report_wizard.py` (baru; TransientModel `id.finance.report.wizard`, 8 jenis laporan, dispatch `_snapshot`, pratinjau HTML+JSON); `addons/id_finance_reporting/views/finance_report_wizard_views.xml` (baru; form + 8 `act_window`); `addons/id_finance_reporting/security/ir.model.access.csv` (baru); `addons/id_finance_reporting/__manifest__.py` + `__init__.py`; `addons/id_finance_foundation/views/finance_menu.xml` (submenu **Finance Reports**, grup `group_finance_reader`) dan versi `19.0.1.1.0`; i18n `id.po` kedua modul; `scripts/ops/verify_finance_i2_exposure.py` (baru) + langkah CI `I2 exposure`; `docs/finance/I2_EXPOSURE.md`, `OWNER_DECISIONS.md`, `LICENSING.md` (baru) dan `docs/finance/README.md`.
 **Diverifikasi:** [F] Model laporan I2 semuanya `AbstractModel` dengan `@api.model _snapshot(...)`; tanpa wizard tidak ada satu pun yang bisa dibuka dari menu. [F] Semua `_snapshot` memanggil `_check_scope`/`_check_finance_scope` (grup `account.group_account_readonly/user/manager` + company aktif), jadi ACL hanya lapisan pertama. [F] `group_finance_reader` meng-implied `account.group_account_readonly`, sehingga menu Finance terlihat. [F] `account.account.company_ids` ada pada Odoo 19 (domain akun); widget `ace` ada pada 19.0. [F] `ruff` PASS; `check_manifests.py` PASS (14 addon); XML well-formed; YAML workflow valid; `compileall` OK; 13 tes formula I2c lulus; validasi PO 92 entri (72+20) tanpa duplikat.
 **Belum diuji:** [BU] Instalasi/upgrade pada database disposable dan demo belum dijalankan; bukti `FINANCE_I2_EXPOSURE=PASS` menunggu CI exact-SHA PR. Export XLSX/PDF, geometri browser, tie-out angka per report ID, layar native list/pivot, sign-off Finance Controller/QA belum ada. FIN36/55/56, payroll, I3–I8 tetap terbuka. [F] `REPORT_CATALOG.csv` tidak diubah; 58/58 `BELUM_DITERIMA`. [F] Manifest dua modul turunan AGPL masih LGPL-3; perubahan lisensi sengaja ditunda ke PR terpisah (lihat `docs/finance/LICENSING.md`).
 **Signature:** Task managed by Agent-Opencode at 2026-11-13T09:00:00+07:00
+
+## 2026-11-13T08:50:36+07:00 — claude-design (Claude-Dev1) — Fase 3B-5: Delivery (49–51) dan POD (53–56) mengikuti DS
+
+- Alur baru: daftar DO -> daftar toko -> check-in -> hub toko -> serah terima (Terima semua/Sebagian/Tolak) -> hasil POD; Biaya toko dibuka dari hub.
+- `DeliveryTaskEditor` kehilangan tampilan lama (details/drawer/wizard/preview); logika draft, koreksi, sumber manifest, riwayat tetap. Update state baris memakai functional update (menghindari tindih antar perubahan beruntun).
+- `DeliveryWorkspace`: kartu trip + `TripStores` (layar toko); selesai = POD antrean bersumber manifest identik. `DeliveryFee` dihapus (digantikan Biaya toko).
+- Tes: helper e2e baru (`openDeliveryTask`, `closeDeliveryScreens`, `backFromTask`); spec delivery/next-policy/review-regressions/route-workflow/sales-delivery-rules disesuaikan.
+- Utang tercatat di K19 (TTD, multi-satuan, foto per item, Tagihan -> fase Penagihan). Backend tidak berubah.
 
 ## 2026-11-12T10:50:13+07:00 — Agent-Opencode — Demo accounting: nyalakan account_financial_report
 **Berubah:** `deploy/init.sh` (`INIT_MODULES` + `account_financial_report`; blok bermark `install_account_financial_report_v1` untuk database yang sudah berjalan); `docs/finance/DEMO_ACCOUNTING_REPORTS.md` (baru); `docs/finance/README.md` (status dan indeks dokumen).

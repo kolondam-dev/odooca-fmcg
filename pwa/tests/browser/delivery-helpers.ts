@@ -34,41 +34,65 @@ export async function ensureDaily(page: Page) {
     await expect(region).toHaveAttribute("aria-busy", "false");
     await expect(ready).toBeVisible();
 }
+/** Buka DO dari tab Delivery: kartu trip -> daftar toko -> DO. Layar penuh, jadi lokator = body. */
+export async function openDeliveryTask(page: Page, id = "DEMO-DO-001") {
+    const region = page.getByRole("region", {
+        name: `Delivery ${id}`,
+        exact: true,
+    });
+    if (!(await region.isVisible())) {
+        const stores = page.getByRole("region", { name: /^Daftar toko / });
+        if (!(await stores.isVisible()))
+            await page
+                .getByRole("button", { name: /^Buka TRIP/ })
+                .first()
+                .click();
+        await page
+            .getByRole("button", { name: `Buka ${id}`, exact: true })
+            .click();
+    }
+    await expect(
+        page.getByText("Memulihkan data…", { exact: true }),
+    ).toHaveCount(0);
+    return page.locator("body");
+}
+/** Tutup semua layar Delivery (hasil POD/hub -> daftar toko -> halaman) agar halaman di belakangnya terjangkau. */
+export async function closeDeliveryScreens(page: Page) {
+    for (let i = 0; i < 4; i++) {
+        const screen = page
+            .locator(".ui-screen--over")
+            .filter({ has: page.getByRole("button", { name: "Kembali" }) })
+            .last();
+        if (!(await screen.isVisible())) return;
+        await screen.getByRole("button", { name: "Kembali" }).first().click();
+    }
+}
+/** Foto bukti + lokasi lokal pada layar yang sedang terbuka (check-in atau serah terima). */
 export async function saveDeliveryPhoto(task: Locator) {
-    const preview = task.getByRole("button", {
-        name: "Preview penerimaan",
-        exact: true,
-    });
-    if (await preview.isVisible())
-        await task.getByRole("button", { name: /^Tutup / }).click();
-    const close = task.getByRole("button", {
-        name: "Close session",
-        exact: true,
-    });
-    if (
-        !(await task
-            .getByRole("button", { name: "Mulai sesi delivery", exact: true })
-            .isVisible()) &&
-        (await close.isEnabled())
-    )
-        await close.click();
-    await task.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
-    await expect(task.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
-    await task
+    // Layar teratas (check-in atau serah terima); halaman di belakangnya punya bidang foto sendiri.
+    const top = task.page().locator(".ui-screen--top").last();
+    await top.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
+    await expect(top.getByAltText("Pratinjau foto bukti lokal")).toBeVisible();
+    await top
         .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
         .click();
-    await task
+    await top
         .getByRole("button", { name: "Simpan bukti lokal", exact: true })
         .click();
-    await expect(task.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
+    await expect(top.getByText("Foto dan lokasi tersimpan.")).toBeVisible();
 }
+/** Check-in toko (bila belum), masuk hub, lalu buka layar serah terima. */
 export async function startDelivery(task: Locator) {
-    await expect(task).toHaveAttribute("aria-busy", "false");
-    if (
-        await task
-            .getByRole("button", { name: "Mulai sesi delivery", exact: true })
-            .isVisible()
-    ) {
+    const start = task.getByRole("button", {
+        name: "Mulai sesi delivery",
+        exact: true,
+    });
+    const form = task.getByRole("button", {
+        name: /^Mulai (serah terima|koreksi POD)$/,
+    });
+    const note = task.getByLabel("Catatan serah terima", { exact: true });
+    await expect(start.or(form).or(note)).toBeVisible();
+    if (await start.isVisible()) {
         await saveDeliveryPhoto(task);
         await task
             .getByRole("button", {
@@ -76,31 +100,18 @@ export async function startDelivery(task: Locator) {
                 exact: true,
             })
             .click();
-        await task
-            .getByRole("button", { name: "Mulai sesi delivery", exact: true })
-            .click();
-        await task
-            .getByRole("button", { name: "Open session", exact: true })
-            .click();
+        await start.click();
         await expect(task.getByText(/Sesi delivery aktif/)).toBeVisible();
-        await task
-            .getByLabel("Alasan status (direkam ke semua item)", {
-                exact: true,
-            })
-            .fill("Diterima sesuai dokumen");
     }
-    const open = task.getByRole("button", {
-        name: "Open session",
-        exact: true,
-    });
-    if (
-        !(await task.getByRole("dialog").isVisible()) &&
-        (await open.isEnabled())
-    )
-        await open.click();
-    const reason = task.getByLabel("Alasan status (direkam ke semua item)", {
-        exact: true,
-    });
-    if ((await reason.isVisible()) && !(await reason.inputValue()))
-        await reason.fill("Diterima sesuai dokumen");
+    if (await form.isVisible()) await form.click();
+    await expect(note).toBeVisible();
+    if (!(await note.inputValue())) await note.fill("Diterima sesuai dokumen");
+}
+/** Kembali dari layar DO (hasil/hub) ke daftar toko. */
+export async function backFromTask(page: Page) {
+    await page
+        .getByRole("region", { name: /^Delivery DEMO/ })
+        .getByRole("button", { name: "Kembali" })
+        .first()
+        .click();
 }
