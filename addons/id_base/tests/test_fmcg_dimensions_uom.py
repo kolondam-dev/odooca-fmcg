@@ -1,3 +1,7 @@
+import csv
+import pathlib
+import tempfile
+
 from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase
 
@@ -66,6 +70,120 @@ class TestFMCGDimensionsUoM(TransactionCase):
 
         self.assertEqual(product.name, original_name)
         self.assertEqual(product.uom_id, self.uom_unit)
+
+
+    def _run_products_csv_loader(self, rows):
+        """Execute the real load_products() function against a temporary CSV in this Odoo test DB."""
+        repo_root = next(
+            parent for parent in pathlib.Path(__file__).resolve().parents
+            if (parent / "scripts" / "load_fmcg_seed.py").is_file()
+        )
+        loader_path = repo_root / "scripts" / "load_fmcg_seed.py"
+        source = loader_path.read_text(encoding="utf-8")
+        # Import the script's definitions without invoking load_all() (which commits the test cursor).
+        source = source.rsplit("\\nload_all()", 1)[0]
+        with tempfile.TemporaryDirectory(prefix="fmcg-seed-uom-") as tmp:
+            seed_dir = pathlib.Path(tmp)
+            csv_path = seed_dir / "products_150.csv"
+            fieldnames = [
+                "default_code", "name", "principal_code", "brand_code",
+                "fmcg_category", "base_uom", "inner_qty", "carton_qty",
+            ]
+            with csv_path.open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
+
+            namespace = {"env": self.env, "__file__": str(loader_path)}
+            exec(compile(source, str(loader_path), "exec"), namespace)
+            namespace["seed_dir"] = seed_dir
+            namespace["load_products"]()
+
+    def test_real_seed_loader_replay_preserves_stock_uom_and_packaging(self):
+        product = self.env["product.template"].create({
+            "name": "Existing Seed SKU Loader Replay",
+            "default_code": "TEST-SEED-LOADER-REPLAY",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "is_storable": True,
+        })
+        variant = product.product_variant_id
+        location = self.env.ref("stock.stock_location_stock")
+        quant_model = self.env["stock.quant"]
+        quant_model._update_available_quantity(variant, location, 37.0)
+
+        row = {
+            "default_code": product.default_code,
+            "name": "Existing Seed SKU Loader Replay",
+            "principal_code": self.principal.code,
+            "brand_code": self.brand.code,
+            "fmcg_category": "biscuit_wafer",
+            "base_uom": "Pcs",
+            "inner_qty": "10",
+            "carton_qty": "120",
+        }
+        self._run_products_csv_loader([row])
+        product.invalidate_recordset()
+        first_uom_ids = tuple(sorted(product.uom_ids.ids))
+        first_base_uom_id = product.fmcg_base_uom_id.id
+        first_inner_uom_id = product.fmcg_inner_uom_id.id
+        first_carton_uom_id = product.fmcg_carton_uom_id.id
+        first_qty = sum(quant_model.search([
+            ("product_id", "=", variant.id),
+            ("location_id", "=", location.id),
+        ]).mapped("quantity"))
+
+        # A second real CSV replay must be idempotent for stock and UoM relationships.
+        self._run_products_csv_loader([row])
+        product.invalidate_recordset()
+        second_qty = sum(quant_model.search([
+            ("product_id", "=", variant.id),
+            ("location_id", "=", location.id),
+        ]).mapped("quantity"))
+
+        self.assertEqual(product.uom_id, self.uom_unit)
+        self.assertEqual(first_qty, 37.0)
+        self.assertEqual(second_qty, first_qty)
+        self.assertEqual(tuple(sorted(product.uom_ids.ids)), first_uom_ids)
+        self.assertEqual(product.fmcg_base_uom_id.id, first_base_uom_id)
+        self.assertEqual(product.fmcg_inner_uom_id.id, first_inner_uom_id)
+        self.assertEqual(product.fmcg_carton_uom_id.id, first_carton_uom_id)
+
+    def test_real_seed_loader_rejects_noncanonical_uom_before_product_write(self):
+        sachet_uom = self.env.ref("id_base.uom_sch")
+        product = self.env["product.template"].create({
+            "name": "Do Not Rewrite Noncanonical SKU",
+            "default_code": "TEST-SEED-LOADER-UOM-MISMATCH",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": sachet_uom.id,
+            "list_price": 4321.0,
+        })
+        before = {
+            "name": product.name,
+            "uom_id": product.uom_id.id,
+            "list_price": product.list_price,
+            "uom_ids": tuple(sorted(product.uom_ids.ids)),
+        }
+        row = {
+            "default_code": product.default_code,
+            "name": "This Must Not Be Written",
+            "principal_code": self.principal.code,
+            "brand_code": self.brand.code,
+            "fmcg_category": "biscuit_wafer",
+            "base_uom": "Pcs",
+            "inner_qty": "10",
+            "carton_qty": "120",
+        }
+        with self.assertRaisesRegex(ValidationError, "tidak akan mengubah UoM"):
+            self._run_products_csv_loader([row])
+
+        product.invalidate_recordset()
+        self.assertEqual(product.name, before["name"])
+        self.assertEqual(product.uom_id.id, before["uom_id"])
+        self.assertEqual(product.list_price, before["list_price"])
+        self.assertEqual(tuple(sorted(product.uom_ids.ids)), before["uom_ids"])
 
     def test_01_product_dimensions_and_weight_computation(self):
         """Verifikasi bahwa 14 kolom FMCG dan komputasi dua arah bobot/kubikasi berjalan presisi."""
