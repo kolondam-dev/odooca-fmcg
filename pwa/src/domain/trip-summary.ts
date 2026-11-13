@@ -35,10 +35,21 @@ export function tripMoney(
             (payloadOf(q).source as { delivery?: { trip?: string } })?.delivery
                 ?.trip === trip,
     );
+    // Penyelesaian v2: jumlah alokasi per faktur; dibatasi ke trip melalui trip_id.
+    const settlements = live("collection.settlement.submit").filter(
+        (q) => payloadOf(q).trip_id === trip,
+    );
+    const paid = (q: QueueItem) =>
+        (
+            (payloadOf(q).allocations as Array<{ amount?: unknown }>) ?? []
+        ).reduce((a, x) => a + money(x.amount), 0);
     const by = (method: string) =>
         receipts
             .filter((q) => payloadOf(q).method === method)
-            .reduce((a, q) => a + money(payloadOf(q).amount), 0);
+            .reduce((a, q) => a + money(payloadOf(q).amount), 0) +
+        settlements
+            .filter((q) => payloadOf(q).method === method)
+            .reduce((a, q) => a + paid(q), 0);
     const cost = live("field_expense.request")
         .filter(
             (q) =>
@@ -46,7 +57,7 @@ export function tripMoney(
                 payloadOf(q).scheduled_date === businessDate,
         )
         .reduce((a, q) => a + money(payloadOf(q).amount), 0);
-    const cashReceiptUuids = receipts
+    const cashReceiptUuids = [...receipts, ...settlements]
         .filter((q) => payloadOf(q).method === "cash")
         .map((q) => q.command.client_uuid);
     return {

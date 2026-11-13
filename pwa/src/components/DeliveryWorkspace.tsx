@@ -18,7 +18,9 @@ import {
     type FieldProvider,
 } from "../domain/contracts";
 import { DeliveryTaskEditor } from "./DeliveryTaskEditor";
-import type { ExpenseSubmit } from "./BiayaTokoScreen";
+import { collectionV2Enabled } from "../domain/collection-settlement";
+import { PenagihanScreen } from "./PenagihanScreen";
+import { useCollectionTasks } from "./useCollectionTasks";
 import type { Snapshot } from "../domain/contracts";
 import { businessRejected } from "../domain/outbox-state";
 import { useBackLayer } from "../ui/navigation";
@@ -40,6 +42,7 @@ export function DeliveryWorkspace({
     queue,
     snapshot,
     submit,
+    provider,
 }: {
     store: FieldStore;
     identity: Identity;
@@ -48,8 +51,16 @@ export function DeliveryWorkspace({
     changed: () => void;
     queue: QueueItem[];
     snapshot: Snapshot;
-    submit: ExpenseSubmit;
+    submit: (
+        type: "field_expense.request" | "collection.settlement.submit",
+        payload: Record<string, unknown>,
+        label: string,
+        keepOpen?: boolean,
+        uuid?: string,
+    ) => Promise<unknown>;
 }) {
+    const { tasks: collection } = useCollectionTasks(identity, provider, store);
+    const [collectOpen, setCollectOpen] = useState<string>();
     const owner = ownerKey(identity),
         cache = `delivery-manifest-v1:${identity.businessDate}`;
     const [tasks, setTasks] = useState<DeliveryTask[]>(),
@@ -117,6 +128,11 @@ export function DeliveryWorkspace({
         ? tasks?.filter((t) => t.trip === tripOpen)
         : undefined;
     const openTask = tasks?.find((t) => podKey(t) === taskOpen);
+    const collectTask = tasks?.find((t) => podKey(t) === collectOpen);
+    const receivablesOf = (t: DeliveryTask) =>
+        (collectionV2Enabled(snapshot) ? (collection ?? []) : []).filter(
+            (c) => podKey(c.delivery) === podKey(t),
+        );
     const next = openTrip?.find((t) => !isDone(t));
     return (
         <section aria-label="Delivery order hari ini">
@@ -169,6 +185,8 @@ export function DeliveryWorkspace({
                     isDone={isDone}
                     next={next}
                     open={(t) => setTaskOpen(podKey(t))}
+                    collect={(t) => setCollectOpen(podKey(t))}
+                    hasReceivables={(t) => receivablesOf(t).length > 0}
                     close={() => setTripOpen(undefined)}
                 />
             ) : null}
@@ -185,7 +203,26 @@ export function DeliveryWorkspace({
                         snapshot,
                         submit,
                     }}
+                    collect={
+                        receivablesOf(openTask).length
+                            ? () => setCollectOpen(podKey(openTask))
+                            : undefined
+                    }
                     close={() => setTaskOpen(undefined)}
+                />
+            ) : null}
+            {collectTask ? (
+                <PenagihanScreen
+                    key={podKey(collectTask)}
+                    outlet={{
+                        id: collectTask.outlet_id,
+                        name: collectTask.outlet,
+                    }}
+                    tripId={collectTask.trip}
+                    businessDate={collectTask.business_date}
+                    receivables={receivablesOf(collectTask)}
+                    {...{ owner, store, queue, snapshot, submit }}
+                    close={() => setCollectOpen(undefined)}
                 />
             ) : null}
         </section>
@@ -198,6 +235,8 @@ function TripStores({
     isDone,
     next,
     open,
+    collect,
+    hasReceivables,
     close,
 }: {
     trip: string;
@@ -205,6 +244,8 @@ function TripStores({
     isDone: (t: DeliveryTask) => boolean;
     next?: DeliveryTask;
     open: (t: DeliveryTask) => void;
+    collect: (t: DeliveryTask) => void;
+    hasReceivables: (t: DeliveryTask) => boolean;
     close: () => void;
 }) {
     useBackLayer(true, close);
@@ -252,6 +293,17 @@ function TripStores({
                             >
                                 Navigasi
                             </Button>
+                            {hasReceivables(t) ? (
+                                <Button
+                                    variant="sec"
+                                    size="md"
+                                    icon="wallet"
+                                    aria-label={`Tagihan ${t.outlet}`}
+                                    onClick={() => collect(t)}
+                                >
+                                    Tagihan
+                                </Button>
+                            ) : null}
                             <Button
                                 variant="sec"
                                 size="md"
