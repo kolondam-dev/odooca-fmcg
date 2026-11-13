@@ -424,10 +424,10 @@ class CanonicalPerpetualAdapter:
 
     def _ensure_expiry_product_configuration(self):
         """Enable native lot expiry tracking for every canonical FMCG SKU."""
-        Product = self.env["product.product"].sudo()
-        product_fields = _safe_fields(Product)
+        ProductTemplate = self.env["product.template"].sudo()
+        template_fields = _safe_fields(ProductTemplate)
         required_fields = {"tracking", "use_expiration_date"}
-        missing = required_fields - set(product_fields)
+        missing = required_fields - set(template_fields)
         if missing:
             raise RuntimeError(
                 "[canonical_loader] FATAL: Field product expiry tidak tersedia "
@@ -435,14 +435,15 @@ class CanonicalPerpetualAdapter:
             )
 
         for sku, product in self.product_by_code.items():
-            if product.tracking != "lot":
+            template = product.product_tmpl_id
+            if template.tracking != "lot":
                 raise RuntimeError(
                     f"[canonical_loader] FATAL: SKU {sku} harus memakai tracking='lot' "
-                    f"sebelum FEFO diaktifkan (aktual={product.tracking!r})."
+                    f"sebelum FEFO diaktifkan (aktual={template.tracking!r})."
                 )
-            if not product.use_expiration_date:
-                product.write({"use_expiration_date": True})
-                if not product.use_expiration_date:
+            if not template.use_expiration_date:
+                template.write({"use_expiration_date": True})
+                if not template.use_expiration_date:
                     raise RuntimeError(
                         f"[canonical_loader] FATAL: Gagal mengaktifkan use_expiration_date untuk SKU {sku}."
                     )
