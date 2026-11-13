@@ -1,3 +1,4 @@
+from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase
 
 
@@ -58,6 +59,80 @@ class TestFMCGDimensionsUoM(TransactionCase):
 
         uom_karton = self.env.ref("id_base.uom_karton", raise_if_not_found=False)
         self.assertTrue(uom_karton, "id_base.uom_karton wajib ada!")
+
+
+    def test_04_native_per_sku_packaging_uom_hierarchy(self):
+        """SKU packaging uses Odoo 19 UoMs while preserving the inventory UoM."""
+        product = self.env["product.template"].create({
+            "name": "Coffee Sachet Test",
+            "default_code": "TEST-UOM-SACHET",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        base_uom = self.env.ref("id_base.uom_sch")
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=10, carton_qty=120)
+
+        self.assertEqual(product.uom_id, self.uom_unit)
+        self.assertEqual(product.fmcg_base_uom_id, base_uom)
+        self.assertTrue(product.fmcg_inner_uom_id)
+        self.assertTrue(product.fmcg_carton_uom_id)
+        self.assertIn(base_uom, product.uom_ids)
+        self.assertIn(product.fmcg_inner_uom_id, product.uom_ids)
+        self.assertIn(product.fmcg_carton_uom_id, product.uom_ids)
+        self.assertEqual(
+            product.fmcg_inner_uom_id._compute_quantity(1, product.uom_id),
+            10,
+        )
+        self.assertEqual(
+            product.fmcg_carton_uom_id._compute_quantity(1, product.uom_id),
+            120,
+        )
+
+        inner_id = product.fmcg_inner_uom_id.id
+        carton_id = product.fmcg_carton_uom_id.id
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=10, carton_qty=120)
+        self.assertEqual(product.fmcg_inner_uom_id.id, inner_id)
+        self.assertEqual(product.fmcg_carton_uom_id.id, carton_id)
+
+    def test_05_native_packaging_without_inner_tier(self):
+        """Products with inner_qty=1 expose carton and base UoM only."""
+        product = self.env["product.template"].create({
+            "name": "Bottled Coffee Test",
+            "default_code": "TEST-UOM-BOTTLE",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 5000.0,
+            "list_price": 6000.0,
+        })
+        base_uom = self.env.ref("id_base.uom_btl")
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=1, carton_qty=24)
+
+        self.assertFalse(product.fmcg_inner_uom_id)
+        self.assertEqual(
+            product.fmcg_carton_uom_id._compute_quantity(1, product.uom_id),
+            24,
+        )
+
+    def test_06_invalid_packaging_ratio_is_rejected(self):
+        product = self.env["product.template"].create({
+            "name": "Invalid Ratio Test",
+            "default_code": "TEST-UOM-INVALID",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        with self.assertRaises(ValidationError):
+            product.configure_fmcg_packaging_uoms(
+                self.env.ref("id_base.uom_sch"),
+                inner_qty=10,
+                carton_qty=125,
+            )
 
     def test_03_partner_coverage_and_matrix_pricelist(self):
         """Verifikasi bahwa partner dengan coverage area dan channel otomatis mendapat matriks harga."""
