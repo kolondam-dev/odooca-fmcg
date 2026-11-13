@@ -1,3 +1,9 @@
+## 2026-11-12T10:50:13+07:00 — Agent-Opencode — Demo accounting: nyalakan account_financial_report
+**Berubah:** `deploy/init.sh` (`INIT_MODULES` + `account_financial_report`; blok bermark `install_account_financial_report_v1` untuk database yang sudah berjalan); `docs/finance/DEMO_ACCOUNTING_REPORTS.md` (baru); `docs/finance/README.md` (status dan indeks dokumen).
+**Diverifikasi:** [F] Manifest OCA pada pin `f48b4ea777c444256aa1c215ec3117d604b5feff`: `account_financial_report` v19.0.0.0.26, AGPL-3, `depends: account, date_range, report_xlsx`, installable; modul sudah tersedia di image karena root `Dockerfile` mengambil seluruh `oca.lock`. [F] Enam laporan: General Ledger, Journal Ledger, Trial Balance, Open Items, Aged Partner Balance, VAT Report; menu Accounting → Reporting → OCA accounting reports. [F] Data demo PT Manado Distribusi Utama (company ID 1, chart `id`, IDR) snapshot audit I0 5 November: 1.324 invoice pelanggan posted, 35 bill posted, 2.619 journal entry posted. [F] `bash -n` PASS; `ruff` PASS; `check_manifests.py` PASS (14 addon).
+**Belum diuji:** [BU] Blok instalasi baru pada database demo berisi data belum dijalankan; bukti CI exact-SHA menunggu PR. Export XLSX/PDF dan tampilan browser pada database demo belum diuji. VAT Report belum tervalidasi mapping pajaknya. [F] `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA`; `id_finance_foundation`, `id_finance_reporting`, dan laporan custom tidak dipasang.
+**Signature:** Task managed by Agent-Opencode at 2026-11-12T10:50:13+07:00
+
 ## 2026-11-12T10:10:00+07:00 — antigravity — F4: Perbaikan Atribut Loader Period & Unit Test Batch Formatting (Branch: agen/seed-f4-period-pack-loader)
 
 **Berubah:**

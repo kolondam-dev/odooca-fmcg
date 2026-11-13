@@ -1,7 +1,9 @@
 # Finance, Accounting & Tax — gap analysis dan implementation plan
 
 Tanggal analisis: 4 November 2026 (WIB). Baseline: `f65b41a0cdbd7fb0a2d9776410bdf63285ca61e3`.
-Status: **rencana implementasi; belum mengaktifkan modul atau mengubah database**.
+Status: **rencana implementasi; modul finance belum diaktifkan di demo** kecuali
+`account_financial_report` yang disetujui pemilik untuk presentasi (lihat
+[demo accounting](DEMO_ACCOUNTING_REPORTS.md)).
 
 Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA dan custom bila dibutuhkan; wajib mencakup HPP, General Ledger, Trial Balance, MIS dan laporan standar lainnya. Kelengkapan diukur melalui katalog dan rekonsiliasi, bukan banyaknya menu atau jumlah addon.
 
@@ -13,11 +15,13 @@ Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA da
 4. [Kontrak penerimaan](ACCEPTANCE_CONTRACT.md): angka kontrol, skenario negatif, keamanan dan bukti siap pakai.
 5. [Audit runtime I0 dan containment](I0_RUNTIME_AUDIT.md): hasil implementasi awal,
    keputusan scope demo pemilik, matriks sumber dan gate yang masih terbuka.
-6. [Golden ledger minimal I0](I0_GOLDEN_LEDGER.md): oracle dua company/dua periode
+6. [Demo accounting: OCA account_financial_report](DEMO_ACCOUNTING_REPORTS.md):
+   scope yang disetujui pemilik, menu laporan, data demo, batas verifikasi.
+7. [Golden ledger minimal I0](I0_GOLDEN_LEDGER.md): oracle dua company/dua periode
    terhadap Trial Balance OCA aktual dan batas pembuktiannya.
-7. [Paket ledger native dan keamanan](I0_LEDGER_SECURITY.md): isolasi tanpa filter,
+8. [Paket ledger native dan keamanan](I0_LEDGER_SECURITY.md): isolasi tanpa filter,
    role/company negatives, invoice/refund/payment/reconcile dan kontrol historis.
-8. [Fondasi I1](I1_FOUNDATION.md), [Paket I2a core ledgers](I2A_LEDGERS_CORE.md),
+9. [Fondasi I1](I1_FOUNDATION.md), [Paket I2a core ledgers](I2A_LEDGERS_CORE.md),
    dan [Paket I2b AR/AP subledger](I2B_ARAP_SUBLEDGER.md): peran/navigasi
    keuangan, profil aktivasi versioned, oracle native I2a (`FIN01`, `FIN02`,
    `FIN03`, `FIN04`, `FIN51`, `FIN57`), serta partner ledger AR/AP, open items

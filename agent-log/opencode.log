@@ -36,3 +36,11 @@
 - Cabang di-rebase ke origin/main a67ebae (PR #58) karena PR #60 konflik; konflik hanya pada docs/HANDOFF.md dan diselesaikan tanpa menghapus entri agen lain.
 - Status akhir tetap [BU] sampai install-test hijau.
 - Task managed by Agent Opencode at 2026-10-31T17:48:19+07:00
+[2026-11-12T10:50:13+07:00] [INFO] Demo accounting: pasang account_financial_report untuk presentasi
+- deploy/init.sh: INIT_MODULES + account_financial_report; blok install_account_financial_report_v1 memasang pada DB berjalan tanpa FORCE_UPGRADE dan tanpa meng-upgrade seluruh INIT_MODULES.
+- docs/finance/DEMO_ACCOUNTING_REPORTS.md: scope disetujui pemilik, enam laporan OCA, data PT Manado Distribusi Utama, batas verifikasi; README diperbarui.
+- [F] Manifest pada pin f48b4ea: v19.0.0.0.26, AGPL-3, deps account/date_range/report_xlsx; modul sudah di image via oca.lock; menu Accounting > Reporting > OCA accounting reports.
+- [F] bash -n, ruff, check_manifests PASS (14 addon).
+- [BU] Instalasi pada DB demo berisi 1.324 invoice/2.619 JE belum dijalankan; CI exact-SHA menyusul; export XLSX/PDF dan VAT Report belum diuji.
+- [F] Katalog tetap 58/58 BELUM_DITERIMA; id_finance_foundation dan laporan custom tidak dipasang.
+- Task managed by Agent-Opencode at 2026-11-12T10:50:13+07:00
