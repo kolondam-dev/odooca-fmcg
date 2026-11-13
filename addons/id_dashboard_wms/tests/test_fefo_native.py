@@ -1,6 +1,8 @@
 from odoo import fields
 from odoo.tests.common import TransactionCase
 
+from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter
+
 
 class TestNativeFmcgFefo(TransactionCase):
     @classmethod
@@ -117,6 +119,54 @@ class TestNativeFmcgFefo(TransactionCase):
 
         self.assertEqual(quants.mapped("lot_id.name"), ["LOT-FEFO-FIRST", "LOT-FEFO-SECOND"])
         self.assertEqual(move._get_available_quantity(location), 20)
+
+    def test_canonical_loader_enables_expiry_backfills_lot_and_sets_fefo(self):
+        category = self.env["product.category"].create({
+            "name": "FMCG FEFO Loader Test Category",
+        })
+        parent = self.env.ref("stock.stock_location_stock")
+        location = self.env["stock.location"].create({
+            "name": "FMCG FEFO Loader Test Location",
+            "usage": "internal",
+            "location_id": parent.id,
+            "company_id": self.company.id,
+        })
+        template = self.env["product.template"].create({
+            "name": "FMCG FEFO Loader Test Product",
+            "is_storable": True,
+            "tracking": "lot",
+            "use_expiration_date": False,
+            "uom_id": self.unit.id,
+            "categ_id": category.id,
+        })
+        product = template.product_variant_id
+        lot = self.env["stock.lot"].create({
+            "name": "LOT-FEFO-LOADER-BACKFILL",
+            "product_id": product.id,
+            "company_id": self.company.id,
+        })
+
+        adapter = object.__new__(CanonicalPerpetualAdapter)
+        adapter.env = self.env
+        adapter.product_by_code = {"TEST-FEFO-LOADER": product}
+        adapter.wh_stock_loc = location
+        adapter.stats = {
+            "expiry_products_enabled": 0,
+            "lot_expiry_backfilled": 0,
+            "fefo_strategy_configured": 0,
+        }
+
+        adapter._ensure_expiry_product_configuration()
+        adapter._ensure_fefo_strategy()
+        adapter._ensure_lot_expiry(lot, "2027-12-31")
+
+        self.assertTrue(template.use_expiration_date)
+        self.assertEqual(location.removal_strategy_id, self.fefo)
+        self.assertTrue(lot.expiration_date)
+        self.assertTrue(lot.removal_date)
+        self.assertEqual(adapter.stats["expiry_products_enabled"], 1)
+        self.assertEqual(adapter.stats["lot_expiry_backfilled"], 1)
+        self.assertEqual(adapter.stats["fefo_strategy_configured"], 1)
 
     def test_product_category_strategy_overrides_location_fallback(self):
         category = self.env["product.category"].create({
