@@ -34,9 +34,9 @@ class ProductTemplate(models.Model):
         domain="[('brand_id', '=?', brand_id)]",
     )
     inner_qty = fields.Integer(
-        string="Pcs per Inner / Renceng / Pack",
+        string="Unit Dasar per Inner / Renceng / Pack",
         default=1,
-        help="Fraksi kemasan menengah (Inner / Renceng / Pack) sebelum tingkat Karton.",
+        help="Jumlah satuan dasar sesuai base_uom dalam satu kemasan menengah.",
     )
     carton_qty = fields.Integer(
         string="Unit Dasar per Karton",
