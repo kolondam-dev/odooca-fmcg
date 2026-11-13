@@ -61,3 +61,48 @@ msgstr "Pos Terbuka"
 #: model:ir.ui.menu,name:id_finance_foundation.menu_aged_partner_balance
 msgid "Aged Partner Balance"
 msgstr "Umur Saldo Mitra"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_reports
+msgid "Finance Reports"
+msgstr "Laporan Keuangan"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_audit_trail
+msgid "Audit Trail (FIN04)"
+msgstr "Jejak Audit (FIN04)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_partner_ledger
+msgid "Partner Ledger AR/AP (FIN05/FIN06)"
+msgstr "Buku Besar Mitra Piutang/Utang (FIN05/FIN06)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_open_items
+msgid "Open Items AR/AP (FIN07)"
+msgstr "Pos Terbuka Piutang/Utang (FIN07)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_aged_partner_balance
+msgid "Aged Partner Balance (FIN08/FIN09)"
+msgstr "Umur Saldo Mitra (FIN08/FIN09)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_combined_trial_balance
+msgid "Combined Trial Balance (FIN51)"
+msgstr "Neraca Saldo Gabungan (FIN51)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_sales_purchase_register
+msgid "Sales and Purchase Register (FIN57)"
+msgstr "Register Penjualan dan Pembelian (FIN57)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_accrual_schedule
+msgid "Accrual Schedules (FIN37)"
+msgstr "Jadwal Akrual (FIN37)"
+
+#. module: id_finance_foundation
+#: model:ir.ui.menu,name:id_finance_foundation.menu_finance_report_fx_revaluation
+msgid "FX Revaluation (FIN38)"
+msgstr "Revaluasi Valas (FIN38)"

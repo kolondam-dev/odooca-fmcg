@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_finance_ledger_mixin_read,id.finance.ledger.mixin read,model_id_finance_ledger_mixin,account.group_account_readonly,1,0,0,0
+access_finance_subledger_mixin_read,id.finance.subledger.mixin read,model_id_finance_subledger_mixin,account.group_account_readonly,1,0,0,0
+access_finance_schedule_mixin_read,id.finance.schedule.mixin read,model_id_finance_schedule_mixin,account.group_account_readonly,1,0,0,0
+access_finance_audit_trail_read,id.finance.audit.trail read,model_id_finance_audit_trail,account.group_account_readonly,1,0,0,0
+access_finance_combined_trial_balance_read,id.finance.combined.trial.balance read,model_id_finance_combined_trial_balance,account.group_account_readonly,1,0,0,0
+access_finance_sales_purchase_register_read,id.finance.sales.purchase.register read,model_id_finance_sales_purchase_register,account.group_account_readonly,1,0,0,0
+access_finance_partner_ledger_read,id.finance.partner.ledger read,model_id_finance_partner_ledger,account.group_account_readonly,1,0,0,0
+access_finance_open_items_read,id.finance.open.items read,model_id_finance_open_items,account.group_account_readonly,1,0,0,0
+access_finance_aged_partner_balance_read,id.finance.aged.partner.balance read,model_id_finance_aged_partner_balance,account.group_account_readonly,1,0,0,0
+access_finance_accrual_schedule_read,id.finance.accrual.schedule read,model_id_finance_accrual_schedule,account.group_account_readonly,1,0,0,0
+access_finance_fx_revaluation_read,id.finance.fx.revaluation read,model_id_finance_fx_revaluation,account.group_account_readonly,1,0,0,0
+access_finance_stock_bridge_read,id.finance.stock.bridge read,model_id_finance_stock_bridge,account.group_account_readonly,1,0,0,0
+access_finance_report_wizard_user,id.finance.report.wizard user,model_id_finance_report_wizard,account.group_account_readonly,1,1,1,1

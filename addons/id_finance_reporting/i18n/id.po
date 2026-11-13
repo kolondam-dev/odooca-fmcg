@@ -88,12 +88,14 @@ msgstr "Pilih satu tanggal posisi untuk pos terbuka piutang/utang."
 #. module: id_finance_reporting
 #. odoo-python
 #: code:addons/id_finance_reporting/models/subledger_reports.py:0
+#: code:addons/id_finance_reporting/models/schedule_reports.py:0
 msgid "Selected partner does not exist."
 msgstr "Partner yang dipilih tidak ditemukan."
 
 #. module: id_finance_reporting
 #. odoo-python
 #: code:addons/id_finance_reporting/models/subledger_reports.py:0
+#: code:addons/id_finance_reporting/models/schedule_reports.py:0
 msgid "Selected partner belongs to another company."
 msgstr "Partner yang dipilih milik perusahaan lain."
 
@@ -116,12 +118,302 @@ msgid "Select a single as-of date for schedule reports."
 msgstr "Pilih satu tanggal posisi untuk laporan jadwal."
 #. module: id_finance_reporting
 #. odoo-python
-#: code:addons/id_finance_reporting/models/schedule_reports.py:0
-msgid "Selected partner does not exist."
-msgstr "Partner yang dipilih tidak ada."
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN04 - Journal Items Audit Trail"
+msgstr "FIN04 - Jejak Audit Pos Jurnal"
 
 #. module: id_finance_reporting
 #. odoo-python
-#: code:addons/id_finance_reporting/models/schedule_reports.py:0
-msgid "Selected partner belongs to another company."
-msgstr "Partner yang dipilih milik perusahaan lain."
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN05/FIN06 - Partner Ledger AR/AP"
+msgstr "FIN05/FIN06 - Buku Besar Mitra Piutang/Utang"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN07 - Open Items AR/AP"
+msgstr "FIN07 - Pos Terbuka Piutang/Utang"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN08/FIN09 - Aged Partner Balance"
+msgstr "FIN08/FIN09 - Umur Saldo Mitra"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN51 - Combined Trial Balance"
+msgstr "FIN51 - Neraca Saldo Gabungan"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN57 - Sales and Purchase Register"
+msgstr "FIN57 - Register Penjualan dan Pembelian"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN37 - Accrual / Prepayment Schedules"
+msgstr "FIN37 - Jadwal Akrual / Prabayar"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "FIN38 - FX Revaluation"
+msgstr "FIN38 - Revaluasi Valas"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Select a company available in the current context."
+msgstr "Pilih perusahaan yang tersedia dalam konteks saat ini."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Select only companies available in the current context."
+msgstr "Pilih hanya perusahaan yang tersedia dalam konteks saat ini."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Unknown report type."
+msgstr "Jenis laporan tidak dikenal."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Select both the start and end date of the report period."
+msgstr "Pilih tanggal mulai dan tanggal akhir periode laporan."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Select a single as-of date for this report."
+msgstr "Pilih satu tanggal posisi untuk laporan ini."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "The COA mapping must be a valid JSON object."
+msgstr "Pemetaan COA harus berupa objek JSON yang valid."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "The COA mapping contains an empty account key."
+msgstr "Pemetaan COA memuat kunci akun kosong."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "The COA mapping key '%(key)s' must start with a numeric company id."
+msgstr "Kunci pemetaan COA '%(key)s' harus diawali ID perusahaan berupa angka."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Yes"
+msgstr "Ya"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "No"
+msgstr "Tidak"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Company"
+msgstr "Perusahaan"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Currency"
+msgstr "Mata Uang"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Period"
+msgstr "Periode"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Filters"
+msgstr "Filter"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "As of today"
+msgstr "Per tanggal hari ini"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Summary"
+msgstr "Ringkasan"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "No rows."
+msgstr "Tidak ada baris."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Showing the first %(shown)s of %(total)s rows."
+msgstr "Menampilkan %(shown)s baris pertama dari %(total)s baris."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Empty."
+msgstr "Kosong."
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Finance Report"
+msgstr "Laporan Keuangan"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Companies"
+msgstr "Perusahaan"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Partners"
+msgstr "Mitra"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Journals"
+msgstr "Jurnal"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Accounts"
+msgstr "Akun"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Presentation currency"
+msgstr "Mata uang penyajian"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Conversion date"
+msgstr "Tanggal konversi"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Hide zero balances"
+msgstr "Sembunyikan saldo nol"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "COA mapping (JSON)"
+msgstr "Pemetaan COA (JSON)"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Result"
+msgstr "Hasil"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Payload (JSON)"
+msgstr "Payload (JSON)"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Run Report"
+msgstr "Jalankan Laporan"
+
+#. module: id_finance_reporting
+#: model:ir.ui.view,arch_db:id_finance_reporting.view_finance_report_wizard_form
+msgid "Close"
+msgstr "Tutup"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_audit_trail
+msgid "Journal Items Audit Trail (FIN04)"
+msgstr "Jejak Audit Pos Jurnal (FIN04)"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_partner_ledger
+msgid "Partner Ledger AR/AP (FIN05/FIN06)"
+msgstr "Buku Besar Mitra Piutang/Utang (FIN05/FIN06)"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_open_items
+msgid "Open Items AR/AP (FIN07)"
+msgstr "Pos Terbuka Piutang/Utang (FIN07)"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_aged_partner_balance
+msgid "Aged Partner Balance (FIN08/FIN09)"
+msgstr "Umur Saldo Mitra (FIN08/FIN09)"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_combined_trial_balance
+msgid "Combined Trial Balance (FIN51)"
+msgstr "Neraca Saldo Gabungan (FIN51)"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_sales_purchase_register
+msgid "Sales and Purchase Register (FIN57)"
+msgstr "Register Penjualan dan Pembelian (FIN57)"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_accrual_schedule
+msgid "Accrual / Prepayment Schedules (FIN37)"
+msgstr "Jadwal Akrual / Prabayar (FIN37)"
+
+#. module: id_finance_reporting
+#: model:ir.actions.act_window,name:id_finance_reporting.action_finance_report_fx_revaluation
+msgid "FX Revaluation (FIN38)"
+msgstr "Revaluasi Valas (FIN38)"
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Customers"
+msgstr "Pelanggan"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Suppliers"
+msgstr "Pemasok"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Customers and Suppliers"
+msgstr "Pelanggan dan Pemasok"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "All documents"
+msgstr "Semua dokumen"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Sales only"
+msgstr "Penjualan saja"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Purchases only"
+msgstr "Pembelian saja"
