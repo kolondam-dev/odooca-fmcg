@@ -694,6 +694,16 @@ class GenericPeriodPackLoader:
                                 f"Drift detected on existing PO {po_num} SKU {sku}: price mismatch {act_price} vs {exp_price}"
                             )
 
+        if not self.dry_run:
+            pickings = getattr(existing, "picking_ids", None)
+            if pickings:
+                for pick in pickings:
+                    if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._assign_lots_to_picking(pick, lines)
+                        self._validate_picking_safely(
+                            pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
+                        )
+
     def _validate_existing_so(
         self, existing: Any, so_row: Dict[str, str], lines: List[Dict[str, str]]
     ) -> None:
@@ -774,6 +784,16 @@ class GenericPeriodPackLoader:
                     if abs(exp_disc - act_disc) > 0.01:
                         raise StateInconsistencyError(
                             f"Drift detected on existing {so_num} SKU {sku}: discount mismatch {act_disc} vs {exp_disc}"
+                        )
+
+        if not self.dry_run:
+            pickings = getattr(existing, "picking_ids", None)
+            if pickings:
+                for pick in pickings:
+                    if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._assign_lots_to_picking(pick, lines)
+                        self._validate_picking_safely(
+                            pick, effective_date=so_row.get("date_order"), ref_num=so_num
                         )
 
     def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
@@ -1298,11 +1318,19 @@ class GenericPeriodPackLoader:
         processed = 0
         for po_row in po_headers:
             po_num = po_row["po_number"]
+            po_lines = po_lines_by_po.get(po_num, [])
             existing = PurchaseOrder.search(
                 [("company_id", "=", self.company.id), ("name", "=", po_num)], limit=1
             )
             if existing:
-                self._validate_existing_po(existing, po_row, po_lines_by_po.get(po_num, []))
+                self._validate_existing_po(existing, po_row, po_lines)
+                if hasattr(existing, "picking_ids"):
+                    for pick in existing.picking_ids:
+                        if getattr(pick, "state", "") not in ("done", "cancel"):
+                            self._assign_lots_to_picking(pick, po_lines)
+                            self._validate_picking_safely(
+                                pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
+                            )
                 continue
 
             prin_code = po_row["principal_code"]
@@ -1318,7 +1346,7 @@ class GenericPeriodPackLoader:
             }
             # Create order lines
             lines_data = []
-            for lrow in po_lines_by_po.get(po_num, []):
+            for lrow in po_lines:
                 sku = lrow["sku_code"]
                 prod = Product.search([("default_code", "=", sku)], limit=1)
                 if not prod:
@@ -1341,6 +1369,14 @@ class GenericPeriodPackLoader:
             po_vals["order_line"] = lines_data
             po_rec = PurchaseOrder.create(po_vals)
             po_rec.button_confirm()
+
+            if hasattr(po_rec, "picking_ids"):
+                for pick in po_rec.picking_ids:
+                    if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._assign_lots_to_picking(pick, po_lines)
+                        self._validate_picking_safely(
+                            pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
+                        )
             processed += 1
 
         return processed
@@ -1424,6 +1460,291 @@ class GenericPeriodPackLoader:
 
         return tax_rec
 
+    def _assign_lots_to_picking(self, pick: Any, lines_data: List[Dict[str, Any]]) -> None:
+        """Map canonical source lots and target quantities into stock.move and stock.move.line.
+
+        Supports multi-lot split lines per SKU, cleans up extraneous/empty reservation lines,
+        and ensures picking move lines match period pack registers deterministically.
+        """
+        if not pick or getattr(pick, "state", "") in ("done", "cancel"):
+            return
+
+        StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
+        StockMoveLine = self.env["stock.move.line"].sudo() if "stock.move.line" in self.env else None
+        Product = self.env["product.product"].sudo() if "product.product" in self.env else None
+
+        if hasattr(pick, "action_assign") and callable(pick.action_assign):
+            try:
+                pick.action_assign()
+            except Exception as e:
+                _logger.warning(f"action_assign on picking non-fatal: {e}")
+
+        # 1. Group requirements per SKU and per Lot
+        demands_by_sku: Dict[str, Dict[str, Any]] = {}
+        for item in lines_data:
+            sku = item.get("sku_code")
+            if not sku:
+                continue
+            qty_cartons = float(item.get("qty_cartons", 0.0) or 0.0)
+            carton_qty = float(item.get("carton_qty", 1.0) or 1.0)
+            qty_units = qty_cartons * carton_qty
+            if qty_units <= 0.0:
+                continue
+
+            lot_num = item.get("lot_number") or False
+            exp_date = item.get("expiry_date")
+
+            if sku not in demands_by_sku:
+                prod = None
+                if Product:
+                    prod = Product.search([("default_code", "=", sku)], limit=1)
+                demands_by_sku[sku] = {
+                    "prod": prod,
+                    "total_units": 0.0,
+                    "lots": {},
+                }
+
+            sku_demands = demands_by_sku[sku]
+            sku_demands["total_units"] += qty_units
+
+            if lot_num not in sku_demands["lots"]:
+                lot_obj = None
+                if StockLot is not None and lot_num and sku_demands["prod"]:
+                    lot_obj = StockLot.search([
+                        ("name", "=", lot_num),
+                        ("product_id", "=", sku_demands["prod"].id),
+                        ("company_id", "in", [self.company.id, False]),
+                    ], limit=1)
+                    if not lot_obj:
+                        lot_vals = {
+                            "name": lot_num,
+                            "product_id": sku_demands["prod"].id,
+                            "company_id": self.company.id,
+                        }
+                        if exp_date and hasattr(StockLot, "_fields") and "expiration_date" in StockLot._fields:
+                            lot_vals["expiration_date"] = exp_date
+                        lot_obj = StockLot.create(lot_vals)
+
+                sku_demands["lots"][lot_num] = {
+                    "qty_units": qty_units,
+                    "expiry_date": exp_date,
+                    "lot_obj": lot_obj,
+                }
+            else:
+                sku_demands["lots"][lot_num]["qty_units"] += qty_units
+
+        # 2. Allocate to moves and move_lines on the picking
+        for sku, sku_demands in demands_by_sku.items():
+            prod = sku_demands["prod"]
+            prod_id = prod.id if prod else None
+
+            matching_moves = []
+            if hasattr(pick, "move_ids") and pick.move_ids:
+                for m in pick.move_ids:
+                    m_p_id = getattr(getattr(m, "product_id", None), "id", None)
+                    if m_p_id == prod_id or getattr(m, "product_id", None) == prod:
+                        matching_moves.append(m)
+
+            if not matching_moves:
+                continue
+
+            existing_lines = []
+            if hasattr(pick, "move_line_ids") and pick.move_line_ids:
+                for ml in pick.move_line_ids:
+                    ml_p_id = getattr(getattr(ml, "product_id", None), "id", None)
+                    if ml_p_id == prod_id or getattr(ml, "product_id", None) == prod:
+                        existing_lines.append(ml)
+
+            sorted_lot_items = sorted(sku_demands["lots"].items(), key=lambda x: str(x[0] or ""))
+            used_move_ids = set()
+
+            for idx, (lot_num, lot_info) in enumerate(sorted_lot_items):
+                target_qty = lot_info["qty_units"]
+                lot_obj = lot_info["lot_obj"]
+                target_lot_id = lot_obj.id if lot_obj else False
+
+                target_move = matching_moves[0]
+                if len(matching_moves) > 1:
+                    matched_by_qty = None
+                    for cand_mv in matching_moves:
+                        cid = getattr(cand_mv, "id", id(cand_mv))
+                        if cid in used_move_ids:
+                            continue
+                        cand_qty = float(getattr(cand_mv, "product_uom_qty", 0.0) or 0.0)
+                        if abs(cand_qty - target_qty) < 0.001:
+                            matched_by_qty = cand_mv
+                            break
+                    if matched_by_qty is not None:
+                        target_move = matched_by_qty
+                    else:
+                        for cand_mv in matching_moves:
+                            cid = getattr(cand_mv, "id", id(cand_mv))
+                            if cid not in used_move_ids:
+                                target_move = cand_mv
+                                break
+                    used_move_ids.add(getattr(target_move, "id", id(target_move)))
+
+                if hasattr(target_move, "picked"):
+                    target_move.picked = True
+
+                if existing_lines:
+                    ml = None
+                    target_mv_id = getattr(target_move, "id", None)
+                    for el_idx, el in enumerate(existing_lines):
+                        if getattr(getattr(el, "move_id", None), "id", None) == target_mv_id:
+                            ml = existing_lines.pop(el_idx)
+                            break
+                    if ml is None:
+                        ml = existing_lines.pop(0)
+
+                    upd_vals = {"quantity": target_qty, "picked": True}
+                    if target_lot_id:
+                        upd_vals["lot_id"] = target_lot_id
+                    if lot_num and hasattr(ml, "lot_name"):
+                        upd_vals["lot_name"] = lot_num
+                    if callable(getattr(ml, "write", None)):
+                        ml.write(upd_vals)
+                    else:
+                        for k, v in upd_vals.items():
+                            setattr(ml, k, v)
+                else:
+                    if StockMoveLine is not None:
+                        ml_vals = {
+                            "picking_id": pick.id,
+                            "move_id": getattr(target_move, "id", False),
+                            "product_id": prod.id if prod else False,
+                            "lot_id": target_lot_id,
+                            "location_id": getattr(pick.location_id, "id", False),
+                            "location_dest_id": getattr(pick.location_dest_id, "id", False),
+                            "quantity": target_qty,
+                            "picked": True,
+                        }
+                        if lot_num and hasattr(StockMoveLine, "_fields") and "lot_name" in StockMoveLine._fields:
+                            ml_vals["lot_name"] = lot_num
+                        StockMoveLine.create(ml_vals)
+
+            # Unlink any leftover/unused move lines for this SKU
+            for unused_ml in existing_lines:
+                if callable(getattr(unused_ml, "unlink", None)):
+                    unused_ml.unlink()
+
+    def _validate_picking_safely(
+        self, pick: Any, effective_date: Optional[str] = None, ref_num: Optional[str] = None
+    ) -> None:
+        """Safely validate stock picking to 'done' handling allowed Odoo wizards.
+
+        Fails-closed if the picking or any of its stock moves remains uncompleted.
+        """
+        if not pick:
+            return
+
+        if getattr(pick, "state", "") != "done":
+            date_str = effective_date or getattr(pick, "scheduled_date", None)
+            date_only = str(date_str)[:10] if date_str else None
+            date_time_str = (
+                f"{date_only} 00:00:00"
+                if (date_only and len(str(date_str)) <= 10)
+                else str(date_str)
+                if date_str
+                else None
+            )
+
+            if date_time_str:
+                if hasattr(pick, "scheduled_date") and callable(getattr(pick, "write", None)):
+                    try:
+                        pick.write({"scheduled_date": date_time_str})
+                    except Exception as e:
+                        _logger.warning(f"write scheduled_date on picking non-fatal: {e}")
+                if hasattr(pick, "date_done") and callable(getattr(pick, "write", None)):
+                    try:
+                        pick.write({"date_done": date_time_str})
+                    except Exception as e:
+                        _logger.warning(f"write date_done on picking non-fatal: {e}")
+                if hasattr(pick, "move_ids") and pick.move_ids:
+                    for sm in pick.move_ids:
+                        if callable(getattr(sm, "write", None)):
+                            try:
+                                sm.write({"date": date_time_str})
+                            except Exception as e:
+                                _logger.warning(f"write date on stock.move non-fatal: {e}")
+
+            val_ctx = {"skip_sms": True}
+            if date_only:
+                val_ctx["force_period_date"] = date_only
+                val_ctx["date"] = date_only
+                val_ctx["accounting_date"] = date_only
+            if date_time_str:
+                val_ctx["date_done"] = date_time_str
+
+            pick_target = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
+            res = pick_target.button_validate() if hasattr(pick_target, "button_validate") else None
+
+            ALLOWED_WIZARDS = {
+                "confirm.stock.sms": ["dont_send_sms"],
+                "stock.immediate.transfer": ["process"],
+                "stock.backorder.confirmation": ["process_cancel_backorder", "process"],
+            }
+
+            wiz_iter = 0
+            current_res = res
+            while isinstance(current_res, dict) and current_res.get("res_model") and wiz_iter < 5:
+                wiz_iter += 1
+                wizard_model = current_res["res_model"]
+                if wizard_model not in ALLOWED_WIZARDS:
+                    raise StateInconsistencyError(
+                        f"Wizard model '{wizard_model}' during picking validation for {ref_num or pick} not in allowlist!"
+                    )
+                wizard_ctx = dict(val_ctx)
+                if isinstance(current_res.get("context"), dict):
+                    wizard_ctx.update(current_res["context"])
+
+                if wizard_model in self.env:
+                    WizardModel = self.env[wizard_model].sudo().with_context(**wizard_ctx)
+                    wiz_id = current_res.get("res_id")
+                    wiz_vals = {}
+                    if hasattr(WizardModel, "_fields") and "pick_ids" in WizardModel._fields:
+                        wiz_vals["pick_ids"] = [(6, 0, [pick.id])]
+                    elif hasattr(WizardModel, "_fields") and "picking_id" in WizardModel._fields:
+                        wiz_vals["picking_id"] = pick.id
+
+                    wizard_record = WizardModel.browse(wiz_id) if wiz_id else WizardModel.create(wiz_vals)
+                    action_taken = False
+                    for act_name in ALLOWED_WIZARDS[wizard_model]:
+                        if hasattr(wizard_record, act_name):
+                            current_res = getattr(wizard_record.with_context(**wizard_ctx), act_name)()
+                            action_taken = True
+                            break
+                    if not action_taken:
+                        raise StateInconsistencyError(
+                            f"Wizard '{wizard_model}' has no supported actions: {ALLOWED_WIZARDS[wizard_model]}"
+                        )
+                else:
+                    break
+
+            if getattr(pick, "state", "") != "done" and hasattr(pick, "button_validate"):
+                re_pick = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
+                re_pick.button_validate()
+
+        if getattr(pick, "state", "") != "done":
+            pick_lbl = getattr(pick, "name", getattr(pick, "id", "picking"))
+            raise StateInconsistencyError(
+                f"Validasi picking '{pick_lbl}' (Ref: {ref_num or getattr(pick, 'origin', '')}) "
+                f"gagal mencapai state 'done'! Status aktual: '{getattr(pick, 'state', 'unknown')}'"
+            )
+
+        if hasattr(pick, "move_ids") and pick.move_ids:
+            for sm in pick.move_ids:
+                sm_state = getattr(sm, "state", "")
+                if sm_state != "done":
+                    sm_lbl = getattr(sm, "name", getattr(sm, "id", "move"))
+                    sku = getattr(getattr(sm, "product_id", None), "default_code", "")
+                    pick_lbl = getattr(pick, "name", getattr(pick, "id", "picking"))
+                    raise StateInconsistencyError(
+                        f"Pergerakan stok '{sm_lbl}' (ID {getattr(sm, 'id', '')}, SKU {sku}) "
+                        f"pada picking '{pick_lbl}' (Ref: {ref_num or getattr(pick, 'origin', '')}) "
+                        f"belum berstatus 'done' (state: '{sm_state}')!"
+                    )
+
     def _apply_sales_orders_and_deliveries(self) -> Tuple[int, int]:
         """Create and validate Sales Orders and Outbound Deliveries."""
         so_rows = self.reader.sales_orders
@@ -1446,11 +1767,20 @@ class GenericPeriodPackLoader:
 
         for so_row in so_rows:
             so_num = so_row["so_number"]
+            so_lines = lines_by_so.get(so_num, [])
             existing = SaleOrder.search(
                 [("company_id", "=", self.company.id), ("client_order_ref", "=", so_num)], limit=1
             )
             if existing:
-                self._validate_existing_so(existing, so_row, lines_by_so.get(so_num, []))
+                self._validate_existing_so(existing, so_row, so_lines)
+                if hasattr(existing, "picking_ids"):
+                    for pick in existing.picking_ids:
+                        if getattr(pick, "state", "") not in ("done", "cancel"):
+                            self._assign_lots_to_picking(pick, so_lines)
+                            self._validate_picking_safely(
+                                pick, effective_date=so_row.get("date_order"), ref_num=so_num
+                            )
+                            do_count += 1
                 continue
 
             cust_ref = extract_ref(so_row["customer"])
@@ -1470,7 +1800,7 @@ class GenericPeriodPackLoader:
                 so_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
 
             sol_data = []
-            for lrow in lines_by_so.get(so_num, []):
+            for lrow in so_lines:
                 sku = lrow["sku_code"]
                 prod = Product.search([("default_code", "=", sku)], limit=1)
                 if not prod:
@@ -1499,77 +1829,14 @@ class GenericPeriodPackLoader:
             so_count += 1
 
             # Validate picking delivery if present
-            StockLot = self.env["stock.lot"].sudo()
-            StockMoveLine = self.env["stock.move.line"].sudo()
-
-            for pick in so_rec.picking_ids:
-                if pick.state not in ("done", "cancel"):
-                    pick.action_assign()
-                    # Resolve lot and quantities for each move
-                    for m in pick.move_ids:
-                        m_prod = m.product_id
-                        m_sku = getattr(m_prod, "default_code", "")
-                        target_qty = float(m.product_uom_qty)
-
-                        # Match line info by SKU and quantity
-                        m_lrow = None
-                        for lr in lines_by_so.get(so_num, []):
-                            if lr.get("sku_code") == m_sku:
-                                lr_qty = float(lr.get("qty_cartons", 0)) * float(lr.get("carton_qty", 1))
-                                if abs(lr_qty - target_qty) < 0.01:
-                                    m_lrow = lr
-                                    break
-                        if not m_lrow:
-                            for lr in lines_by_so.get(so_num, []):
-                                if lr.get("sku_code") == m_sku:
-                                    m_lrow = lr
-                                    break
-
-                        lot_num = m_lrow.get("lot_number") if m_lrow else None
-                        lot_rec = None
-                        if getattr(m_prod, "tracking", "none") in ("lot", "serial") and lot_num:
-                            lot_rec = StockLot.search([
-                                ("name", "=", lot_num),
-                                ("product_id", "=", m_prod.id),
-                                ("company_id", "=", self.company.id),
-                            ], limit=1)
-                            if not lot_rec:
-                                lot_rec = StockLot.search([
-                                    ("name", "=", lot_num),
-                                    ("product_id", "=", m_prod.id),
-                                ], limit=1)
-                            if not lot_rec:
-                                lot_rec = StockLot.create({
-                                    "name": lot_num,
-                                    "product_id": m_prod.id,
-                                    "company_id": self.company.id,
-                                })
-
-                        if m.move_line_ids:
-                            for ml in m.move_line_ids:
-                                ml_vals = {"quantity": target_qty, "picked": True}
-                                if lot_rec:
-                                    ml_vals["lot_id"] = lot_rec.id
-                                ml.write(ml_vals)
-                        else:
-                            ml_vals = {
-                                "picking_id": pick.id,
-                                "move_id": m.id,
-                                "product_id": m_prod.id,
-                                "location_id": pick.location_id.id,
-                                "location_dest_id": pick.location_dest_id.id,
-                                "quantity": target_qty,
-                                "picked": True,
-                            }
-                            if lot_rec:
-                                ml_vals["lot_id"] = lot_rec.id
-                            StockMoveLine.create(ml_vals)
-
-                        m.quantity = target_qty
-                        m.picked = True
-
-                    pick.button_validate()
-                    do_count += 1
+            if hasattr(so_rec, "picking_ids"):
+                for pick in so_rec.picking_ids:
+                    if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._assign_lots_to_picking(pick, so_lines)
+                        self._validate_picking_safely(
+                            pick, effective_date=so_row.get("date_order"), ref_num=so_num
+                        )
+                        do_count += 1
 
         return so_count, do_count
 
@@ -1582,6 +1849,10 @@ class GenericPeriodPackLoader:
         AccountMove = self.env["account.move"].sudo()
         SaleOrder = self.env["sale.order"].sudo()
         processed = 0
+
+        lines_by_so = {}
+        for lrow in self.reader.order_lines:
+            lines_by_so.setdefault(lrow["so_number"], []).append(lrow)
 
         # Pastikan konfigurasi pajak Kode 04 aktif dan presisi sebelum membuat faktur
         self._resolve_canonical_tax_code_04()
@@ -1607,9 +1878,32 @@ class GenericPeriodPackLoader:
             if not so:
                 raise PreflightContinuityError(f"SO {so_num} not found for invoice {inv_num}")
 
+            # Ensure all deliveries for SO are validated and completed before creating/posting invoice
+            if hasattr(so, "picking_ids"):
+                so_lines = lines_by_so.get(so_num, [])
+                for pick in so.picking_ids:
+                    if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._assign_lots_to_picking(pick, so_lines)
+                        self._validate_picking_safely(
+                            pick, effective_date=inv_row.get("date_invoice"), ref_num=so_num
+                        )
+                    if hasattr(pick, "move_ids"):
+                        for sm in pick.move_ids:
+                            sm_st = getattr(sm, "state", "")
+                            if sm_st != "done":
+                                sm_lbl = getattr(sm, "name", getattr(sm, "id", "move"))
+                                sku = getattr(getattr(sm, "product_id", None), "default_code", "")
+                                raise StateInconsistencyError(
+                                    f"Delivery move '{sm_lbl}' (ID {getattr(sm, 'id', '')}, SKU {sku}) "
+                                    f"for {so_num} / DO '{getattr(pick, 'name', '')}' is not done "
+                                    f"(state: '{sm_st}') before posting invoice {inv_num}!"
+                                )
+
             # Generate invoice from SO
             inv = so._create_invoices()
             if inv:
+                # In case multiple invoices were returned, operate on the primary invoice
+                inv_rec = inv[0] if hasattr(inv, "__getitem__") and len(inv) > 0 else inv
                 inv_vals = {
                     "payment_reference": inv_num,
                     "ref": inv_num,
@@ -1617,18 +1911,18 @@ class GenericPeriodPackLoader:
                     "invoice_date_due": inv_row["due_date"],
                     "invoice_origin": so_num,
                 }
-                if "is_fmcg_seed_invoice" in inv._fields:
+                if "is_fmcg_seed_invoice" in inv_rec._fields:
                     inv_vals["is_fmcg_seed_invoice"] = True
-                if "fmcg_seed_batch" in inv._fields:
+                if "fmcg_seed_batch" in inv_rec._fields:
                     inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
-                if "l10n_id_tax_transaction_code" in inv._fields:
+                if "l10n_id_tax_transaction_code" in inv_rec._fields:
                     inv_vals["l10n_id_tax_transaction_code"] = "04"
-                inv.write(inv_vals)
+                inv_rec.write(inv_vals)
 
-                inv.action_post()
+                inv_rec.action_post()
 
                 # Verifikasi bahwa Odoo ORM secara native menghasilkan angka yang tepat sesuai register tanpa drift
-                self._validate_existing_invoice(inv, inv_row)
+                self._validate_existing_invoice(inv_rec, inv_row)
                 processed += 1
 
         return processed

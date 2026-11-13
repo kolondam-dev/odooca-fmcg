@@ -1,3 +1,25 @@
+## 2026-11-13T08:40:00+07:00 — antigravity — F4: Penanganan Multi-Lot Picking & Validasi Delivery Sebelum Faktur (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Mengimplementasikan `_assign_lots_to_picking()` untuk pemetaan lot multi-line split pada picking delivery SO dan penerimaan PO. Mengelompokkan demand per SKU & Lot, membuat lot baru bila belum ada, memetakan move lines secara deterministik tanpa menimpa baris yang sama, dan membersihkan reservation lines kosong (`unlink()`).
+  - Mengimplementasikan `_validate_picking_safely()` dengan penanganan wizard allowlist (`confirm.stock.sms`, `stock.immediate.transfer`, `stock.backorder.confirmation`), assert fail-closed status picking (`done`) dan seluruh underlying moves (`done`), serta pesan log deskriptif yang menyertakan nomor SO, nomor picking/DO, move ID, SKU, dan state.
+  - Memastikan validasi penerimaan barang PO masuk (`_apply_inbound_pos`) tuntas sebelum penjualan agar stok lot tersedia di `WH/Stock`.
+  - Memastikan validasi tuntas seluruh DO pengiriman pada `_apply_invoices()` sebelum posting faktur komersial.
+  - Menjaga safe attribute check pada `_validate_existing_po()` dan `_validate_existing_so()` agar tidak error saat dry-run.
+- `.github/workflows/ci.yml`:
+  - Menambahkan penyalinan filestore direktori (`/var/lib/odoo/filestore/ci_db` -> `fmcg_period_master` -> `fmcg_period_disposable_b` & `fmcg_period_disposable`) serta cleanup pada step `F4 Generic period pack loader runtime proof` untuk mengeliminasi peringatan missing attachment pada kloning database PostgreSQL.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit test `test_multi_lot_picking_allocation_and_move_lines` dan `test_validate_picking_safely_fails_closed_with_descriptive_error` (total 54/54 tests PASS).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS (4.7s).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Git merge upstream `origin/main` (commit `64b32b2`): PR #110 MERGEABLE dengan 0 baris terhapus pada riwayat HANDOFF.
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-13T08:40:00+07:00
+
 ## 2026-11-12T10:50:13+07:00 — Agent-Opencode — Demo accounting: nyalakan account_financial_report
 **Berubah:** `deploy/init.sh` (`INIT_MODULES` + `account_financial_report`; blok bermark `install_account_financial_report_v1` untuk database yang sudah berjalan); `docs/finance/DEMO_ACCOUNTING_REPORTS.md` (baru); `docs/finance/README.md` (status dan indeks dokumen).
 **Diverifikasi:** [F] Manifest OCA pada pin `f48b4ea777c444256aa1c215ec3117d604b5feff`: `account_financial_report` v19.0.0.0.26, AGPL-3, `depends: account, date_range, report_xlsx`, installable; modul sudah tersedia di image karena root `Dockerfile` mengambil seluruh `oca.lock`. [F] Enam laporan: General Ledger, Journal Ledger, Trial Balance, Open Items, Aged Partner Balance, VAT Report; menu Accounting → Reporting → OCA accounting reports. [F] Data demo PT Manado Distribusi Utama (company ID 1, chart `id`, IDR) snapshot audit I0 5 November: 1.324 invoice pelanggan posted, 35 bill posted, 2.619 journal entry posted. [F] `bash -n` PASS; `ruff` PASS; `check_manifests.py` PASS (14 addon).

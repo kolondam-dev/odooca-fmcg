@@ -2504,3 +2504,14 @@
 - Menambahkan Unit Test: `test_loader_period_attribute_and_batch_naming` pada `tests/test_period_pack_loader.py` yang memvalidasi ketersediaan `loader.period` serta kesesuaian format batch `PERIOD_2026-08`.
 - Verifikasi Penuh: pytest test_period_pack_loader (52/52 PASS); ruff check PASS clean; check_manifests 14 addon OK. Zero touch live Railway.
 - Task managed by antigravity at 2026-11-12T10:10:00+07:00
+
+[2026-11-13T08:40:00+07:00] [INFO] F4: Penanganan Multi-Lot Picking, Validasi Delivery Sebelum Faktur, dan Sinkronisasi Filestore CI
+- Resolusi Blocker Supervisor Review #5872268674:
+  * Multi-Lot Picking Allocation: Mengimplementasikan `_assign_lots_to_picking()` pada `scripts/ops/load_period_pack.py` untuk mengalokasikan lot dan quantity secara tepat pada SO yang memiliki multi-line dengan SKU sama (contoh SO-202608-0035 untuk MYR-RMA-02 dengan lot INIT dan lot PO baru).
+  * Safe Picking Validation & Audit Trail: Mengimplementasikan `_validate_picking_safely()` dengan allowlist wizard Odoo 19, assert fail-closed pada status picking (`done`) dan seluruh stock moves (`done`), serta error reporting deskriptif yang menyertakan nomor SO, nomor picking/DO, move ID, SKU, dan state move.
+  * Inbound PO Receipt Validation: Memastikan picking penerimaan PO pada `_apply_inbound_pos()` tuntas tervalidasi ke `WH/Stock` sebelum order penjualan dieksekusi.
+  * Pre-Invoice Delivery Completion: Memastikan seluruh DO terkait order penjualan telah berstatus `done` sebelum faktur diposting pada `_apply_invoices()`.
+  * Sinkronisasi Filestore CI: Menambahkan penyalinan direktori filestore `/var/lib/odoo/filestore` antar database master dan disposable pada `.github/workflows/ci.yml` untuk mencegah missing attachment warning.
+  * Upstream Merge: Menggabungkan `origin/main` (commit `64b32b2`), menyelesaikan konflik tanpa menghapus riwayat HANDOFF, memastikan status PR #110 kembali MERGEABLE.
+- Verifikasi Penuh: python -m unittest tests/test_period_pack_loader.py (54/54 PASS); ruff check PASS clean; check_manifests 14 addon OK. Zero touch live Railway.
+- Task managed by antigravity at 2026-11-13T08:40:00+07:00

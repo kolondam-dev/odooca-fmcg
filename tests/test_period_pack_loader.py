@@ -1723,6 +1723,100 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         expected_batch = f"PERIOD_{loader.period}"
         self.assertEqual(expected_batch, "PERIOD_2026-08")
 
+    def test_multi_lot_picking_allocation_and_move_lines(self):
+        """Verify _assign_lots_to_picking correctly maps multi-lot split lines for same SKU."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_prod = MockRecord(id=101, default_code="MYR-RMA-02", name="Roma Kelapa")
+        created_lots = []
+        created_move_lines = []
+
+        class MockLotModel:
+            def search(self, domain, limit=None):
+                return []
+            def create(self, vals):
+                rec = MockRecord(id=len(created_lots) + 1, **vals)
+                created_lots.append(rec)
+                return rec
+            def sudo(self):
+                return self
+
+        class MockMoveLineModel:
+            _fields = {"lot_name": True, "quantity": True, "picked": True}
+            def create(self, vals):
+                rec = MockRecord(id=len(created_move_lines) + 1, **vals)
+                created_move_lines.append(rec)
+                return rec
+            def sudo(self):
+                return self
+
+        class MockProdModel:
+            def search(self, domain, limit=None):
+                return mock_prod
+            def sudo(self):
+                return self
+
+        mock_move_1 = MockRecord(id=501, product_id=mock_prod, product_uom_qty=270.0, quantity=0.0, picked=False)
+        mock_move_2 = MockRecord(id=502, product_id=mock_prod, product_uom_qty=30.0, quantity=0.0, picked=False)
+        mock_picking = MockRecord(
+            id=301,
+            name="WH/OUT/0035",
+            state="assigned",
+            move_ids=[mock_move_1, mock_move_2],
+            move_line_ids=[],
+            location_id=MockRecord(id=11),
+            location_dest_id=MockRecord(id=12),
+        )
+
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "stock.lot": MockLotModel(),
+            "stock.move.line": MockMoveLineModel(),
+            "product.product": MockProdModel(),
+            "stock.picking": MockModel(records=[mock_picking]),
+            "sale.order": MockModel(records=[]),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env, AUG_PACK_DIR, dry_run=False, strict=True)
+        loader.company = mock_company
+
+        lines_data = [
+            {"sku_code": "MYR-RMA-02", "qty_cartons": 9, "carton_qty": 30, "lot_number": "LOT-ORA-20260615-INIT-02"},
+            {"sku_code": "MYR-RMA-02", "qty_cartons": 1, "carton_qty": 30, "lot_number": "LOT-ORA-20260702-02"},
+        ]
+        loader._assign_lots_to_picking(mock_picking, lines_data)
+
+        self.assertEqual(len(created_lots), 2)
+        self.assertEqual(len(created_move_lines), 2)
+        self.assertEqual(created_move_lines[0].quantity, 270.0)
+        self.assertEqual(created_move_lines[0].lot_id, created_lots[0].id)
+        self.assertEqual(created_move_lines[1].quantity, 30.0)
+        self.assertEqual(created_move_lines[1].lot_id, created_lots[1].id)
+
+    def test_validate_picking_safely_fails_closed_with_descriptive_error(self):
+        """Verify _validate_picking_safely raises descriptive StateInconsistencyError when move is assigned."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_prod = MockRecord(id=101, default_code="MYR-RMA-02", name="Roma Kelapa")
+        mock_move = MockRecord(id=3311, name="move_3311", product_id=mock_prod, state="assigned")
+        mock_picking = MockRecord(
+            id=301,
+            name="WH/OUT/0035",
+            origin="SO-202608-0035",
+            state="done",  # picking reports done, but internal move stayed assigned
+            move_ids=[mock_move],
+        )
+        env = MockEnv({"res.company": MockModel(records=[mock_company])})
+        loader = GenericPeriodPackLoader(env, AUG_PACK_DIR, dry_run=False, strict=True)
+        loader.company = mock_company
+
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_picking_safely(mock_picking, ref_num="SO-202608-0035")
+
+        err_msg = str(ctx.exception)
+        self.assertIn("3311", err_msg)
+        self.assertIn("MYR-RMA-02", err_msg)
+        self.assertIn("assigned", err_msg)
+        self.assertIn("SO-202608-0035", err_msg)
+
 
 if __name__ == "__main__":
     unittest.main()
