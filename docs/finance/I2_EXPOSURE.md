@@ -1,7 +1,8 @@
 # I2 exposure — wizard, ACL, menu dan bukti peran
 
 Status: **implementasi + bukti disposable; belum penerimaan katalog.**
-Branch: `Opencode-finance-i2-exposure` dari `main` `4f61086`.
+Branch: `Opencode-finance-i2-exposure`, disinkronkan dengan `main` `488bd87`
+(merge `fab0cbc`).
 
 ## Masalah yang diselesaikan
 
@@ -56,8 +57,9 @@ Versi: `id_finance_reporting` `19.0.1.4.0`, `id_finance_foundation`
 
 `scripts/ops/verify_finance_i2_exposure.py` pada
 `finance_i0_reports_disposable`. **Status: PASS pada CI exact-SHA
-`34452fe094da03f6d073d2585e9e1ff2db1f0abc`**, run
-`43357437999` (langkah `I2 exposure`), dengan seluruh 12 check PR hijau.
+`fab0cbca13c1c120b2dddbdf6ed41a5a28af8319`** (setelah sinkronisasi `main`),
+run `43371935122` (langkah `I2 exposure`), dengan seluruh **12/12 check PR
+hijau** pada SHA tersebut. Bukti sanitasi pertama kali lulus di SHA ini.
 
 1. 8 jenis laporan dijalankan lewat wizard; `report_id` harus sesuai
    (`FIN04`, `FIN05`, `FIN07`, `FIN08`, `FIN37`, `FIN38`, `FIN51`, `FIN57`),
@@ -68,6 +70,8 @@ Versi: `id_finance_reporting` `19.0.1.4.0`, `id_finance_foundation`
 4. Sales dan Driver ditolak pada wizard (ACL) **dan** pada pemanggilan
    `_snapshot` langsung (scope server).
 5. Reader tidak bisa membaca company lain.
+6. Penulisan HTML langsung lewat ORM oleh Finance Reader tidak menyimpan
+   markup aktif, sementara tabel laporan tetap utuh.
 
 Keluaran CI (`FINANCE_I2_EXPOSURE`): 8/8 `wizard_run_*` PASS, 9/9
 `menu_action_*` + view PASS, `reader_can_run` PASS, `sales_wizard_denied`,
@@ -75,7 +79,7 @@ Keluaran CI (`FINANCE_I2_EXPOSURE`): 8/8 `wizard_run_*` PASS, 9/9
 `reader_foreign_company_denied` semuanya `ACCESS_DENIED`, dan
 `fixture_rollback` PASS.
 
-Bukti sanitasi (`sanitization`) pada review #5886476944:
+Bukti sanitasi (`sanitization`, review #5886476944) — PASS pada `fab0cbc`:
 
 - `reader_direct_write_sanitized` — Finance Reader menulis `<script>`,
   `onerror`, dan `href="javascript:"` langsung lewat ORM; hasil baca tidak
@@ -97,7 +101,7 @@ di-rollback; skrip memeriksa tidak ada kebocoran company/user.
 - [BU] Tie-out angka per report ID terhadap oracle independen di database demo
   (oracle angka sudah ada di paket I2a/I2b/I2c, tetapi bukan penerimaan UI).
 - [BU] Aktivasi `id_finance_foundation` di database demo; prasyarat CI
-  disposable sudah hijau pada `34452fe`, aktivasi belum dijalankan.
+  disposable sudah hijau pada `fab0cbc`, aktivasi belum dijalankan.
 - [BU] Sign-off Finance Controller + QA per report ID.
 - [BU] Layar native list/pivot; saat ini pratinjau form + JSON.
 

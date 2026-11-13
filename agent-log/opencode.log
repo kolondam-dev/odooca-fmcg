@@ -71,3 +71,11 @@
 - [BU] Bukti CI dengan komponen sanitization menunggu run pada SHA hasil sinkronisasi dengan origin/main (branch tertinggal 4 commit).
 - [F] Katalog tetap 58/58 BELUM_DITERIMA; tanpa merge/deploy/verdict.
 - Task managed by Agent-Opencode at 2026-11-13T12:15:51+07:00
+
+[2026-11-13T12:46:38+07:00] [INFO] PR #123: sanitization PASS di CI pada fab0cbc, branch sinkron dengan main
+- [F] Run 43371935122 langkah I2 exposure PASS pada fab0cbca13c1c120b2dddbdf6ed41a5a28af8319; keluaran FINANCE_I2_EXPOSURE memuat sanitization reader_direct_write_sanitized PASS dan reader_preview_keeps_table PASS.
+- [F] Komponen lain pada run yang sama: 8/8 wizard_run_* PASS, 9/9 menu_action_* + wizard_form_view PASS, reader_can_run PASS, sales/driver wizard+service dan reader lintas company ACCESS_DENIED, fixture_rollback PASS.
+- [F] PR #123 12/12 check hijau pada fab0cbc (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift, Kontrak Runner Upgrade, invariant, seed, pwa-quality/container/browser/gate).
+- [F] Branch memuat main 488bd87 lewat merge fab0cbc; konflik hanya docs/HANDOFF.md, entri claude-design dan Agent-Opencode sama-sama dipertahankan urut waktu terbaru.
+- [BU] Aktivasi DB demo, export XLSX/PDF + guard formula injection, geometri browser, tie-out per report ID, sign-off, payroll, FIN36/55/56, I3-I8 tetap terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy/verdict.
+- Task managed by Agent-Opencode at 2026-11-13T12:46:38+07:00
