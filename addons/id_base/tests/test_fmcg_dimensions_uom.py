@@ -17,6 +17,56 @@ class TestFMCGDimensionsUoM(TransactionCase):
         })
         cls.uom_unit = cls.env.ref("uom.product_uom_unit")
 
+    def test_existing_seed_sku_replay_preserves_inventory_uom_and_stock_quantity(self):
+        product = self.env["product.template"].create({
+            "name": "Existing Seed SKU UoM Replay",
+            "default_code": "TEST-SEED-UOM-PRESERVE",
+            "uom_id": self.uom_unit.id,
+            "is_storable": True,
+        })
+        variant = product.product_variant_id
+        location = self.env.ref("stock.stock_location_stock")
+        Quant = self.env["stock.quant"]
+        Quant._update_available_quantity(variant, location, 37.0)
+
+        original_uom_id = product.uom_id.id
+        original_quantity = sum(Quant.search([
+            ("product_id", "=", variant.id),
+            ("location_id", "=", location.id),
+        ]).mapped("quantity"))
+
+        # Same guard invoked by load_products() before writing any existing SKU fields.
+        self.assertTrue(product.assert_fmcg_seed_inventory_uom(self.uom_unit))
+        product.write({
+            "name": "Existing Seed SKU UoM Replay Updated",
+            "list_price": 1234.0,
+        })
+
+        self.assertEqual(product.uom_id.id, original_uom_id)
+        self.assertEqual(
+            sum(Quant.search([
+                ("product_id", "=", variant.id),
+                ("location_id", "=", location.id),
+            ]).mapped("quantity")),
+            original_quantity,
+        )
+        self.assertEqual(original_quantity, 37.0)
+
+    def test_existing_seed_sku_with_different_inventory_uom_fails_before_write(self):
+        product = self.env["product.template"].create({
+            "name": "Noncanonical Existing Seed SKU",
+            "default_code": "TEST-SEED-UOM-MISMATCH",
+            "uom_id": self.uom_unit.id,
+        })
+        original_name = product.name
+        sachet_uom = self.env.ref("id_base.uom_sch")
+
+        with self.assertRaisesRegex(ValidationError, "tidak akan mengubah UoM"):
+            product.assert_fmcg_seed_inventory_uom(sachet_uom)
+
+        self.assertEqual(product.name, original_name)
+        self.assertEqual(product.uom_id, self.uom_unit)
+
     def test_01_product_dimensions_and_weight_computation(self):
         """Verifikasi bahwa 14 kolom FMCG dan komputasi dua arah bobot/kubikasi berjalan presisi."""
         product = self.env["product.template"].create({
