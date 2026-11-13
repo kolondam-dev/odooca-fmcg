@@ -1,3 +1,4 @@
+from odoo.exceptions import ValidationError
 from odoo.tests.common import TransactionCase
 
 
@@ -15,6 +16,56 @@ class TestFMCGDimensionsUoM(TransactionCase):
             "principal_id": cls.principal.id,
         })
         cls.uom_unit = cls.env.ref("uom.product_uom_unit")
+
+    def test_existing_seed_sku_replay_preserves_inventory_uom_and_stock_quantity(self):
+        product = self.env["product.template"].create({
+            "name": "Existing Seed SKU UoM Replay",
+            "default_code": "TEST-SEED-UOM-PRESERVE",
+            "uom_id": self.uom_unit.id,
+            "is_storable": True,
+        })
+        variant = product.product_variant_id
+        location = self.env.ref("stock.stock_location_stock")
+        Quant = self.env["stock.quant"]
+        Quant._update_available_quantity(variant, location, 37.0)
+
+        original_uom_id = product.uom_id.id
+        original_quantity = sum(Quant.search([
+            ("product_id", "=", variant.id),
+            ("location_id", "=", location.id),
+        ]).mapped("quantity"))
+
+        # Same guard invoked by load_products() before writing any existing SKU fields.
+        self.assertTrue(product.assert_fmcg_seed_inventory_uom(self.uom_unit))
+        product.write({
+            "name": "Existing Seed SKU UoM Replay Updated",
+            "list_price": 1234.0,
+        })
+
+        self.assertEqual(product.uom_id.id, original_uom_id)
+        self.assertEqual(
+            sum(Quant.search([
+                ("product_id", "=", variant.id),
+                ("location_id", "=", location.id),
+            ]).mapped("quantity")),
+            original_quantity,
+        )
+        self.assertEqual(original_quantity, 37.0)
+
+    def test_existing_seed_sku_with_different_inventory_uom_fails_before_write(self):
+        product = self.env["product.template"].create({
+            "name": "Noncanonical Existing Seed SKU",
+            "default_code": "TEST-SEED-UOM-MISMATCH",
+            "uom_id": self.uom_unit.id,
+        })
+        original_name = product.name
+        sachet_uom = self.env.ref("id_base.uom_sch")
+
+        with self.assertRaisesRegex(ValidationError, "tidak akan mengubah UoM"):
+            product.assert_fmcg_seed_inventory_uom(sachet_uom)
+
+        self.assertEqual(product.name, original_name)
+        self.assertEqual(product.uom_id, self.uom_unit)
 
     def test_01_product_dimensions_and_weight_computation(self):
         """Verifikasi bahwa 14 kolom FMCG dan komputasi dua arah bobot/kubikasi berjalan presisi."""
@@ -58,6 +109,135 @@ class TestFMCGDimensionsUoM(TransactionCase):
 
         uom_karton = self.env.ref("id_base.uom_karton", raise_if_not_found=False)
         self.assertTrue(uom_karton, "id_base.uom_karton wajib ada!")
+
+
+    def test_04_native_per_sku_packaging_uom_hierarchy(self):
+        """SKU packaging uses Odoo 19 UoMs while preserving the inventory UoM."""
+        product = self.env["product.template"].create({
+            "name": "Coffee Sachet Test",
+            "default_code": "TEST-UOM-SACHET",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        base_uom = self.env.ref("id_base.uom_sch")
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=10, carton_qty=120)
+
+        self.assertEqual(product.uom_id, self.uom_unit)
+        self.assertEqual(product.fmcg_base_uom_id, base_uom)
+        self.assertTrue(product.fmcg_inner_uom_id)
+        self.assertTrue(product.fmcg_carton_uom_id)
+        self.assertIn(base_uom, product.uom_ids)
+        self.assertIn(product.fmcg_inner_uom_id, product.uom_ids)
+        self.assertIn(product.fmcg_carton_uom_id, product.uom_ids)
+        self.assertEqual(
+            product.fmcg_inner_uom_id._compute_quantity(1, product.uom_id),
+            10,
+        )
+        self.assertEqual(
+            product.fmcg_carton_uom_id._compute_quantity(1, product.uom_id),
+            120,
+        )
+
+        inner_id = product.fmcg_inner_uom_id.id
+        carton_id = product.fmcg_carton_uom_id.id
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=10, carton_qty=120)
+        self.assertEqual(product.fmcg_inner_uom_id.id, inner_id)
+        self.assertEqual(product.fmcg_carton_uom_id.id, carton_id)
+
+    def test_05_native_packaging_without_inner_tier(self):
+        """Products with inner_qty=1 expose carton and base UoM only."""
+        product = self.env["product.template"].create({
+            "name": "Bottled Coffee Test",
+            "default_code": "TEST-UOM-BOTTLE",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 5000.0,
+            "list_price": 6000.0,
+        })
+        base_uom = self.env.ref("id_base.uom_btl")
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=1, carton_qty=24)
+
+        self.assertFalse(product.fmcg_inner_uom_id)
+        self.assertEqual(
+            product.fmcg_carton_uom_id._compute_quantity(1, product.uom_id),
+            24,
+        )
+
+    def test_08_sales_line_defaults_base_uom_and_shows_breakdown(self):
+        product = self.env["product.template"].create({
+            "name": "Sales Line Sachet Test",
+            "default_code": "TEST-UOM-SALES",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        base_uom = self.env.ref("id_base.uom_sch")
+        product.configure_fmcg_packaging_uoms(base_uom, inner_qty=10, carton_qty=120)
+        partner = self.env["res.partner"].create({"name": "FMCG UoM Test Customer"})
+        order = self.env["sale.order"].create({"partner_id": partner.id})
+        variant = product.product_variant_id
+
+        base_line = self.env["sale.order.line"].create({
+            "order_id": order.id,
+            "product_id": variant.id,
+            "product_uom_qty": 2,
+            "price_unit": 1500,
+        })
+        self.assertEqual(base_line.product_uom_id, base_uom)
+        self.assertEqual(base_line.fmcg_qty_breakdown, "2 Sachet (2 Sachet)")
+
+        carton_line = self.env["sale.order.line"].create({
+            "order_id": order.id,
+            "product_id": variant.id,
+            "product_uom_qty": 1.1,
+            "product_uom_id": product.fmcg_carton_uom_id.id,
+            "price_unit": 180000,
+        })
+        self.assertEqual(
+            carton_line.fmcg_qty_breakdown,
+            "1 Karton + 1 Inner + 2 Sachet (132 Sachet)",
+        )
+
+    def test_07_configured_packaging_ratio_cannot_be_silently_changed(self):
+        product = self.env["product.template"].create({
+            "name": "Configured Ratio Test",
+            "default_code": "TEST-UOM-LOCKED",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        product.configure_fmcg_packaging_uoms(
+            self.env.ref("id_base.uom_sch"),
+            inner_qty=10,
+            carton_qty=120,
+        )
+        with self.assertRaises(ValidationError):
+            product.write({"carton_qty": 130})
+
+    def test_06_invalid_packaging_ratio_is_rejected(self):
+        product = self.env["product.template"].create({
+            "name": "Invalid Ratio Test",
+            "default_code": "TEST-UOM-INVALID",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        with self.assertRaises(ValidationError):
+            product.configure_fmcg_packaging_uoms(
+                self.env.ref("id_base.uom_sch"),
+                inner_qty=10,
+                carton_qty=125,
+            )
 
     def test_03_partner_coverage_and_matrix_pricelist(self):
         """Verifikasi bahwa partner dengan coverage area dan channel otomatis mendapat matriks harga."""

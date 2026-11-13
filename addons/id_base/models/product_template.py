@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class ProductTemplate(models.Model):
@@ -33,14 +34,35 @@ class ProductTemplate(models.Model):
         domain="[('brand_id', '=?', brand_id)]",
     )
     inner_qty = fields.Integer(
-        string="Pcs per Inner / Renceng / Pack",
+        string="Unit Dasar per Inner / Renceng / Pack",
         default=1,
-        help="Fraksi kemasan menengah (Inner / Renceng / Pack) sebelum tingkat Karton.",
+        help="Jumlah satuan dasar sesuai base_uom dalam satu kemasan menengah.",
     )
     carton_qty = fields.Integer(
-        string="Pcs per Karton",
+        string="Unit Dasar per Karton",
         default=1,
-        help="Konversi kemasan sekunder: jumlah satuan dasar per dus/karton.",
+        help="Jumlah satuan dasar sesuai base_uom yang terkandung dalam satu karton.",
+    )
+    fmcg_base_uom_id = fields.Many2one(
+        "uom.uom",
+        string="Satuan Dasar FMCG",
+        copy=False,
+        ondelete="restrict",
+        help="Label satuan terkecil per SKU; nilainya setara 1 unit inventaris Odoo yang sudah ada.",
+    )
+    fmcg_inner_uom_id = fields.Many2one(
+        "uom.uom",
+        string="Satuan Inner FMCG",
+        copy=False,
+        ondelete="restrict",
+        help="Satuan kemasan menengah per SKU, bila SKU memiliki inner/renceng/pack.",
+    )
+    fmcg_carton_uom_id = fields.Many2one(
+        "uom.uom",
+        string="Satuan Karton FMCG",
+        copy=False,
+        ondelete="restrict",
+        help="Satuan karton per SKU dengan faktor konversi spesifik SKU.",
     )
     base_weight_g = fields.Float(
         string="Gramasi Base (g)",
@@ -62,6 +84,120 @@ class ProductTemplate(models.Model):
     )
     carton_weight_kg = fields.Float(string="Berat Karton (kg)", digits=(12, 2))
     carton_barcode = fields.Char(string="Barcode Karton", copy=False, index=True)
+
+    def assert_fmcg_seed_inventory_uom(self, expected_uom):
+        """Fail closed when a seed replay would change an existing SKU's inventory UoM."""
+        self.ensure_one()
+        if not expected_uom:
+            raise ValidationError("UoM inventaris seed tidak ditemukan.")
+        if self.uom_id != expected_uom:
+            raise ValidationError(
+                f"UoM inventaris SKU {self.display_name} adalah "
+                f"'{self.uom_id.display_name}', bukan UoM seed "
+                f"'{expected_uom.display_name}'. Loader tidak akan mengubah UoM "
+                "SKU yang sudah ada; lakukan rekonsiliasi/migrasi terkontrol."
+            )
+        return True
+
+    def write(self, vals):
+        ratio_fields = {"inner_qty", "carton_qty"}
+        if ratio_fields.intersection(vals):
+            for product in self:
+                if not product.fmcg_carton_uom_id:
+                    continue
+                new_inner = vals.get("inner_qty", product.inner_qty)
+                new_carton = vals.get("carton_qty", product.carton_qty)
+                if new_inner != product.inner_qty or new_carton != product.carton_qty:
+                    raise ValidationError(
+                        f"Rasio kemasan {product.display_name} sudah dipakai sebagai UoM transaksi. "
+                        "Perubahan harus melalui migrasi UoM terkontrol."
+                    )
+        return super().write(vals)
+
+    def _fmcg_get_or_create_uom(self, name, relative_uom, factor):
+        """Get an immutable Odoo 19 UoM node for one exact packaging ratio."""
+        Uom = self.env["uom.uom"].sudo()
+        domain = [
+            ("name", "=", name),
+            ("relative_uom_id", "=", relative_uom.id),
+            ("relative_factor", "=", factor),
+        ]
+        uom = Uom.search(domain, limit=1)
+        if not uom:
+            uom = Uom.create({
+                "name": name,
+                "relative_uom_id": relative_uom.id,
+                "relative_factor": factor,
+                "active": True,
+            })
+        return uom
+
+    def configure_fmcg_packaging_uoms(self, base_uom, inner_qty, carton_qty):
+        """Attach SKU-specific Odoo 19 packaging UoMs without changing inventory UoM.
+
+        The product inventory UoM deliberately remains untouched so existing stock
+        quantities and transaction references retain their current canonical unit.
+        """
+        self.ensure_one()
+        if not base_uom:
+            raise ValidationError("Satuan dasar FMCG wajib ditentukan.")
+        if inner_qty < 1 or carton_qty < 1 or carton_qty % inner_qty:
+            raise ValidationError(
+                "Rasio kemasan tidak valid: carton_qty harus merupakan kelipatan inner_qty."
+            )
+        if base_uom == self.uom_id or base_uom.factor != self.uom_id.factor:
+            raise ValidationError(
+                "Satuan label dasar FMCG harus memiliki faktor 1:1 terhadap UoM inventaris produk."
+            )
+        if self.fmcg_carton_uom_id and (
+            self.fmcg_base_uom_id != base_uom
+            or self.inner_qty != inner_qty
+            or self.carton_qty != carton_qty
+        ):
+            raise ValidationError(
+                f"Konfigurasi kemasan {self.display_name} sudah digunakan. "
+                "Perubahan rasio memerlukan migrasi UoM terkontrol."
+            )
+
+        expected_inner = False
+        if inner_qty > 1:
+            expected_inner = self._fmcg_get_or_create_uom(
+                f"Inner ({inner_qty} {base_uom.name})",
+                base_uom,
+                inner_qty,
+            )
+
+        carton_reference = expected_inner or base_uom
+        carton_factor = carton_qty // inner_qty if expected_inner else carton_qty
+        expected_carton = self._fmcg_get_or_create_uom(
+            f"Karton ({carton_qty} {base_uom.name})",
+            carton_reference,
+            carton_factor,
+        )
+
+        # Never mutate an existing UoM's conversion factor: it may already be used
+        # by posted documents. A changed master ratio must be handled as a migration.
+        for field_name, expected in (
+            ("fmcg_base_uom_id", base_uom),
+            ("fmcg_inner_uom_id", expected_inner),
+            ("fmcg_carton_uom_id", expected_carton),
+        ):
+            current = self[field_name]
+            if current and current != expected:
+                raise ValidationError(
+                    f"Konfigurasi {field_name} untuk {self.display_name} sudah ada dan berbeda. "
+                    "Perubahan rasio memerlukan migrasi terkontrol, bukan overwrite loader."
+                )
+
+        self.write({
+            "inner_qty": inner_qty,
+            "carton_qty": carton_qty,
+            "fmcg_base_uom_id": base_uom.id,
+            "fmcg_inner_uom_id": expected_inner.id if expected_inner else False,
+            "fmcg_carton_uom_id": expected_carton.id,
+            "uom_ids": [(4, uom.id) for uom in (base_uom, expected_inner, expected_carton) if uom],
+        })
+        return True
 
     @api.depends("weight")
     def _compute_base_weight_g(self):
