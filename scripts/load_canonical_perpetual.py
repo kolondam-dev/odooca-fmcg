@@ -417,7 +417,144 @@ class CanonicalPerpetualAdapter:
             "skipped_ap": 0,
             "skipped_opex": 0,
             "skipped_quarantine": 0,
+            "expiry_products_enabled": 0,
+            "lot_expiry_backfilled": 0,
+            "fefo_strategy_configured": 0,
         }
+
+    def _ensure_expiry_product_configuration(self):
+        """Enable native lot expiry tracking for every canonical FMCG SKU."""
+        Product = self.env["product.product"].sudo()
+        product_fields = _safe_fields(Product)
+        required_fields = {"tracking", "use_expiration_date"}
+        missing = required_fields - set(product_fields)
+        if missing:
+            raise RuntimeError(
+                "[canonical_loader] FATAL: Field product expiry tidak tersedia "
+                f"({sorted(missing)}). Pastikan product_expiry terpasang sebelum seed."
+            )
+
+        for sku, product in self.product_by_code.items():
+            if product.tracking != "lot":
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: SKU {sku} harus memakai tracking='lot' "
+                    f"sebelum FEFO diaktifkan (aktual={product.tracking!r})."
+                )
+            if not product.use_expiration_date:
+                product.write({"use_expiration_date": True})
+                if not product.use_expiration_date:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Gagal mengaktifkan use_expiration_date untuk SKU {sku}."
+                    )
+                self.stats["expiry_products_enabled"] += 1
+
+    def _ensure_fefo_strategy(self):
+        """Configure native Odoo FEFO on the seed stock location without overriding conflicts."""
+        fefo = self.env.ref("product_expiry.removal_fefo", raise_if_not_found=False)
+        if not fefo or getattr(fefo, "method", False) != "fefo":
+            raise RuntimeError(
+                "[canonical_loader] FATAL: Strategi native product_expiry.removal_fefo tidak ditemukan."
+            )
+        location = getattr(self, "wh_stock_loc", None)
+        if not location:
+            raise RuntimeError("[canonical_loader] FATAL: Lokasi WH/Stock seed tidak ditemukan untuk FEFO.")
+
+        current_location_strategy = getattr(location, "removal_strategy_id", False)
+        if current_location_strategy and current_location_strategy != fefo:
+            raise RuntimeError(
+                f"[canonical_loader] FATAL: WH/Stock sudah memakai strategi "
+                f"'{getattr(current_location_strategy, 'name', current_location_strategy)}', bukan FEFO. "
+                "Perlu keputusan konfigurasi eksplisit; loader tidak akan menimpa strategi."
+            )
+        if not current_location_strategy:
+            location.write({"removal_strategy_id": fefo.id})
+            if getattr(location, "removal_strategy_id", False) != fefo:
+                raise RuntimeError("[canonical_loader] FATAL: Readback removal_strategy_id WH/Stock gagal.")
+            self.stats["fefo_strategy_configured"] += 1
+
+        # Category strategy overrides location strategy in native Odoo. Reject any conflict.
+        seen_categories = set()
+        for sku, product in self.product_by_code.items():
+            category = getattr(product, "categ_id", False)
+            if not category:
+                raise RuntimeError(f"[canonical_loader] FATAL: SKU {sku} tidak memiliki product category.")
+            if category.id in seen_categories:
+                continue
+            seen_categories.add(category.id)
+            category_strategy = getattr(category, "removal_strategy_id", False)
+            if category_strategy and category_strategy != fefo:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Kategori '{category.display_name}' untuk SKU {sku} "
+                    "memiliki removal strategy non-FEFO yang akan mengalahkan strategi lokasi."
+                )
+
+        # Explicit child-location strategies also override the parent fallback.
+        StockLocation = self.env["stock.location"].sudo()
+        descendants = StockLocation.search([
+            ("id", "child_of", location.id),
+            ("usage", "=", "internal"),
+        ])
+        for child in _iter_records(descendants):
+            child_strategy = getattr(child, "removal_strategy_id", False)
+            if child_strategy and child_strategy != fefo:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lokasi turunan '{child.complete_name}' "
+                    "memiliki strategi non-FEFO yang mengalahkan fallback WH/Stock."
+                )
+
+    def _ensure_lot_expiry(self, lot, expiry_date):
+        """Backfill missing lot expiry metadata and verify native removal_date for FEFO."""
+        if not expiry_date:
+            raise RuntimeError(
+                f"[canonical_loader] FATAL: Tanggal expiry sumber kosong untuk lot "
+                f"'{getattr(lot, 'name', lot)}'."
+            )
+        lot_fields = _safe_fields(lot)
+        if "expiration_date" not in lot_fields or "removal_date" not in lot_fields:
+            raise RuntimeError(
+                "[canonical_loader] FATAL: stock.lot belum menyediakan expiration_date/removal_date. "
+                "Pastikan product_expiry terpasang."
+            )
+
+        expected_date = str(expiry_date).strip()[:10]
+        current_expiry = getattr(lot, "expiration_date", False)
+        if current_expiry:
+            actual_date = str(current_expiry)[:10]
+            if actual_date != expected_date:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Konflik expiry lot '{getattr(lot, 'name', lot)}': "
+                    f"database={actual_date}, register={expected_date}. Tidak akan menimpa tanggal yang berbeda."
+                )
+        else:
+            if not callable(getattr(lot, "write", None)):
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lot '{getattr(lot, 'name', lot)}' tidak mendukung write() untuk backfill."
+                )
+            lot.write({"expiration_date": f"{expected_date} 00:00:00"})
+            current_expiry = getattr(lot, "expiration_date", False)
+            if not current_expiry or str(current_expiry)[:10] != expected_date:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Readback expiration_date lot "
+                    f"'{getattr(lot, 'name', lot)}' gagal setelah backfill."
+                )
+            self.stats["lot_expiry_backfilled"] += 1
+
+        # Enabling use_expiration_date does not reliably invalidate all existing lots;
+        # explicitly recompute Odoo's native use/removal/alert dates for existing records.
+        if not getattr(lot, "removal_date", False):
+            compute_dates = getattr(lot, "_compute_dates", None)
+            if not callable(compute_dates):
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lot '{getattr(lot, 'name', lot)}' "
+                    "tidak memiliki _compute_dates() untuk membangun removal_date."
+                )
+            compute_dates()
+        if not getattr(lot, "removal_date", False):
+            raise RuntimeError(
+                f"[canonical_loader] FATAL: removal_date lot '{getattr(lot, 'name', lot)}' "
+                "tetap kosong; FEFO tidak dapat dijamin."
+            )
+        return True
 
     def _collect_canonical_sku_scope(self) -> tuple[set[str], dict[str, float]]:
         """Membangun cakupan SKU kanonikal dan unit_cost langsung dari register sumber."""
