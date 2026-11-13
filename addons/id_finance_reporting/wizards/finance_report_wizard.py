@@ -1,0 +1,453 @@
+# Part of odooca-fmcg. License LGPL-3.
+"""Single screen entry point for the custom I2 finance reports.
+
+The report models themselves are ``AbstractModel`` services without any
+persisted record, so they cannot be opened from a menu. This transient wizard
+collects the bounded filters, dispatches to the matching ``_snapshot`` service
+and renders the returned payload in a read-only preview.
+
+Nothing is posted, created or mutated: every report is a read-only projection
+of posted journal items and partial reconciliations.
+"""
+
+import json
+from html import escape
+
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
+
+REPORT_TYPES = [
+    ("audit_trail", _("FIN04 - Journal Items Audit Trail")),
+    ("partner_ledger", _("FIN05/FIN06 - Partner Ledger AR/AP")),
+    ("open_items", _("FIN07 - Open Items AR/AP")),
+    ("aged_partner_balance", _("FIN08/FIN09 - Aged Partner Balance")),
+    ("combined_trial_balance", _("FIN51 - Combined Trial Balance")),
+    ("sales_purchase_register", _("FIN57 - Sales and Purchase Register")),
+    ("accrual_schedule", _("FIN37 - Accrual / Prepayment Schedules")),
+    ("fx_revaluation", _("FIN38 - FX Revaluation")),
+]
+
+RANGE_REPORTS = {
+    "audit_trail",
+    "partner_ledger",
+    "combined_trial_balance",
+    "sales_purchase_register",
+}
+AS_OF_REPORTS = {
+    "open_items",
+    "aged_partner_balance",
+    "accrual_schedule",
+    "fx_revaluation",
+}
+PARTNER_TYPE_REPORTS = {"partner_ledger", "open_items", "aged_partner_balance"}
+
+MAX_TABLE_ROWS = 300
+MAX_TABLE_COLUMNS = 24
+MAX_CELL_CHARS = 200
+MAX_JSON_CHARS = 200000
+
+META_KEYS = {
+    "report_id",
+    "report_ids",
+    "company_id",
+    "currency_id",
+    "date_from",
+    "date_to",
+    "as_of_date",
+    "partner_type",
+    "only_posted_moves",
+}
+
+
+def _default_month_start(self):
+    return fields.Date.context_today(self).replace(day=1)
+
+
+def _format_cell(value):
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return _("Yes") if value else _("No")
+    if isinstance(value, float):
+        return f"{value:,.2f}"
+    if isinstance(value, int):
+        return f"{value:,}"
+    text = str(value)
+    if len(text) > MAX_CELL_CHARS:
+        text = text[:MAX_CELL_CHARS] + "..."
+    return escape(text)
+
+
+def _is_scalar(value):
+    return value is None or isinstance(value, (str, int, float, bool))
+
+
+class FinanceReportWizard(models.TransientModel):
+    _name = "id.finance.report.wizard"
+    _description = "Finance Report Runner"
+
+    report_type = fields.Selection(REPORT_TYPES, required=True, default="audit_trail")
+    company_id = fields.Many2one(
+        "res.company",
+        required=True,
+        default=lambda self: self.env.company,
+        domain="[('id', 'in', allowed_company_ids)]",
+    )
+    company_ids = fields.Many2many(
+        "res.company",
+        string="Companies",
+        default=lambda self: self.env.companies,
+        domain="[('id', 'in', allowed_company_ids)]",
+    )
+    date_from = fields.Date(default=_default_month_start)
+    date_to = fields.Date(default=fields.Date.context_today)
+    as_of_date = fields.Date(default=fields.Date.context_today)
+
+    partner_type = fields.Selection(
+        [
+            ("customer", _("Customers")),
+            ("supplier", _("Suppliers")),
+            ("all", _("Customers and Suppliers")),
+        ],
+        default="customer",
+    )
+    partner_ids = fields.Many2many("res.partner", string="Partners")
+    journal_ids = fields.Many2many("account.journal", string="Journals")
+    account_ids = fields.Many2many("account.account", string="Accounts")
+
+    only_posted_moves = fields.Boolean(default=True)
+    register_type = fields.Selection(
+        [
+            ("all", _("All documents")),
+            ("sale", _("Sales only")),
+            ("purchase", _("Purchases only")),
+        ],
+        default="all",
+    )
+
+    presentation_currency_id = fields.Many2one("res.currency", string="Presentation currency")
+    rate_date = fields.Date(string="Conversion date")
+    hide_account_at_0 = fields.Boolean(string="Hide zero balances")
+    account_map_json = fields.Text(
+        string="COA mapping (JSON)",
+        help="Optional JSON object keyed by account code or by '<company_id>|<code>'. "
+        "Each value is either [code, name, account_type] or "
+        '{"code": ..., "name": ..., "account_type": ...}.',
+    )
+
+    result_summary = fields.Char(readonly=True)
+    result_html = fields.Html(readonly=True, sanitize=False)
+    result_json = fields.Text(readonly=True)
+    generated_at = fields.Datetime(readonly=True)
+
+    # ------------------------------------------------------------------ actions
+    def action_run(self):
+        self.ensure_one()
+        snapshot = self._dispatch()
+        self.write({
+            "result_summary": self._summary(snapshot),
+            "result_html": self._render(snapshot),
+            "result_json": self._payload_json(snapshot),
+            "generated_at": fields.Datetime.now(),
+        })
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": self._name,
+            "res_id": self.id,
+            "view_mode": "form",
+            "target": "current",
+        }
+
+    # ---------------------------------------------------------------- dispatch
+    def _dispatch(self):
+        report = self.report_type
+        company = self.company_id
+        if company not in self.env.companies:
+            raise UserError(_("Select a company available in the current context."))
+
+        partner_ids = self.partner_ids.ids or None
+        journal_ids = self.journal_ids.ids or None
+        account_ids = self.account_ids.ids or None
+        posted = self.only_posted_moves
+
+        if report in RANGE_REPORTS:
+            date_from, date_to = self._required_range()
+
+        if report in AS_OF_REPORTS:
+            as_of = self._required_as_of()
+
+        if report == "audit_trail":
+            return self.env["id.finance.audit.trail"]._snapshot(
+                company_id=company.id,
+                date_from=date_from,
+                date_to=date_to,
+                only_posted_moves=posted,
+                journal_ids=journal_ids,
+                account_ids=account_ids,
+            )
+
+        if report == "partner_ledger":
+            return self.env["id.finance.partner.ledger"]._snapshot(
+                company_id=company.id,
+                date_from=date_from,
+                date_to=date_to,
+                partner_type=self.partner_type or "customer",
+                only_posted_moves=posted,
+                partner_ids=partner_ids,
+                journal_ids=journal_ids,
+            )
+
+        if report == "open_items":
+            return self.env["id.finance.open.items"]._snapshot(
+                company_id=company.id,
+                as_of_date=as_of,
+                partner_type=self.partner_type or "customer",
+                only_posted_moves=posted,
+                partner_ids=partner_ids,
+                journal_ids=journal_ids,
+            )
+
+        if report == "aged_partner_balance":
+            return self.env["id.finance.aged.partner.balance"]._snapshot(
+                company_id=company.id,
+                as_of_date=as_of,
+                partner_type=self.partner_type or "customer",
+                only_posted_moves=posted,
+                partner_ids=partner_ids,
+                journal_ids=journal_ids,
+            )
+
+        if report == "combined_trial_balance":
+            companies = self.company_ids or company
+            if any(c not in self.env.companies for c in companies):
+                raise UserError(_("Select only companies available in the current context."))
+            return self.env["id.finance.combined.trial.balance"]._snapshot(
+                company_ids=companies.ids,
+                date_from=date_from,
+                date_to=date_to,
+                presentation_currency_id=self.presentation_currency_id.id or None,
+                rate_date=self.rate_date,
+                only_posted_moves=posted,
+                hide_account_at_0=self.hide_account_at_0,
+                account_map=self._account_map(),
+            )
+
+        if report == "sales_purchase_register":
+            return self.env["id.finance.sales.purchase.register"]._snapshot(
+                company_id=company.id,
+                date_from=date_from,
+                date_to=date_to,
+                register_type=self.register_type or "all",
+                only_posted_moves=posted,
+                journal_ids=journal_ids,
+            )
+
+        if report == "accrual_schedule":
+            return self.env["id.finance.accrual.schedule"]._snapshot(
+                company_id=company.id,
+                as_of_date=as_of,
+                account_ids=account_ids,
+                journal_ids=journal_ids,
+                partner_ids=partner_ids,
+                only_posted_moves=posted,
+            )
+
+        if report == "fx_revaluation":
+            return self.env["id.finance.fx.revaluation"]._snapshot(
+                company_id=company.id,
+                as_of_date=as_of,
+                account_ids=account_ids,
+                journal_ids=journal_ids,
+                partner_ids=partner_ids,
+                only_posted_moves=posted,
+            )
+
+        raise UserError(_("Unknown report type."))
+
+    def _required_range(self):
+        if not self.date_from or not self.date_to:
+            raise UserError(_("Select both the start and end date of the report period."))
+        return self.date_from, self.date_to
+
+    def _required_as_of(self):
+        if not self.as_of_date:
+            raise UserError(_("Select a single as-of date for this report."))
+        return self.as_of_date
+
+    def _account_map(self):
+        raw = (self.account_map_json or "").strip()
+        if not raw:
+            return None
+        try:
+            loaded = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise UserError(_("The COA mapping must be a valid JSON object.")) from exc
+        if not isinstance(loaded, dict):
+            raise UserError(_("The COA mapping must be a valid JSON object."))
+        mapping = {}
+        for key, value in loaded.items():
+            key = str(key).strip()
+            if not key:
+                raise UserError(_("The COA mapping contains an empty account key."))
+            if "|" in key:
+                company_part, code = key.split("|", 1)
+                try:
+                    company_ref = int(company_part)
+                except ValueError as exc:
+                    raise UserError(
+                        _("The COA mapping key '%(key)s' must start with a numeric company id.", key=key)
+                    ) from exc
+                mapping[(company_ref, code.strip())] = value
+            else:
+                mapping[key] = value
+        return mapping
+
+    # ---------------------------------------------------------------- payload
+    @api.model
+    def _label(self, report_type):
+        return dict(REPORT_TYPES).get(report_type, report_type)
+
+    def _summary(self, snapshot):
+        parts = [str(snapshot.get("report_id") or ""), self._label(self.report_type)]
+        lists = [key for key in snapshot if isinstance(snapshot[key], list)]
+        if lists:
+            parts.append(", ".join(f"{key}: {len(snapshot[key])}" for key in lists))
+        return " | ".join(part for part in parts if part)
+
+    def _payload_json(self, snapshot):
+        try:
+            payload = json.dumps(snapshot, default=str, indent=1)
+        except (TypeError, ValueError):
+            payload = json.dumps({"error": "payload is not JSON serialisable"}, default=str)
+        if len(payload) > MAX_JSON_CHARS:
+            payload = payload[:MAX_JSON_CHARS] + "\n... (truncated)"
+        return payload
+
+    # --------------------------------------------------------------- rendering
+    def _render(self, snapshot):
+        company = self.env["res.company"].browse(snapshot.get("company_id") or self.company_id.id)
+        currency = self.env["res.currency"].browse(
+            snapshot.get("currency_id") or company.currency_id.id
+        )
+        parts = ['<div class="o_finance_report">']
+        heading = f"{escape(str(snapshot.get('report_id') or ''))} &middot; "
+        heading += escape(self._label(self.report_type))
+        parts.append(f"<h3>{heading}</h3>")
+        parts.append("<table class='table table-sm table-bordered'><tbody>")
+        for label, value in (
+            (_("Company"), company.display_name),
+            (_("Currency"), currency.name),
+            (_("Period"), self._period_label(snapshot)),
+            (_("Filters"), self._filter_label()),
+        ):
+            parts.append(f"<tr><th>{escape(label)}</th><td>{escape(str(value or ''))}</td></tr>")
+        parts.append("</tbody></table>")
+
+        parts.append(self._scalar_table(snapshot))
+
+        for key in snapshot:
+            value = snapshot[key]
+            if key in META_KEYS:
+                continue
+            if isinstance(value, list):
+                parts.append(self._list_section(key, value))
+            elif isinstance(value, dict):
+                parts.append(self._dict_section(key, value))
+
+        parts.append("</div>")
+        return "".join(parts)
+
+    def _period_label(self, snapshot):
+        if snapshot.get("as_of_date"):
+            start = snapshot.get("date_from")
+            prefix = f"{start} - " if start else ""
+            return f"{prefix}{snapshot['as_of_date']}"
+        if snapshot.get("date_from") or snapshot.get("date_to"):
+            return f"{snapshot.get('date_from') or ''} - {snapshot.get('date_to') or ''}"
+        return _("As of today")
+
+    def _filter_label(self):
+        bits = []
+        if self.report_type in PARTNER_TYPE_REPORTS:
+            bits.append(f"partner type: {self.partner_type or 'customer'}")
+        if self.partner_ids:
+            bits.append(f"partners: {len(self.partner_ids)}")
+        if self.journal_ids:
+            bits.append(f"journals: {len(self.journal_ids)}")
+        if self.account_ids:
+            bits.append(f"accounts: {len(self.account_ids)}")
+        if self.report_type == "combined_trial_balance" and self.company_ids:
+            bits.append(f"companies: {len(self.company_ids)}")
+        if self.report_type == "sales_purchase_register":
+            bits.append(f"documents: {self.register_type or 'all'}")
+        bits.append("posted only" if self.only_posted_moves else "posted and draft")
+        return ", ".join(bits)
+
+    def _scalar_table(self, snapshot):
+        rows = [
+            (key, value)
+            for key, value in snapshot.items()
+            if key not in META_KEYS and _is_scalar(value)
+        ]
+        if not rows:
+            return ""
+        parts = ["<h4>", escape(_("Summary")), "</h4>"]
+        parts.append("<table class='table table-sm table-bordered'><tbody>")
+        for key, value in rows:
+            parts.append(
+                f"<tr><th>{escape(str(key))}</th><td>{_format_cell(value)}</td></tr>"
+            )
+        parts.append("</tbody></table>")
+        return "".join(parts)
+
+    def _list_section(self, key, value):
+        title = f"<h4>{escape(str(key))} ({len(value)})</h4>"
+        if not value:
+            return title + f"<p class='text-muted'>{escape(_('No rows.'))}</p>"
+        if not isinstance(value[0], dict):
+            preview = ", ".join(_format_cell(item) for item in value[:MAX_TABLE_ROWS])
+            return title + f"<p>{preview}</p>"
+        columns = self._columns(value)
+        parts = [title, "<table class='table table-sm table-bordered'><thead><tr>"]
+        for column in columns:
+            parts.append(f"<th>{escape(str(column))}</th>")
+        parts.append("</tr></thead><tbody>")
+        for row in value[:MAX_TABLE_ROWS]:
+            parts.append("<tr>")
+            for column in columns:
+                parts.append(f"<td>{_format_cell(row.get(column))}</td>")
+            parts.append("</tr>")
+        parts.append("</tbody></table>")
+        if len(value) > MAX_TABLE_ROWS:
+            note = _(
+                "Showing the first %(shown)s of %(total)s rows.",
+                shown=MAX_TABLE_ROWS,
+                total=len(value),
+            )
+            parts.append(f"<p class='text-muted'>{escape(note)}</p>")
+        return "".join(parts)
+
+    def _dict_section(self, key, value):
+        title = f"<h4>{escape(str(key))}</h4>"
+        if not value:
+            return title + f"<p class='text-muted'>{escape(_('Empty.'))}</p>"
+        if all(_is_scalar(item) for item in value.values()):
+            parts = [title, "<table class='table table-sm table-bordered'><tbody>"]
+            for sub_key, sub_value in value.items():
+                parts.append(
+                    f"<tr><th>{escape(str(sub_key))}</th><td>{_format_cell(sub_value)}</td></tr>"
+                )
+            parts.append("</tbody></table>")
+            return "".join(parts)
+        rendered = escape(json.dumps(value, default=str, indent=1)[:4000])
+        return title + f"<pre>{rendered}</pre>"
+
+    def _columns(self, rows):
+        columns = []
+        for row in rows[:MAX_TABLE_ROWS]:
+            for key, value in row.items():
+                if key not in columns and _is_scalar(value):
+                    columns.append(key)
+                if len(columns) >= MAX_TABLE_COLUMNS:
+                    return columns
+        return columns

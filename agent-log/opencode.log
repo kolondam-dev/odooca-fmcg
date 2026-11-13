@@ -44,3 +44,13 @@
 - [BU] Instalasi pada DB demo berisi 1.324 invoice/2.619 JE belum dijalankan; CI exact-SHA menyusul; export XLSX/PDF dan VAT Report belum diuji.
 - [F] Katalog tetap 58/58 BELUM_DITERIMA; id_finance_foundation dan laporan custom tidak dipasang.
 - Task managed by Agent-Opencode at 2026-11-12T10:50:13+07:00
+
+[2026-11-13T09:00:00+07:00] [INFO] I2 exposure: wizard laporan, ACL, menu Finance Reports dan bukti peran
+- [F] Branch Opencode-finance-i2-exposure dari main 4f61086. Tambah TransientModel id.finance.report.wizard (8 jenis laporan: FIN04, FIN05/06, FIN07, FIN08/09, FIN37, FIN38, FIN51, FIN57) yang memanggil _snapshot dan menampilkan pratinjau HTML + payload JSON; semua teks di-escape, tabel dibatasi 300 baris/24 kolom.
+- [F] Tambah security/ir.model.access.csv (baca 12 model abstrak, CRUD wizard, grup account.group_account_readonly) dan views/finance_report_wizard_views.xml (1 form + 8 act_window). Submenu Finance Reports di id_finance_foundation memakai grup group_finance_reader. Versi: id_finance_reporting 19.0.1.4.0, id_finance_foundation 19.0.1.1.0.
+- [F] Tambah scripts/ops/verify_finance_i2_exposure.py + langkah CI: 8 jenis laporan dijalankan, report_id/HTML/JSON diperiksa, menu/action/view diverifikasi, Finance Reader boleh, Sales dan Driver ditolak pada wizard dan pada _snapshot langsung, reader ditolak untuk company lain; fixture di-rollback.
+- [F] Tambah docs/finance/I2_EXPOSURE.md, OWNER_DECISIONS.md (keputusan 1-5: lisensi B, FIN55 C, FIN56 A, payroll bertahap A, aktivasi demo bertahap A) dan LICENSING.md (matriks lisensi + analisis turunan AGPL + rencana perbaikan). README finance diperbarui; REPORT_CATALOG.csv tidak diubah.
+- [F] i18n id.po: 92 entri valid (72 reporting + 20 foundation); dua msgid duplikat lama digabung menjadi satu entri dengan dua referensi.
+- [F] Verifikasi lokal: ruff PASS, check_manifests PASS (14 addon), XML well-formed, YAML workflow valid, compileall OK, 13 tes formula I2c lulus.
+- [BU] Instalasi pada DB demo belum dijalankan. Export XLSX/PDF, geometri browser, tie-out angka per report ID, sign-off Finance Controller/QA, layar native list/pivot, aktivasi payroll, FIN36/55/56 dan I3-I8 masih terbuka. Katalog tetap 58/58 BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-13T09:00:00+07:00
