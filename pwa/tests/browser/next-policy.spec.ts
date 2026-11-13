@@ -11,6 +11,9 @@ import {
     switchPersona,
     startDelivery,
     saveDeliveryPhoto,
+    openDeliveryTask,
+    backFromTask,
+    closeDeliveryScreens,
 } from "./delivery-helpers";
 import {
     leaveClosedVisit,
@@ -66,8 +69,7 @@ async function delivery(page: Page) {
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
 }
 async function openDo(page: Page, id = "DEMO-DO-001") {
-    const task = page.locator(".delivery-task").filter({ hasText: id });
-    await task.locator("summary").first().click();
+    const task = await openDeliveryTask(page, id);
     await startDelivery(task);
     await task.getByLabel("Penerima", { exact: true }).fill("Toko Demo");
     return task;
@@ -326,12 +328,8 @@ for (const days of [2, 3])
     }) => {
         await delivery(page);
         const task = await openDo(page);
-        await task
-            .getByLabel("Hasil serah terima", { exact: true })
-            .selectOption("rejected");
-        await task
-            .getByLabel("Alasan DO", { exact: true })
-            .selectOption("REQUEST PENDING KIRIM");
+        await task.getByRole("button", { name: "Tolak", exact: true }).click();
+        await task.getByLabel("Request pending kirim", { exact: true }).check();
         const date = await page.evaluate((n) => {
             const date = new Date().toLocaleDateString("en-CA", {
                 timeZone: "Asia/Makassar",
@@ -340,21 +338,20 @@ for (const days of [2, 3])
                 .toISOString()
                 .slice(0, 10);
         }, days);
+        await task.getByLabel("Tanggal kirim ulang").fill(date);
         await task
-            .getByLabel("Tanggal kirim ulang", { exact: true })
-            .fill(date);
-        await task
-            .getByLabel("Alasan status (direkam ke semua item)", {
+            .getByLabel("Catatan serah terima", {
                 exact: true,
             })
             .fill("Toko minta kirim ulang");
         await saveDeliveryPhoto(task);
         await task
             .getByRole("button", {
-                name: "Ajukan POD untuk review",
+                name: "Selesai serah terima",
                 exact: true,
             })
             .click();
+        await closeDeliveryScreens(page);
         await page
             .getByRole("button", { name: "Lainnya", exact: true })
             .click();
@@ -404,19 +401,16 @@ test("Cancel Delivery has the required subreason and SPV rejection keeps origina
 }) => {
     await delivery(page);
     const task = await openDo(page);
+    await task.getByRole("button", { name: "Tolak", exact: true }).click();
+    await task.getByLabel("Toko tidak dapat diakses", { exact: true }).check();
     await task
-        .getByLabel("Hasil serah terima", { exact: true })
-        .selectOption("rejected");
-    await task
-        .getByLabel("Alasan DO", { exact: true })
-        .selectOption("TOKO TIDAK DAPAT DIAKSES");
-    await task
-        .getByLabel("Alasan status (direkam ke semua item)", { exact: true })
+        .getByLabel("Catatan serah terima", { exact: true })
         .fill("Rute melebihi waktu kerja");
     await saveDeliveryPhoto(task);
     await task
-        .getByRole("button", { name: "Ajukan POD untuk review", exact: true })
+        .getByRole("button", { name: "Selesai serah terima", exact: true })
         .click();
+    await closeDeliveryScreens(page);
     await page.getByRole("button", { name: "Lainnya", exact: true }).click();
     const approval = page
         .getByRole("heading", {
@@ -469,15 +463,14 @@ test("closing trip at office uses recorded location, accepts demo outside office
         await saveDeliveryPhoto(task);
         await task
             .getByRole("button", {
-                name: "Ajukan POD untuk review",
+                name: "Selesai serah terima",
                 exact: true,
             })
             .click();
         await expect(task.getByText(/Session closed/).first()).toBeVisible();
-        await task
-            .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
-            .click();
+        await backFromTask(page);
     }
+    await closeDeliveryScreens(page);
     await runClose(page);
     await expect(closing.getByRole("alert")).toContainText("Trip closed lokal");
     await expect(closing.getByRole("alert")).toContainText(
@@ -498,15 +491,14 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
         await saveDeliveryPhoto(task);
         await task
             .getByRole("button", {
-                name: "Ajukan POD untuk review",
+                name: "Selesai serah terima",
                 exact: true,
             })
             .click();
         await expect(task.getByText(/Session closed/).first()).toBeVisible();
-        await task
-            .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
-            .click();
+        await backFromTask(page);
     }
+    await closeDeliveryScreens(page);
     const closing = closingScreen(page);
     await runClose(page);
     await expect(closing.getByRole("alert")).toContainText("Trip closed lokal");
@@ -541,18 +533,20 @@ test("new daily sync cannot close today's trip using yesterday's PODs with repea
     await switchPersona(page, "delivery");
     await ensureDaily(page);
     await page.getByRole("button", { name: "Delivery", exact: true }).click();
-    await expect(page.locator(".delivery-task")).toHaveCount(2);
-    for (const task of await page.locator(".delivery-task").all()) {
-        await expect(task.locator("summary")).toContainText("Belum dimulai");
-        await task.locator(":scope > summary").click();
-        await expect(task.getByRole("status")).toContainText(
-            "POD berbeda sumber manifest",
-        );
-        await task
-            .getByRole("button", { name: "Kembali ke daftar DO", exact: true })
-            .click();
+    await expect(
+        page.getByRole("button", { name: /^Buka TRIP/ }),
+    ).toContainText("Belum mulai");
+    for (const id of ["DEMO-DO-001", "DEMO-DO-002"]) {
+        const task = await openDeliveryTask(page, id);
+        await expect(
+            task
+                .getByRole("region", { name: `Delivery ${id}`, exact: true })
+                .getByRole("status"),
+        ).toContainText("POD berbeda sumber manifest");
+        await backFromTask(page);
         await expect(task.getByText(/Session closed/)).toHaveCount(0);
     }
+    await closeDeliveryScreens(page);
     await runClose(page);
     await expect(closing.getByRole("alert")).toContainText(
         "POD berbeda sumber manifest",

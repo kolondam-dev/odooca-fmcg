@@ -378,6 +378,16 @@ class GenericPeriodPackLoader:
         # 2. Accounting and location maps
         self.company = None
         self.wh_location = None
+        self.wh_stock_loc = None
+        self.seed_customer_loc = None
+        self.seed_supplier_loc = None
+        self.quarantine_loc = None
+        self.seed_inventory_loc = None
+        self.stock_valuation_acc = None
+        self.stock_input_acc = None
+        self.stock_output_acc = None
+        self.cogs_acc = None
+        self.stock_journal = None
         self.partner_by_ref = {}
         self.sku_by_code = {}
         self.lot_by_sku_and_name = {}
@@ -442,6 +452,183 @@ class GenericPeriodPackLoader:
     # -----------------------------------------------------------------------
     # Preflight Check & Continuity Verification
     # -----------------------------------------------------------------------
+
+    def _ensure_accounting_and_stock_configuration(self) -> None:
+        """Ensure FMCG perpetual stock accounting and seed locations are configured."""
+        if not self.env or not self.company:
+            return
+
+        has_company = bool(self.company)
+        # 1. Company anglo_saxon_accounting
+        comp_fields = _safe_fields(self.company)
+        if "anglo_saxon_accounting" in comp_fields:
+            if not getattr(self.company, "anglo_saxon_accounting", True):
+                if callable(getattr(self.company.sudo(), "write", None)):
+                    self.company.sudo().write({"anglo_saxon_accounting": True})
+
+        # 2. Accounts
+        AccountAccount = self.env["account.account"].sudo() if "account.account" in self.env else None
+        acc_fields = _safe_fields(AccountAccount) if AccountAccount is not None else {}
+        comp_domain = []
+        comp_vals = {}
+        if "company_ids" in acc_fields and has_company:
+            comp_domain = [("company_ids", "in", [self.company.id])]
+            comp_vals = {"company_ids": [(4, self.company.id)]}
+        elif "company_id" in acc_fields and has_company:
+            comp_domain = [("company_id", "in", [False, self.company.id])]
+            comp_vals = {"company_id": self.company.id}
+
+        def _resolve_or_create_acc(code: str, name: str, acc_type: str, fallback_type: str = None):
+            if AccountAccount is None:
+                return None
+            acc = AccountAccount.search(comp_domain + [("code", "=", code)], limit=1)
+            if not acc and callable(getattr(AccountAccount, "create", None)):
+                vals = {"code": code, "name": name, "account_type": acc_type}
+                vals.update(comp_vals)
+                try:
+                    acc = AccountAccount.create(vals)
+                except Exception:
+                    if fallback_type:
+                        vals["account_type"] = fallback_type
+                        try:
+                            acc = AccountAccount.create(vals)
+                        except Exception:
+                            pass
+            return acc
+
+        stock_val_acc = _resolve_or_create_acc("113000", "Persediaan Barang Dagang FMCG", "asset_current")
+        stock_in_acc = _resolve_or_create_acc("113900", "Penerimaan Barang Sementara (Interim)", "asset_current", "liability_current")
+        stock_out_acc = _resolve_or_create_acc("113910", "Pengiriman Barang Sementara (Interim)", "asset_current")
+        cogs_acc = _resolve_or_create_acc("510000", "Harga Pokok Penjualan (HPP) FMCG", "expense_direct_cost", "expense")
+
+        self.stock_valuation_acc = stock_val_acc
+        self.stock_input_acc = stock_in_acc
+        self.stock_output_acc = stock_out_acc
+        self.cogs_acc = cogs_acc
+
+        # 3. Stock Journal STJ
+        stock_journal = None
+        if "account.journal" in self.env:
+            AccountJournal = self.env["account.journal"].sudo()
+            j_fields = _safe_fields(AccountJournal)
+            has_comp_id = "company_id" in j_fields and has_company
+            j_domain = [("company_id", "in", [False, self.company.id])] if has_comp_id else []
+            stock_journal = AccountJournal.search(j_domain + [("code", "=", "STJ")], limit=1)
+            if not stock_journal and callable(getattr(AccountJournal, "create", None)):
+                jvals = {"name": "Penilaian Persediaan", "type": "general", "code": "STJ"}
+                if has_comp_id:
+                    jvals["company_id"] = self.company.id
+                if "auto_post" in j_fields:
+                    jvals["auto_post"] = True
+                stock_journal = AccountJournal.create(jvals)
+            if has_company and stock_journal:
+                comp_fields = _safe_fields(self.company)
+                if "account_stock_journal_id" in comp_fields:
+                    if callable(getattr(self.company.sudo(), "write", None)):
+                        self.company.sudo().write({"account_stock_journal_id": stock_journal.id})
+
+        self.stock_journal = stock_journal
+
+        # 4. Stock Locations
+        StockLocation = self.env["stock.location"].sudo() if "stock.location" in self.env else None
+        if StockLocation is not None:
+            sl_fields = _safe_fields(StockLocation)
+            seed_comp_id = self.company.id if has_company else False
+
+            def _loc_comp_id(loc):
+                loc_comp = getattr(loc, "company_id", False)
+                return getattr(loc_comp, "id", loc_comp) if loc_comp else False
+
+            # Internal WH Stock location
+            wh_candidates = [
+                loc for loc in _iter_records(StockLocation.search([
+                    ("usage", "=", "internal"),
+                    ("complete_name", "in", ["WH/Stock", "GD-MND/Stock", "GD-MND/UTAMA", "WH"]),
+                ]))
+                if _loc_comp_id(loc) in (seed_comp_id, False)
+            ]
+            if not wh_candidates:
+                wh_candidates = [
+                    loc for loc in _iter_records(StockLocation.search([("usage", "=", "internal")]))
+                    if _loc_comp_id(loc) in (seed_comp_id, False)
+                ]
+            self.wh_stock_loc = wh_candidates[0] if wh_candidates else None
+            self.wh_location = self.wh_stock_loc
+
+            def _resolve_or_create_seed_loc(name: str, usage: str, parent_id=False):
+                matches = [
+                    loc for loc in _iter_records(StockLocation.search([("name", "=", name), ("usage", "=", usage)]))
+                    if _loc_comp_id(loc) in (seed_comp_id, False)
+                ]
+                if matches:
+                    exact = [loc for loc in matches if _loc_comp_id(loc) == seed_comp_id]
+                    return exact[0] if exact else matches[0]
+                if callable(getattr(StockLocation, "create", None)):
+                    vals = {"name": name, "usage": usage}
+                    if parent_id:
+                        vals["location_id"] = parent_id
+                    if "company_id" in sl_fields and seed_comp_id:
+                        vals["company_id"] = seed_comp_id
+                    return StockLocation.create(vals)
+                return None
+
+            self.quarantine_loc = _resolve_or_create_seed_loc(
+                "Karantina FMCG Maumbi", "internal", parent_id=getattr(self.wh_stock_loc, "id", False)
+            )
+            self.seed_inventory_loc = _resolve_or_create_seed_loc("Inventory Adjustment FMCG Maumbi", "inventory")
+            self.seed_supplier_loc = _resolve_or_create_seed_loc("Suppliers FMCG Maumbi", "supplier")
+            self.seed_customer_loc = _resolve_or_create_seed_loc("Customers FMCG Maumbi", "customer")
+
+            if "valuation_account_id" in sl_fields:
+                if self.wh_stock_loc and getattr(self.wh_stock_loc, "valuation_account_id", False):
+                    if callable(getattr(self.wh_stock_loc, "write", None)):
+                        self.wh_stock_loc.write({"valuation_account_id": False})
+                if self.quarantine_loc and getattr(self.quarantine_loc, "valuation_account_id", False):
+                    if callable(getattr(self.quarantine_loc, "write", None)):
+                        self.quarantine_loc.write({"valuation_account_id": False})
+                if stock_in_acc and self.seed_supplier_loc:
+                    cur_in_val = getattr(getattr(self.seed_supplier_loc, "valuation_account_id", None), "id", getattr(self.seed_supplier_loc, "valuation_account_id", None))
+                    if cur_in_val != stock_in_acc.id and callable(getattr(self.seed_supplier_loc, "write", None)):
+                        self.seed_supplier_loc.write({"valuation_account_id": stock_in_acc.id})
+                cust_acc = cogs_acc or stock_out_acc
+                if cust_acc and self.seed_customer_loc:
+                    cur_cust_val = getattr(getattr(self.seed_customer_loc, "valuation_account_id", None), "id", getattr(self.seed_customer_loc, "valuation_account_id", None))
+                    if cur_cust_val != cust_acc.id and callable(getattr(self.seed_customer_loc, "write", None)):
+                        self.seed_customer_loc.write({"valuation_account_id": cust_acc.id})
+
+        # 5. Product Categories Real-Time Valuation & Costing
+        if "product.category" in self.env:
+            ProductCategory = self.env["product.category"].sudo()
+            cat_fields = _safe_fields(ProductCategory)
+            cats = ProductCategory.search([])
+            for cat in _iter_records(cats):
+                has_comp_ctx = callable(getattr(cat, "with_company", None)) and has_company
+                cat_target = cat.with_company(self.company) if has_comp_ctx else cat
+                vals = {}
+                if "property_cost_method" in cat_fields and getattr(cat_target, "property_cost_method", None) != "fifo":
+                    vals["property_cost_method"] = "fifo"
+                if "property_valuation" in cat_fields and getattr(cat_target, "property_valuation", None) != "real_time":
+                    vals["property_valuation"] = "real_time"
+                for fname in ["property_stock_valuation_account_id", "stock_valuation_account_id", "account_stock_valuation_id"]:
+                    if fname in cat_fields and stock_val_acc and not getattr(cat_target, fname, None):
+                        vals[fname] = stock_val_acc.id
+                for fname in ["property_stock_journal", "stock_journal_id", "stock_journal"]:
+                    if fname in cat_fields and stock_journal and not getattr(cat_target, fname, None):
+                        vals[fname] = stock_journal.id
+                for fname in ["property_stock_account_input_categ_id", "property_stock_account_input_id", "account_stock_in_id"]:
+                    if fname in cat_fields and stock_in_acc and not getattr(cat_target, fname, None):
+                        vals[fname] = stock_in_acc.id
+                for fname in ["property_stock_account_output_categ_id", "property_stock_account_output_id", "account_stock_out_id"]:
+                    if fname in cat_fields and (cogs_acc or stock_out_acc) and not getattr(cat_target, fname, None):
+                        vals[fname] = (cogs_acc or stock_out_acc).id
+                for fname in ["property_account_expense_categ_id", "property_account_expense_id", "account_expense_id"]:
+                    if fname in cat_fields and cogs_acc and not getattr(cat_target, fname, None):
+                        vals[fname] = cogs_acc.id
+                if vals and callable(getattr(cat_target, "write", None)):
+                    try:
+                        cat_target.write(vals)
+                    except Exception as e:
+                        _logger.warning(f"write category vals non-fatal: {e}")
 
     def verify_preflight(self) -> Dict[str, Any]:
         """Verify environment, company, warehouses, and previous month baseline."""
@@ -516,26 +703,33 @@ class GenericPeriodPackLoader:
             canonical_tax = self._resolve_canonical_tax_code_04()
             report["checks"].append(f"canonical_tax_04_resolved: {canonical_tax.name} (id={canonical_tax.id})")
 
-        # B. Resolve Warehouse & Internal Stock Location
-        Location = self.env["stock.location"].sudo()
-        self.wh_location = Location.search(
-            [
-                ("company_id", "=", self.company.id),
-                ("usage", "=", "internal"),
-                ("complete_name", "in", ["WH/Stock", "GD-MND/Stock", "GD-MND/UTAMA"]),
-            ],
-            limit=1,
-        )
-        if not self.wh_location:
-            # Fallback to any internal location of the company
+        # B. Ensure FMCG Perpetual Accounting, Journals & Locations
+        self._ensure_accounting_and_stock_configuration()
+        if not self.wh_stock_loc:
+            Location = self.env["stock.location"].sudo()
             self.wh_location = Location.search(
+                [
+                    ("company_id", "=", self.company.id),
+                    ("usage", "=", "internal"),
+                    ("complete_name", "in", ["WH/Stock", "GD-MND/Stock", "GD-MND/UTAMA"]),
+                ],
+                limit=1,
+            ) or Location.search(
                 [("company_id", "=", self.company.id), ("usage", "=", "internal")],
                 limit=1,
             )
-        if not self.wh_location:
+            self.wh_stock_loc = self.wh_location
+        if not self.wh_stock_loc:
             raise PreflightContinuityError("Internal warehouse stock location not found")
 
-        report["checks"].append(f"stock_location_resolved: {self.wh_location.complete_name}")
+        loc_lbl = getattr(self.wh_stock_loc, "complete_name", getattr(self.wh_stock_loc, "name", "WH/Stock"))
+        report["checks"].append(f"stock_location_resolved: {loc_lbl}")
+        if self.seed_customer_loc:
+            c_lbl = getattr(self.seed_customer_loc, "name", "Customers FMCG Maumbi")
+            report["checks"].append(f"seed_customer_location_resolved: {c_lbl}")
+        if self.seed_supplier_loc:
+            s_lbl = getattr(self.seed_supplier_loc, "name", "Suppliers FMCG Maumbi")
+            report["checks"].append(f"seed_supplier_location_resolved: {s_lbl}")
 
         # C. Master Data Completeness (Do NOT recreate)
         Partner = self.env["res.partner"].sudo()
@@ -1375,6 +1569,11 @@ class GenericPeriodPackLoader:
                 if hasattr(existing, "picking_ids"):
                     for pick in existing.picking_ids:
                         if getattr(pick, "state", "") not in ("done", "cancel"):
+                            self._align_picking_locations(
+                                pick,
+                                expected_src_loc=getattr(self, "seed_supplier_loc", None),
+                                expected_dest_loc=getattr(self, "wh_stock_loc", None),
+                            )
                             self._assign_lots_to_picking(pick, po_lines)
                             self._validate_picking_safely(
                                 pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
@@ -1421,6 +1620,11 @@ class GenericPeriodPackLoader:
             if hasattr(po_rec, "picking_ids"):
                 for pick in po_rec.picking_ids:
                     if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._align_picking_locations(
+                            pick,
+                            expected_src_loc=getattr(self, "seed_supplier_loc", None),
+                            expected_dest_loc=getattr(self, "wh_stock_loc", None),
+                        )
                         self._assign_lots_to_picking(pick, po_lines)
                         self._validate_picking_safely(
                             pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
@@ -1741,6 +1945,8 @@ class GenericPeriodPackLoader:
                 actual_by_lot[l_key] = actual_by_lot.get(l_key, 0.0) + qty
 
             for lot_num, lot_info in sku_demands["lots"].items():
+                if not lot_num:
+                    continue
                 expected_lot_qty = lot_info["qty_units"]
                 lot_key = lot_num or "NO_LOT"
                 lot_id_key = _rec_id(lot_info["lot_obj"]) if lot_info.get("lot_obj") else None
@@ -1761,6 +1967,61 @@ class GenericPeriodPackLoader:
                     f"FATAL: Total units per SKU mismatch on picking '{getattr(pick, 'name', pick.id)}' "
                     f"for SKU '{sku}'! Expected: {sku_demands['total_units']}, Got: {total_actual_sku}"
                 )
+
+    def _align_picking_locations(
+        self, pick: Any, expected_src_loc: Optional[Any] = None, expected_dest_loc: Optional[Any] = None
+    ) -> None:
+        """Align picking, stock.move, and stock.move.line locations to seed locations before lot allocation."""
+        if not pick:
+            return
+        targets = {}
+        if expected_src_loc is not None and getattr(expected_src_loc, "id", None):
+            targets["location_id"] = expected_src_loc.id
+        if expected_dest_loc is not None and getattr(expected_dest_loc, "id", None):
+            targets["location_dest_id"] = expected_dest_loc.id
+
+        if not targets:
+            return
+
+        # 1. Update picking
+        pick_upd = {
+            fname: target_id
+            for fname, target_id in targets.items()
+            if getattr(getattr(pick, fname, None), "id", getattr(pick, fname, None)) != target_id
+        }
+        if pick_upd and callable(getattr(pick, "write", None)):
+            try:
+                pick.write(pick_upd)
+            except Exception as e:
+                _logger.warning(f"write location on picking non-fatal: {e}")
+
+        # 2. Update stock.move
+        moves = list(_iter_records(getattr(pick, "move_ids", None)))
+        for sm in moves:
+            sm_upd = {
+                fname: target_id
+                for fname, target_id in targets.items()
+                if getattr(getattr(sm, fname, None), "id", getattr(sm, fname, None)) != target_id
+            }
+            if sm_upd and callable(getattr(sm, "write", None)):
+                try:
+                    sm.write(sm_upd)
+                except Exception as e:
+                    _logger.warning(f"write location on stock.move non-fatal: {e}")
+
+        # 3. Update stock.move.line
+        move_lines = list(_iter_records(getattr(pick, "move_line_ids", None)))
+        for sml in move_lines:
+            sml_upd = {
+                fname: target_id
+                for fname, target_id in targets.items()
+                if getattr(getattr(sml, fname, None), "id", getattr(sml, fname, None)) != target_id
+            }
+            if sml_upd and callable(getattr(sml, "write", None)):
+                try:
+                    sml.write(sml_upd)
+                except Exception as e:
+                    _logger.warning(f"write location on stock.move.line non-fatal: {e}")
 
     def _validate_picking_safely(
         self, pick: Any, effective_date: Optional[str] = None, ref_num: Optional[str] = None
@@ -1885,6 +2146,87 @@ class GenericPeriodPackLoader:
                         f"pada picking '{pick_lbl}' (Ref: {ref_num or getattr(pick, 'origin', '')}) "
                         f"belum berstatus 'done' (state: '{sm_state}')!"
                     )
+                self._sync_native_stock_accounting(sm, date_time_str or "", date_only or "")
+
+    def _sync_native_stock_accounting(
+        self, stock_move: Any, date_time_str: Optional[str] = None, date_only: Optional[str] = None
+    ) -> None:
+        """Verify, link, and post native stock valuation accounting entries (account.move) for stock.move."""
+        if not self.env or "account.move" not in self.env:
+            return
+
+        AccountMove = self.env["account.move"].sudo()
+        found_ams = []
+        seen_am_ids = set()
+
+        def _add_am(am_rec):
+            if not am_rec:
+                return
+            am_id = getattr(am_rec, "id", None)
+            if am_id and am_id not in seen_am_ids:
+                seen_am_ids.add(am_id)
+                found_ams.append(am_rec)
+
+        # 1. Many2one account_move_id
+        if getattr(stock_move, "account_move_id", None):
+            _add_am(stock_move.account_move_id)
+        # 2. Relasi account_move_ids
+        elif getattr(stock_move, "account_move_ids", None):
+            for am in _iter_records(stock_move.account_move_ids):
+                _add_am(am)
+        # 3. Relasi stock_valuation_layer_ids -> account_move_id
+        if hasattr(stock_move, "stock_valuation_layer_ids") and stock_move.stock_valuation_layer_ids:
+            for svl in _iter_records(stock_move.stock_valuation_layer_ids):
+                if getattr(svl, "account_move_id", None):
+                    _add_am(svl.account_move_id)
+        # 4. Field stock_move_id pada account.move
+        if "stock_move_id" in _safe_fields(AccountMove):
+            ams = AccountMove.search([("stock_move_id", "=", stock_move.id)])
+            for am in _iter_records(ams):
+                _add_am(am)
+        # 5. Melalui origin atau picking name
+        if not found_ams:
+            origins = []
+            if getattr(stock_move, "origin", None):
+                origins.append(stock_move.origin)
+            if getattr(stock_move, "picking_id", None) and getattr(stock_move.picking_id, "name", None):
+                origins.append(stock_move.picking_id.name)
+            if origins:
+                domain = [("ref", "in", origins)]
+                if hasattr(self, "company") and self.company:
+                    domain.append(("company_id", "in", [False, self.company.id]))
+                ams = AccountMove.search(domain)
+                for am in _iter_records(ams):
+                    _add_am(am)
+
+        # Link ke stock_move.account_move_id jika belum terhubung
+        if found_ams and not getattr(stock_move, "account_move_id", None):
+            primary_am = found_ams[0]
+            sm_fields = _safe_fields(stock_move)
+            if "account_move_id" in sm_fields or not sm_fields:
+                if callable(getattr(stock_move, "write", None)):
+                    try:
+                        stock_move.write({"account_move_id": primary_am.id})
+                    except Exception as e:
+                        _logger.warning(f"write account_move_id on stock.move non-fatal: {e}")
+                if hasattr(stock_move, "account_move_id"):
+                    try:
+                        stock_move.account_move_id = primary_am
+                    except Exception:
+                        pass
+
+        for am in found_ams:
+            am_state = getattr(am, "state", "")
+            if am_state == "draft":
+                if date_only and callable(getattr(am, "write", None)):
+                    am.write({"date": date_only})
+                    if hasattr(am, "line_ids") and am.line_ids and callable(getattr(am.line_ids, "write", None)):
+                        am.line_ids.write({"date": date_only})
+                if hasattr(am, "action_post"):
+                    try:
+                        am.action_post()
+                    except Exception as post_err:
+                        _logger.warning(f"action_post on stock account.move non-fatal: {post_err}")
 
     def _apply_sales_orders_and_deliveries(self) -> Tuple[int, int]:
         """Create and validate Sales Orders and Outbound Deliveries."""
@@ -1917,6 +2259,11 @@ class GenericPeriodPackLoader:
                 if hasattr(existing, "picking_ids"):
                     for pick in existing.picking_ids:
                         if getattr(pick, "state", "") not in ("done", "cancel"):
+                            self._align_picking_locations(
+                                pick,
+                                expected_src_loc=getattr(self, "wh_stock_loc", None),
+                                expected_dest_loc=getattr(self, "seed_customer_loc", None),
+                            )
                             self._assign_lots_to_picking(pick, so_lines)
                             self._validate_picking_safely(
                                 pick, effective_date=so_row.get("date_order"), ref_num=so_num
@@ -1973,6 +2320,11 @@ class GenericPeriodPackLoader:
             if hasattr(so_rec, "picking_ids"):
                 for pick in so_rec.picking_ids:
                     if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._align_picking_locations(
+                            pick,
+                            expected_src_loc=getattr(self, "wh_stock_loc", None),
+                            expected_dest_loc=getattr(self, "seed_customer_loc", None),
+                        )
                         self._assign_lots_to_picking(pick, so_lines)
                         self._validate_picking_safely(
                             pick, effective_date=so_row.get("date_order"), ref_num=so_num
@@ -2024,6 +2376,11 @@ class GenericPeriodPackLoader:
                 so_lines = lines_by_so.get(so_num, [])
                 for pick in so.picking_ids:
                     if getattr(pick, "state", "") not in ("done", "cancel"):
+                        self._align_picking_locations(
+                            pick,
+                            expected_src_loc=getattr(self, "wh_stock_loc", None),
+                            expected_dest_loc=getattr(self, "seed_customer_loc", None),
+                        )
                         self._assign_lots_to_picking(pick, so_lines)
                         self._validate_picking_safely(
                             pick, effective_date=inv_row.get("date_invoice"), ref_num=so_num

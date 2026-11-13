@@ -495,7 +495,7 @@ function Workspace({
         payload: Record<string, unknown>,
         label: string,
         keepOpen?: boolean,
-        uuid?: ReturnType<typeof crypto.randomUUID>,
+        uuid?: string,
     ) {
         if (type.startsWith("sales.")) {
             if (!dailyReady)
@@ -515,7 +515,12 @@ function Workspace({
                       payload,
                       await captureVisitLocation(),
                   )
-                : await engine.enqueue(type, payload, label, uuid);
+                : await engine.enqueue(
+                      type,
+                      payload,
+                      label,
+                      uuid as ReturnType<typeof crypto.randomUUID> | undefined,
+                  );
         if (!keepOpen) setDialog(undefined);
         setToast(
             "Tersimpan di perangkat. " +
@@ -733,15 +738,6 @@ function Workspace({
                         )}
                         {page === "delivery" && dailyReady && (
                             <>
-                                <section class="trip-card">
-                                    <Icon name="truck" size={36} />
-                                    <div>
-                                        <strong>TRIP-DEMO-01</strong>
-                                        <p>
-                                            2 pengiriman · 20 karton · DB • DEMO
-                                        </p>
-                                    </div>
-                                </section>
                                 <DeliveryWorkspace
                                     key={owner}
                                     store={store}
@@ -749,6 +745,8 @@ function Workspace({
                                     provider={provider}
                                     engine={engine}
                                     queue={queue}
+                                    snapshot={snapshot}
+                                    submit={submit}
                                     changed={() => void refresh()}
                                 />
                                 <TripClosing

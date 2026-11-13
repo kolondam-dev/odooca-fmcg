@@ -160,6 +160,19 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 
 - DS: Indonesia, Rp, WITA, jam `HH.mm`. PWA mencampur `:` dan `.` (mis. LiveClock). **Rekomendasi:** satu util format di `domain/format.ts`, tes unit.
 
+### K19. Fase 3B-5 — Delivery (49–51) dan POD (53–56): sudah di PWA, sisa utang
+
+**Selesai di PWA (alur mockup dipatuhi):** daftar DO (Delivery_do: kartu per trip + progres toko) → daftar toko (Delivery_detail: Berikutnya/Belum/Selesai, Navigasi, footer "Check-in toko · X") → Check-in → hub toko (Delivery_hub: Tracker 5 langkah, Serah terima, Biaya operasional toko, Foto bukti) → layar serah terima (Pod_semua / Pod_sebagian / Pod_tolak) dengan segmented "Terima semua / Sebagian / Tolak", alasan penolakan sebagai radio, estimasi kirim ulang + petunjuk tangga approval, foto bukti wajib, "Selesai serah terima". Logika bisnis lama (draft offline, sumber manifest, koreksi POD ditolak, riwayat) tidak berubah. Status DO "selesai" hanya bila POD di antrean bersumber manifest yang sama.
+
+**Utang (tanpa kontrak backend, tidak diaktifkan):**
+- **Tanda tangan penerima (Pod_ttd, opsional):** butuh field `signature` (+ nama penerima terpisah) di `delivery.pod.submit`; skema saat ini `strict`. Ditunda; `recipient` tetap diisi di layar serah terima.
+- **Input multi-satuan (Karton/Pak/Pcs) pada Pod_sebagian:** kontrak POD hanya satu satuan per baris (`received` + `unit`). Layar memakai satu bidang "Diterima" per item.
+- **Foto bukti per item rusak:** kontrak hanya satu bukti POD; foto dibagi untuk seluruh POD.
+- **Tagihan titipan toko di hub (Delivery_hub/detail):** baris dan tombol "Tagihan" menunggu fase Penagihan (30–33, 52).
+- **Biaya DO (`delivery_fee`) dihapus dari UI:** digantikan Biaya toko (`store_*`, flag `outlet_expense_v1`). Biaya level trip lewat Ajukan uang.
+- **Estimasi jarak ("0,1 km") di kartu toko:** tidak ada sumber data jarak di manifest; tidak ditampilkan.
+- **Navigasi:** membuka Google Maps eksternal; layar Navigasi DS (kartu in-app) belum dibuat.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).

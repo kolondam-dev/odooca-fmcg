@@ -2538,3 +2538,20 @@
   * `python scripts/check_manifests.py`: PASS (14 addon OK).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-13T10:10:00+07:00
+
+
+[2026-11-13T12:15:00+07:00] [INFO] F4: Sinkronisasi Jurnal Valuasi Native Anglo-Saxon & Relasi Move Akuntansi
+- Resolusi Blocker Supervisor Review #5886009276:
+  * Akar Masalah Move 3311: Pada alur delivery Odoo 19 Anglo-Saxon, jurnal valuasi STJ (COGS debit 510000 / Persediaan kredit 113000) hanya ter-trigger secara otomatis pada delivery pickings jika lokasi tujuan (`location_dest_id`) memiliki konfigurasi akun valuasi (`valuation_account_id`). Karena sebelumnya DO diarahkan ke partner location generic tanpa `valuation_account_id`, Odoo menunda pembuatan entri COGS ke faktur, sehingga relasi `account_move_id` pada `stock.move` 3311 kosong dan ditolak oleh guard integritas `id_base`.
+  * Konfigurasi Akuntansi & Persediaan: Mengimplementasikan `_ensure_accounting_and_stock_configuration()` pada `scripts/ops/load_period_pack.py` untuk mengaktifkan `anglo_saxon_accounting`, memastikan akun 113000, 113900, 113910, 510000, jurnal STJ auto-post, lokasi `Suppliers FMCG Maumbi` (113900) dan `Customers FMCG Maumbi` (510000), serta kategori produk FIFO real-time valuation.
+  * Penyelarasan Lokasi Picking: Mengimplementasikan `_align_picking_locations()` pada inbound PO, sales delivery DO, dan invoices agar picking terarah ke lokasi valuasi yang tepat.
+  * Sinkronisasi Relasi Move Native: Mengimplementasikan `_sync_native_stock_accounting()` yang menelusuri stock valuation layer dan account move native, menghubungkan relasi `sm.account_move_id` yang belum terisi, dan memposting draft STJ entry.
+  * Resolusi Kegagalan Probe Batch Interruption: Menambahkan penanganan aman pada baris tanpa lot eksplisit di `_assign_lots_to_picking()` Step 3 assertion (`if not lot_num: continue`) agar failure injection probe dapat menguji integritas batch tanpa bentrok dengan alokasi otomatis lot Odoo.
+  * Mounting Filestore CI: Menambahkan `-v ui-filestore:/var/lib/odoo` pada langkah F4 di `.github/workflows/ci.yml`.
+  * Upstream Merge: Menggabungkan `origin/main` (commit 488bd87), menjaga riwayat HANDOFF tetap lengkap dan urut kronologis.
+- Verifikasi Penuh:
+  * python -m unittest tests/test_period_pack_loader.py (54/54 PASS).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-13T12:15:00+07:00

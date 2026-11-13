@@ -1,3 +1,29 @@
+## 2026-11-13T12:15:00+07:00 — antigravity — F4: Sinkronisasi Jurnal Valuasi Native Anglo-Saxon & Relasi Move Akuntansi (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menambahkan `_ensure_accounting_and_stock_configuration()` untuk memastikan akuntansi Anglo-Saxon aktif pada company, memastikan akun valuasi persediaan (`113000`), akun perantara masuk (`113900`), perantara keluar (`113910`), dan HPP / COGS (`510000`) terkonfigurasi. Memastikan jurnal stok native (`STJ`) otomatis memposting pergerakan dan kategori produk menggunakan metode `fifo` dengan valuasi `real_time`.
+  - Menambahkan lokasi persediaan khusus `Suppliers FMCG Maumbi` (dengan `valuation_account_id = 113900`) dan `Customers FMCG Maumbi` (dengan `valuation_account_id = 510000`).
+  - Menambahkan `_align_picking_locations()` pada `_apply_inbound_pos()`, `_apply_sales_orders_and_deliveries()`, dan `_apply_invoices()` agar picking delivery dan move lines terarah ke lokasi valuasi COGS yang tepat sehingga Odoo men-trigger jurnal valuasi STJ native saat barang terkirim.
+  - Menambahkan `_sync_native_stock_accounting()` pada `_validate_picking_safely()`: menelusuri stock valuation layer dan account move native Odoo, memastikan relasi `sm.account_move_id` terhubung langsung ke move pergerakan stok, dan memposting draft move bila belum berstatus posted.
+  - Memperbaiki penanganan lot pada baris SO tanpa lot eksplisit di `_assign_lots_to_picking()` Step 3 audit assertion (`if not lot_num: continue`) agar pengujian injeksi kegagalan `probe_batch_interruption` dapat mendeteksi kegagalan corrupt SKU sesuai ekspektasi tanpa terhalang alokasi reservasi otomatis Odoo.
+- `.github/workflows/ci.yml`:
+  - Menambahkan mounting volume `-v ui-filestore:/var/lib/odoo` pada langkah `F4 Generic period pack loader runtime proof` untuk menjamin ketersediaan filestore antar database master dan klon disposable.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Git merge upstream `origin/main` (commit `488bd87`): riwayat HANDOFF tetap lengkap dan urut kronologis tanpa data yang hilang.
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-13T12:15:00+07:00
+
+## 2026-11-13T10:15:16+07:00 — claude-design (Claude-Dev1) — PR #124: POD ditolak server tidak lagi dihitung selesai (review #5885182618)
+
+- Akar masalah: `DeliveryWorkspace.isDone` mencocokkan sumber manifest tetapi ikut menghitung entri outbox `rejected`; progres trip naik dan tombol check-in melompati toko yang PODnya masih perlu koreksi.
+- Perbaikan: entri `businessRejected` dikecualikan; koreksi valid (anak, sumber sama) yang menghitung selesai. POD menunggu sinkronisasi tetap dihitung (perilaku offline tidak berubah).
+- Tes: `delivery.spec` (phone+tablet) memeriksa 0/2 setelah penolakan, toko tetap 'Berikutnya' dan koreksi terjangkau, lalu 1/2 setelah koreksi.
+
 ## 2026-11-13T10:10:00+07:00 — antigravity — F4: Penyelarasan Alokasi Lot Deterministik Penerimaan PO & Validasi SML Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
@@ -20,6 +46,14 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-13T10:10:00+07:00
+
+## 2026-11-13T08:50:36+07:00 — claude-design (Claude-Dev1) — Fase 3B-5: Delivery (49–51) dan POD (53–56) mengikuti DS
+
+- Alur baru: daftar DO -> daftar toko -> check-in -> hub toko -> serah terima (Terima semua/Sebagian/Tolak) -> hasil POD; Biaya toko dibuka dari hub.
+- `DeliveryTaskEditor` kehilangan tampilan lama (details/drawer/wizard/preview); logika draft, koreksi, sumber manifest, riwayat tetap. Update state baris memakai functional update (menghindari tindih antar perubahan beruntun).
+- `DeliveryWorkspace`: kartu trip + `TripStores` (layar toko); selesai = POD antrean bersumber manifest identik. `DeliveryFee` dihapus (digantikan Biaya toko).
+- Tes: helper e2e baru (`openDeliveryTask`, `closeDeliveryScreens`, `backFromTask`); spec delivery/next-policy/review-regressions/route-workflow/sales-delivery-rules disesuaikan.
+- Utang tercatat di K19 (TTD, multi-satuan, foto per item, Tagihan -> fase Penagihan). Backend tidak berubah.
 
 ## 2026-11-13T08:40:00+07:00 — antigravity — F4: Penanganan Multi-Lot Picking & Validasi Delivery Sebelum Faktur (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**

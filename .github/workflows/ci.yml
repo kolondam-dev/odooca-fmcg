@@ -103,7 +103,7 @@ jobs:
       - name: F4 Generic period pack loader runtime proof (two disposable databases)
         run: |
           set -o pipefail
-          docker run --rm --network host -v "$PWD":/workspace -w /workspace --entrypoint bash fmcg-odoo:ci -c '
+          docker run --rm -v ui-filestore:/var/lib/odoo --network host -v "$PWD":/workspace -w /workspace --entrypoint bash fmcg-odoo:ci -c '
             set -euo pipefail
             PGPASSWORD=odoo createdb -h localhost -p 5432 -U odoo -T ci_db fmcg_period_master
             if [ -d /var/lib/odoo/filestore/ci_db ]; then
