@@ -1971,7 +1971,12 @@ class CanonicalPerpetualAdapter:
             return
 
         print(" -> [2/7] Memuat 5 Inbound PO Transit Juni & Penerimaan Barang...")
+        self._ensure_expiry_product_configuration()
+        self._ensure_fefo_strategy()
         PurchaseOrder = self.env["purchase.order"].sudo()
+        StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
+        if StockLot is None:
+            raise RuntimeError("[canonical_loader] FATAL: Model stock.lot wajib tersedia untuk penerimaan FMCG.")
         AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
 
         headers = self._read_csv("inbound_po_intransit_june_headers.csv")
@@ -2074,6 +2079,25 @@ class CanonicalPerpetualAdapter:
                     bill = AccountMove.create(bill_vals)
                     bill.action_post()
                     self.stats["po_bills_created"] += 1
+
+        # Audit/backfill seluruh lot penerimaan, termasuk PO yang sudah done sebelum
+        # product_expiry diaktifkan. Jangan hanya memproses picking yang masih pending.
+        for line_data in lines:
+            sku = line_data["sku_code"]
+            product = self.product_by_code.get(sku)
+            if not product:
+                raise KeyError(f"[canonical_loader] Produk inbound lot '{sku}' tidak ditemukan.")
+            lot_name = line_data["lot_number"]
+            lot = StockLot.search(
+                [("name", "=", lot_name), ("product_id", "=", product.id)],
+                limit=1,
+            )
+            if not lot:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lot penerimaan '{lot_name}' untuk SKU {sku} "
+                    "tidak ditemukan setelah proses receipt. Tidak membuat lot yatim tanpa stock move."
+                )
+            self._ensure_lot_expiry(lot, line_data.get("expiry_date"))
 
     # 3. Sales Orders, Deliveries, and Invoices
     def load_sales_deliveries_and_invoices(
