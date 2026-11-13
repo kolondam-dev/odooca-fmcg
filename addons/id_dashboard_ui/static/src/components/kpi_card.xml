@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <templates xml:space="preserve">
   <t t-name="id_dashboard_ui.KpiCard">
-    <div style="min-width:0;background:#fff;border:1px solid #d5e0f2;border-radius:6px;font-family:Inter,system-ui,sans-serif;color:#12223f;">
+    <div class="id-dash-kpi" t-att-class="{'is-drillable': props.kpi.drill}" style="min-width:0;background:#fff;border:1px solid #d5e0f2;border-radius:6px;font-family:Inter,system-ui,sans-serif;color:#12223f;">
       <div style="display:flex;align-items:center;gap:8px;min-width:0">
         <span style="flex:none;width:30px;height:30px;margin:-1px 0 0 -1px;background:#102f6b;color:#fff;border-radius:6px 0 8px 0;display:flex;align-items:center;justify-content:center">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" viewBox="0 0 24 24">
@@ -11,13 +11,7 @@
         <span style="flex:1;min-width:0;font-size:11.5px;color:#52627f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
           <t t-out="v.label"/>
         </span>
-        <button t-att-disabled="!props.kpi.drill" t-on-click="() => props.onDrill?.(props.kpi.drill)" style="all:unset;cursor:pointer;flex:none;width:26px;height:26px;margin-right:4px;display:flex;align-items:center;justify-content:center;color:#52627f" t-attf-aria-label="{{ v.menuLabel }}">
-          <svg width="16" height="16" fill="currentColor" aria-hidden="true" viewBox="0 0 24 24">
-            <circle cx="12" cy="5" r="1.8"/>
-            <circle cx="12" cy="12" r="1.8"/>
-            <circle cx="12" cy="19" r="1.8"/>
-          </svg>
-        </button>
+
       </div>
       <div style="padding:4px 12px 10px">
         <div style="position:relative;height:46px;display:flex;align-items:flex-end;padding-bottom:4px">
@@ -70,6 +64,9 @@
           </span>
         </div>
       </div>
+      <button t-if="props.kpi.drill" type="button" class="id-dash-kpi-hit"
+              t-att-aria-label="'Source documents: ' + v.label"
+              t-on-click="() => props.onDrill?.(props.kpi.drill)"/>
     </div>
   </t>
 </templates>

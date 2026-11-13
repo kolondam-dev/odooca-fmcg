@@ -35,6 +35,12 @@ export class GeoMap extends VisualComponent {
             height,
         ];
     }
+    wheelZoom(event) {
+        if (!this.props.geographic || (!event.ctrlKey && !event.metaKey)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.deltaY) this.zoom(event.deltaY < 0 ? 0.8 : 1.25);
+    }
     mapClick(ev) {
         const command = ev.target.closest("button")?.dataset.command;
         if (command === "in") this.zoom(0.8);
@@ -135,7 +141,7 @@ export class GeoMap extends VisualComponent {
             labels = [];
         for (const k in CENT) {
             const v = vals[k];
-            f["c" + k.replace(".", "_")] = v == null ? "var(--tint2)" : col(v);
+            f["c" + k.replace(".", "_")] = !v ? "rgba(255,255,255,.65)" : col(v);
             const c = CENT[k];
             if (
                 v != null &&

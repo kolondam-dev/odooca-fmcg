@@ -139,7 +139,7 @@ for user in users:
     equal(own["total"]["net"], by_user[str(user.id)]["net"], "own_sales_" + str(user.id))
     equal(own["total"]["orders"], 28, "own_order_count_" + str(user.id))
 no_role = env["res.users"].with_context(no_reset_password=True).create({"name": "D1 QA No Sales",
-    "login": "d1-visual-no-sales", "group_ids": [(6, 0, env.ref("base.group_user").ids)]})
+    "login": "d1-visual-no-sales", "password": password, "group_ids": [(6, 0, env.ref("base.group_user").ids)]})
 try:
     service.with_user(no_role).get_data("D1", {"query": query})
 except AccessError:
