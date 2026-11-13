@@ -117,6 +117,24 @@ class TestFMCGDimensionsUoM(TransactionCase):
             24,
         )
 
+    def test_07_configured_packaging_ratio_cannot_be_silently_changed(self):
+        product = self.env["product.template"].create({
+            "name": "Configured Ratio Test",
+            "default_code": "TEST-UOM-LOCKED",
+            "principal_id": self.principal.id,
+            "brand_id": self.brand.id,
+            "uom_id": self.uom_unit.id,
+            "standard_price": 1000.0,
+            "list_price": 1500.0,
+        })
+        product.configure_fmcg_packaging_uoms(
+            self.env.ref("id_base.uom_sch"),
+            inner_qty=10,
+            carton_qty=120,
+        )
+        with self.assertRaises(ValidationError):
+            product.write({"carton_qty": 130})
+
     def test_06_invalid_packaging_ratio_is_rejected(self):
         product = self.env["product.template"].create({
             "name": "Invalid Ratio Test",
