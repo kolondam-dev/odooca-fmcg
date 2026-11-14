@@ -1,3 +1,11 @@
+## 2026-11-13 — Codex-Dashboard — Pemulihan konteks D1
+
+**Berubah:** Breadcrumb dari dokumen sumber memulihkan kueri dan posisi peta D1 melalui state aksi Odoo. Baris wilayah di luar poligon membuka dokumen sumber pada cakupan yang sama.
+
+**Verifikasi:** Regresi Playwright memeriksa pemulihan periode dan filter SKU. Validasi produksi menunggu merge dan auto-deploy.
+
+**Signature:** Task Managed by Agent Codex-Dashboard
+
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.
 **Diverifikasi:** [F] `main` bergerak ke `6fe9f2c` (PR #132 PWA Absen); merge `545c264` berkonflik hanya di `docs/HANDOFF.md` dan kedua sisi dipertahankan urut waktu (348 entri main + 2 entri baru). [F] PR #133 **12/12 check hijau** pada `545c264` (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift 19m4s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate) dan status `MERGEABLE`.

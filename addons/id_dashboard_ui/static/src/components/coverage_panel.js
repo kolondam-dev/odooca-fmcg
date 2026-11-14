@@ -7,14 +7,26 @@ export class CoveragePanel extends Chart {
     static template = "id_dashboard_ui.CoveragePanel";
     static components = { GeoMap, BarRows };
     setup() {
-        this.geo = useState({ levels: [], loading: false, error: "", selected: null });
+        const saved = this.props.coverageState?.restored;
+        const restored = saved && JSON.parse(JSON.stringify(saved));
+        this.geo = useState({ levels: restored?.levels || [], loading: false, error: "",
+            selected: restored?.selected ?? null });
+        this.bindSnapshot(this.props.coverageState);
         this.geoRequest = 0;
         onWillUpdateProps(next => {
             if (next.geoLoad !== this.props.geoLoad) {
+                this.bindSnapshot(next.coverageState);
                 this.geoRequest++;
                 Object.assign(this.geo, { levels: [], loading: false, error: "", selected: null });
             }
         });
+    }
+    bindSnapshot(coverageState) {
+        if (coverageState) {
+            coverageState.snapshot = () => JSON.parse(JSON.stringify({
+                levels: this.geo.levels, selected: this.geo.selected,
+            }));
+        }
     }
     get level() { return this.geo.levels.at(-1); }
     get head() {
@@ -84,7 +96,10 @@ export class CoveragePanel extends Chart {
         }));
     }
     sourceIds(code) {
-        return this.props.geoPartners?.[this.level.code]?.[code] || [];
+        const partners = this.props.geoPartners?.[this.level.code] || {};
+        if (code) return partners[code] || [];
+        const mapped = new Set(this.level.shapes.map(shape => shape.code));
+        return [...new Set(Object.entries(partners).flatMap(([key, ids]) => mapped.has(key) ? [] : ids))];
     }
     openSource(code) {
         const ids = this.sourceIds(code);

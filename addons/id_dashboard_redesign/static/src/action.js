@@ -1,5 +1,6 @@
 /** @odoo-module **/
 import { Component, onWillStart, onWillDestroy, useState } from "@odoo/owl";
+import { useSetupAction } from "@web/search/action_hook";
 import { Dialog } from "@web/core/dialog/dialog";
 import { Domain } from "@web/core/domain";
 import { user } from "@web/core/user";
@@ -31,6 +32,10 @@ export class RedesignAction extends Component {
         this.dialog = useService("dialog");
         const release = this.env.services.id_shell?.enterDashboard?.();
         this.generation = 0;
+        this.coverageState = {};
+        useSetupAction({
+            getLocalState: () => ({ d1Query: this.query, d1Coverage: this.coverageState.snapshot?.() }),
+        });
         this.state = useState({ loading: true, error: null, data: null, filters: {}, scope: {} });
         onWillDestroy(() => { this.generation++; release?.(); });
         onWillStart(async () => {
@@ -42,7 +47,7 @@ export class RedesignAction extends Component {
                 const end = info.filters.period_max < today ? info.filters.period_max : today;
                 this.initialQuery = { period: { preset: "custom", from: end.slice(0, 8) + "01", to: end,
                     compare: false, compareMode: "previous", align: false, customFrom: end, customTo: end }, filters: {} };
-                await this.load(this.initialQuery);
+                await this.load(this.props.state?.d1Query || this.initialQuery, this.props.state?.d1Coverage);
             } catch (error) {
                 this.state.error = error?.data?.message || error.message;
                 this.state.loading = false;
@@ -62,7 +67,7 @@ export class RedesignAction extends Component {
             })), demo: false, workdayAlignment: false, maxDays: 366,
         };
     }
-    async load(query) {
+    async load(query, restoredCoverage) {
         const token = ++this.generation;
         this.state.loading = true;
         this.state.error = null;
@@ -73,6 +78,8 @@ export class RedesignAction extends Component {
             if (token !== this.generation) return false;
             const data = adaptSource("D1", response, this.state.scope);
             data.geoLoad = parent => this.orm.call("id.dashboard.redesign", "get_geo_boundaries", ["D1", parent]);
+            this.coverageState = { restored: restoredCoverage };
+            data.coverageState = this.coverageState;
             data.controlOptions = this.controlOptions(query);
             this.state.data = data;
             this.query = JSON.parse(JSON.stringify(query));
