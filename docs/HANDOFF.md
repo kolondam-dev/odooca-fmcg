@@ -5186,3 +5186,9 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
 **Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]
+
+
+## 2026-11-14 — PR #135 FMCG warehouse reports
+- Draft PR #135 menambahkan Picklist, Packlist, dan Delivery Order berbasis stock.picking native.
+- Tes tambahan mencakup kondisi Packlist kosong, reservasi dengan lot/paket, pengiriman parsial `done` (actual 3 vs demand 5), serta PDF `%PDF-` smoke untuk ketiga report.
+- Belum dianggap lulus sebelum exact-SHA CI dan runtime tests berhasil.

@@ -344,3 +344,9 @@
 - Perbaiki overflow action D1 dan klik poligon.
 - Gunakan batas Sulut di repo untuk kabupaten/kota → kecamatan → kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
 - Task managed by codex agent at 2026-11-11T19:04:48+07:00
+
+
+[2026-11-14T19:00:00+07:00] [INFO] PR #135: bukti native warehouse reports
+- Perluasan tes picking kosong, reservasi native lot/paket, partial done actual quantity, dan PDF rendering smoke.
+- Branch diselaraskan ke main 50866b8; tidak merge/deploy.
+- Task managed by agent-codex-pwa.
