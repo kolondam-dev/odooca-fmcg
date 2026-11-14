@@ -106,3 +106,11 @@
 - [F] Verifikasi lokal: ruff PASS, check_manifests PASS, compileall PASS, id.po 97 entri. Modul 19.0.1.5.1.
 - [BU] Bukti runtime P2 menunggu CI pada HEAD PR #131. Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy.
 - Task managed by Agent-Opencode at 2026-11-14T17:08:43+07:00
+
+[2026-11-14T17:37:13+07:00] [INFO] I2-2 P2: bukti CI exact-SHA fe26a28 (5/5 workflow hijau, completeness 3/3)
+- [F] P2 review #5902486524 dikoreksi di 54c316f; main 6fe9f2c di-merge ke cabang sebagai fe26a28 (konflik hanya docs/HANDOFF.md).
+- [F] Bukti CI exact-SHA fe26a28: CI 43584001596, Upgrade Runtime 43584001555, Finance I0 candidate spike 43584001640 (job 132414505091), Seed supervision 43584001537, PWA quality 43584001651 — semuanya success.
+- [F] FINANCE_I2_EXPOSURE=PASS; completeness 3/3 (payload_cap_valid_json, nested_completeness, cell_truncation_disclosed); xlsx 12 PASS + sales_export_denied; runs 8/8; sanitization 2/2; surface 9/9; roles 1 izin + 5 penolakan.
+- [F] docs/finance/I2_XLSX_EXPORT.md memuat run/job exact-SHA dan keluaran completeness.
+- [BU] Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-14T17:37:13+07:00

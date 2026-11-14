@@ -95,8 +95,10 @@ Tambahan pertahanan:
 
 `scripts/ops/verify_finance_i2_exposure.py` pada
 `finance_i0_reports_disposable`, langkah CI `I2 exposure`.
-**Status: PASS pada CI exact-SHA `b23cf09` untuk paket awal; koreksi P2
-(lihat di bawah) menunggu run CI pada HEAD PR #131.**
+**Status: PASS pada CI exact-SHA `fe26a28`, run `43584001640`, job
+`132414505091` (langkah `I2 exposure`, PASS), dengan kelima workflow PR #131
+hijau pada commit yang sama (CI, Upgrade Runtime Verification, Finance I0
+candidate spike, Seed supervision, PWA quality).**
 
 Keluaran `FINANCE_I2_EXPOSURE` memuat komponen `xlsx`:
 
@@ -151,6 +153,19 @@ baris), dengan nilai bersarang di bagian **terakhir** snapshot:
 
 `check_wizard_runs` juga mem-parse `result_json` dengan `json.loads` untuk 8/8
 jenis laporan, sehingga payload yang tidak valid akan menggagalkan CI.
+
+Keluaran `completeness` yang tercatat pada run di atas:
+
+```
+{"case": "xlsx_payload_cap_valid_json", "result": "PASS"}
+{"case": "xlsx_nested_completeness", "result": "PASS"}
+{"case": "xlsx_cell_truncation_disclosed", "result": "PASS"}
+```
+
+Komponen `xlsx` tetap 12 PASS + 1 `ACCESS_DENIED` (penolakan Sales yang
+memang diharapkan), `runs` 8/8 PASS, `sanitization` 2/2 PASS, `surface` 9/9
+PASS, `roles` 1 izin + 5 penolakan sesuai harapan, dan
+`FINANCE_I2_EXPOSURE=PASS`.
 
 ## Yang belum dibuktikan (tetap `BELUM_DITERIMA`)
 
