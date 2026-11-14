@@ -35,7 +35,7 @@ class MockModel:
     """Mock Odoo model for unit testing loader logic offline."""
 
     def __init__(self, records=None, count_val=0, auto_match=False):
-        self._records = records or []
+        self._records = records if records is not None else []
         self._count_val = count_val
         self._auto_match = auto_match
 
@@ -98,12 +98,39 @@ class MockModel:
     def search_count(self, domain):
         return self._count_val
 
+    def with_company(self, company):
+        return self
+
+    def create(self, vals):
+        new_id = len(self._records) + 1
+        rec = MockRecord(id=new_id, **vals)
+        if "partner_id" in vals and isinstance(vals["partner_id"], int) and hasattr(self, "_env"):
+            p_model = getattr(self._env, "models", {}).get("res.partner")
+            if p_model:
+                p_rec = p_model.browse(vals["partner_id"])
+                if p_rec:
+                    rec.partner_id = p_rec
+        if "account_id" in vals and isinstance(vals["account_id"], int) and hasattr(self, "_env"):
+            acc_model = getattr(self._env, "models", {}).get("account.account")
+            if acc_model:
+                acc_rec = acc_model.browse(vals["account_id"])
+                if acc_rec:
+                    rec.account_id = acc_rec
+        if "tax_line_id" in vals and isinstance(vals["tax_line_id"], int) and hasattr(self, "_env"):
+            t_model = getattr(self._env, "models", {}).get("account.tax")
+            if t_model:
+                t_rec = t_model.browse(vals["tax_line_id"])
+                if t_rec:
+                    rec.tax_line_id = t_rec
+        self._records.append(rec)
+        return rec
+
 
 class MockRecord:
     """Mock Odoo recordset element."""
 
     def __init__(self, **kwargs):
-        self._data = kwargs
+        self._data = dict(kwargs)
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -116,15 +143,37 @@ class MockRecord:
     def exists(self):
         return True
 
+    def with_company(self, company):
+        return self
+
+    def with_context(self, **kwargs):
+        return self
+
+    def write(self, vals):
+        self._data.update(vals)
+        for k, v in vals.items():
+            setattr(self, k, v)
+        return True
+
+    def action_post(self):
+        self.write({"state": "posted"})
+        return True
+
 
 class MockEnv:
     """Mock Odoo environment dictionary."""
 
     def __init__(self, models):
         self.models = models
+        for m in models.values():
+            if isinstance(m, MockModel):
+                m._env = self
 
     def __getitem__(self, item):
         return self.models.get(item, MockModel())
+
+    def get(self, item, default=None):
+        return self.models.get(item, default)
 
     def __contains__(self, item):
         return item in self.models
@@ -1816,6 +1865,158 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         self.assertIn("MYR-RMA-02", err_msg)
         self.assertIn("assigned", err_msg)
         self.assertIn("SO-202608-0035", err_msg)
+
+    def test_single_invoice_reproduction_and_pack_contract_resolution(self):
+        """Reproduksi INV-202608-0001 lewat jalur loader sebenarnya:
+        Verifikasi DPP komersial (355.680,00), DPP Nilai Lain (326.040,00),
+        PPN 12% (39.124,80), total (394.804,80), dan jurnal pajak pada akun 211200.
+        """
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_partner = MockRecord(
+            id=10,
+            ref="CUST-RTL-006",
+            name="Warung Dani Ujung Lorong",
+            property_account_receivable_id=MockRecord(
+                id=110, code="112000", name="Piutang Usaha", account_type="asset_receivable"
+            ),
+        )
+        mock_prod = MockRecord(
+            id=20,
+            default_code="MYR-CND-02",
+            name="Koppiko Blister Pack 32g",
+            uom_id=MockRecord(id=1, name="Pcs"),
+            taxes_id=None,
+        )
+        # Mock income account
+        mock_acc_inc = MockRecord(id=40, code="410100", name="Pendapatan Penjualan")
+        mock_prod._get_product_accounts = lambda: {"income": mock_acc_inc}
+
+        mock_acc_ppn_out = MockRecord(id=50, code="211200", name="PPN Keluaran", company_id=mock_company)
+        mock_acc_ar = MockRecord(
+            id=110, code="112000", name="Piutang Usaha", account_type="asset_receivable", company_id=mock_company
+        )
+
+        # Canonical Tax Code 04
+        mock_tax_04 = MockRecord(
+            id=77,
+            name="PPN Keluaran 12% (DPP Nilai Lain - Kode 04)",
+            description="PPN 12% atas DPP Nilai Lain 11/12 PMK 131/2024 (Kode Transaksi 04)",
+            amount=12.0,
+            amount_type="percent",
+            type_tax_use="sale",
+            l10n_id_tax_transaction_code="04",
+            company_id=mock_company,
+            invoice_repartition_line_ids=[
+                MockRecord(id=1, repartition_type="base", factor_percent=91.6667),
+                MockRecord(id=2, repartition_type="tax", factor_percent=100.0, account_id=mock_acc_ppn_out),
+            ],
+            refund_repartition_line_ids=[
+                MockRecord(id=3, repartition_type="base", factor_percent=91.6667),
+                MockRecord(id=4, repartition_type="tax", factor_percent=100.0, account_id=mock_acc_ppn_out),
+            ],
+        )
+
+        mock_sol = MockRecord(
+            id=501,
+            product_id=mock_prod,
+            tax_id=mock_tax_04,
+            tax_ids=[mock_tax_04],
+        )
+        mock_so = MockRecord(
+            id=601,
+            name="SO/2026/08/0001",
+            client_order_ref="SO-202608-0001",
+            partner_id=mock_partner,
+            company_id=mock_company,
+            order_line=[mock_sol],
+            picking_ids=[],
+        )
+        mock_sale_journal = MockRecord(id=701, code="SJL", name="Sales Journal", type="sale", company_id=mock_company)
+
+        mock_moves = []
+        mock_am_lines = []
+
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "res.partner": MockModel(records=[mock_partner]),
+            "product.product": MockModel(records=[mock_prod]),
+            "product.template": MockModel(records=[]),
+            "account.tax": MockModel(records=[mock_tax_04]),
+            "sale.order": MockModel(records=[mock_so]),
+            "account.journal": MockModel(records=[mock_sale_journal]),
+            "account.account": MockModel(records=[mock_acc_ppn_out, mock_acc_ar, mock_acc_inc]),
+            "account.move": MockModel(records=mock_moves),
+            "account.move.line": MockModel(records=mock_am_lines),
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env, AUG_PACK_DIR, dry_run=False, strict=True)
+        loader.company = mock_company
+
+        # Target invoice row
+        inv_row = {
+            "invoice_number": "INV-202608-0001",
+            "so_number": "SO-202608-0001",
+            "do_number": "DO-202608-0001",
+            "date_invoice": "2026-08-03",
+            "due_date": "2026-08-03",
+            "commercial_dpp": "355680.00",
+            "dpp_amount": "326040.00",
+            "tax_rate": "0.12",
+            "ppn_amount": "39124.80",
+            "total_invoice_with_ppn": "394804.80",
+            "customer": "CUST-RTL-006 - Warung Dani Ujung Lorong",
+            "is_pkp": "False",
+            "tax_code": "04",
+        }
+        loader.reader.set_override("invoices.csv", [inv_row])
+
+        processed = loader._apply_invoices()
+        self.assertEqual(processed, 1)
+
+        created_inv = mock_moves[0]
+        self.assertEqual(created_inv.state, "posted")
+        self.assertEqual(created_inv.payment_reference, "INV-202608-0001")
+        self.assertEqual(created_inv.amount_untaxed, 355680.00)
+        self.assertEqual(created_inv.amount_tax, 39124.80)
+        self.assertEqual(created_inv.amount_total, 394804.80)
+        self.assertEqual(created_inv.l10n_id_tax_transaction_code, "04")
+
+        # Verify tax move lines on account 211200
+        t_lines = [
+            aml for aml in mock_am_lines if getattr(getattr(aml, "account_id", None), "code", "") == "211200"
+        ]
+        self.assertEqual(len(t_lines), 1)
+        self.assertEqual(t_lines[0].credit, 39124.80)
+        self.assertEqual(t_lines[0].debit, 0.0)
+        self.assertEqual(t_lines[0].tax_base_amount, 326040.00)
+        self.assertEqual(t_lines[0].tax_line_id.id, mock_tax_04.id)
+
+    def test_single_invoice_old_unpatched_divergence_fails_validation(self):
+        """Supervisor Contract: Older unpatched code where tax is omitted and total is 355680
+        must fail validation closed with exact drift message."""
+        mock_inv = MockRecord(
+            payment_reference="INV-202608-0001",
+            partner_id=MockRecord(ref="CUST-RTL-006", name="Warung Dani"),
+            invoice_date="2026-08-03",
+            amount_untaxed=355680.00,
+            amount_tax=0.00,  # Missing tax
+            amount_total=355680.00,  # Expected 394804.80
+            state="posted",
+        )
+        inv_row = {
+            "invoice_number": "INV-202608-0001",
+            "customer": "CUST-RTL-006",
+            "date_invoice": "2026-08-03",
+            "commercial_dpp": "355680.00",
+            "dpp_amount": "326040.00",
+            "ppn_amount": "39124.80",
+            "total_invoice_with_ppn": "394804.80",
+        }
+        loader = GenericPeriodPackLoader(MockEnv({}), AUG_PACK_DIR, dry_run=True)
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_invoice(mock_inv, inv_row)
+        expected_msg = "Drift detected on Invoice INV-202608-0001: expected total 394804.80, found 355680.00"
+        self.assertIn(expected_msg, str(ctx.exception))
 
 
 if __name__ == "__main__":

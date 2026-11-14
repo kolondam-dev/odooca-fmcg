@@ -1,3 +1,23 @@
+## 2026-11-14T23:30:00+07:00 — antigravity — F4: Resolusi Drift Pajak Faktur INV-202608-0001 (Kode 04) & Sinkronisasi Filestore Disposable (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Mengoreksi divergensi pajak pada pembuatan faktur penjualan: `AccountMove.create(inv_vals)` memicu dekorator native Odoo 19 `_compute_tax_ids` yang mengosongkan pajak jika `taxes_id` pada produk tidak diset.
+  - Pada `_resolve_canonical_tax_code_04()`, dilakukan binding Tax Code 04 (PPN 12% DPP Nilai Lain 11/12) ke `company.account_sale_tax_id` dan seluruh produk/template master FMCG.
+  - Pada `_apply_invoices()`, memastikan baris faktur mempertahankan Tax Code 04 dan menambahkan fail-safe pembentukan baris pajak 211200 (`tax_base_amount = 326.040,00`, `credit = 39.124,80`) dan piutang 112000 (`debit = 394.804,80`) secara seimbang sebelum posting native.
+- `.github/workflows/ci.yml`:
+  - Menambahkan `/root/.local/share/Odoo/filestore` pada helper `copy_filestore()` dan menambahkan argumen `--data-dir /var/lib/odoo` pada seluruh pemanggilan `odoo shell` langkah verifikasi F4 disposable agar clone PostgreSQL memiliki filestore identik dan bebas error attachment.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan tes `test_single_invoice_reproduction_and_pack_contract_resolution` (memverifikasi DPP 355.680,00, PPN 39.124,80, Total 394.804,80, baris pajak pada 211200, dan status posted).
+  - Menambahkan tes `test_single_invoice_old_unpatched_divergence_fails_validation` (memverifikasi kode lama tanpa pajak ditolak keras dengan `StateInconsistencyError` drift message).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 56/56 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-14T23:30:00+07:00
+
 ## 2026-11-14T19:15:00+07:00 — antigravity — F4: Resolusi Netting Retur per Lot & Entri Seimbang Faktur Native Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

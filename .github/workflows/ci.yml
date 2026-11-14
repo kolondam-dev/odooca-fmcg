@@ -108,7 +108,7 @@ jobs:
             copy_filestore() {
               local src="$1"
               local dst="$2"
-              for f_root in /var/lib/odoo/filestore /var/lib/odoo/.local/share/Odoo/filestore; do
+              for f_root in /var/lib/odoo/filestore /var/lib/odoo/.local/share/Odoo/filestore /root/.local/share/Odoo/filestore; do
                 if [ -d "$f_root/$src" ]; then
                   mkdir -p "$f_root/$dst"
                   cp -r "$f_root/$src"/* "$f_root/$dst"/ 2>/dev/null || true
@@ -121,7 +121,7 @@ jobs:
 
             echo "Memuat data master FMCG (150 SKU, vendor, partner outlet) ke fmcg_period_master..."
             odoo shell -d fmcg_period_master --db_host localhost --db_port 5432 -r odoo -w odoo \
-              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http < scripts/load_fmcg_seed.py
+              --data-dir /var/lib/odoo --addons-path "$(/opt/deploy/addons_path.sh)" --no-http < scripts/load_fmcg_seed.py
 
             # Database B (Scenario B): master-only baseline (150 SKU terverifikasi, 0 transaksi)
             PGPASSWORD=odoo createdb -h localhost -p 5432 -U odoo -T fmcg_period_master fmcg_period_disposable_b
@@ -132,7 +132,7 @@ jobs:
             copy_filestore fmcg_period_master fmcg_period_disposable
             echo "Bootstrapping baseline transaksi kanonikal Juli ke fmcg_period_disposable..."
             odoo shell -d fmcg_period_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
-              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http < scripts/load_canonical_perpetual.py
+              --data-dir /var/lib/odoo --addons-path "$(/opt/deploy/addons_path.sh)" --no-http < scripts/load_canonical_perpetual.py
 
             echo "Menjalankan verify_disposable_period_pack.py pada fmcg_period_disposable dan fmcg_period_disposable_b..."
             PERIOD_PACK_DIR="data/registers/periods/2026-08" \
@@ -140,13 +140,13 @@ jobs:
             PERIOD_DB_B="fmcg_period_disposable_b" \
             PERIOD_OUT="period_pack_runtime_report.json" \
             odoo shell -d fmcg_period_disposable --db_host localhost --db_port 5432 -r odoo -w odoo \
-              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http \
+              --data-dir /var/lib/odoo --addons-path "$(/opt/deploy/addons_path.sh)" --no-http \
               < scripts/ops/verify_disposable_period_pack.py
 
             PGPASSWORD=odoo dropdb -h localhost -p 5432 -U odoo fmcg_period_master || true
             PGPASSWORD=odoo dropdb -h localhost -p 5432 -U odoo fmcg_period_disposable || true
             PGPASSWORD=odoo dropdb -h localhost -p 5432 -U odoo fmcg_period_disposable_b || true
-            rm -rf /var/lib/odoo/filestore/fmcg_period_master /var/lib/odoo/filestore/fmcg_period_disposable /var/lib/odoo/filestore/fmcg_period_disposable_b || true
+            rm -rf /var/lib/odoo/filestore/fmcg_period_master /var/lib/odoo/filestore/fmcg_period_disposable /var/lib/odoo/filestore/fmcg_period_disposable_b /root/.local/share/Odoo/filestore/fmcg_period_master /root/.local/share/Odoo/filestore/fmcg_period_disposable /root/.local/share/Odoo/filestore/fmcg_period_disposable_b || true
           ' 2>&1 | tee period-pack-runtime.log
           grep -q 'STATUS: RUNTIME VERIFICATION COMPLETED SUCCESSFULLY.' period-pack-runtime.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' period-pack-runtime.log; then exit 1; fi

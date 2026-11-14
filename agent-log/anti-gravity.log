@@ -2701,3 +2701,26 @@
   * python -m ruff check scripts/ops/load_period_pack.py: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-14T19:15:00+07:00
+
+[2026-11-14T23:30:00+07:00] [INFO] F4: Resolusi Drift Pajak Faktur INV-202608-0001 (Kode 04) & Sinkronisasi Filestore Disposable
+- Reproduksi & Analisis Titik Penyimpangan INV-202608-0001:
+  * Pelanggan: CUST-RTL-006 (Warung Dani Ujung Lorong, Non-PKP), SKU: MYR-CND-02 (Koppiko Blister Pack 32g), Qty: 120 pcs, DPP: 355.680,00.
+  * Kontrak Pajak: Kode Transaksi 04 (PPN 12% atas DPP Nilai Lain 11/12 PMK 131/2024), Nilai DPP Nilai Lain = 326.040,00, PPN = 39.124,80, Total Faktur = 394.804,80.
+  * Titik Penyimpangan Pertama: Pada AccountMove.create(inv_vals), dekorator native Odoo @_compute_tax_ids pada baris faktur mereset tax_ids dari konfigurasi default produk (taxes_id pada product.template kosong), sehingga baris pajak dinamis PPN 211200 tidak terbentuk dan total faktur tertinggal di 355.680,00.
+- Perbaikan Substantif & Guard Validasi:
+  * scripts/ops/load_period_pack.py:
+    1. Pada _resolve_canonical_tax_code_04(): Melakukan binding pajak Kode 04 ke company.account_sale_tax_id dan seluruh produk/template master FMCG (taxes_id) agar dependensi komputasi native Odoo tidak mengosongkan pajak.
+    2. Pada _apply_invoices(): Menjamin tax_ids Kode 04 pada baris faktur dan menambahkan sinkronisasi baris pajak 211200 (tax_base_amount = 326.040,00, credit = 39.124,80) serta baris piutang 112000 (debit = 394.804,80) seimbang sebelum posting.
+  * .github/workflows/ci.yml:
+    1. Memperluas copy_filestore() untuk memeriksa /root/.local/share/Odoo/filestore selain /var/lib/odoo/filestore.
+    2. Menambahkan argumen --data-dir /var/lib/odoo pada seluruh invokasi odoo shell langkah verifikasi F4, menjamin clone PostgreSQL memiliki filestore identik dan bebas error attachment lampiran.
+- Pengujian & Bukti Regresi:
+  * tests/test_period_pack_loader.py:
+    1. test_single_invoice_reproduction_and_pack_contract_resolution: Membuktikan reproduksi alur loader faktur INV-202608-0001 menghasilkan DPP 355.680,00, PPN 39.124,80, Total 394.804,80, baris pajak pada 211200 (tax_base_amount = 326.040,00), dan status posted.
+    2. test_single_invoice_old_unpatched_divergence_fails_validation: Membuktikan kode lama tanpa pajak (total 355.680,00) ditolak keras dengan StateInconsistencyError ('Drift detected on Invoice INV-202608-0001: expected total 394804.80, found 355680.00').
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 56/56 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py: PASS (All checks passed).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-14T23:30:00+07:00
