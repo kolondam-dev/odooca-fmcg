@@ -23,7 +23,7 @@ import { CameraViewfinder, type CameraCaptureResult } from "./CameraViewfinder";
 import { CheckinMap } from "./CheckinMap";
 import type { EvidenceRef } from "./Evidence";
 
-/** Batas akurasi GPS untuk absen dan check-in (DS: Status_gps). */
+/** Batas akurasi GPS untuk absen (DS: Status_gps). */
 export const GPS_ACCURACY_LIMIT_M = 30;
 
 /**
@@ -394,7 +394,7 @@ export function AttendanceScreen({
                         {lowAccuracy ? (
                             <Callout tone="warn" icon="warning">
                                 Akurasi saat ini ±{Math.round(fix!.accuracy)} m.
-                                Batas untuk absen dan check-in adalah ±
+                                Batas akurasi untuk absen adalah ±
                                 {GPS_ACCURACY_LIMIT_M} m.
                             </Callout>
                         ) : null}
@@ -450,8 +450,7 @@ export function AttendanceScreen({
                 >
                     <Callout tone="warn" icon="warning">
                         Akurasi saat ini ±{Math.round(fix.accuracy)} m. Batas
-                        untuk absen dan check-in adalah ±{GPS_ACCURACY_LIMIT_M}{" "}
-                        m.
+                        akurasi untuk absen adalah ±{GPS_ACCURACY_LIMIT_M} m.
                     </Callout>
                     <p class="ui-sheet__text">
                         Pindah ke tempat terbuka, jauhi bangunan tinggi, lalu

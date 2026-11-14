@@ -17,7 +17,7 @@ test("Absen: akurasi GPS di atas batas ±30 m membuka lembar dan mengunci selfie
         .click();
     const sheet = page.getByRole("dialog", { name: "Akurasi lokasi rendah" });
     await expect(sheet).toContainText(
-        "Akurasi saat ini ±85 m. Batas untuk absen dan check-in adalah ±30 m.",
+        "Akurasi saat ini ±85 m. Batas akurasi untuk absen adalah ±30 m.",
     );
     await expect(sheet).toContainText("Pindah ke tempat terbuka");
     await sheet
