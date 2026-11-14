@@ -5,6 +5,11 @@
 **Verifikasi:** Regresi Playwright memeriksa pemulihan periode dan filter SKU. Validasi produksi menunggu merge dan auto-deploy.
 
 **Signature:** Task Managed by Agent Codex-Dashboard
+## 2026-11-14T23:29:12+07:00 — Agent-Claude-Dev1 — Fase 3B-10: Sinkron (jalan/gagal) + angka Beranda Sales
+**Berubah:** `pwa/src/components/SyncProgressCard.tsx` (baru), `MorningSession.tsx`, `Home.tsx`, `App.tsx`, `domain/morning.ts` (`open(onStage)`), `ui/ui.css`, `tests/browser/sync-progress.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K24), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser sync-progress (3 tes, phone+tablet) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] Lanjut offline (menunggu backend memecah bagian opsional snapshot), Beranda canvasser/delivery/sesi.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-14T23:29:12+07:00
 
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.

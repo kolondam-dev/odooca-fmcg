@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Button, Card, CardHead, Chip, DayStep, Callout } from "../ui";
+import { SyncProgressCard, type SyncStage } from "./SyncProgressCard";
 import type { FieldProvider, Identity } from "../domain/contracts";
 import {
     fieldBusinessDate,
@@ -38,11 +39,16 @@ export function MorningSession({
     const record = restored;
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
+    const [stage, setStage] = useState<SyncStage>();
+    const [online, setOnline] = useState(navigator.onLine);
     const [date, setDate] = useState(fieldBusinessDate());
     const running = useRef(false);
     const changed = useRef(onChange);
     changed.current = onChange;
     useEffect(() => {
+        const net = () => setOnline(navigator.onLine);
+        window.addEventListener("online", net);
+        window.addEventListener("offline", net);
         const checkDate = () => setDate(fieldBusinessDate());
         const timer = setInterval(checkDate, 15000);
         window.addEventListener("focus", checkDate);
@@ -51,6 +57,8 @@ export function MorningSession({
             clearInterval(timer);
             window.removeEventListener("focus", checkDate);
             document.removeEventListener("visibilitychange", checkDate);
+            window.removeEventListener("online", net);
+            window.removeEventListener("offline", net);
         };
     }, [service]);
     const today = record?.businessDate === date ? record : undefined;
@@ -70,8 +78,9 @@ export function MorningSession({
         running.current = true;
         setBusy(true);
         setError("");
+        setStage("check");
         try {
-            const next = await service.open();
+            const next = await service.open(setStage);
             changed.current(next);
         } catch (e) {
             setError(
@@ -82,6 +91,7 @@ export function MorningSession({
         } finally {
             running.current = false;
             setBusy(false);
+            setStage(undefined);
         }
     }
     const clock = (iso?: string) =>
@@ -143,7 +153,15 @@ export function MorningSession({
                     </div>
                 </Card>
             )}
-            {!ready && (
+            {!ready && attended && (busy || !!error) && (
+                <SyncProgressCard
+                    stage={stage}
+                    failed={!busy && !!error}
+                    online={online}
+                    onRetry={() => void advance()}
+                />
+            )}
+            {!ready && !(attended && (busy || !!error)) && (
                 <Card>
                     <CardHead title="Mulai hari kerja" />
                     <div class="ui-stack">
