@@ -8,6 +8,7 @@ export function Home({
     outlets,
     doneIds,
     orders,
+    confirmedOrders,
     canWork,
     isSales,
     isDelivery,
@@ -23,6 +24,8 @@ export function Home({
     outlets: Snapshot["outlets"];
     doneIds: Set<string>;
     orders: number;
+    /** Order yang sudah diterima server (status antrean "accepted"). */
+    confirmedOrders: number;
     /** Sesi aktif dan belum absen pulang. */
     canWork: boolean;
     isSales: boolean;
@@ -43,11 +46,19 @@ export function Home({
                 <Stats
                     items={[
                         {
-                            value: outlets.length || "–",
-                            label: "Outlet hari ini",
+                            value: outlets.length
+                                ? `${done}/${outlets.length}`
+                                : "–",
+                            label: "Outlet selesai",
                         },
-                        { value: done, label: "Kunjungan selesai" },
-                        { value: orders, label: "Order diajukan" },
+                        {
+                            value: outlets.length ? orders : "–",
+                            label: "Order",
+                        },
+                        {
+                            value: outlets.length ? confirmedOrders : "–",
+                            label: "Order terkonfirmasi",
+                        },
                     ]}
                 />
             )}

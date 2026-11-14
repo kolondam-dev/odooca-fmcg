@@ -265,12 +265,16 @@ export class MorningSimulation {
         await this.store.draft(record.owner, MORNING_KEY, record);
         return record;
     }
-    async open() {
+    async open(
+        onStage?: (stage: "check" | "download" | "validate" | "save") => void,
+    ) {
+        onStage?.("check");
         const date = await this.checkConnection();
         const attendance = await this.restore();
         const isDemo = isDemoMode();
         if (!attendance || (!isDemo && attendance.businessDate !== date))
             throw new Error("Absensi belum diterima. Buka sesi kerja dahulu.");
+        onStage?.("download");
         const snapshot = SnapshotSchema.parse(await this.provider.snapshot());
         const deliveryManifest = this.identity.roles.includes("delivery")
             ? z
@@ -287,6 +291,7 @@ export class MorningSimulation {
             )
         )
             throw new Error("Manifest daily sync tidak cocok.");
+        onStage?.("validate");
         if (!validMorningSnapshot(snapshot, date, isDemo))
             throw new Error(
                 "Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai. Sesi belum dibuka.",
@@ -307,6 +312,7 @@ export class MorningSimulation {
         };
         if (!morningReady(record, ownerKey(this.identity), date))
             throw new Error("Paket sesi tidak valid. Sesi belum dibuka.");
+        onStage?.("save");
         // One IndexedDB record: never publish ready before the complete bundle is durable.
         await this.store.draft(record.owner, MORNING_KEY, record);
         return record;
