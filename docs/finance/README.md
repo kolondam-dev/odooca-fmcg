@@ -29,7 +29,12 @@ Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA da
 10. [I2 exposure](I2_EXPOSURE.md): wizard laporan, ACL, menu **Finance
     Reports**, dan bukti peran Sales/Driver ditolak. Ini lapisan yang membuat
     model laporan bisa dipakai, bukan penerimaan katalog.
-11. [Keputusan pemilik](OWNER_DECISIONS.md) dan [lisensi](LICENSING.md):
+11. [I2 export XLSX](I2_XLSX_EXPORT.md): workbook per laporan dengan guard
+    formula injection, sel numerik asli, dan batas ekspor yang eksplisit.
+12. [Aktivasi I2-3](I2_ACTIVATION.md): blok bermark di `deploy/init.sh` untuk
+    memasang `id_finance_reporting` + `id_finance_foundation` dan memberi peran
+    Finance Reader kepada admin demo; belum dijalankan di database demo.
+13. [Keputusan pemilik](OWNER_DECISIONS.md) dan [lisensi](LICENSING.md):
     model AGPL-compliant, scope `FIN55`/`FIN56`/payroll, serta batas aktivasi
     demo bertahap.
 

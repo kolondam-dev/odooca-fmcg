@@ -172,6 +172,37 @@ if [ "$upgrade_modules" = "1" ]; then
   set_mark upgrade_modules_v3
 fi
 
+# 4d. Aktivasi laporan keuangan custom (I2-3): id_finance_reporting + id_finance_foundation.
+# Blok bermark, idempoten, dan tidak menyentuh INIT_MODULES, chart, costing, seed
+# atau transaksi. Instalasi yang gagal tidak menyetel mark dan menghentikan boot,
+# supaya aplikasi tidak berjalan dengan menu setengah terpasang. Tidak memakai RESET_DB.
+# Deploy hanya dari main yang sudah memuat paket I2-2 (modul 19.0.1.5.0); bila DB
+# demo sudah terpasang versi lebih lama, buat blok upgrade bertanda baru.
+if ! has_mark activate_finance_reports_v1; then
+  log "activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation..."
+  odoo_run -i id_finance_reporting,id_finance_foundation --stop-after-init
+  set_mark activate_finance_reports_v1
+fi
+
+# 4e. Peran Finance Reader untuk admin demo, supaya menu Finance Reports bisa
+# dibuka saat presentasi. Hanya base.user_admin; user dan grup accounting lain
+# tidak diubah.
+if ! has_mark demo_finance_reader_v1; then
+  log "demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo..."
+  odoo_run shell --no-http <<'PY'
+admin = env.ref('base.user_admin', raise_if_not_found=False)
+group = env.ref('id_finance_foundation.group_finance_reader', raise_if_not_found=False)
+if not admin or not group:
+    raise SystemExit('[init] demo_finance_reader_v1: admin atau grup Finance Reader tidak ditemukan')
+field = 'group_ids' if 'group_ids' in admin._fields else 'groups_id'
+if group not in admin[field]:
+    admin.write({field: [(4, group.id)]})
+    env.cr.commit()
+print(f"[init] demo_finance_reader_v1: {admin.login} memiliki grup {group.name}")
+PY
+  set_mark demo_finance_reader_v1
+fi
+
 # 5. Postinit (v1): URL dasar, kata sandi admin, bahasa. TODO M1: aktifkan id_ID, grup bisnis admin.
 if ! has_mark postinit_v1; then
   log "postinit_v1"

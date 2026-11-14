@@ -55,6 +55,7 @@
                 </sheet>
                 <footer>
                     <button name="action_run" string="Run Report" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button name="action_export_xlsx" string="Export XLSX" type="object" class="btn-secondary"/>
                     <button string="Close" special="cancel" class="btn-secondary"/>
                 </footer>
             </form>
