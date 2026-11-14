@@ -1,3 +1,8 @@
+## 2026-11-14T08:20:50+07:00 — claude-design (Claude-Dev1) — Fase 3B-7: Ajukan cuti (47) mengikuti DS
+
+- `AjukanCutiScreen` layar penuh menggantikan dialog cuti di `TaskForm` (cabang cuti dan `LocalDateInput` dihapus); payload `hris.leave.request` tetap.
+- Tes: `leave.test.ts`, `leave.spec.ts`, Back test di `ux-improvements.spec.ts` diperbarui. Utang di DS_RECONCILIATION K21.
+
 ## 2026-11-13T12:46:38+07:00 — Agent-Opencode — PR #123: sanitasi terbukti di CI, branch sinkron dengan `main`
 **Berubah:** `docs/finance/I2_EXPOSURE.md` (status exact-SHA `fab0cbc`, tambah butir bukti sanitasi ke daftar pemeriksaan, prasyarat aktivasi menunjuk `fab0cbc`); `docs/HANDOFF.md`; `agent-log/opencode.log`. Tidak ada perubahan kode pada entri ini.
 **Diverifikasi:** [F] Run `43371935122` langkah `I2 exposure` PASS pada `fab0cbca13c1c120b2dddbdf6ed41a5a28af8319`; keluaran `FINANCE_I2_EXPOSURE` memuat `sanitization: [{"case": "reader_direct_write_sanitized", "result": "PASS"}, {"case": "reader_preview_keeps_table", "result": "PASS"}]`, bersama 8/8 `wizard_run_*`, 9/9 `menu_action_*` + view, `reader_can_run` PASS, lima penolakan peran `ACCESS_DENIED`, dan `fixture_rollback` PASS. [F] PR #123 **12/12 check hijau** pada `fab0cbc` (static, install-test 11m37s, init-test, `candidate-install-upgrade`, upgrade runtime + replay zero drift 19m36s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate). [F] Branch sudah memuat `main` `488bd87`; merge `fab0cbc` hanya berkonflik di `docs/HANDOFF.md` dan entri kedua agen dipertahankan.

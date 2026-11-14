@@ -34,6 +34,7 @@ import { SalesVisits, captureVisitLocation } from "./domain/visits";
 import { CollectionWorkspace } from "./components/CollectionWorkspace";
 import { collectionV2Enabled } from "./domain/collection-settlement";
 import { DeliveryWorkspace } from "./components/DeliveryWorkspace";
+import { AjukanCutiScreen } from "./components/AjukanCutiScreen";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
 import { MorePage } from "./components/MorePage";
@@ -1049,8 +1050,15 @@ function Workspace({
                             close={() => setDialog(undefined)}
                         />
                     )}
+                    {dialog?.type === "leave" && (
+                        <AjukanCutiScreen
+                            submit={submit as never}
+                            close={() => setDialog(undefined)}
+                        />
+                    )}
                     {dialog &&
                         dialog.type !== "attendance" &&
+                        dialog.type !== "leave" &&
                         dialog.type !== "extra" &&
                         dialog.type !== "expense" &&
                         dialog.type !== "order" &&
