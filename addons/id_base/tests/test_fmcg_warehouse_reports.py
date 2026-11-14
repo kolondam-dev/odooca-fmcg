@@ -86,10 +86,18 @@ class TestFMCGWarehouseReports(TransactionCase):
 
     def _assert_pdf_download(self, xmlid, picking):
         report = self.env.ref(xmlid)
-        pdf, _content_type = report._render_qweb_pdf(
-            report.report_name, picking.ids
+        # Odoo deliberately falls back to HTML while running tests unless
+        # force_report_rendering is enabled. Exercise the real wkhtmltopdf path
+        # so this smoke test verifies a downloadable PDF, not the HTML fallback.
+        pdf, content_type = report.with_context(
+            force_report_rendering=True
+        )._render_qweb_pdf(report.report_name, picking.ids)
+        self.assertEqual(content_type, "pdf")
+        self.assertIsInstance(pdf, bytes)
+        self.assertTrue(
+            pdf.startswith(b"%PDF-"),
+            "Expected PDF bytes, received: %r" % pdf[:80],
         )
-        self.assertTrue(pdf.startswith(b"%PDF-"))
         self.assertGreater(len(pdf), 1000)
 
     def test_empty_packlist_states_empty_without_fabricated_rows(self):
