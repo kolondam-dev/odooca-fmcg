@@ -114,3 +114,27 @@
 - [F] docs/finance/I2_XLSX_EXPORT.md memuat run/job exact-SHA dan keluaran completeness.
 - [BU] Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy.
 - Task managed by Agent-Opencode at 2026-11-14T17:37:13+07:00
+
+[2026-11-14T14:09:12+07:00] [INFO] I2-3: blok aktivasi finance bertanda di deploy/init.sh (staged, belum deploy)
+- [F] Keputusan pemilik: aktivasi I2-3 = modul + admin demo sebagai Finance Reader (opsi A).
+- [F] deploy/init.sh: blok bermark activate_finance_reports_v1 (-i id_finance_reporting,id_finance_foundation) dan demo_finance_reader_v1 (group_finance_reader hanya base.user_admin). Fail-closed: mark tidak diset bila gagal. Tanpa RESET_DB, tanpa ubah INIT_MODULES/chart/costing/seed/bahasa.
+- [F] ci.yml init-test: kedua penanda wajib muncul tepat sekali setelah restart, dua modul installed, lalu scripts/ops/verify_finance_activation_demo.py (read-only) memeriksa grup meng-implikasi account.group_account_readonly, menu Finance Reports dibatasi reader, menu laporan custom punya action, dan tidak ada user lain yang mendapat grup.
+- [F] Verifikasi lokal: ruff check . PASS, check_manifests PASS, bash -n pada salinan LF PASS, YAML ci.yml ter-parse (init-test 13 langkah).
+- [BU] Bukti runtime menunggu CI PR. Deploy DB demo, login admin demo, geometri browser, tie-out, PDF, sign-off, payroll, FIN36/55/56, I3 belum diuji.
+- [F] Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy. Blok hanya boleh dideploy setelah PR #131 (I2-2) merge.
+- Task managed by Agent-Opencode at 2026-11-14T14:09:12+07:00
+
+[2026-11-14T14:40:48+07:00] [INFO] I2-3 PASS di CI pada 038d42f: aktivasi bertanda + idempoten, zero-drift
+- [F] PR #133 12/12 check hijau pada 038d42f (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift 18m38s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate).
+- [F] init-test run 43570682742 job 132374227786: activate_finance_reports_v1 dan demo_finance_reader_v1 masing-masing muncul tepat sekali setelah restart; id_finance_reporting dan id_finance_foundation installed.
+- [F] INIT_FINANCE_ACTIVATION=PASS pada 038d42f dengan JSON: admin admin, menu Finance/Finance Reports, reader_group Finance Reader, report_menu_action Journal Items Audit Trail (FIN04), other_reader_users kosong.
+- [F] Upgrade runtime run 43570682677 job 132374214936: UPGRADE_BASELINE_PHASE=SUCCESS, UPGRADE_VERIFY_PHASE=SUCCESS, UPGRADE_REPLAY_ZERO_DRIFT=PASS. deploy/init.sh ditambahkan ke path trigger upgrade-runtime.yml.
+- [BU] Deploy database demo, login admin demo, geometri browser, tie-out, PDF, sign-off, payroll, FIN36/55/56, I3 belum diuji.
+- [F] Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy. Deploy PR #133 hanya setelah PR #131 merge.
+- Task managed by Agent-Opencode at 2026-11-14T14:40:48+07:00
+
+[2026-11-14T15:29:17+07:00] [INFO] I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
+- [F] main 6fe9f2c (PR #132 PWA Absen). Merge 545c264 konflik hanya docs/HANDOFF.md; entri kedua agen dipertahankan (348 entri main + 2 entri Agent-Opencode).
+- [F] PR #133 12/12 hijau pada 545c264 dan MERGEABLE: init-test, install-test, candidate-install-upgrade, upgrade runtime + replay zero drift 19m4s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate, static.
+- [BU] Deploy database demo, login admin demo, geometri browser, tie-out, PDF, sign-off, payroll, FIN36/55/56, I3 belum diuji. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy. PR #131 belum merge sehingga PR #133 belum boleh dideploy.
+- Task managed by Agent-Opencode at 2026-11-14T15:29:17+07:00
