@@ -4,6 +4,8 @@
 
 **Diverifikasi:** [F] Baseline branch dari main `c5b1ecb5c51cbbf854c55d9138ff3589aa8c2442`. [F] Odoo 19 delivery slip memakai `stock.picking`, `stock.move`, `stock.move.line`; report baru tidak override report native. [BU] Install-test, render PDF, browser, dan CI menunggu run PR.
 
+**Koreksi:** seluruh string sumber report dikembalikan ke English sesuai protokol addon; terjemahan Indonesianya ditambahkan di `i18n/id.po`.
+
 **Belum diuji:** rendering PDF/HTML di Odoo runtime; detail lot/package aktual pada picking yang sudah direservasi/selesai; geometri cetak.
 
 **Butir terbuka:** review apakah field tanda tangan dan label dokumen sesuai proses gudang; tidak ada asumsi bahwa pencetakan packlist menandakan barang sudah dipaketkan.

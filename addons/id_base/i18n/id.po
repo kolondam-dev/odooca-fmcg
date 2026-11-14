@@ -256,3 +256,32 @@ msgstr "Diperiksa oleh"
 #. module: id_base
 msgid "Approved by"
 msgstr "Disetujui oleh"
+
+
+#. module: id_base
+msgid "This picklist reads native Odoo demand and reservation lines. The report does not create or change lot or location assignments."
+msgstr "Daftar pengambilan ini membaca demand dan baris reservasi native Odoo. Laporan tidak membuat atau mengubah penetapan lot maupun lokasi."
+
+#. module: id_base
+msgid "No native operation or reservation lines are available. Print the packlist after the picking has native operation details."
+msgstr "Belum ada baris operasi atau reservasi native. Cetak daftar pengepakan setelah picking memiliki detail operasi native."
+
+#. module: id_base
+msgid "Packing staff"
+msgstr "Petugas pengepakan"
+
+#. module: id_base
+msgid "Inspector"
+msgstr "Pemeriksa"
+
+#. module: id_base
+msgid "Handed over by"
+msgstr "Diserahkan oleh"
+
+#. module: id_base
+msgid "Received by"
+msgstr "Diterima oleh"
+
+#. module: id_base
+msgid "Date / Stamp"
+msgstr "Tanggal / Stempel"

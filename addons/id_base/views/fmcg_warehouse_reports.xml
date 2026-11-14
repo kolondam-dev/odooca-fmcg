@@ -87,11 +87,11 @@
                                 </t>
                             </tbody>
                         </table>
-                        <p class="text-muted">Picklist ini membaca demand dan baris reservasi native Odoo. Penetapan lot dan lokasi tidak dibuat atau diubah oleh laporan.</p>
+                        <p class="text-muted">This picklist reads native Odoo demand and reservation lines. The report does not create or change lot or location assignments.</p>
                         <div class="row mt-5">
-                            <div class="col-4 text-center">Disiapkan oleh<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Diperiksa oleh<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Disetujui oleh<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center">Prepared by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center">Checked by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center">Approved by<br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>
@@ -143,13 +143,13 @@
                                     <td><span t-field="line.result_package_id"/></td>
                                 </tr>
                                 <tr t-if="not o.move_ids.move_line_ids">
-                                    <td colspan="6" class="text-center text-muted">Belum ada baris operasi/reservasi. Packlist dicetak setelah picking memiliki detail operasi native.</td>
+                                    <td colspan="6" class="text-center text-muted">No native operation or reservation lines are available. Print the packlist after the picking has native operation details.</td>
                                 </tr>
                             </tbody>
                         </table>
                         <div class="row mt-5">
-                            <div class="col-6 text-center">Petugas packing<br/><br/><br/>____________________</div>
-                            <div class="col-6 text-center">Pemeriksa<br/><br/><br/>____________________</div>
+                            <div class="col-6 text-center">Packing staff<br/><br/><br/>____________________</div>
+                            <div class="col-6 text-center">Inspector<br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>
@@ -216,9 +216,9 @@
                             </tbody>
                         </table>
                         <div class="row mt-5">
-                            <div class="col-4 text-center">Diserahkan oleh<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Diterima oleh<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Tanggal / Stempel<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center">Handed over by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center">Received by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center">Date / Stamp<br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>
