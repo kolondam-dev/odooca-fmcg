@@ -231,7 +231,7 @@ export async function checkIn(page: Page) {
         .first()
         .click();
     await page
-        .getByRole("button", { name: "Ambil Lokasi Presisi", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi", exact: true })
         .click();
     await expect(
         page.getByRole("region", { name: "Lokasi dan foto absensi" }),
@@ -240,7 +240,7 @@ export async function checkIn(page: Page) {
         .getByLabel("Alamat / nama lokasi")
         .fill("Jl. Sam Ratulangi, Sario, Manado, Sulawesi Utara");
     await page
-        .getByRole("button", { name: "Buka Kamera", exact: true })
+        .getByRole("button", { name: "Ambil selfie", exact: true })
         .click();
     await page
         .getByLabel("Buka Kamera Perangkat")
@@ -252,7 +252,8 @@ export async function checkIn(page: Page) {
         page.getByAltText("Foto absensi dengan watermark"),
     ).toBeVisible();
     await page
-        .getByRole("button", { name: "Simpan absen masuk", exact: true })
+        .getByRole("region", { name: "Absensi foto dan lokasi" })
+        .getByRole("button", { name: "Absen masuk", exact: true })
         .click();
     await expect(clock).toBeVisible();
 }

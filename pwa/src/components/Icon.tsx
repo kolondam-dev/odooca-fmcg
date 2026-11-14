@@ -17,6 +17,7 @@ import close from "@phosphor-icons/core/assets/duotone/x-duotone.svg?raw";
 import bag from "@phosphor-icons/core/assets/duotone/shopping-bag-duotone.svg?raw";
 import warning from "@phosphor-icons/core/assets/duotone/warning-circle-duotone.svg?raw";
 import signal from "@phosphor-icons/core/assets/duotone/wifi-high-duotone.svg?raw";
+import info from "@phosphor-icons/core/assets/duotone/info-duotone.svg?raw";
 import gas from "@phosphor-icons/core/assets/duotone/gas-pump-duotone.svg?raw";
 import lock from "@phosphor-icons/core/assets/duotone/lock-duotone.svg?raw";
 import plus from "@phosphor-icons/core/assets/duotone/plus-duotone.svg?raw";
@@ -57,6 +58,7 @@ const icons = {
     warning,
     signal,
     gas,
+    info,
 };
 export type IconName = keyof typeof icons;
 // Only trusted, build-time Phosphor SVGs enter this wrapper. No server/user SVG.

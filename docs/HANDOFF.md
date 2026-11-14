@@ -15,6 +15,11 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-14T17:25:00+07:00
 
+## 2026-11-14T13:18:09+07:00 — claude-design (Claude-Dev1) — Fase 3B-8: Absen (04–08) mengikuti DS
+
+- `AttendanceScreen` ditulis ulang: chip dalam/luar area, sheet Aturan geofence, Ambil selfie (kamera depan, terkunci di luar area terverifikasi), kartu Selfie tersimpan, Absen masuk/pulang. `AttendanceCapture` dan cabang absen di `TaskForm` dihapus; ikon `info` ditambah.
+- Tes: `attendance-geofence.spec.ts` baru; helper/spec absen diperbarui ke label baru. Utang di DS_RECONCILIATION K22.
+
 ## 2026-11-14T11:30:00+07:00 — antigravity — F4: Perbaikan Truthiness Model Odoo & Resolusi Produk Langsung dari Baris SO di _apply_invoices (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

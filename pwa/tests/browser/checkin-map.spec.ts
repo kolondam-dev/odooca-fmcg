@@ -26,7 +26,7 @@ test("office check-in previews real fix and handles failed road tiles without au
     await expect(map).toContainText("Di luar radius");
     await expect(map).toContainText("Titik tujuan simulasi");
     await page
-        .getByRole("button", { name: "Ambil Lokasi Presisi", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi", exact: true })
         .click();
     await expect(map).toContainText("Di luar radius");
     await expect(map).toContainText("-6.200000, 106.800000");
@@ -37,7 +37,9 @@ test("office check-in previews real fix and handles failed road tiles without au
     await expect(map.getByRole("status")).toContainText("Peta jalan gagal");
     await expect(map.locator("svg[role=img]")).toBeVisible();
     await expect(
-        page.getByRole("button", { name: "Simpan absen masuk", exact: true }),
+        page
+            .getByRole("region", { name: "Absensi foto dan lokasi" })
+            .getByRole("button", { name: "Ambil selfie", exact: true }),
     ).toBeDisabled();
     expect(tiles).toBeGreaterThan(0);
     expect(

@@ -29,7 +29,7 @@ test("browser Back closes camera before form and returns through pages", async (
         .click();
     await page.getByLabel("Alamat / nama lokasi").fill("Kantor Manado");
     await page
-        .getByRole("button", { name: "Buka Kamera", exact: true })
+        .getByRole("button", { name: "Ambil selfie", exact: true })
         .click();
     await expect(page.locator("[role=dialog][aria-modal=true]")).toHaveCount(1);
     const camera = page.locator(".cam");
@@ -173,7 +173,7 @@ test("map zoom and consent survive a new GPS fix, touch affects only the map", a
         accuracy: 2,
     });
     await page
-        .getByRole("button", { name: "Ambil Lokasi Presisi", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi", exact: true })
         .click();
     await expect(region).toContainText("1.465020");
     await expect(map).toHaveAttribute("data-zoom", zoom!);
@@ -335,7 +335,7 @@ test("account handover with nested camera restores body scroll and clears both d
         .click();
     await page.getByLabel("Alamat / nama lokasi").fill("Kantor Manado");
     await page
-        .getByRole("button", { name: "Buka Kamera", exact: true })
+        .getByRole("button", { name: "Ambil selfie", exact: true })
         .click();
     await expect(page.locator(".cam")).toBeVisible();
     await changeTestAccount(page, "delivery");

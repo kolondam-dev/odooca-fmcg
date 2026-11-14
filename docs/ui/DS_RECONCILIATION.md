@@ -192,6 +192,18 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 
 **Utang (butuh backend):** jenis cuti selain tahunan, lampiran surat dokter (cuti sakit), saldo cuti nyata (kini "Dihitung server"), pengurangan libur nasional pada durasi, layar riwayat/saldo cuti (tidak ada di mockup terkunci). Pengecekan layar 48 menunggu mockup tersedia (tidak ditemukan di artifact Design).
 
+### K22. Fase 3B-8 — Absen (04–08): layar mengikuti DS, kamera tetap
+
+**Selesai di PWA:** `AttendanceScreen` memuat alur Absen_info/dalam/luar/selfie/pulang: header dengan ikon info → BottomSheet "Aturan geofence" (3 aturan + Mengerti), chip status area ("Di dalam area · N m dari titik absen" / "Di luar area · N m dari batas"), blok "Absen hanya bisa di dalam area kantor" + tombol terkunci bila titik master terverifikasi dan bukan mode demo, tombol "Ambil selfie" (pulang: "Ambil selfie pulang") dengan **kamera depan** dan gerbang area yang sama di kamera, lalu kartu "Selfie tersimpan" + Lokasi + Waktu + "Ulangi foto", tombol akhir "Absen masuk"/"Absen pulang". Bukti (watermark, hash, kedaluwarsa 60 detik, penyimpanan lokal) tidak berubah. `AttendanceCapture` dan cabang absen mati di `TaskForm` dihapus. Kamera (Kamera_viewfinder/pratinjau/kedaluwarsa/luar) sudah sesuai DS sejak fase sebelumnya.
+
+**Utang / perbedaan yang disengaja:**
+- **Alamat otomatis dari GPS:** belum ada layanan geocoding; alamat tetap diisi manual (wajib) dengan label "Alamat / nama lokasi".
+- **Perbarui lokasi** tetap tampil di footer saat di dalam area (mockup Absen_dalam hanya punya Ambil selfie) agar fix presisi/ulang tetap bisa diminta; kedaluwarsa 60 detik membutuhkannya.
+- **Peta:** komponen `CheckinMap` lama tetap dipakai (label titik uji/simulasi wajib jujur); belum dibuat ulang sebagai peta DS bergaya sederhana.
+- **Ringkasan hari ini (Absen_pulang):** kartu Masuk/Durasi/Outlet selesai/Order terkirim + peringatan item menunggu kirim belum ada; butuh data sesi dan antrean di layar pulang.
+- **Ulangi foto** memakai alamat dan lokasi yang sama (alamat tidak bisa diubah setelah selfie; perbarui lokasi/alamat hanya sebelum foto).
+- Baris "Perusahaan · Pegawai" di bawah foto dihapus (ada di watermark gambar).
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).

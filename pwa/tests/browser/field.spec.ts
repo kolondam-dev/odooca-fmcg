@@ -225,7 +225,9 @@ test("missing evidence is not accepted as attendance", async ({
         .getByRole("button", { name: "Absen masuk", exact: true })
         .click();
     await expect(
-        page.getByRole("button", { name: "Simpan absen masuk", exact: true }),
+        page
+            .getByRole("region", { name: "Absensi foto dan lokasi" })
+            .getByRole("button", { name: "Ambil selfie", exact: true }),
     ).toBeDisabled();
 });
 test("live build is fail-closed with no simulation selector or data", async ({
