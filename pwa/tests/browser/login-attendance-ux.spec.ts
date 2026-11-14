@@ -289,6 +289,8 @@ for (const retake of [false, true])
             const before = (await shown.count())
                 ? await shown.getAttribute("src")
                 : null;
+            // Alamat sama saat ulangi foto: beri jeda >1 detik agar watermark waktu (detik) membuat foto B berbeda dari A.
+            if (before) await page.waitForTimeout(1200);
             await page
                 .getByRole("button", {
                     name: /^(Ambil selfie|Ulangi foto)$/,

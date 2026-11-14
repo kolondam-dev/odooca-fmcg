@@ -92,3 +92,62 @@ test("Absen: sheet Aturan geofence terbuka dari header, Back dan Mengerti menutu
     await sheet.getByRole("button", { name: "Mengerti" }).click();
     await expect(sheet).toHaveCount(0);
 });
+
+test("Absen: ulangi foto dengan lokasi kedaluwarsa tidak buntu; perbarui lokasi lalu absen tanpa menutup layar", async ({
+    page,
+    context,
+}) => {
+    await context.grantPermissions(["geolocation"]);
+    await page.goto("./");
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .first()
+        .click();
+    const screen = page.getByRole("region", {
+        name: "Absensi foto dan lokasi",
+    });
+    await screen.getByLabel("Alamat / nama lokasi").fill("Jl. Uji, Manado");
+    const shoot = async (name: string | RegExp) => {
+        await screen.getByRole("button", { name }).click();
+        await page
+            .getByLabel("Buka Kamera Perangkat")
+            .setInputFiles("public/icon-192.png");
+        await page
+            .getByRole("button", { name: "Gunakan foto", exact: true })
+            .click();
+    };
+    await shoot("Ambil selfie");
+    await expect(screen.getByText("Selfie tersimpan")).toBeVisible();
+    // Lokasi menjadi lebih dari 60 detik sebelum foto ulang.
+    await page.evaluate(() => {
+        const now = Date.now.bind(Date);
+        (window as unknown as { realNow: () => number }).realNow = now;
+        Date.now = () => now() + 120000;
+    });
+    await shoot("Ulangi foto");
+    await expect(screen.getByRole("alert")).toContainText("kedaluwarsa");
+    await expect(
+        screen.getByRole("button", { name: "Perbarui lokasi", exact: true }),
+    ).toBeVisible();
+    await expect(
+        screen.getByRole("button", { name: "Absen masuk", exact: true }),
+    ).toHaveCount(0);
+    // Perbarui lokasi, ambil selfie baru, kirim absen: layar tidak pernah ditutup.
+    await page.evaluate(() => {
+        Date.now = (window as unknown as { realNow: () => number }).realNow;
+    });
+    await screen
+        .getByRole("button", { name: "Perbarui lokasi", exact: true })
+        .click();
+    await expect(
+        page.getByRole("region", { name: "Lokasi dan foto absensi" }),
+    ).toHaveAttribute("aria-busy", "false");
+    await shoot("Ambil selfie");
+    await expect(screen.getByText("Selfie tersimpan")).toBeVisible();
+    await screen
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
+    await expect(
+        page.locator('[data-testid="attendance-record"]'),
+    ).toBeVisible();
+});

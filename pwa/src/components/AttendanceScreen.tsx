@@ -191,12 +191,16 @@ export function AttendanceScreen({
             setCaptured(at);
             setEvidence({ ...ref, packageHash: row.visual!.bindingSha256 });
         } catch (failure) {
-            if (ticket === generation.current)
+            if (ticket === generation.current) {
+                // Tanpa bukti aktif, kembali ke langkah lokasi agar Perbarui lokasi tersedia (tidak buntu).
+                setPhoto(undefined);
+                setCaptured("");
                 setError(
                     failure instanceof Error
                         ? failure.message
                         : "Foto gagal disimpan. Coba kembali.",
                 );
+            }
         } finally {
             if (ticket === generation.current) setWorking(false);
         }
