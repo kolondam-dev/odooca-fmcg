@@ -68,8 +68,24 @@ restart, lalu memeriksa:
   **Finance Reports** dibatasi ke grup reader, menu laporan custom menunjuk
   action yang benar, dan tidak ada user lain yang mendapat grup tersebut.
 
-Status: **[BU] menunggu run CI pada PR ini**; hasil exact-SHA ditempel di PR
-dan di `docs/HANDOFF.md` setelah selesai.
+**Status: PASS pada exact-SHA `038d42f`, 12/12 check PR hijau.**
+
+- `init-test` (run `43570682742`, job `132374227786`), langkah
+  *Aktivasi finance bertanda dan idempoten*:
+  `INIT_FINANCE_ACTIVATION=PASS` dengan
+  `{"admin": "admin", "menu": "Finance/Finance Reports", "modules":
+  {"id_finance_foundation": "installed", "id_finance_reporting": "installed"},
+  "other_reader_users": [], "reader_group": "Finance Reader",
+  "report_menu_action": "Journal Items Audit Trail (FIN04)"}`.
+- `Kontrak Runner Upgrade (unit)` dan
+  *Module Upgrade from Persisted Baseline + Replay Zero Drift*
+  (run `43570682677`, job `132374214936`, 18m38s) PASS dengan
+  `UPGRADE_BASELINE_PHASE=SUCCESS`, `UPGRADE_VERIFY_PHASE=SUCCESS`, dan
+  `UPGRADE_REPLAY_ZERO_DRIFT=PASS` — blok aktivasi ikut berjalan pada boot
+  `fmcg_base` (DB kosong) tanpa merusak baseline persisten atau replay.
+- `deploy/init.sh` ditambahkan ke path trigger `upgrade-runtime.yml`, supaya
+  perubahan jalur boot tidak lolos tanpa bukti zero-drift.
+
 
 ## Rollback
 
