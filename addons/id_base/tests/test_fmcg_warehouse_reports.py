@@ -24,7 +24,6 @@ class TestFMCGWarehouseReports(TransactionCase):
             "origin": "SO-FMCG-REPORT-TEST",
             "move_ids": [
                 Command.create({
-                    "name": cls.product.display_name,
                     "product_id": cls.product.id,
                     "product_uom": cls.product.uom_id.id,
                     "product_uom_qty": 2.0,
