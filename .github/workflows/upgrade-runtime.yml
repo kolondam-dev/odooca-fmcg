@@ -12,6 +12,7 @@ on:
       - 'scripts/load_canonical_perpetual.py'
       - 'tests/test_full_dataset_cutoff_and_upgrade.py'
       - '.github/workflows/upgrade-runtime.yml'
+      - 'deploy/init.sh'
       - 'data/registers/**'
       - 'addons/**'
 
