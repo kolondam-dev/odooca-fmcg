@@ -1,7 +1,6 @@
 import importlib.util
 from pathlib import Path
 
-from odoo import fields
 from odoo.tests.common import TransactionCase
 
 
@@ -120,20 +119,27 @@ class TestNativeFmcgFefo(TransactionCase):
         for lot in lots:
             Quant._update_available_quantity(product, location, 10, lot_id=lot)
 
-        move = self.env["stock.move"].create({
-            "name": "FMCG FEFO Reservation Test",
-            "product_id": product.id,
-            "product_uom": self.unit.id,
-            "product_uom_qty": 1,
+        picking = self.env["stock.picking"].create({
+            "picking_type_id": self.env.ref("stock.picking_type_out").id,
             "location_id": location.id,
             "location_dest_id": self.env.ref("stock.stock_location_customers").id,
             "company_id": self.company.id,
-            "date": fields.Datetime.now(),
+            "move_ids": [(0, 0, {
+                "product_id": product.id,
+                "product_uom": self.unit.id,
+                "product_uom_qty": 1,
+                "location_id": location.id,
+                "location_dest_id": self.env.ref("stock.stock_location_customers").id,
+            })],
         })
-        quants = Quant.with_context(with_expiration=move.date)._gather(product, location)
+        picking.action_confirm()
+        picking.action_assign()
 
-        self.assertEqual(quants.mapped("lot_id.name"), ["LOT-FEFO-FIRST", "LOT-FEFO-SECOND"])
-        self.assertEqual(move._get_available_quantity(location), 20)
+        move = picking.move_ids
+        self.assertEqual(move.state, "assigned")
+        self.assertEqual(move.move_line_ids.mapped("lot_id.name"), ["LOT-FEFO-FIRST"])
+        self.assertNotIn("LOT-FEFO-EXPIRED", move.move_line_ids.mapped("lot_id.name"))
+        self.assertEqual(sum(move.move_line_ids.mapped("quantity")), 1)
 
     def test_canonical_loader_enables_expiry_backfills_lot_and_sets_fefo(self):
         category = self.env["product.category"].create({
