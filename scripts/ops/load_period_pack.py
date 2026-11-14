@@ -2455,7 +2455,12 @@ class GenericPeriodPackLoader:
 
         AccountMove = self.env["account.move"].sudo()
         SaleOrder = self.env["sale.order"].sudo()
-        Product = self.env["product.product"].sudo() if "product.product" in self.env else None
+        Product = None
+        if hasattr(self.env, "__getitem__"):
+            try:
+                Product = self.env["product.product"].sudo()
+            except Exception:
+                Product = None
         processed = 0
 
         lines_by_so = {}
@@ -2568,23 +2573,43 @@ class GenericPeriodPackLoader:
                 if net_cartons <= 0.0:
                     continue
 
-                prod = Product.search([("default_code", "=", sku)], limit=1) if Product else None
+                matched_sol = None
+                prod = None
+
+                # 1. Resolve directly from SO order lines for this SO
+                if hasattr(so, "order_line"):
+                    for sol in so.order_line:
+                        sol_id = getattr(sol, "id", None)
+                        if sol_id in used_sol_ids:
+                            continue
+                        sol_p = getattr(sol, "product_id", None)
+                        sol_code = getattr(sol_p, "default_code", None)
+                        if sol_code == sku:
+                            matched_sol = sol
+                            prod = sol_p
+                            used_sol_ids.add(sol_id)
+                            break
+
+                # 2. If not matched by default_code in sol, search Product model
+                if not prod and Product is not None:
+                    prod = Product.search([("default_code", "=", sku)], limit=1)
+
+                # 3. If prod resolved via model search, match sol by product id
+                if matched_sol is None and prod and hasattr(so, "order_line"):
+                    for sol in so.order_line:
+                        sol_id = getattr(sol, "id", None)
+                        sol_p = getattr(sol, "product_id", None)
+                        sol_pid = getattr(sol_p, "id", sol_p)
+                        if sol_id not in used_sol_ids and sol_pid == getattr(prod, "id", None):
+                            matched_sol = sol
+                            used_sol_ids.add(sol_id)
+                            break
+
                 if not prod:
                     raise StateInconsistencyError(f"Fatal: Unresolved SKU '{sku}' for invoice {inv_num}")
 
                 carton_qty = float(lrow.get("carton_qty", 1.0) or 1.0)
                 net_units = net_cartons * carton_qty
-
-                matched_sol = None
-                if hasattr(so, "order_line"):
-                    for sol in so.order_line:
-                        sol_id = getattr(sol, "id", None)
-                        sol_p = getattr(sol, "product_id", None)
-                        sol_pid = getattr(sol_p, "id", sol_p)
-                        if sol_id not in used_sol_ids and sol_pid == prod.id:
-                            matched_sol = sol
-                            used_sol_ids.add(sol_id)
-                            break
 
                 inv_line_vals = {
                     "product_id": prod.id,

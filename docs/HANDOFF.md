@@ -1,3 +1,19 @@
+## 2026-11-14T11:30:00+07:00 — antigravity — F4: Perbaikan Truthiness Model Odoo & Resolusi Produk Langsung dari Baris SO di _apply_invoices (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Mengoreksi penanganan model `Product` di `_apply_invoices()`: pada Odoo ORM, model reference `self.env['product.product']` merupakan recordset kosong yang selalu mengevaluasi ke `False` dalam kondisi boolean Python (`if Product:`). Kondisi ternary `prod = Product.search(...) if Product else None` sebelumnya menyebabkan `.search()` terlewati dan `prod` diset ke `None`.
+  - Mengoptimalkan pencocokan produk pada pembuatan faktur: mengambil `product.product` record langsung dari `so.order_line` (`sol.product_id`) yang telah terhubung pada order penjualan dengan mencocokkan `sol.product_id.default_code == sku`.
+  - Menambahkan fallback pencarian model `Product.search()` dengan kondisi eksplisit `if Product is not None:` untuk mencegah evaluasi falsy pada recordset Odoo kosong.
+  - Memastikan `matched_sol` dan `prod` terpasang secara presisi dan sinkron sebelum pembangunan baris faktur native `AccountMove.create()`.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-14T11:30:00+07:00
+
 ## 2026-11-14T10:10:00+07:00 — antigravity — F4: Resolusi Pembuatan Faktur Penjualan Native dengan Kode Pajak 04 & DPP Nilai Lain 11/12 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
