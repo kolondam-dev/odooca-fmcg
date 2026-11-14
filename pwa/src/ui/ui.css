@@ -1685,3 +1685,74 @@ select.ui-select {
     color: var(--c-warn);
     font: 600 14px/20px var(--font);
 }
+
+/* Sinkron data harian (DS: Sinkron_jalan / Sinkron_gagal) */
+.ui-sync__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+.ui-sync__title {
+    margin: 0;
+    font: 700 17px/24px var(--font-sans, Inter, system-ui, sans-serif);
+    color: var(--c-ink);
+}
+.ui-sync__list {
+    list-style: none;
+    margin: 4px 0 12px;
+    padding: 0;
+}
+.ui-sync__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+}
+.ui-sync__ico {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    color: var(--c-pri);
+}
+.ui-sync__row.is-error .ui-sync__ico {
+    color: var(--c-bad);
+}
+.ui-sync__row.is-soon .ui-sync__ico {
+    color: var(--c-mute);
+}
+.ui-sync__ring {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #c5d2e0;
+    box-sizing: border-box;
+    display: block;
+}
+.ui-sync__txt {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.ui-sync__name {
+    font: 600 15px/22px var(--font-sans, Inter, system-ui, sans-serif);
+    color: var(--c-ink);
+}
+.ui-sync__row.is-pending .ui-sync__name,
+.ui-sync__row.is-soon .ui-sync__name {
+    font-weight: 400;
+    color: var(--c-mute);
+}
+.ui-sync__sub {
+    font: 400 13px/18px var(--font-sans, Inter, system-ui, sans-serif);
+    color: var(--c-mute);
+}
+.ui-sync__sub.is-bad {
+    color: var(--c-bad);
+}
+.ui-sync__cap {
+    font: 400 13px/18px var(--font-sans, Inter, system-ui, sans-serif);
+    color: var(--c-mute);
+    text-align: center;
+}
