@@ -157,7 +157,7 @@ test("check-in is a full page with map, bound watermark photo and clock-out", as
     expect(bounds!.y).toBe(0);
     expect(bounds!.height).toBe(await page.evaluate(() => innerHeight));
     await page
-        .getByRole("button", { name: "Ambil Lokasi Presisi", exact: true })
+        .getByRole("button", { name: "Perbarui lokasi", exact: true })
         .click();
     await expect(
         page.getByRole("region", { name: "Lokasi dan foto absensi" }),
@@ -166,7 +166,7 @@ test("check-in is a full page with map, bound watermark photo and clock-out", as
         .getByLabel("Alamat / nama lokasi")
         .fill("Jl. Sam Ratulangi, Sario, Manado, Sulawesi Utara");
     await page
-        .getByRole("button", { name: "Buka Kamera", exact: true })
+        .getByRole("button", { name: "Ambil selfie pulang", exact: true })
         .click();
     await page
         .getByLabel("Buka Kamera Perangkat")
@@ -177,19 +177,18 @@ test("check-in is a full page with map, bound watermark photo and clock-out", as
     await expect(
         page.getByAltText("Foto absensi dengan watermark"),
     ).toBeVisible();
-    await expect(page.locator(".attendance-result")).toContainText(
-        "PT. Demo FMCG · Andre",
-    );
+    await expect(form.getByText("Selfie tersimpan")).toBeVisible();
     await expect(
         page.getByAltText("Foto absensi dengan watermark"),
     ).toBeInViewport();
-    await expect(page.locator(".attendance-result")).toContainText("Manado");
+    await expect(form).toContainText("Manado");
     await page.screenshot({
         path: `test-results/attendance-${test.info().project.name}.png`,
         fullPage: true,
     });
     await page
-        .getByRole("button", { name: "Simpan absen pulang", exact: true })
+        .getByRole("region", { name: "Absensi foto dan lokasi" })
+        .getByRole("button", { name: "Absen pulang", exact: true })
         .click();
     await expect(form).toHaveCount(0);
     await expect(
@@ -223,10 +222,7 @@ test("denied GPS keeps check-in disabled and returning restores focus", async ({
     await attendance.click();
     await expect(page.getByRole("alert")).toContainText("Izin lokasi ditolak");
     await expect(
-        page.getByRole("button", { name: "Simpan absen masuk", exact: true }),
-    ).toBeDisabled();
-    await expect(
-        page.getByRole("button", { name: "Buka Kamera", exact: true }),
+        page.getByRole("button", { name: "Ambil selfie", exact: true }),
     ).toBeDisabled();
     await page.getByRole("button", { name: "Kembali", exact: true }).click();
     await expect(attendance).toBeFocused();
@@ -273,20 +269,31 @@ for (const retake of [false, true])
             .getByRole("button", { name: "Absen masuk", exact: true })
             .first()
             .click();
-        async function photo(address: string) {
+        async function photo(address?: string) {
+            if (address) {
+                await page
+                    .getByRole("button", {
+                        name: "Perbarui lokasi",
+                        exact: true,
+                    })
+                    .click();
+                await expect(
+                    page.getByRole("region", {
+                        name: "Lokasi dan foto absensi",
+                    }),
+                ).toHaveAttribute("aria-busy", "false");
+                await page.getByLabel("Alamat / nama lokasi").fill(address);
+            }
+            const shown = page.getByAltText("Foto absensi dengan watermark");
+            // Saat ulangi foto, foto lama tetap tampil sampai bukti baru tersimpan.
+            const before = (await shown.count())
+                ? await shown.getAttribute("src")
+                : null;
+            // Alamat sama saat ulangi foto: beri jeda >1 detik agar watermark waktu (detik) membuat foto B berbeda dari A.
+            if (before) await page.waitForTimeout(1200);
             await page
                 .getByRole("button", {
-                    name: "Ambil Lokasi Presisi",
-                    exact: true,
-                })
-                .click();
-            await expect(
-                page.getByRole("region", { name: "Lokasi dan foto absensi" }),
-            ).toHaveAttribute("aria-busy", "false");
-            await page.getByLabel("Alamat / nama lokasi").fill(address);
-            await page
-                .getByRole("button", {
-                    name: /^(Buka Kamera|Foto ulang)$/,
+                    name: /^(Ambil selfie|Ulangi foto)$/,
                     exact: true,
                 })
                 .click();
@@ -296,14 +303,14 @@ for (const retake of [false, true])
             await page
                 .getByRole("button", { name: "Gunakan foto", exact: true })
                 .click();
+            if (before) await expect(shown).not.toHaveAttribute("src", before);
             await expect(
                 page.getByAltText("Foto absensi dengan watermark"),
             ).toBeInViewport();
             await expect(
-                page.getByRole("button", {
-                    name: "Simpan absen masuk",
-                    exact: true,
-                }),
+                page
+                    .getByRole("region", { name: "Absensi foto dan lokasi" })
+                    .getByRole("button", { name: "Absen masuk", exact: true }),
             ).toBeEnabled();
         }
         const pending = () =>
@@ -325,13 +332,14 @@ for (const retake of [false, true])
         await photo("Alamat foto A, Manado");
         failNextSnapshot = true;
         await page
-            .getByRole("button", { name: "Simpan absen masuk", exact: true })
+            .getByRole("region", { name: "Absensi foto dan lokasi" })
+            .getByRole("button", { name: "Absen masuk", exact: true })
             .click();
         await expect(page.getByRole("alert")).toContainText("503");
         const a = await pending();
         expect(a.sessionId).toBeNull();
         expect(a.attendanceEvidence.packageHash).toMatch(/^[a-f0-9]{64}$/);
-        if (retake) await photo("Alamat foto B, lokasi pengganti, Manado");
+        if (retake) await photo();
         const selected = await page
             .getByAltText("Foto absensi dengan watermark")
             .evaluate(async (image: HTMLImageElement) => {
@@ -373,7 +381,8 @@ for (const retake of [false, true])
         if (retake) expect(selected.id).not.toBe(a.attendanceEvidence.id);
         else expect(selected.id).toBe(a.attendanceEvidence.id);
         await page
-            .getByRole("button", { name: "Simpan absen masuk", exact: true })
+            .getByRole("region", { name: "Absensi foto dan lokasi" })
+            .getByRole("button", { name: "Absen masuk", exact: true })
             .click();
         await expect(
             page.locator('[data-testid="attendance-record"]'),

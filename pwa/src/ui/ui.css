@@ -1643,3 +1643,27 @@ select.ui-select {
     flex-direction: column;
     gap: 12px;
 }
+
+/* Absen: panel selfie tersimpan (DS: Absen_selfie). */
+.att-selfie {
+    min-height: 300px;
+    max-height: 420px;
+    border-radius: 20px;
+    background: var(--navy-900, #0b1f4d);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.att-selfie__img {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    object-fit: contain;
+}
+.att-selfie__cap {
+    flex: none;
+    padding: 8px 12px 12px;
+    text-align: center;
+    font: 500 15px/22px var(--font, Inter, system-ui, sans-serif);
+    color: #e6eefa;
+}
