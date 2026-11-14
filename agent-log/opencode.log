@@ -79,3 +79,12 @@
 - [F] Branch memuat main 488bd87 lewat merge fab0cbc; konflik hanya docs/HANDOFF.md, entri claude-design dan Agent-Opencode sama-sama dipertahankan urut waktu terbaru.
 - [BU] Aktivasi DB demo, export XLSX/PDF + guard formula injection, geometri browser, tie-out per report ID, sign-off, payroll, FIN36/55/56, I3-I8 tetap terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy/verdict.
 - Task managed by Agent-Opencode at 2026-11-13T12:46:38+07:00
+
+[2026-11-14T14:09:12+07:00] [INFO] I2-3: blok aktivasi finance bertanda di deploy/init.sh (staged, belum deploy)
+- [F] Keputusan pemilik: aktivasi I2-3 = modul + admin demo sebagai Finance Reader (opsi A).
+- [F] deploy/init.sh: blok bermark activate_finance_reports_v1 (-i id_finance_reporting,id_finance_foundation) dan demo_finance_reader_v1 (group_finance_reader hanya base.user_admin). Fail-closed: mark tidak diset bila gagal. Tanpa RESET_DB, tanpa ubah INIT_MODULES/chart/costing/seed/bahasa.
+- [F] ci.yml init-test: kedua penanda wajib muncul tepat sekali setelah restart, dua modul installed, lalu scripts/ops/verify_finance_activation_demo.py (read-only) memeriksa grup meng-implikasi account.group_account_readonly, menu Finance Reports dibatasi reader, menu laporan custom punya action, dan tidak ada user lain yang mendapat grup.
+- [F] Verifikasi lokal: ruff check . PASS, check_manifests PASS, bash -n pada salinan LF PASS, YAML ci.yml ter-parse (init-test 13 langkah).
+- [BU] Bukti runtime menunggu CI PR. Deploy DB demo, login admin demo, geometri browser, tie-out, PDF, sign-off, payroll, FIN36/55/56, I3 belum diuji.
+- [F] Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy. Blok hanya boleh dideploy setelah PR #131 (I2-2) merge.
+- Task managed by Agent-Opencode at 2026-11-14T14:09:12+07:00

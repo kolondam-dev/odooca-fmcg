@@ -1,3 +1,10 @@
+## 2026-11-14T14:09:12+07:00 — Agent-Opencode — I2-3: blok aktivasi finance bertanda di deploy/init.sh (staged, belum deploy)
+**Konteks:** [F] Keputusan pemilik: aktivasi bertahap, modul + admin demo sebagai Finance Reader. [F] PR #131 (I2-2 export XLSX) masih terbuka di `2084cdb`; blok aktivasi hanya boleh dideploy setelah #131 merge karena instalasi memakai `-i` (versi modul mengikuti image saat deploy pertama).
+**Berubah:** `deploy/init.sh` (`activate_finance_reports_v1`: `-i id_finance_reporting,id_finance_foundation`; `demo_finance_reader_v1`: beri `group_finance_reader` hanya ke `base.user_admin`; fail-closed bila gagal, tanpa `RESET_DB`, tanpa mengubah `INIT_MODULES`/chart/costing/seed/bahasa); `.github/workflows/ci.yml` (langkah `init-test` baru: tiap penanda tepat sekali setelah restart, dua modul `installed`, lalu `verify_finance_activation_demo.py`); `scripts/ops/verify_finance_activation_demo.py` (bukti read-only: grup masih meng-implikasi `account.group_account_readonly`, menu Finance Reports dibatasi reader, tidak bocor ke user lain); `docs/finance/I2_ACTIVATION.md`; indeks `docs/finance/README.md`; `docs/finance/OWNER_DECISIONS.md` baris 6.
+**Diverifikasi:** [F] `ruff check .` PASS, `scripts/check_manifests.py` PASS, `bash -n` pada salinan LF PASS, YAML `ci.yml` ter-parse dan langkah `init-test` menjadi 13. [BU] Bukti runtime menunggu CI PR: instalasi dua modul pada DB kosong, idempotensi mark saat restart, dan assertion grup/menu/admin.
+**Belum diuji:** [BU] Deploy ke database demo (Railway) dan login admin demo; geometri browser; tie-out per report ID; PDF; sign-off Finance Controller/QA; payroll serta FIN36/55/56; I3. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T14:09:12+07:00
+
 ## 2026-11-14T08:20:50+07:00 — claude-design (Claude-Dev1) — Fase 3B-7: Ajukan cuti (47) mengikuti DS
 
 - `AjukanCutiScreen` layar penuh menggantikan dialog cuti di `TaskForm` (cabang cuti dan `LocalDateInput` dihapus); payload `hris.leave.request` tetap.
