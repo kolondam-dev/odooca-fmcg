@@ -1,7 +1,7 @@
 {
     "name": "FMCG Distributor Base",
     "summary": "Fondasi FMCG: principal, brand, area, channel, matriks harga, multi-uom, kemasan, approval, pajak.",
-    "version": "19.0.1.3.2",
+    "version": "19.0.1.3.3",
     "category": "Distribution",
     "license": "LGPL-3",
     "author": "kolondam-dev",
@@ -30,6 +30,7 @@
         "wizard/coretax_export_wizard_views.xml",
         "views/sale_order_views.xml",
         "views/account_move_views.xml",
+        "views/fmcg_document_uom_views.xml",
         "views/menu_views.xml",
     ],
     "assets": {"web.assets_backend": ["id_base/static/src/scss/dashboard_workspace.scss"]},
