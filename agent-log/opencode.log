@@ -79,3 +79,12 @@
 - [F] Branch memuat main 488bd87 lewat merge fab0cbc; konflik hanya docs/HANDOFF.md, entri claude-design dan Agent-Opencode sama-sama dipertahankan urut waktu terbaru.
 - [BU] Aktivasi DB demo, export XLSX/PDF + guard formula injection, geometri browser, tie-out per report ID, sign-off, payroll, FIN36/55/56, I3-I8 tetap terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy/verdict.
 - Task managed by Agent-Opencode at 2026-11-13T12:46:38+07:00
+
+[2026-11-14T11:16:55+07:00] [INFO] I2-2: export XLSX wizard laporan + guard formula injection
+- [F] PR #123 di-merge pemilik ke main pada 3c143c6; lima workflow main hijau (CI, Upgrade Runtime, Full Dataset, Seed supervision, PWA quality). Katalog tetap 58/58 BELUM_DITERIMA.
+- [F] Wizard id.finance.report.wizard kini punya action_export_xlsx: snapshot yang sama dengan pratinjau, workbook Summary + satu sheet per bagian, nama berkas FIN<id>-<jenis>-<periode>.xlsx, unduhan lewat /web/content/<model>/<id>/result_xlsx/<nama>?download=true.
+- [F] Guard formula injection dua lapis: semua teks ditulis sebagai string; nilai yang diawali = + - @ tab atau carriage return diberi apostrof. Karakter kontrol XML dibuang, teks dibatasi 32.000 karakter dengan penanda, baris di atas 20.000 ditolak (bukan dipotong), kolom di atas 40 dicatat di Summary, workbook lama dihapus saat laporan dijalankan ulang.
+- [F] Verifikasi lokal: ruff check . PASS, check_manifests PASS, compileall PASS, id.po 92 + 20 entri valid tanpa duplikat. Modul 19.0.1.5.0.
+- [BU] Bukti runtime FINANCE_I2_EXPOSURE dengan komponen xlsx (helper guard, guard workbook, 8/8 jenis laporan, pembersihan workbook basi, izin baca/tolak) menunggu CI pada SHA PR. Workbook belum dibuka di Excel/LibreOffice; volume demo, PDF, tie-out dan sign-off belum diuji.
+- [BU] Aktivasi DB demo (I2-3) belum dijalankan. Tidak ada merge/deploy/katalog yang diubah.
+- Task managed by Agent-Opencode at 2026-11-14T11:16:55+07:00

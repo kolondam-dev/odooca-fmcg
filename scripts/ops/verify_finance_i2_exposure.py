@@ -7,6 +7,9 @@ proves the part those oracles cannot see:
 
 * every custom report type can actually be executed from the UI entry point;
 * stored report markup is sanitized server-side even on a direct ORM write;
+* every report type produces a downloadable XLSX workbook whose text cells are
+  inert (a leading ``=``, ``+``, ``-``, ``@``, tab or carriage return is quoted)
+  and whose numeric cells stay numeric;
 * the actions, menus and views needed to open it exist;
 * an accounting reader can run them, while Sales and Driver cannot.
 
@@ -14,8 +17,13 @@ All fixtures are rolled back. No report is posted, mutated or exported, and no
 catalog status is changed.
 """
 
+import base64
 import json
+import re
 import sys
+import xml.etree.ElementTree as ElementTree
+import zipfile
+from io import BytesIO
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent) if "__file__" in globals() else "/opt/scripts/ops")
@@ -247,6 +255,131 @@ def check_html_sanitization(env, company):
     ]
 
 
+def _xlsx_parts(payload):
+    """Return the workbook, shared strings and worksheets of an XLSX blob."""
+    require(payload[:2] == b"PK", "XLSX export is not a ZIP archive")
+    parts = {}
+    with zipfile.ZipFile(BytesIO(payload)) as archive:
+        names = archive.namelist()
+        require("xl/workbook.xml" in names, "XLSX workbook part is missing")
+        for name in names:
+            if name.startswith("xl/") and name.endswith(".xml"):
+                parts[name] = archive.read(name)
+    for name, data in parts.items():
+        try:
+            ElementTree.fromstring(data)
+        except ElementTree.ParseError as exc:
+            raise AssertionError(f"XLSX part is not well-formed XML: {name}") from exc
+    workbook = parts["xl/workbook.xml"].decode("utf-8")
+    shared = parts.get("xl/sharedStrings.xml", b"").decode("utf-8")
+    sheets = {
+        name: data.decode("utf-8")
+        for name, data in parts.items()
+        if name.startswith("xl/worksheets/sheet")
+    }
+    require(bool(sheets), "XLSX has no worksheet")
+    return workbook, shared, sheets
+
+
+def check_xlsx_export(env, company, fixture):
+    """Every report type must export a workbook that cannot run a formula."""
+    from odoo.addons.id_finance_reporting.wizards.finance_report_wizard import _xlsx_text
+
+    evidence = []
+    for raw in ("=1+1", "+SUM(A1)", "-2+3", "@cmd|' /C calc'!A0", "\tvalue", "\rvalue"):
+        guarded = _xlsx_text(raw)
+        require(guarded.startswith("'"), f"Formula trigger was not quoted: {raw!r}")
+        require(guarded[1:] == raw, f"Formula trigger text was altered: {raw!r}")
+    require(_xlsx_text("safe text") == "safe text", "Plain text was changed by the guard")
+    require(_xlsx_text(None) == "", "An empty value must stay empty")
+    require(_xlsx_text("a\x01b") == "ab", "An illegal XML control character was kept")
+    require(len(_xlsx_text("x" * 40000)) < 40000, "Long text was not bounded")
+    evidence.append({"case": "xlsx_formula_guard_helper", "result": "PASS"})
+
+    _company, accounts, journal, partner, _scale = fixture
+    move = env["account.move"].with_company(company).create({
+        "company_id": company.id,
+        "journal_id": journal.id,
+        "date": "2026-07-12",
+        "ref": "=SUM(1+1)",
+        "move_type": "entry",
+        "line_ids": [
+            (0, 0, {
+                "name": "@cmd|' /C calc'!A0",
+                "account_id": accounts["revenue"].id,
+                "debit": 0.0,
+                "credit": 7.5,
+            }),
+            (0, 0, {
+                "name": "-7.5+1",
+                "account_id": accounts["cash"].id,
+                "partner_id": partner.id,
+                "debit": 7.5,
+                "credit": 0.0,
+            }),
+        ],
+    })
+    move.action_post()
+
+    record = wizard(env, company, "audit_trail", {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+    action = record.action_export_xlsx()
+    require(action.get("type") == "ir.actions.act_url", "Export did not start a download")
+    url = action.get("url") or ""
+    require(
+        url.startswith(f"/web/content/id.finance.report.wizard/{record.id}/result_xlsx/"),
+        f"Download URL does not target the wizard binary field: {url}",
+    )
+    require("download=true" in url, "Download URL is not a forced download")
+    require(
+        re.fullmatch(r"FIN04-audit-trail-2026-07-01_2026-07-31\.xlsx", record.result_filename or "") is not None,
+        f"Unexpected export filename: {record.result_filename}",
+    )
+    payload = base64.b64decode(record.result_xlsx or b"")
+    require(len(payload) > 1000, "Exported workbook is empty")
+    workbook, shared, sheets = _xlsx_parts(payload)
+    require("Summary" in workbook, "Workbook has no Summary sheet")
+    joined = "".join(sheets.values())
+    require("<f" not in joined, "Workbook contains a formula element")
+    require(joined.count("<row ") > 3, "Workbook has no data rows")
+    for trigger in ("=SUM(1+1)", "@cmd", "-7.5+1"):
+        require(f"'{trigger}" in shared, f"Formula trigger was stored unquoted: {trigger}")
+        require(f">{trigger}</t>" not in shared, f"Unquoted formula trigger reached the workbook: {trigger}")
+    require("<v>7.5</v>" in joined, "The amount was not stored as a numeric cell")
+    evidence.append({"case": "xlsx_formula_guard_workbook", "result": "PASS"})
+
+    for report_type, (filters, _expected) in REPORT_SPECS.items():
+        exported = wizard(env, company, report_type, dict(filters))
+        result = exported.action_export_xlsx()
+        require(result.get("type") == "ir.actions.act_url", f"{report_type}: export did not download")
+        blob = base64.b64decode(exported.result_xlsx or b"")
+        exported_book, _shared, _sheets = _xlsx_parts(blob)
+        require("Summary" in exported_book, f"{report_type}: workbook has no Summary sheet")
+        evidence.append({"case": f"xlsx_export_{report_type}", "result": "PASS"})
+
+    rerun = wizard(env, company, "audit_trail", {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+    rerun.action_export_xlsx()
+    require(bool(rerun.result_xlsx), "Export produced no workbook")
+    rerun.action_run()
+    require(not rerun.result_xlsx and not rerun.result_filename,
+            "A re-run kept the previous workbook downloadable")
+    evidence.append({"case": "xlsx_cleared_on_rerun", "result": "PASS"})
+
+    _reader_user, reader = actor(env, "xlsx_reader", company, ["account.group_account_readonly"])
+    reader_record = wizard(reader, company, "audit_trail", {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+    reader_record.action_export_xlsx()
+    require(bool(reader_record.result_xlsx), "Finance Reader could not export the workbook")
+    evidence.append({"case": "reader_can_export_xlsx", "result": "PASS"})
+
+    _sales_user, sales = actor(env, "xlsx_sales", company, ["sales_team.group_sale_salesman"])
+    evidence.append(denied(
+        lambda e=sales: wizard(
+            e, company, "audit_trail", {"date_from": "2026-07-01", "date_to": "2026-07-31"},
+        ).action_export_xlsx(),
+        "sales_export_denied",
+    ))
+    return evidence
+
+
 def run(env):
     require(env.cr.dbname == DISPOSABLE_DB, "Exposure evidence requires the exact disposable reports database")
     companies_before = set(env["res.company"].search([]).ids)
@@ -260,6 +393,7 @@ def run(env):
             evidence["runs"] = check_wizard_runs(env, company)
             evidence["roles"] = check_roles(env, company)
             evidence["sanitization"] = check_html_sanitization(env, company)
+            evidence["xlsx"] = check_xlsx_export(env, company, fixture)
             raise RollbackFixture()
     except RollbackFixture:
         env.invalidate_all()
