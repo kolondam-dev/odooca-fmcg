@@ -150,7 +150,11 @@ class TestFMCGWarehouseReports(TransactionCase):
             isinstance(result, dict)
             and result.get("res_model") == "stock.backorder.confirmation"
         ):
-            self.env[result["res_model"]].browse(result["res_id"]).process()
+            wizard_context = dict(self.env.context, **result.get("context", {}))
+            wizard = self.env[result["res_model"]].with_context(
+                wizard_context
+            ).create({"pick_ids": [Command.set(picking.ids)]})
+            wizard.process()
         picking.invalidate_recordset()
         self.assertEqual(picking.state, "done")
         self.assertEqual(
