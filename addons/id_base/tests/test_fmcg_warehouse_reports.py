@@ -160,7 +160,20 @@ class TestFMCGWarehouseReports(TransactionCase):
         self.assertEqual(
             sum(picking.move_ids.move_line_ids.mapped("quantity")), 3
         )
-        self.assertEqual(picking.move_ids.product_uom_qty, 5)
+        # Native backorder confirmation splits the original demand: the done
+        # picking keeps the fulfilled 3, while the remaining 2 move to a
+        # separate backorder picking. Assert the complete demand across both.
+        self.assertEqual(sum(picking.move_ids.mapped("product_uom_qty")), 3)
+        backorders = picking.backorder_ids
+        self.assertEqual(len(backorders), 1)
+        self.assertEqual(
+            sum(backorders.move_ids.mapped("product_uom_qty")), 2
+        )
+        self.assertEqual(
+            sum(picking.move_ids.mapped("product_uom_qty"))
+            + sum(backorders.move_ids.mapped("product_uom_qty")),
+            5,
+        )
         self.assertEqual(picking.move_ids.move_line_ids.mapped("lot_id"), lot)
 
         html = self._render_html(
