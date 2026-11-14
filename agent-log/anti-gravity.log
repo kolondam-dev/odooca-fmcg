@@ -2724,3 +2724,21 @@
   * python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py: PASS (All checks passed).
   * Zero touch live Railway / production database.
 - Task managed by antigravity at 2026-11-14T23:30:00+07:00
+
+[2026-11-15T01:25:00+07:00] [INFO] CI: Resolusi Rollover Kalender Minggu pada Mock business_date staging.py (id_mobile_api)
+- Analisis Kegagalan install-test (Run 43616309374 Job 132512090963):
+  * Error: odoo.exceptions.AccessError: An active assignment for today is required. pada test_existing_demo.py (11 errors).
+  * Root Cause:
+    1. Pergantian hari WIB/WITA ke hari Minggu (2026-11-15) memicu logika deterministik kalender di MobileFixture.
+    2. MobileFixture mem-patch mobile_workday.business_date agar mundur ke Sabtu (2026-11-14) karena operasional libur hari Minggu.
+    3. Namun addons/id_mobile_api/staging.py mengimpor 'from .models.mobile_workday import business_date' secara direct reference di tingkat modul sebelum patch dieksekusi.
+    4. Akibatnya, staging._provision_records() membaca business_date() unpatched (Minggu 2026-11-15), membuat assignment untuk tanggal 15, lalu _bootstrap_payload() memanggil _current_assignment() yang menggunakan mobile_workday.business_date patched (Sabtu 2026-11-14). Ketidakcocokan tanggal menghasilkan AccessError.
+  * Solusi:
+    1. Pada addons/id_mobile_api/staging.py: mengimpor modul 'from .models import mobile_workday' dan memanggil 'mobile_workday.business_date()', menjamin patch MobileFixture berlaku transparan pada seluruh fixture provisioning staging.
+    2. Pada addons/id_mobile_api/tests/test_staging.py: menyesuaikan simulasi rollover kalender pada test_rollover_rejects_provisioning_summary agar memicu perubahan tanggal tepat sebelum _assert_day dievaluasi.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 56/56 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check addons/id_mobile_api: PASS clean (0 error).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-15T01:25:00+07:00

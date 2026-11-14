@@ -1,3 +1,19 @@
+## 2026-11-15T01:25:00+07:00 — antigravity — CI: Resolusi Rollover Kalender Minggu pada Mock business_date staging.py (id_mobile_api) (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `addons/id_mobile_api/staging.py`:
+  - Mengubah import `from .models.mobile_workday import business_date` menjadi `from .models import mobile_workday` dan pemanggilan `mobile_workday.business_date()`.
+  - Mencegah divergensi tanggal saat eksekusi test pada hari Minggu (WITA/WIB) di mana `MobileFixture` mem-patch `mobile_workday.business_date` ke hari Sabtu, sehingga `_provision_records()` dan `_current_assignment()` selalu berjalan pada tanggal bisnis deterministik yang identik (mengeliminasi 11 AccessError pada `test_existing_demo.py`).
+- `addons/id_mobile_api/tests/test_staging.py`:
+  - Menyesuaikan `test_rollover_rejects_provisioning_summary` untuk mensimulasikan pergantian tanggal kalender tepat saat `_assert_day` dipanggil.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 56/56 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check addons/id_mobile_api`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T01:25:00+07:00
+
 ## 2026-11-14T23:30:00+07:00 — antigravity — F4: Resolusi Drift Pajak Faktur INV-202608-0001 (Kode 04) & Sinkronisasi Filestore Disposable (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
