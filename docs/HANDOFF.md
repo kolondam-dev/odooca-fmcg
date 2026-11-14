@@ -6,6 +6,11 @@
 
 **Signature:** Task Managed by Agent Codex-Dashboard
 
+## 2026-11-14T13:18:09+07:00 — claude-design (Claude-Dev1) — Fase 3B-8: Absen (04–08) mengikuti DS
+
+- `AttendanceScreen` ditulis ulang: chip dalam/luar area, sheet Aturan geofence, Ambil selfie (kamera depan, terkunci di luar area terverifikasi), kartu Selfie tersimpan, Absen masuk/pulang. `AttendanceCapture` dan cabang absen di `TaskForm` dihapus; ikon `info` ditambah.
+- Tes: `attendance-geofence.spec.ts` baru; helper/spec absen diperbarui ke label baru. Utang di DS_RECONCILIATION K22.
+
 ## 2026-11-14T08:20:50+07:00 — claude-design (Claude-Dev1) — Fase 3B-7: Ajukan cuti (47) mengikuti DS
 
 - `AjukanCutiScreen` layar penuh menggantikan dialog cuti di `TaskForm` (cabang cuti dan `LocalDateInput` dihapus); payload `hris.leave.request` tetap.
