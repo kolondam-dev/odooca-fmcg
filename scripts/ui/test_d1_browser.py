@@ -9,7 +9,7 @@ import os
 from urllib.parse import urlparse
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 from d1_evidence import REPORT, capture, checked, full_dashboard, set_page
 
 base = os.environ.get("D1_BASE_URL", "http://127.0.0.1:18069")
@@ -193,7 +193,8 @@ with sync_playwright() as playwright:
     village_map.wait_for()
     village_map.locator('path[aria-label="Calaca"]').press("Enter")
     selected_row = coverage.get_by_role("row", name="Calaca")
-    check("table-active" in selected_row.get_attribute("class").split(), "Calaca selected before drill")
+    active_calaca = selected_row.and_(coverage.locator("tr.table-active"))
+    expect(active_calaca).to_be_visible()
     selected_row.get_by_role("button", name="Source documents: Calaca").click()
     page.get_by_role("button", name="Matching sales order lines", exact=True).click()
     page.locator(".o_list_view").wait_for()
@@ -208,7 +209,7 @@ with sync_playwright() as playwright:
     check(restored["filters"]["sku"] == applied["filters"]["sku"], "D1 breadcrumb restores the exact SKU filter")
     village_map.wait_for()
     check(coverage.get_by_text("Manado › Wenang", exact=True).is_visible(), "D1 restores the geographic path")
-    check("table-active" in selected_row.get_attribute("class").split(), "D1 restores selected Calaca")
+    expect(active_calaca).to_be_visible()
     if expectations := os.environ.get("D1_EXPECTATIONS_FILE"):
         evidence = json.loads(Path(expectations).read_text())
         wanted = evidence["expected"]
