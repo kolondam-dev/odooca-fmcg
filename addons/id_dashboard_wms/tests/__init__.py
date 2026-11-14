@@ -9,3 +9,5 @@ from . import test_pod_attempt
 
 from . import test_warehouse_depth
 from . import test_receiving_dwell
+
+from . import test_fefo_native

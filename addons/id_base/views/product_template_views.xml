@@ -15,8 +15,11 @@
                             <field name="sub_brand_id"/>
                         </group>
                         <group string="Hierarki Rasio Kemasan">
-                            <field name="inner_qty"/>
-                            <field name="carton_qty"/>
+                            <field name="fmcg_base_uom_id" readonly="1"/>
+                            <field name="inner_qty" string="Unit Dasar per Inner" readonly="1"/>
+                            <field name="fmcg_inner_uom_id" readonly="1" invisible="inner_qty &lt;= 1"/>
+                            <field name="carton_qty" string="Unit Dasar per Karton" readonly="1"/>
+                            <field name="fmcg_carton_uom_id" readonly="1"/>
                             <field name="carton_barcode"/>
                         </group>
                     </group>

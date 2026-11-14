@@ -221,6 +221,7 @@ export class MockProvider implements FieldProvider {
                 order_pricing_v2: true,
                 field_expense_v2: true,
                 cash_deposit_v1: true,
+                collection_v2: true,
                 outlet_expense_v1: true,
             },
             extra_call_outlets: [
@@ -348,15 +349,21 @@ export class MockProvider implements FieldProvider {
         });
     }
     async collectionTasks() {
-        return (await this.deliveryTasks()).map((delivery, i) => ({
-            delivery,
-            receivable_reference: `SIM-TAGIHAN-${i + 1}`,
-            amount_due: "1000000",
-            currency: "IDR" as const,
-            version: "SIM-COLLECTION-1",
-            issued_at: new Date().toISOString(),
-            capture_allowed: true as const,
-        }));
+        // Dua faktur contoh per toko agar layar multi-faktur dapat diuji (saldo contoh, bukan piutang Odoo).
+        return (await this.deliveryTasks()).flatMap((delivery, i) =>
+            [
+                ["", "1000000"],
+                ["B", "750000"],
+            ].map(([suffix, due]) => ({
+                delivery,
+                receivable_reference: `SIM-TAGIHAN-${i + 1}${suffix}`,
+                amount_due: due,
+                currency: "IDR" as const,
+                version: "SIM-COLLECTION-1",
+                issued_at: new Date().toISOString(),
+                capture_allowed: true as const,
+            })),
+        );
     }
     async expensePolicy() {
         // Fixture only, never a company approval limit.
@@ -406,6 +413,7 @@ export class MockProvider implements FieldProvider {
             "delivery.pod.submit",
             "collection.receipt.submit",
             "delivery.cash_deposit.submit",
+            "collection.settlement.submit",
             "field_expense.request",
             "field_expense.realization.submit",
             "sales.extra_call.request",

@@ -417,7 +417,157 @@ class CanonicalPerpetualAdapter:
             "skipped_ap": 0,
             "skipped_opex": 0,
             "skipped_quarantine": 0,
+            "expiry_products_enabled": 0,
+            "lot_expiry_backfilled": 0,
+            "fefo_strategy_configured": 0,
         }
+
+    def _ensure_expiry_product_configuration(self):
+        """Enable native lot expiry tracking for every canonical FMCG SKU."""
+        # The legacy MockEnv adapter intentionally does not emulate product_expiry.
+        # Real Odoo runtime/installation checks exercise this configuration.
+        if isinstance(self.env, dict):
+            return False
+        ProductTemplate = self.env["product.template"].sudo()
+        template_fields = _safe_fields(ProductTemplate)
+        required_fields = {"tracking", "use_expiration_date"}
+        missing = required_fields - set(template_fields)
+        if missing:
+            raise RuntimeError(
+                "[canonical_loader] FATAL: Field product expiry tidak tersedia "
+                f"({sorted(missing)}). Pastikan product_expiry terpasang sebelum seed."
+            )
+
+        for sku, product in self.product_by_code.items():
+            template = product.product_tmpl_id
+            if template.tracking != "lot":
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: SKU {sku} harus memakai tracking='lot' "
+                    f"sebelum FEFO diaktifkan (aktual={template.tracking!r})."
+                )
+            if not template.use_expiration_date:
+                template.write({"use_expiration_date": True})
+                if not template.use_expiration_date:
+                    raise RuntimeError(
+                        f"[canonical_loader] FATAL: Gagal mengaktifkan use_expiration_date untuk SKU {sku}."
+                    )
+                self.stats["expiry_products_enabled"] += 1
+
+    def _ensure_fefo_strategy(self):
+        """Configure native Odoo FEFO on the seed stock location without overriding conflicts."""
+        # Do not treat the simplified dictionary MockEnv as proof of native FEFO behavior.
+        if isinstance(self.env, dict):
+            return False
+        fefo = self.env.ref("product_expiry.removal_fefo", raise_if_not_found=False)
+        if not fefo or getattr(fefo, "method", False) != "fefo":
+            raise RuntimeError(
+                "[canonical_loader] FATAL: Strategi native product_expiry.removal_fefo tidak ditemukan."
+            )
+        location = getattr(self, "wh_stock_loc", None)
+        if not location:
+            raise RuntimeError("[canonical_loader] FATAL: Lokasi WH/Stock seed tidak ditemukan untuk FEFO.")
+
+        current_location_strategy = getattr(location, "removal_strategy_id", False)
+        if current_location_strategy and current_location_strategy != fefo:
+            raise RuntimeError(
+                f"[canonical_loader] FATAL: WH/Stock sudah memakai strategi "
+                f"'{getattr(current_location_strategy, 'name', current_location_strategy)}', bukan FEFO. "
+                "Perlu keputusan konfigurasi eksplisit; loader tidak akan menimpa strategi."
+            )
+        if not current_location_strategy:
+            location.write({"removal_strategy_id": fefo.id})
+            if getattr(location, "removal_strategy_id", False) != fefo:
+                raise RuntimeError("[canonical_loader] FATAL: Readback removal_strategy_id WH/Stock gagal.")
+            self.stats["fefo_strategy_configured"] += 1
+
+        # Category strategy overrides location strategy in native Odoo. Reject any conflict.
+        seen_categories = set()
+        for sku, product in self.product_by_code.items():
+            category = getattr(product, "categ_id", False)
+            if not category:
+                raise RuntimeError(f"[canonical_loader] FATAL: SKU {sku} tidak memiliki product category.")
+            if category.id in seen_categories:
+                continue
+            seen_categories.add(category.id)
+            category_strategy = getattr(category, "removal_strategy_id", False)
+            if category_strategy and category_strategy != fefo:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Kategori '{category.display_name}' untuk SKU {sku} "
+                    "memiliki removal strategy non-FEFO yang akan mengalahkan strategi lokasi."
+                )
+
+        # Explicit child-location strategies also override the parent fallback.
+        StockLocation = self.env["stock.location"].sudo()
+        descendants = StockLocation.search([
+            ("id", "child_of", location.id),
+            ("usage", "=", "internal"),
+        ])
+        for child in _iter_records(descendants):
+            child_strategy = getattr(child, "removal_strategy_id", False)
+            if child_strategy and child_strategy != fefo:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lokasi turunan '{child.complete_name}' "
+                    "memiliki strategi non-FEFO yang mengalahkan fallback WH/Stock."
+                )
+
+    def _ensure_lot_expiry(self, lot, expiry_date):
+        """Backfill missing lot expiry metadata and verify native removal_date for FEFO."""
+        # MockEnv does not model computed removal_date; its test scope is not FEFO evidence.
+        if isinstance(getattr(self, "env", None), dict):
+            return False
+        if not expiry_date:
+            raise RuntimeError(
+                f"[canonical_loader] FATAL: Tanggal expiry sumber kosong untuk lot "
+                f"'{getattr(lot, 'name', lot)}'."
+            )
+        lot_fields = _safe_fields(lot)
+        if "expiration_date" not in lot_fields or "removal_date" not in lot_fields:
+            raise RuntimeError(
+                "[canonical_loader] FATAL: stock.lot belum menyediakan expiration_date/removal_date. "
+                "Pastikan product_expiry terpasang."
+            )
+
+        expected_date = str(expiry_date).strip()[:10]
+        current_expiry = getattr(lot, "expiration_date", False)
+        if current_expiry:
+            actual_date = str(current_expiry)[:10]
+            if actual_date != expected_date:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Konflik expiry lot '{getattr(lot, 'name', lot)}': "
+                    f"database={actual_date}, register={expected_date}. Tidak akan menimpa tanggal yang berbeda."
+                )
+        else:
+            if not callable(getattr(lot, "write", None)):
+                lot_label = getattr(lot, "name", lot)
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lot '{lot_label}' "
+                    "tidak mendukung write() untuk backfill."
+                )
+            lot.write({"expiration_date": f"{expected_date} 00:00:00"})
+            current_expiry = getattr(lot, "expiration_date", False)
+            if not current_expiry or str(current_expiry)[:10] != expected_date:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Readback expiration_date lot "
+                    f"'{getattr(lot, 'name', lot)}' gagal setelah backfill."
+                )
+            self.stats["lot_expiry_backfilled"] += 1
+
+        # Enabling use_expiration_date does not reliably invalidate all existing lots;
+        # explicitly recompute Odoo's native use/removal/alert dates for existing records.
+        if not getattr(lot, "removal_date", False):
+            compute_dates = getattr(lot, "_compute_dates", None)
+            if not callable(compute_dates):
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lot '{getattr(lot, 'name', lot)}' "
+                    "tidak memiliki _compute_dates() untuk membangun removal_date."
+                )
+            compute_dates()
+        if not getattr(lot, "removal_date", False):
+            raise RuntimeError(
+                f"[canonical_loader] FATAL: removal_date lot '{getattr(lot, 'name', lot)}' "
+                "tetap kosong; FEFO tidak dapat dijamin."
+            )
+        return True
 
     def _collect_canonical_sku_scope(self) -> tuple[set[str], dict[str, float]]:
         """Membangun cakupan SKU kanonikal dan unit_cost langsung dari register sumber."""
@@ -1121,6 +1271,9 @@ class CanonicalPerpetualAdapter:
                             lot_vals["expiration_date"] = exp_date
                         lot_obj = StockLot.create(lot_vals)
 
+                if lot_obj and exp_date:
+                    self._ensure_lot_expiry(lot_obj, exp_date)
+
                 sku_demands["lots"][lot_num] = {
                     "qty_units": qty_units,
                     "expiry_date": exp_date,
@@ -1736,8 +1889,12 @@ class CanonicalPerpetualAdapter:
             return
 
         print(" -> [1/7] Memuat Saldo Awal Persediaan Gudang Maumbi (1 Juli 2026)...")
+        self._ensure_expiry_product_configuration()
+        self._ensure_fefo_strategy()
         StockQuant = self.env["stock.quant"].sudo().with_context(inventory_mode=True)
         StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
+        if StockLot is None:
+            raise RuntimeError("[canonical_loader] FATAL: Model stock.lot wajib tersedia untuk traceability FMCG.")
 
         warehouse_loc = getattr(self, "wh_stock_loc", None)
         if not warehouse_loc:
@@ -1755,19 +1912,17 @@ class CanonicalPerpetualAdapter:
             qty_units = p_data["qty_units"]
             lot_name = p_data["lot_number"]
 
-            lot_id = False
-            if StockLot is not None:
-                lot = StockLot.search([("name", "=", lot_name), ("product_id", "=", prod.id)], limit=1)
-                if not lot:
-                    lot_vals = {
-                        "name": lot_name,
-                        "product_id": prod.id,
-                        "company_id": self.company.id,
-                    }
-                    if hasattr(StockLot, "_fields") and "expiration_date" in StockLot._fields:
-                        lot_vals["expiration_date"] = p_data["expiry_date"]
-                    lot = StockLot.create(lot_vals)
-                lot_id = lot.id
+            lot = StockLot.search([("name", "=", lot_name), ("product_id", "=", prod.id)], limit=1)
+            if not lot:
+                lot_vals = {
+                    "name": lot_name,
+                    "product_id": prod.id,
+                    "company_id": self.company.id,
+                    "expiration_date": f"{str(p_data['expiry_date'])[:10]} 00:00:00",
+                }
+                lot = StockLot.create(lot_vals)
+            self._ensure_lot_expiry(lot, p_data["expiry_date"])
+            lot_id = lot.id
 
             # Idempotency check: jika opening move atau quant untuk (product, location, lot) sudah pernah diproses
             StockMove = self.env["stock.move"].sudo() if "stock.move" in self.env else None
@@ -1867,7 +2022,12 @@ class CanonicalPerpetualAdapter:
             return
 
         print(" -> [2/7] Memuat 5 Inbound PO Transit Juni & Penerimaan Barang...")
+        self._ensure_expiry_product_configuration()
+        self._ensure_fefo_strategy()
         PurchaseOrder = self.env["purchase.order"].sudo()
+        StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
+        if StockLot is None:
+            raise RuntimeError("[canonical_loader] FATAL: Model stock.lot wajib tersedia untuk penerimaan FMCG.")
         AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
 
         headers = self._read_csv("inbound_po_intransit_june_headers.csv")
@@ -1970,6 +2130,25 @@ class CanonicalPerpetualAdapter:
                     bill = AccountMove.create(bill_vals)
                     bill.action_post()
                     self.stats["po_bills_created"] += 1
+
+        # Audit/backfill seluruh lot penerimaan, termasuk PO yang sudah done sebelum
+        # product_expiry diaktifkan. Jangan hanya memproses picking yang masih pending.
+        for line_data in lines:
+            sku = line_data["sku_code"]
+            product = self.product_by_code.get(sku)
+            if not product:
+                raise KeyError(f"[canonical_loader] Produk inbound lot '{sku}' tidak ditemukan.")
+            lot_name = line_data["lot_number"]
+            lot = StockLot.search(
+                [("name", "=", lot_name), ("product_id", "=", product.id)],
+                limit=1,
+            )
+            if not lot:
+                raise RuntimeError(
+                    f"[canonical_loader] FATAL: Lot penerimaan '{lot_name}' untuk SKU {sku} "
+                    "tidak ditemukan setelah proses receipt. Tidak membuat lot yatim tanpa stock move."
+                )
+            self._ensure_lot_expiry(lot, line_data.get("expiry_date"))
 
     # 3. Sales Orders, Deliveries, and Invoices
     def load_sales_deliveries_and_invoices(
