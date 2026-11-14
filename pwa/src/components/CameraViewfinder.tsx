@@ -20,6 +20,8 @@ interface CameraViewfinderProps {
     salespersonName?: string;
     defaultCoordinates?: { latitude: number; longitude: number };
     rawCapture?: boolean;
+    /** Kamera awal; Absen dan Check-in wajib kamera depan (DS: Absen_info). */
+    initialFacing?: "user" | "environment";
     /** Area yang diizinkan: di luar radius, shutter dikunci (DS: Kamera_luar). */
     fence?: { latitude: number; longitude: number; radius: number };
     onCapture: (result: CameraCaptureResult) => void;
@@ -80,6 +82,7 @@ export function CameraViewfinder({
     onCapture,
     onClose,
     rawCapture = false,
+    initialFacing = "environment",
     fence,
 }: CameraViewfinderProps) {
     const dialogRef = useDialog<HTMLDivElement>(onClose);
@@ -89,7 +92,7 @@ export function CameraViewfinder({
     const [cameraActive, setCameraActive] = useState(false);
     const [cameraError, setCameraError] = useState("");
     const [facingMode, setFacingMode] = useState<"environment" | "user">(
-        "environment",
+        initialFacing,
     );
     const [restart, setRestart] = useState(0);
     const [hasMultipleCameras, setHasMultipleCameras] = useState(false);

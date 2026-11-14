@@ -1078,7 +1078,6 @@ function Workspace({
                                           : "Sesi kerja belum dibuka"
                                 }
                                 submit={submit}
-                                startSession={startSession}
                                 close={() => setDialog(undefined)}
                             />
                         )}

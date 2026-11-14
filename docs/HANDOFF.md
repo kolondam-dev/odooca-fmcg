@@ -11,6 +11,11 @@
 **Belum diuji:** [BU] Deploy ke database demo (Railway) dan login admin demo; geometri browser; tie-out per report ID; PDF; sign-off Finance Controller/QA; payroll serta FIN36/55/56; I3. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-14T14:09:12+07:00
 
+## 2026-11-14T13:18:09+07:00 — claude-design (Claude-Dev1) — Fase 3B-8: Absen (04–08) mengikuti DS
+
+- `AttendanceScreen` ditulis ulang: chip dalam/luar area, sheet Aturan geofence, Ambil selfie (kamera depan, terkunci di luar area terverifikasi), kartu Selfie tersimpan, Absen masuk/pulang. `AttendanceCapture` dan cabang absen di `TaskForm` dihapus; ikon `info` ditambah.
+- Tes: `attendance-geofence.spec.ts` baru; helper/spec absen diperbarui ke label baru. Utang di DS_RECONCILIATION K22.
+
 ## 2026-11-14T08:20:50+07:00 — claude-design (Claude-Dev1) — Fase 3B-7: Ajukan cuti (47) mengikuti DS
 
 - `AjukanCutiScreen` layar penuh menggantikan dialog cuti di `TaskForm` (cabang cuti dan `LocalDateInput` dihapus); payload `hris.leave.request` tetap.

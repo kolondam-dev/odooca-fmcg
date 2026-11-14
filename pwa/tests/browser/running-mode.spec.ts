@@ -114,7 +114,7 @@ for (const closed of [false, true]) {
                 .click();
             await page
                 .getByRole("button", {
-                    name: "Ambil Lokasi Presisi",
+                    name: "Perbarui lokasi",
                     exact: true,
                 })
                 .click();
@@ -125,7 +125,10 @@ for (const closed of [false, true]) {
                 .getByLabel("Alamat / nama lokasi")
                 .fill("Kantor demo Manado");
             await page
-                .getByRole("button", { name: "Buka Kamera", exact: true })
+                .getByRole("button", {
+                    name: "Ambil selfie pulang",
+                    exact: true,
+                })
                 .click();
             await page
                 .getByLabel("Buka Kamera Perangkat")
@@ -137,10 +140,8 @@ for (const closed of [false, true]) {
                 page.getByAltText("Foto absensi dengan watermark"),
             ).toBeVisible();
             await page
-                .getByRole("button", {
-                    name: "Simpan absen pulang",
-                    exact: true,
-                })
+                .getByRole("region", { name: "Absensi foto dan lokasi" })
+                .getByRole("button", { name: "Absen pulang", exact: true })
                 .click();
             await expect(page.getByRole("dialog")).toHaveCount(0);
             await expect(
