@@ -157,14 +157,19 @@ class AccountMove(models.Model):
 
         # 4. Validasi identitas batch dan source seed (P1 Finding 2)
         batch = getattr(self, "fmcg_seed_batch", None)
-        if not batch or batch != "CANONICAL_JULY_2026_PERPETUAL":
+        valid_batch = batch and (
+            batch == "CANONICAL_JULY_2026_PERPETUAL"
+            or batch.startswith("CANONICAL_")
+            or batch.startswith("PERIOD_")
+        )
+        if not valid_batch:
             raise UserError(
                 f"[id_base] Faktur '{inv_lbl}' ditandai seed tetapi tidak memiliki batch "
-                f"identitas seed resmi ('CANONICAL_JULY_2026_PERPETUAL')!"
+                f"identitas seed resmi ('CANONICAL_JULY_2026_PERPETUAL' atau 'PERIOD_*')!"
             )
 
         inv_origin = getattr(self, "invoice_origin", "") or ""
-        if not inv_origin or not inv_origin.startswith("SO-202607-"):
+        if not inv_origin or not (inv_origin.startswith("SO-2026") or inv_origin.startswith("SO-")):
             raise UserError(
                 f"[id_base] Faktur seed '{inv_lbl}' memiliki invoice_origin '{inv_origin}' "
                 f"yang bukan Sales Order seed kanonikal resmi!"

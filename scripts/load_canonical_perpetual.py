@@ -678,6 +678,32 @@ class CanonicalPerpetualAdapter:
         ProductCategory = self.env["product.category"].sudo()
         cat_fields = _safe_fields(ProductCategory)
 
+        # 0. Pastikan mata uang IDR aktif di res.currency dan company
+        if "res.currency" in self.env:
+            ResCurrency = self.env["res.currency"].sudo().with_context(active_test=False)
+            idr = ResCurrency.search([("name", "=", "IDR")], limit=1)
+            if idr and not idr.active:
+                idr.write({"active": True})
+            if hasattr(self, "cr") and hasattr(self.cr, "execute"):
+                self.cr.execute("UPDATE res_currency SET active = TRUE WHERE name = 'IDR';")
+        if hasattr(self, "company") and self.company:
+            comp_curr = getattr(self.company, "currency_id", None)
+            if comp_curr and not getattr(comp_curr, "active", True):
+                comp_curr.sudo().write({"active": True})
+            if hasattr(self, "cr") and hasattr(self.cr, "execute") and getattr(self.company, "id", None):
+                self.cr.execute(
+                    "UPDATE res_company SET currency_id = ("
+                    "SELECT id FROM res_currency WHERE name = 'IDR' LIMIT 1) WHERE id = %s;",
+                    (self.company.id,),
+                )
+                self.cr.execute(
+                    "UPDATE res_currency SET active = TRUE WHERE id = ("
+                    "SELECT currency_id FROM res_company WHERE id = %s);",
+                    (self.company.id,),
+                )
+        if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
+            self.env.invalidate_all()
+
         # 1. anglo_saxon_accounting pada company (fail-fast jika field ada)
         has_company = hasattr(self, "company") and self.company
         if has_company and "anglo_saxon_accounting" in getattr(self.company, "_fields", {}):
@@ -745,6 +771,9 @@ class CanonicalPerpetualAdapter:
             cogs_acc = _resolve_or_create_explicit_account(
                 "510000", "Harga Pokok Penjualan (HPP) FMCG", "expense_direct_cost", "expense"
             )
+            discount_acc = _resolve_or_create_explicit_account(
+                "410200", "Potongan Penjualan (Cash Discount) FMCG", "expense", "income"
+            )
 
             # Buktikan akun-akun wajib secara fail-fast
             if not stock_valuation_acc:
@@ -760,6 +789,11 @@ class CanonicalPerpetualAdapter:
             if not cogs_acc:
                 raise RuntimeError(
                     "[canonical_loader] FATAL: Akun HPP (510000 / cogs) tidak ditemukan atau gagal dibuat!"
+                )
+            if not discount_acc:
+                raise RuntimeError(
+                    "[canonical_loader] FATAL: Akun potongan penjualan (410200 / discount) "
+                    "tidak ditemukan atau gagal dibuat!"
                 )
 
             # Resolusi akun beban OPEX eksplisit per kategori kanonikal
@@ -779,6 +813,7 @@ class CanonicalPerpetualAdapter:
         self.stock_input_acc = stock_input_acc
         self.stock_output_acc = stock_output_acc
         self.cogs_acc = cogs_acc
+        self.discount_acc = locals().get("discount_acc", None)
 
         # Resolusi partner operasional OPEX eksplisit (bukan self.company.partner_id)
         self.opex_partners = {}
@@ -2332,12 +2367,9 @@ class CanonicalPerpetualAdapter:
                             if isinstance(prod_accs, dict) and prod_accs.get("income"):
                                 inv_line_vals["account_id"] = prod_accs["income"].id
 
-                        taxes = getattr(pr_comp, "taxes_id", None)
-                        if taxes and hasattr(taxes, "filtered") and hasattr(self, "company") and self.company:
-                            taxes = taxes.filtered(
-                                lambda t: not getattr(t, "company_id", False) or t.company_id.id == self.company.id
-                            )
-                        if (not taxes or not getattr(taxes, "ids", None)) and "account.tax" in self.env:
+                        # Baseline Juli 2026: seluruh faktur penjualan Juli menggunakan PPN Standar 11.0%
+                        taxes = None
+                        if "account.tax" in self.env:
                             AccountTax = self.env["account.tax"].sudo()
                             tax_domain = [("type_tax_use", "=", "sale"), ("amount", "=", 11.0)]
                             if (
@@ -2345,8 +2377,15 @@ class CanonicalPerpetualAdapter:
                                 and hasattr(self, "company")
                                 and self.company
                             ):
-                                tax_domain.append(("company_id", "=", self.company.id))
+                                tax_domain.append(("company_id", "in", [self.company.id, False]))
                             taxes = AccountTax.search(tax_domain, limit=1)
+                        if not taxes or not getattr(taxes, "ids", None):
+                            pr_taxes = getattr(pr_comp, "taxes_id", None)
+                            if pr_taxes and hasattr(pr_taxes, "filtered"):
+                                taxes = pr_taxes.filtered(
+                                    lambda t: getattr(t, "amount", 0.0) == 11.0
+                                    and (not getattr(t, "company_id", False) or t.company_id.id == self.company.id)
+                                )
                         if taxes and getattr(taxes, "ids", None):
                             inv_line_vals["tax_ids"] = [(6, 0, list(taxes.ids))]
 
@@ -2734,9 +2773,15 @@ class CanonicalPerpetualAdapter:
                     except Exception:
                         pass
 
+            # Cari invoice terlebih dahulu agar akun piutang disc_move terikat identik
+            inv = None
+            if AccountMove is not None and p_data.get("invoice_number"):
+                inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
+
             # Diskon Pembayaran Awal (Early Cash Discount)
             disc_move = None
             if AccountMove is not None and disc_amt > 0:
+                disc_ref = f"DISC-{pay_id}"
                 existing_disc = AccountMove.search([("ref", "=", disc_ref)], limit=1)
                 if not existing_disc:
                     AccountAccount = (
@@ -2744,9 +2789,60 @@ class CanonicalPerpetualAdapter:
                     )
                     disc_account = None
                     ar_account = None
+
+                    # Utamakan akun piutang eksak dari invoice pelanggan
+                    if inv:
+                        for line in getattr(inv, "line_ids", []):
+                            if getattr(getattr(line, "account_id", None), "account_type", "") == "asset_receivable":
+                                ar_account = line.account_id
+                                break
+
+                    if not ar_account and getattr(cust_partner, "property_account_receivable_id", None):
+                        ar_account = cust_partner.property_account_receivable_id
+
                     if AccountAccount is not None:
-                        disc_account = AccountAccount.search([("account_type", "=", "expense")], limit=1)
-                        ar_account = AccountAccount.search([("account_type", "=", "asset_receivable")], limit=1)
+                        acc_fields = _safe_fields(AccountAccount)
+                        comp_domain = []
+                        if hasattr(self, "company") and self.company:
+                            if "company_ids" in acc_fields:
+                                comp_domain = [("company_ids", "in", [self.company.id])]
+                            elif "company_id" in acc_fields:
+                                comp_domain = [("company_id", "in", [self.company.id, False])]
+
+                        disc_account = getattr(self, "discount_acc", None) or AccountAccount.search(
+                            comp_domain + [("code", "=", "410200")],
+                            limit=1,
+                        ) or AccountAccount.search(
+                            comp_domain
+                            + [
+                                ("account_type", "in", ["expense", "income_other", "income"]),
+                                ("name", "ilike", "diskon"),
+                            ],
+                            limit=1,
+                        )
+                        if not disc_account and callable(getattr(AccountAccount, "create", None)):
+                            try:
+                                disc_vals = {
+                                    "code": "410200",
+                                    "name": "Potongan Penjualan (Cash Discount) FMCG",
+                                    "account_type": "expense",
+                                }
+                                if "company_ids" in acc_fields and hasattr(self, "company") and self.company:
+                                    disc_vals["company_ids"] = [(4, self.company.id)]
+                                elif "company_id" in acc_fields and hasattr(self, "company") and self.company:
+                                    disc_vals["company_id"] = self.company.id
+                                disc_account = AccountAccount.create(disc_vals)
+                            except Exception:
+                                pass
+                        if not ar_account:
+                            ar_account = AccountAccount.search(
+                                comp_domain + [("code", "=", "112000")],
+                                limit=1,
+                            ) or AccountAccount.search(
+                                comp_domain
+                                + [("account_type", "=", "asset_receivable"), ("name", "not ilike", "pos")],
+                                limit=1,
+                            )
 
                     disc_move = AccountMove.create({
                         "move_type": "entry",
@@ -2777,7 +2873,8 @@ class CanonicalPerpetualAdapter:
 
             # Reconcile dengan invoice jika ada
             if AccountMove is not None:
-                inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
+                if not inv:
+                    inv = AccountMove.search([("ref", "=", p_data["invoice_number"])], limit=1)
                 if inv and inv.state == "posted":
                     pay_l = self._get_record_lines(pay)
                     inv_l = self._get_record_lines(inv)
@@ -3357,7 +3454,17 @@ class CanonicalPerpetualAdapter:
 if __name__ == "__main__" or "env" in globals():
     env_obj = globals().get("env")
     if env_obj:
-        adapter = CanonicalPerpetualAdapter(env_obj)
+        import os
+        cutoff_date = os.environ.get("CANONICAL_CUTOFF_DATE", "2026-07-31")
+        # Enforce canonical July cutoff contract by default so uncompleted deliveries crossing
+        # into August (e.g. 48 carry-forward orders) are not posted before delivery validation,
+        # satisfying the COGS guard in id_base without modification.
+        enforce_cutoff = os.environ.get("CANONICAL_ENFORCE_INVOICE_CUTOFF", "1") not in ("0", "false", "False")
+        adapter = CanonicalPerpetualAdapter(
+            env_obj,
+            cutoff_date=cutoff_date,
+            enforce_invoice_cutoff=enforce_cutoff,
+        )
         adapter.run_all()
     else:
         print("[canonical_loader] Mode offline/analisis: Verifikasi dataset kanonikal berhasil.")
