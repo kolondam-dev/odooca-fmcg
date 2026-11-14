@@ -1,3 +1,15 @@
+## 2026-11-14T17:57:18.665+07:00 — codex — Dokumen gudang FMCG v1 (PR in progress)
+
+**Berubah:** branch `agen/fmcg-warehouse-documents-v1`; report QWeb terpisah untuk Picklist, Packlist, dan Delivery Order pada `stock.picking`. Ketiganya memakai native `stock.move` / `stock.move.line`, termasuk breakdown UoM baca-saja; tidak membuat lot, reservasi, package, atau kuantitas baru. Manifest `id_base` dinaikkan ke `19.0.1.3.4`; tes render HTML tiga report ditambahkan.
+
+**Diverifikasi:** [F] Baseline branch dari main `c5b1ecb5c51cbbf854c55d9138ff3589aa8c2442`. [F] Odoo 19 delivery slip memakai `stock.picking`, `stock.move`, `stock.move.line`; report baru tidak override report native. [BU] Install-test, render PDF, browser, dan CI menunggu run PR.
+
+**Belum diuji:** rendering PDF/HTML di Odoo runtime; detail lot/package aktual pada picking yang sudah direservasi/selesai; geometri cetak.
+
+**Butir terbuka:** review apakah field tanda tangan dan label dokumen sesuai proses gudang; tidak ada asumsi bahwa pencetakan packlist menandakan barang sudah dipaketkan.
+
+**Menunggu:** CI dan review supervisor; tidak merge atau deploy.
+
 ## 2026-11-14T13:18:09+07:00 — claude-design (Claude-Dev1) — Fase 3B-8: Absen (04–08) mengikuti DS
 
 - `AttendanceScreen` ditulis ulang: chip dalam/luar area, sheet Aturan geofence, Ambil selfie (kamera depan, terkunci di luar area terverifikasi), kartu Selfie tersimpan, Absen masuk/pulang. `AttendanceCapture` dan cabang absen di `TaskForm` dihapus; ikon `info` ditambah.

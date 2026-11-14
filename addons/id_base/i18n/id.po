@@ -160,3 +160,99 @@ msgstr "Draf"
 #: model:ir.model.fields.selection,name:id_base.selection__coretax_export_wizard__state__done
 msgid "Done"
 msgstr "Selesai"
+
+
+#. module: id_base
+#: model:ir.actions.report,name:id_base.action_report_fmcg_picklist
+msgid "FMCG Picklist"
+msgstr "Daftar Pengambilan FMCG"
+
+#. module: id_base
+#: model:ir.actions.report,name:id_base.action_report_fmcg_packlist
+msgid "FMCG Packlist"
+msgstr "Daftar Pengepakan FMCG"
+
+#. module: id_base
+#: model:ir.actions.report,name:id_base.action_report_fmcg_delivery_order
+msgid "FMCG Delivery Order"
+msgstr "Surat Jalan FMCG"
+
+#. module: id_base
+msgid "Picklist"
+msgstr "Daftar Pengambilan"
+
+#. module: id_base
+msgid "Packlist"
+msgstr "Daftar Pengepakan"
+
+#. module: id_base
+msgid "Delivery Order"
+msgstr "Surat Jalan"
+
+#. module: id_base
+msgid "Customer / Destination"
+msgstr "Pelanggan / Tujuan"
+
+#. module: id_base
+msgid "Source Document"
+msgstr "Dokumen Asal"
+
+#. module: id_base
+msgid "Scheduled"
+msgstr "Dijadwalkan"
+
+#. module: id_base
+msgid "Source Location"
+msgstr "Lokasi Asal"
+
+#. module: id_base
+msgid "Lot / Serial"
+msgstr "Lot / Nomor Seri"
+
+#. module: id_base
+msgid "Reserved / Planned"
+msgstr "Direservasi / Direncanakan"
+
+#. module: id_base
+msgid "Packaging Breakdown"
+msgstr "Rincian Kemasan"
+
+#. module: id_base
+msgid "Product"
+msgstr "Produk"
+
+#. module: id_base
+msgid "Quantity"
+msgstr "Kuantitas"
+
+#. module: id_base
+msgid "Destination Package"
+msgstr "Kemasan Tujuan"
+
+#. module: id_base
+msgid "Ship To"
+msgstr "Dikirim Kepada"
+
+#. module: id_base
+msgid "Sales / Source Order"
+msgstr "Penjualan / Pesanan Asal"
+
+#. module: id_base
+msgid "Delivery Date"
+msgstr "Tanggal Pengiriman"
+
+#. module: id_base
+msgid "Package"
+msgstr "Kemasan"
+
+#. module: id_base
+msgid "Prepared by"
+msgstr "Disiapkan oleh"
+
+#. module: id_base
+msgid "Checked by"
+msgstr "Diperiksa oleh"
+
+#. module: id_base
+msgid "Approved by"
+msgstr "Disetujui oleh"

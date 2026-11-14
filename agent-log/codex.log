@@ -344,3 +344,8 @@
 - Perbaiki overflow action D1 dan klik poligon.
 - Gunakan batas Sulut di repo untuk kabupaten/kota → kecamatan → kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
 - Task managed by codex agent at 2026-11-11T19:04:48+07:00
+
+[2026-11-14T17:57:18.665+07:00] [INFO] Dokumen gudang FMCG v1
+- Branch agen/fmcg-warehouse-documents-v1 dari main c5b1ecb; tambah report QWeb Picklist, Packlist, Delivery Order berbasis picking native dan test render HTML.
+- Breakdown UoM hanya display; tidak mengubah demand, lot, reservasi, kuantitas done, atau package. Runtime Odoo dan CI menunggu.
+- Task managed by codex agent at 2026-11-14T17:57:18.665+07:00
