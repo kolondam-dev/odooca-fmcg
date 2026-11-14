@@ -204,6 +204,21 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Ulangi foto** memakai alamat dan lokasi yang sama (alamat tidak bisa diubah setelah selfie; perbarui lokasi/alamat hanya sebelum foto).
 - Baris "Perusahaan · Pegawai" di bawah foto dihapus (ada di watermark gambar).
 
+### K23. Fase 3B-9 — Status_gps / izin / offline / 401 (+ Login_gagal sudah sesuai)
+
+**Selesai di PWA:**
+- **Status_gps:** pada Absen, akurasi GPS di atas ±30 m (hanya mode LIVE) membuka lembar "Akurasi lokasi rendah" (Akurasi saat ini ±N m, batas ±30 m, saran pindah ke tempat terbuka, Coba lagi, Tutup), mengunci "Ambil selfie", dan menampilkan Callout peringatan yang sama di layar setelah lembar ditutup. Mode demo tidak dikunci.
+- **Status_izin:** izin lokasi ditolak pada Absen membuka lembar "Akses lokasi ditolak" (panduan izinkan lokasi, berlaku juga untuk kamera; Coba lagi, Tutup) di samping pesan galat.
+- **Status_offline:** pita peringatan "Offline · N item menunggu kirim" (atau "Offline · aktivitas disimpan di perangkat" bila antrean kosong) di bawah header untuk semua halaman, menggantikan live region tersembunyi.
+- **Status_401:** sesi berakhir (401/403/409 saat validasi) menampilkan lembar "Sesi berakhir" ("Masuk lagi untuk melanjutkan. Data yang belum terkirim tetap aman di perangkat.") di atas halaman masuk; tombol Masuk lagi menutup lembar menuju formulir.
+- **Login_gagal:** halaman Login sudah sesuai DS (Callout galat, SSO, bantuan lupa kata sandi); tidak diubah.
+
+**Perbedaan yang disengaja / utang:**
+- **Buka pengaturan:** mockup Status_izin memiliki tombol "Buka pengaturan"; web tidak punya API untuk membuka pengaturan izin browser, jadi diganti panduan teks + Coba lagi.
+- **401 di atas layar kerja:** mockup menumpuk lembar di atas daftar outlet; PWA tetap mengosongkan ruang kerja (data akun sebelumnya tidak boleh terlihat di perangkat bersama) dan menampilkan lembar di atas halaman masuk.
+- **Batas akurasi ±30 m** baru berlaku di Absen; check-in toko (Evidence/VisitPhotoField) dan Status_izin pada check-in toko belum memakai lembar yang sama.
+- Pita offline tampil di semua halaman, bukan hanya daftar outlet.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).

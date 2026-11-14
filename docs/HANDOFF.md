@@ -29,6 +29,10 @@
 **Diverifikasi:** [F] `ruff check` PASS, `scripts/check_manifests.py` PASS, `compileall` PASS, PO `id_finance_reporting` 97 entri lolos pemeriksa lokal. [BU] Bukti runtime menunggu CI PR #131 pada HEAD baru: snapshot sintetis 400 baris × ~610 karakter (di atas 200k, di bawah 20k baris) dengan nilai bersarang di bagian terakhir; payload harus valid JSON, `tail` tetap dimuat, `rows` disebut omitted, workbook memuat `NESTED-TAIL-VALUE` di kolom `__nested`, dan Summary tidak lagi memuat janji payload.
 **Belum diuji:** [BU] Regresi P2 pada CI belum dijalankan; Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-14T17:08:43+07:00
+## 2026-11-14T18:11:33+07:00 — claude-design (Claude-Dev1) — Fase 3B-9: Status_gps/izin/offline/401
+
+- Absen: lembar Akurasi lokasi rendah (±30 m, kunci selfie, LIVE saja) dan Akses lokasi ditolak; pita Offline global di bawah header; lembar Sesi berakhir di atas Login. Login_gagal sudah sesuai DS.
+- Tes: `status-sheets.spec.ts` baru; `login-attendance-ux.spec.ts` diperbarui. Perbedaan dan utang di DS_RECONCILIATION K23.
 
 ## 2026-11-14T13:18:09+07:00 — claude-design (Claude-Dev1) — Fase 3B-8: Absen (04–08) mengikuti DS
 

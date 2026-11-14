@@ -23,6 +23,9 @@ import { CameraViewfinder, type CameraCaptureResult } from "./CameraViewfinder";
 import { CheckinMap } from "./CheckinMap";
 import type { EvidenceRef } from "./Evidence";
 
+/** Batas akurasi GPS untuk absen dan check-in (DS: Status_gps). */
+export const GPS_ACCURACY_LIMIT_M = 30;
+
 /**
  * Layar penuh absen masuk/pulang (DS: Absen_info, Absen_dalam, Absen_luar, Absen_selfie, Absen_pulang).
  * Alur: lokasi → status area → Ambil selfie (kamera depan, terkunci di luar area) → Selfie tersimpan → simpan.
@@ -55,6 +58,7 @@ export function AttendanceScreen({
     const [captured, setCaptured] = useState("");
     const [camera, setCamera] = useState(false);
     const [rules, setRules] = useState(false);
+    const [notice, setNotice] = useState<"accuracy" | "denied">();
     const [working, setWorking] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
@@ -92,6 +96,9 @@ export function AttendanceScreen({
             : 0;
     const outside = beyond > 0;
     const blocked = enforced && outside;
+    // Akurasi di atas batas mengunci selfie (kecuali mode demo), selaras DS Status_gps.
+    const lowAccuracy =
+        !!fix && !isDemoMode() && fix.accuracy > GPS_ACCURACY_LIMIT_M;
 
     function locate(precise: boolean) {
         const ticket = ++generation.current;
@@ -114,12 +121,18 @@ export function AttendanceScreen({
                     accuracy: position.coords.accuracy,
                     timestamp: position.timestamp,
                 });
+                if (
+                    !isDemoMode() &&
+                    position.coords.accuracy > GPS_ACCURACY_LIMIT_M
+                )
+                    setNotice("accuracy");
                 setWorking(false);
             },
             (failure) => {
                 if (ticket !== generation.current) return;
                 setWorking(false);
                 setFix(undefined);
+                if (failure.code === 1) setNotice("denied");
                 setError(
                     failure.code === 1
                         ? "Izin lokasi ditolak. Aktifkan izin lokasi di browser."
@@ -294,7 +307,8 @@ export function AttendanceScreen({
                                 !fix ||
                                 !address.trim() ||
                                 !mapSite ||
-                                blocked
+                                blocked ||
+                                lowAccuracy
                             }
                             onClick={() => setCamera(true)}
                         >
@@ -377,6 +391,13 @@ export function AttendanceScreen({
                                 </span>
                             </Card>
                         ) : null}
+                        {lowAccuracy ? (
+                            <Callout tone="warn" icon="warning">
+                                Akurasi saat ini ±{Math.round(fix!.accuracy)} m.
+                                Batas untuk absen dan check-in adalah ±
+                                {GPS_ACCURACY_LIMIT_M} m.
+                            </Callout>
+                        ) : null}
                         {fix ? (
                             <p class="ev__fix">
                                 {fix.latitude.toFixed(6)},{" "}
@@ -421,6 +442,57 @@ export function AttendanceScreen({
                     onCapture={(result) => void capture(result)}
                     onClose={() => setCamera(false)}
                 />
+            ) : null}
+            {notice === "accuracy" && fix ? (
+                <BottomSheet
+                    title="Akurasi lokasi rendah"
+                    onClose={() => setNotice(undefined)}
+                >
+                    <Callout tone="warn" icon="warning">
+                        Akurasi saat ini ±{Math.round(fix.accuracy)} m. Batas
+                        untuk absen dan check-in adalah ±{GPS_ACCURACY_LIMIT_M}{" "}
+                        m.
+                    </Callout>
+                    <p class="ui-sheet__text">
+                        Pindah ke tempat terbuka, jauhi bangunan tinggi, lalu
+                        coba lagi.
+                    </p>
+                    <Button
+                        icon="sync"
+                        onClick={() => {
+                            setNotice(undefined);
+                            locate(true);
+                        }}
+                    >
+                        Coba lagi
+                    </Button>
+                    <Button variant="sec" onClick={() => setNotice(undefined)}>
+                        Tutup
+                    </Button>
+                </BottomSheet>
+            ) : null}
+            {notice === "denied" ? (
+                <BottomSheet
+                    title="Akses lokasi ditolak"
+                    onClose={() => setNotice(undefined)}
+                >
+                    <p class="ui-sheet__text">
+                        Absen butuh lokasi. Buka pengaturan browser, izinkan
+                        lokasi untuk aplikasi ini, lalu coba lagi. Berlaku juga
+                        untuk kamera.
+                    </p>
+                    <Button
+                        onClick={() => {
+                            setNotice(undefined);
+                            locate(true);
+                        }}
+                    >
+                        Coba lagi
+                    </Button>
+                    <Button variant="sec" onClick={() => setNotice(undefined)}>
+                        Tutup
+                    </Button>
+                </BottomSheet>
             ) : null}
             {rules ? (
                 <BottomSheet
