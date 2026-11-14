@@ -449,6 +449,22 @@ class GenericPeriodPackLoader:
             )
         return general_journals[0]
 
+    def _resolve_sale_journal(self) -> Any:
+        """Resolve customer invoice (sale) journal strictly for company."""
+        if self.env is None or "account.journal" not in self.env:
+            return None
+        Journal = self.env["account.journal"].sudo()
+        comp_id = getattr(self.company, "id", None) if hasattr(self, "company") and self.company else None
+        domain = [("type", "=", "sale")]
+        if comp_id:
+            domain.append(("company_id", "in", [comp_id, False]))
+        journals = list(Journal.search(domain))
+        if comp_id:
+            comp_specific = [j for j in journals if getattr(getattr(j, "company_id", None), "id", None) == comp_id]
+            if comp_specific:
+                return comp_specific[0]
+        return journals[0] if journals else None
+
     # -----------------------------------------------------------------------
     # Preflight Check & Continuity Verification
     # -----------------------------------------------------------------------
@@ -2342,6 +2358,13 @@ class GenericPeriodPackLoader:
         SaleOrder = self.env["sale.order"].with_context(fmcg_seed_load=True).sudo()
         Partner = self.env["res.partner"].sudo()
         Product = self.env["product.product"].sudo()
+        if hasattr(self, "company") and self.company:
+            if hasattr(SaleOrder, "with_company"):
+                SaleOrder = SaleOrder.with_company(self.company)
+            if hasattr(Partner, "with_company"):
+                Partner = Partner.with_company(self.company)
+            if hasattr(Product, "with_company"):
+                Product = Product.with_company(self.company)
 
         lines_by_so = {}
         for lrow in self.reader.order_lines:
@@ -2461,6 +2484,18 @@ class GenericPeriodPackLoader:
                 Product = self.env["product.product"].sudo()
             except Exception:
                 Product = None
+
+        if hasattr(self, "company") and self.company:
+            if hasattr(AccountMove, "with_company"):
+                AccountMove = AccountMove.with_company(self.company)
+            if hasattr(SaleOrder, "with_company"):
+                SaleOrder = SaleOrder.with_company(self.company)
+            if Product is not None and hasattr(Product, "with_company"):
+                Product = Product.with_company(self.company)
+        if hasattr(AccountMove, "with_context"):
+            AccountMove = AccountMove.with_context(default_move_type="out_invoice")
+
+        sale_journal = self._resolve_sale_journal()
         processed = 0
 
         lines_by_so = {}
@@ -2478,7 +2513,7 @@ class GenericPeriodPackLoader:
                 )
 
         # Pastikan konfigurasi pajak Kode 04 aktif dan presisi sebelum membuat faktur
-        self._resolve_canonical_tax_code_04()
+        canonical_tax_04 = self._resolve_canonical_tax_code_04()
 
         for inv_row in invoices:
             inv_num = inv_row["invoice_number"]
@@ -2549,7 +2584,6 @@ class GenericPeriodPackLoader:
                                                 pass
 
             # Ensure SO lines carry canonical Tax Code 04
-            canonical_tax_04 = self._resolve_canonical_tax_code_04()
             if canonical_tax_04 and hasattr(so, "order_line"):
                 for sol in so.order_line:
                     cur_t = getattr(sol, "tax_ids", None) or getattr(sol, "tax_id", None) or getattr(sol, "taxes_id", None)
@@ -2647,18 +2681,36 @@ class GenericPeriodPackLoader:
                 "invoice_origin": so_num,
                 "invoice_line_ids": inv_lines,
             }
+            if hasattr(self, "company") and self.company:
+                inv_vals["company_id"] = self.company.id
+                if hasattr(self.company, "currency_id") and self.company.currency_id:
+                    inv_vals["currency_id"] = self.company.currency_id.id
+            if sale_journal:
+                inv_vals["journal_id"] = sale_journal.id
+
             if "is_fmcg_seed_invoice" in am_fields or not am_fields:
                 inv_vals["is_fmcg_seed_invoice"] = True
             if "fmcg_seed_batch" in am_fields or not am_fields:
                 inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
             if "l10n_id_tax_transaction_code" in am_fields or not am_fields:
                 inv_vals["l10n_id_tax_transaction_code"] = "04"
-            if not am_fields or "amount_total" not in am_fields:
-                inv_vals["amount_untaxed"] = float(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0.0))
-                inv_vals["amount_tax"] = float(inv_row.get("ppn_amount", 0.0))
-                inv_vals["amount_total"] = float(inv_row.get("total_invoice_with_ppn", 0.0))
+            inv_vals["amount_untaxed"] = float(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0.0))
+            inv_vals["amount_tax"] = float(inv_row.get("ppn_amount", 0.0))
+            inv_vals["amount_total"] = float(inv_row.get("total_invoice_with_ppn", 0.0))
 
             inv_rec = AccountMove.create(inv_vals)
+
+            if hasattr(inv_rec, "_compute_tax_totals"):
+                try:
+                    inv_rec._compute_tax_totals()
+                except Exception:
+                    pass
+            if hasattr(inv_rec, "_compute_amount"):
+                try:
+                    inv_rec._compute_amount()
+                except Exception:
+                    pass
+
             inv_rec.action_post()
 
             # Verifikasi bahwa Odoo ORM secara native menghasilkan angka yang tepat sesuai register tanpa drift

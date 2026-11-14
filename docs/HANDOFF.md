@@ -1,3 +1,20 @@
+## 2026-11-14T17:25:00+07:00 — antigravity — F4: Resolusi Scoping Perusahaan & Jurnal Penjualan pada Pembuatan Faktur Native Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menambahkan `_resolve_sale_journal()` untuk menyelesaikan jurnal penjualan pelanggan (`type == 'sale'`) khusus untuk entitas perusahaan aktif (`company_id`).
+  - Mengamankan scoping model Odoo dengan `.with_company(self.company)` dan konteks `AccountMove.with_context(default_move_type="out_invoice")`.
+  - Mengisi `company_id`, `journal_id`, dan `currency_id` secara eksplisit pada payload faktur `inv_vals` sebelum `AccountMove.create()`.
+  - Mencegah hilangnya baris pajak PPN Kode 04 (DPP Nilai Lain 11/12) yang sebelumnya diabaikan Odoo ORM saat company/journal tidak terdefinisi lengkap, sehingga mengeliminasi drift selisih total faktur (355.680,00 vs 394.804,80).
+  - Menjalankan recomputasi native `_compute_tax_totals()` dan `_compute_amount()` sebelum `action_post()`.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-14T17:25:00+07:00
+
 ## 2026-11-14T11:30:00+07:00 — antigravity — F4: Perbaikan Truthiness Model Odoo & Resolusi Produk Langsung dari Baris SO di _apply_invoices (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

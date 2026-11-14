@@ -2662,3 +2662,23 @@
   * python -m ruff check scripts/ops/load_period_pack.py: PASS (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-14T11:30:00+07:00
+
+[2026-11-14T17:25:00+07:00] [INFO] F4: Resolusi Scoping Perusahaan & Jurnal Penjualan pada Pembuatan Faktur Native Odoo 19
+- Analisis Kegagalan install-test Langkah 10 (Run 43557745417):
+  * Error: StateInconsistencyError: Drift detected on Invoice INV-202608-0001: expected total 394804.80, found 355680.00 di scripts/ops/load_period_pack.py line 2408 saat memanggil _validate_existing_invoice().
+  * Root Cause:
+    1. Pada saat pemanggilan AccountMove.create(inv_vals) di _apply_invoices(), inv_vals tidak menyertakan company_id dan journal_id.
+    2. AccountMove tidak di-scope dengan with_company(self.company) maupun with_context(default_move_type="out_invoice").
+    3. Di Odoo 19, pembuatan move tanpa spesifikasi jurnal penjualan atau keselarasan ID perusahaan dengan canonical_tax_04 menyebabkan ORM mengabaikan atau menghapus tax lines dari move (atau defaulting ke MISC journal), sehingga amount_tax = 0.00 dan amount_total = 355680.00 (hanya DPP).
+  * Solusi:
+    1. Menambahkan helper _resolve_sale_journal() untuk memastikan jurnal penjualan (type == 'sale') perusahaan aktif ditemukan dan di-bind pada inv_vals['journal_id'].
+    2. Menambahkan company_id dan currency_id ke inv_vals.
+    3. Men-scope AccountMove, SaleOrder, dan Product dengan with_company(self.company) dan AccountMove.with_context(default_move_type="out_invoice").
+    4. Mengisi amount_untaxed, amount_tax, dan amount_total pada inv_vals untuk lingkungan mock.
+    5. Menambahkan recomputasi native _compute_tax_totals() dan _compute_amount() sebelum action_post().
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 54/54 tests PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check scripts/ops/load_period_pack.py: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-14T17:25:00+07:00
