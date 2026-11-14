@@ -272,3 +272,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-14T08:20:50+07:00] [INFO] Fase 3B-7 Ajukan cuti DS
 - AjukanCutiScreen layar penuh, payload leave tetap, utang K21
 - Task managed by claude-design agent at 2026-11-14T08:20:50+07:00
+
+[2026-11-14T13:18:09+07:00] [INFO] Fase 3B-8 Absen DS
+- AttendanceScreen ulang: geofence sheet, chip area, selfie depan, kartu selfie; utang K22
+- Task managed by claude-design agent at 2026-11-14T13:18:09+07:00

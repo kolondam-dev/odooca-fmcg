@@ -2,7 +2,6 @@ import { useState } from "preact/hooks";
 import type { Dialog } from "../ui/navigation";
 import { SheetHeader } from "../ui";
 import { useDialog } from "../ui/useDialog";
-import { AttendanceCapture } from "./AttendanceCapture";
 import { Icon } from "./Icon";
 import { EvidenceCapture, type EvidenceRef } from "./Evidence";
 import {
@@ -17,7 +16,6 @@ export function TaskForm({
     snapshot,
     owner,
     submit,
-    startSession,
     close,
     workStatus,
     store,
@@ -36,10 +34,6 @@ export function TaskForm({
         payload: Record<string, unknown>,
         label: string,
     ) => Promise<QueueItem>;
-    startSession: (
-        event: "check_in" | "check_out",
-        evidence: EvidenceRef,
-    ) => Promise<void>;
     close: () => void;
 }) {
     const [error, setError] = useState("");
@@ -50,9 +44,8 @@ export function TaskForm({
     const [evidence, setEvidence] = useState<EvidenceRef>();
     const title = {
         proof: "Bukti pengiriman",
-        attendance: "Absensi foto & lokasi",
         profile: "Profil & Sesi Akun",
-    }[dialog.type as "proof" | "attendance" | "profile"];
+    }[dialog.type as "proof" | "profile"];
     async function send(e: SubmitEvent) {
         e.preventDefault();
         if (busy) return;
@@ -66,11 +59,6 @@ export function TaskForm({
             {
                 if (!evidence)
                     throw new Error("Simpan foto dan lokasi dahulu.");
-                if (dialog.type === "attendance") {
-                    await startSession(dialog.event ?? "check_in", evidence);
-                    close();
-                    return;
-                }
                 if (dialog.type !== "proof")
                     throw new Error("Form bukti tidak dikenal.");
                 type = "delivery.proof.submit";
@@ -123,46 +111,6 @@ export function TaskForm({
                 />
                 <form onSubmit={(e) => void send(e)}>
                     <div class="sheet-body">
-                        {dialog.type === "attendance" && (
-                            <>
-                                <label>
-                                    Aktivitas
-                                    <select
-                                        name="event"
-                                        value={dialog.event ?? "check_in"}
-                                        disabled
-                                    >
-                                        <option value="check_in">
-                                            Absensi Masuk (Checkin)
-                                        </option>
-                                        <option value="check_out">
-                                            Absensi Keluar (Checkout)
-                                        </option>
-                                    </select>
-                                </label>
-                                <AttendanceCapture
-                                    store={store}
-                                    owner={owner}
-                                    onChange={setEvidence}
-                                    employeeName={identity.name}
-                                    companyName={
-                                        identity.companyName ??
-                                        `Perusahaan #${identity.companyId}`
-                                    }
-                                    mapSite={
-                                        snapshot.office
-                                            ? {
-                                                  ...snapshot.office,
-                                                  simulated:
-                                                      snapshot.office
-                                                          .coordinate_status !==
-                                                      "verified",
-                                              }
-                                            : undefined
-                                    }
-                                />
-                            </>
-                        )}
                         {dialog.type === "proof" && (
                             <>
                                 <p class="muted">{dialog.delivery}</p>
@@ -359,21 +307,8 @@ export function TaskForm({
                                 >
                                     Kembali
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={
-                                        busy ||
-                                        (dialog.type === "attendance" &&
-                                            !evidence)
-                                    }
-                                >
-                                    {busy
-                                        ? "Menyimpan…"
-                                        : dialog.type === "attendance"
-                                          ? dialog.event === "check_out"
-                                              ? "Check out"
-                                              : "Check in"
-                                          : "Simpan ke antrean"}
+                                <button type="submit" disabled={busy}>
+                                    {busy ? "Menyimpan…" : "Simpan ke antrean"}
                                 </button>
                             </>
                         </footer>
