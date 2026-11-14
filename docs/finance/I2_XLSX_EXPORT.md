@@ -73,6 +73,29 @@ Tambahan pertahanan:
 
 `scripts/ops/verify_finance_i2_exposure.py` pada
 `finance_i0_reports_disposable`, langkah CI `I2 exposure`.
+**Status: PASS pada CI exact-SHA
+`b23cf09` (`b23cf09` pada run `43556711792`, job `132331093982`),
+dengan 12/12 check PR hijau.**
+
+Keluaran `FINANCE_I2_EXPOSURE` memuat komponen `xlsx`:
+
+```
+{"case": "xlsx_formula_guard_helper", "result": "PASS"}
+{"case": "xlsx_formula_guard_workbook", "result": "PASS"}
+{"case": "xlsx_export_audit_trail", "result": "PASS"}
+{"case": "xlsx_export_partner_ledger", "result": "PASS"}
+{"case": "xlsx_export_open_items", "result": "PASS"}
+{"case": "xlsx_export_aged_partner_balance", "result": "PASS"}
+{"case": "xlsx_export_combined_trial_balance", "result": "PASS"}
+{"case": "xlsx_export_sales_purchase_register", "result": "PASS"}
+{"case": "xlsx_export_accrual_schedule", "result": "PASS"}
+{"case": "xlsx_export_fx_revaluation", "result": "PASS"}
+{"case": "xlsx_cleared_on_rerun", "result": "PASS"}
+{"case": "reader_can_export_xlsx", "result": "PASS"}
+{"case": "sales_export_denied", "result": "ACCESS_DENIED"}
+```
+
+Rincian setiap kasus:
 
 - `xlsx_formula_guard_helper` — `=`, `+`, `-`, `@`, tab dan carriage return
   diberi awalan apostrof; teks biasa, nilai kosong, karakter kontrol, dan teks

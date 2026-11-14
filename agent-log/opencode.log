@@ -88,3 +88,11 @@
 - [BU] Bukti runtime FINANCE_I2_EXPOSURE dengan komponen xlsx (helper guard, guard workbook, 8/8 jenis laporan, pembersihan workbook basi, izin baca/tolak) menunggu CI pada SHA PR. Workbook belum dibuka di Excel/LibreOffice; volume demo, PDF, tie-out dan sign-off belum diuji.
 - [BU] Aktivasi DB demo (I2-3) belum dijalankan. Tidak ada merge/deploy/katalog yang diubah.
 - Task managed by Agent-Opencode at 2026-11-14T11:16:55+07:00
+
+[2026-11-14T11:50:56+07:00] [INFO] I2-2 XLSX PASS di CI pada b23cf09; PR #131 12/12 hijau
+- [F] Run 43556711792 langkah I2 exposure PASS pada b23cf09. Komponen xlsx memuat 13 kasus PASS: helper guard, guard level workbook, 8/8 jenis laporan, cleared_on_rerun, reader_can_export_xlsx; sales_export_denied ACCESS_DENIED.
+- [F] Guard level workbook: tidak ada elemen <f>; =SUM(1+1), @cmd, -7.5+1 tersimpan berapostrof; 7.5 tersimpan sebagai sel numerik <v>7.5</v>.
+- [F] PR #131 12/12 check hijau pada b23cf09 (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate).
+- [F] Branch memuat main 99ad910 lewat merge b23cf09; konflik hanya docs/HANDOFF.md, entri claude-design dan Agent-Opencode dipertahankan.
+- [BU] Workbook belum dibuka di Excel/LibreOffice; volume demo 1.324 invoice, PDF, tie-out, sign-off, aktivasi DB demo (I2-3), payroll, FIN36/55/56, I3-I8 masih terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-14T11:50:56+07:00
