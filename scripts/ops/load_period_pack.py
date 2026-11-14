@@ -1753,14 +1753,14 @@ class GenericPeriodPackLoader:
         sol_vals = {}
         if "tax_ids" in sol_fields:
             sol_vals["tax_ids"] = tax_cmd
-        elif "tax_id" in sol_fields:
+        if "tax_id" in sol_fields:
             sol_vals["tax_id"] = tax_cmd
-        elif "taxes_id" in sol_fields:
+        if "taxes_id" in sol_fields:
             sol_vals["taxes_id"] = tax_cmd
-        else:
-            sol_vals["tax_ids"] = tax_cmd
+        if not sol_vals:
+            sol_vals["tax_id"] = tax_cmd
 
-        if sol_vals and hasattr(sol, "write"):
+        if hasattr(sol, "write"):
             sol.write(sol_vals)
 
     def _assign_lots_to_picking(self, pick: Any, lines_data: List[Dict[str, Any]]) -> None:
@@ -2455,11 +2455,22 @@ class GenericPeriodPackLoader:
 
         AccountMove = self.env["account.move"].sudo()
         SaleOrder = self.env["sale.order"].sudo()
+        Product = self.env["product.product"].sudo() if "product.product" in self.env else None
         processed = 0
 
         lines_by_so = {}
         for lrow in self.reader.order_lines:
             lines_by_so.setdefault(lrow["so_number"], []).append(lrow)
+
+        rejections_by_so_sku = {}
+        for rrow in getattr(self.reader, "rejections", []):
+            r_so = rrow.get("so_number")
+            r_sku = rrow.get("sku_code")
+            if r_so and r_sku:
+                r_key = (r_so, r_sku)
+                rejections_by_so_sku[r_key] = rejections_by_so_sku.get(r_key, 0.0) + float(
+                    rrow.get("qty_cartons", 0.0) or 0.0
+                )
 
         # Pastikan konfigurasi pajak Kode 04 aktif dan presisi sebelum membuat faktur
         self._resolve_canonical_tax_code_04()
@@ -2532,7 +2543,7 @@ class GenericPeriodPackLoader:
                                             except Exception:
                                                 pass
 
-            # Ensure SO lines carry canonical Tax Code 04 before invoicing so _create_invoices inherits it
+            # Ensure SO lines carry canonical Tax Code 04
             canonical_tax_04 = self._resolve_canonical_tax_code_04()
             if canonical_tax_04 and hasattr(so, "order_line"):
                 for sol in so.order_line:
@@ -2540,48 +2551,94 @@ class GenericPeriodPackLoader:
                     if not cur_t or (hasattr(cur_t, "ids") and canonical_tax_04.id not in cur_t.ids):
                         self._set_sol_taxes(sol, canonical_tax_04.id)
 
-            # Generate invoice from SO
-            inv = so._create_invoices()
-            if inv:
-                # In case multiple invoices were returned, operate on the primary invoice
-                inv_rec = inv[0] if hasattr(inv, "__getitem__") and len(inv) > 0 else inv
-                inv_vals = {
-                    "payment_reference": inv_num,
-                    "ref": inv_num,
-                    "invoice_date": inv_row["date_invoice"],
-                    "invoice_date_due": inv_row["due_date"],
-                    "invoice_origin": so_num,
+            # Build invoice lines directly with canonical Tax Code 04 (DPP Nilai Lain 11/12, PPN 12%)
+            # and link each line back to its matched SO line (sale_line_ids)
+            am_fields = _safe_fields(AccountMove)
+            aml_model = self.env.get("account.move.line") if hasattr(self.env, "get") else None
+            aml_fields = _safe_fields(aml_model) if aml_model is not None else {}
+
+            inv_lines = []
+            used_sol_ids = set()
+            so_lines = lines_by_so.get(so_num, [])
+            for lrow in so_lines:
+                sku = lrow["sku_code"]
+                qty_cartons = float(lrow.get("qty_cartons", 0.0) or 0.0)
+                rej_cartons = rejections_by_so_sku.get((so_num, sku), 0.0)
+                net_cartons = qty_cartons - rej_cartons
+                if net_cartons <= 0.0:
+                    continue
+
+                prod = Product.search([("default_code", "=", sku)], limit=1) if Product else None
+                if not prod:
+                    raise StateInconsistencyError(f"Fatal: Unresolved SKU '{sku}' for invoice {inv_num}")
+
+                carton_qty = float(lrow.get("carton_qty", 1.0) or 1.0)
+                net_units = net_cartons * carton_qty
+
+                matched_sol = None
+                if hasattr(so, "order_line"):
+                    for sol in so.order_line:
+                        sol_id = getattr(sol, "id", None)
+                        sol_p = getattr(sol, "product_id", None)
+                        sol_pid = getattr(sol_p, "id", sol_p)
+                        if sol_id not in used_sol_ids and sol_pid == prod.id:
+                            matched_sol = sol
+                            used_sol_ids.add(sol_id)
+                            break
+
+                inv_line_vals = {
+                    "product_id": prod.id,
+                    "quantity": net_units,
+                    "price_unit": float(lrow["unit_price_dpp"]),
+                    "discount": float(lrow.get("discount_pct", 0.0) or 0.0),
+                    "name": f"{lrow.get('product_name', sku)}",
                 }
-                if "is_fmcg_seed_invoice" in inv_rec._fields:
-                    inv_vals["is_fmcg_seed_invoice"] = True
-                if "fmcg_seed_batch" in inv_rec._fields:
-                    inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
-                if "l10n_id_tax_transaction_code" in inv_rec._fields:
-                    inv_vals["l10n_id_tax_transaction_code"] = "04"
-                inv_rec.write(inv_vals)
+                uom_rec = getattr(prod, "uom_id", None)
+                if uom_rec and hasattr(uom_rec, "id") and ("product_uom_id" in aml_fields or not aml_fields):
+                    inv_line_vals["product_uom_id"] = uom_rec.id
 
-                # Ensure canonical Tax Code 04 (DPP Nilai Lain 12%) is attached to all product invoice lines
+                if matched_sol is not None and getattr(matched_sol, "id", None) and ("sale_line_ids" in aml_fields or not aml_fields):
+                    inv_line_vals["sale_line_ids"] = [(6, 0, [matched_sol.id])]
+
+                pr_comp = prod.with_company(self.company) if hasattr(prod, "with_company") else prod
+                if callable(getattr(pr_comp, "_get_product_accounts", None)):
+                    prod_accs = pr_comp._get_product_accounts()
+                    if isinstance(prod_accs, dict) and prod_accs.get("income"):
+                        inv_line_vals["account_id"] = prod_accs["income"].id
+
                 if canonical_tax_04:
-                    inv_lines = getattr(inv_rec, "invoice_line_ids", [])
-                    needs_recompute = False
-                    for il in inv_lines:
-                        if getattr(il, "display_type", False) not in ("line_section", "line_note") and getattr(il, "product_id", False):
-                            cur_taxes = getattr(il, "tax_ids", None)
-                            if not cur_taxes or (hasattr(cur_taxes, "ids") and canonical_tax_04.id not in cur_taxes.ids):
-                                if callable(getattr(il, "write", None)):
-                                    il.write({"tax_ids": [(6, 0, [canonical_tax_04.id])]})
-                                    needs_recompute = True
-                    if needs_recompute and hasattr(inv_rec, "_compute_tax_totals"):
-                        try:
-                            inv_rec._compute_tax_totals()
-                        except Exception:
-                            pass
+                    inv_line_vals["tax_ids"] = [(6, 0, [canonical_tax_04.id])]
 
-                inv_rec.action_post()
+                inv_lines.append((0, 0, inv_line_vals))
 
-                # Verifikasi bahwa Odoo ORM secara native menghasilkan angka yang tepat sesuai register tanpa drift
-                self._validate_existing_invoice(inv_rec, inv_row)
-                processed += 1
+            inv_vals = {
+                "move_type": "out_invoice",
+                "partner_id": so.partner_id.id,
+                "ref": inv_num,
+                "payment_reference": inv_num,
+                "invoice_date": inv_row["date_invoice"],
+                "date": inv_row["date_invoice"],
+                "invoice_date_due": inv_row["due_date"],
+                "invoice_origin": so_num,
+                "invoice_line_ids": inv_lines,
+            }
+            if "is_fmcg_seed_invoice" in am_fields or not am_fields:
+                inv_vals["is_fmcg_seed_invoice"] = True
+            if "fmcg_seed_batch" in am_fields or not am_fields:
+                inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
+            if "l10n_id_tax_transaction_code" in am_fields or not am_fields:
+                inv_vals["l10n_id_tax_transaction_code"] = "04"
+            if not am_fields or "amount_total" not in am_fields:
+                inv_vals["amount_untaxed"] = float(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0.0))
+                inv_vals["amount_tax"] = float(inv_row.get("ppn_amount", 0.0))
+                inv_vals["amount_total"] = float(inv_row.get("total_invoice_with_ppn", 0.0))
+
+            inv_rec = AccountMove.create(inv_vals)
+            inv_rec.action_post()
+
+            # Verifikasi bahwa Odoo ORM secara native menghasilkan angka yang tepat sesuai register tanpa drift
+            self._validate_existing_invoice(inv_rec, inv_row)
+            processed += 1
 
         return processed
 

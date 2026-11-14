@@ -2628,3 +2628,20 @@
   * python -m ruff check scripts/ops/load_period_pack.py: PASS (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-14T08:21:00+07:00
+
+[2026-11-14T10:10:00+07:00] [INFO] F4: Resolusi Pembuatan Faktur Penjualan Native dengan Kode Pajak 04 & DPP Nilai Lain 11/12
+- Analisis Kegagalan install-test Langkah 10 (Run 43540132855):
+  * Error: StateInconsistencyError: Drift detected on Invoice INV-202608-0001: expected total 394804.80, found 355680.00.
+  * Root Cause: Pemanggilan so._create_invoices() kemudian melakukan write({"tax_ids": ...}) pada child account.move.line tidak memicu pembuatan baris pajak jurnal (display_type == 'tax') pada account.move, sehingga faktur terposting dengan 0 PPN (total hanya mencerminkan DPP komersial 355.680,00).
+  * Solusi:
+    - Merekonstruksi _apply_invoices() di scripts/ops/load_period_pack.py mengikuti pola kanonikal scripts/load_canonical_perpetual.py:
+    - Membuat faktur langsung melalui AccountMove.create(inv_vals) dengan invoice_line_ids yang membawa tax_ids = [(6, 0, [canonical_tax_04.id])] dan sale_line_ids = [(6, 0, [matched_sol.id])].
+    - Mengintegrasikan pengurangan kuantitas retur pengiriman (rejections_by_so_sku) agar faktur yang memiliki retur karantina hanya menagihkan kuantitas netto yang diterima outlet.
+    - Odoo ORM saat create() mengeksekusi account.tax.compute_all() (dengan override PMK 131/2024 di id_base) dan secara native membentuk baris PPN Keluaran pada akun 211200 sebesar 39.124,80 dan piutang usaha pada akun 112100 sebesar 394.804,80.
+    - Memanggil inv_rec.action_post() secara native.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 54/54 tests PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check scripts/ops/load_period_pack.py: PASS (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-14T10:10:00+07:00

@@ -1,3 +1,18 @@
+## 2026-11-14T10:10:00+07:00 — antigravity — F4: Resolusi Pembuatan Faktur Penjualan Native dengan Kode Pajak 04 & DPP Nilai Lain 11/12 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Mengubah implementasi `_apply_invoices()` dari pemanggilan `so._create_invoices()` yang diikuti penulisan child line menjadi pembuatan faktur langsung via `AccountMove.create(inv_vals)` dengan `invoice_line_ids` terdefinisi lengkap (produk, UoM, akun pendapatan, kuantitas netto setelah retur, diskon, tautan `sale_line_ids`, dan `tax_ids` kode 04).
+  - Melakukan netting retur karantina pengiriman (`rejections_by_so_sku`) dari kuantitas faktur sehingga order dengan barang rusak/tolak (misal `SO-202608-0045`) memiliki nominal faktur tepat sesuai register.
+  - Memastikan seluruh baris repartisi dan komputasi pajak dijalankan secara native oleh Odoo ORM (`account.tax.compute_all` via ekstensi `id_base`) tanpa modifikasi manual atas baris jurnal terposting (zero SQL overwrite).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-14T10:10:00+07:00
+
 ## 2026-11-14T08:21:00+07:00 — antigravity — F4: Kompatibilitas Skema Many2many Field Pajak sale.order.line Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
