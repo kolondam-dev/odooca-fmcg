@@ -339,6 +339,27 @@ jobs:
           }
           [ "$(q "SELECT state FROM ir_module_module WHERE name='account_financial_report'")" = "installed" ]
           [ "$(q "SELECT count(*) FROM ir_module_module WHERE name IN ('date_range','report_xlsx') AND state='installed'")" = "2" ]
+      - name: Aktivasi finance bertanda dan idempoten
+        run: |
+          set -euo pipefail
+          grep -q "activate_finance_reports_v1: memasang" init1.log
+          count="$(grep -c "activate_finance_reports_v1: memasang" init2.log || true)"
+          if [ "$count" != "1" ]; then
+            echo "Marker activate_finance_reports_v1 setelah restart: $count (harus 1 dari boot pertama)"; exit 1
+          fi
+          grep -q "demo_finance_reader_v1: memberikan" init1.log
+          count="$(grep -c "demo_finance_reader_v1: memberikan" init2.log || true)"
+          if [ "$count" != "1" ]; then
+            echo "Marker demo_finance_reader_v1 setelah restart: $count (harus 1 dari boot pertama)"; exit 1
+          fi
+          q() {
+            docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo \
+              psql -h localhost -U postgres -d fmcg -tAc "$1"
+          }
+          [ "$(q "SELECT count(*) FROM ir_module_module WHERE name IN ('id_finance_reporting','id_finance_foundation') AND state='installed'")" = "2" ]
+          docker exec -i odoo /opt/deploy/init.sh shell --no-http \
+            < scripts/ops/verify_finance_activation_demo.py | tee finance_activation.log
+          grep -q 'INIT_FINANCE_ACTIVATION=PASS' finance_activation.log
       - name: Siapkan database terisolasi untuk eksperimen
         run: |
           docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='fmcg' AND pid <> pg_backend_pid();"

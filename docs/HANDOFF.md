@@ -12,6 +12,12 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-14T19:15:00+07:00
 
+## 2026-11-14T17:37:13+07:00 — Agent-Opencode — I2-2 P2: bukti CI exact-SHA fe26a28 (5/5 workflow hijau, completeness 3/3)
+**Berubah:** koreksi P2 di-commit (`54c316f`), `main` `6fe9f2c` di-merge (`fe26a28`, konflik hanya `docs/HANDOFF.md`, kedua entri dipertahankan dan diurutkan), lalu `docs/finance/I2_XLSX_EXPORT.md` diisi bukti exact-SHA + keluaran `completeness`.
+**Diverifikasi:** [F] Push `fe26a28`; kelima workflow hijau pada `fe26a2883903b5ca6c67285e17b73f3683a16d05`: CI (`43584001596`: static, init-test, install-test), Upgrade Runtime Verification (`43584001555`, replay zero drift), Finance I0 candidate spike (`43584001640`, job `132414505091`), Seed supervision (`43584001537`), PWA quality (`43584001651`). [F] `FINANCE_I2_EXPOSURE=PASS` dengan `completeness` 3/3 PASS: `xlsx_payload_cap_valid_json`, `xlsx_nested_completeness`, `xlsx_cell_truncation_disclosed`; `xlsx` 12 PASS + `sales_export_denied` `ACCESS_DENIED`; `runs` 8/8; `sanitization` 2/2; `surface` 9/9; `roles` 1 izin + 5 penolakan. [F] GitHub melaporkan PR #131 `mergeable: MERGEABLE` pada HEAD tersebut.
+**Belum diuji:** [BU] Excel/LibreOffice desktop/tablet, volume demo 1.324 invoice, PDF, tie-out per report ID, sign-off Finance Controller + QA. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy; verdict PASS/HOLD bukan wewenang asisten.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T17:37:13+07:00
+
 ## 2026-11-14T17:25:00+07:00 — antigravity — F4: Resolusi Scoping Perusahaan & Jurnal Penjualan pada Pembuatan Faktur Native Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
@@ -29,10 +35,42 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-14T17:25:00+07:00
 
+## 2026-11-14T17:08:43+07:00 — Agent-Opencode — I2-2 P2: koreksi kontrak kelengkapan XLSX (__nested, payload valid, disclosure)
+**Konteks:** [F] Review #5902486524 (HOLD/P2) pada `2084cdb`: Summary menjanjikan nilai bersarang "tersedia di payload JSON", padahal `_payload_json` memotong mentah di 200.000 karakter sehingga JSON tidak valid dan nilai di ekor snapshot hilang.
+**Berubah:** `addons/id_finance_reporting/wizards/finance_report_wizard.py` (kolom `__nested` per baris untuk nilai bersarang dan kolom skalar di atas 40; bagian tanpa kolom skalar memakai `__nested`; `_xlsx_text_parts` mengembalikan flag pemotongan; payload di atas batas menjadi JSON valid dengan `__truncation__` berisi `included_sections`/`omitted_sections`; Summary menyebut kolom `__nested`, batas sel 32.000, batas payload 200.000, dan hitungan sel terpotong per bagian); `i18n/id.po` (+7 entri, −2 entri janji lama); `__manifest__.py` `19.0.1.5.1`; `scripts/ops/verify_finance_i2_exposure.py` (`check_xlsx_completeness`: `xlsx_payload_cap_valid_json`, `xlsx_nested_completeness`, `xlsx_cell_truncation_disclosed`); `docs/finance/I2_XLSX_EXPORT.md` (kontrak kelengkapan + disclosure).
+**Diverifikasi:** [F] `ruff check` PASS, `scripts/check_manifests.py` PASS, `compileall` PASS, PO `id_finance_reporting` 97 entri lolos pemeriksa lokal. [BU] Bukti runtime menunggu CI PR #131 pada HEAD baru: snapshot sintetis 400 baris × ~610 karakter (di atas 200k, di bawah 20k baris) dengan nilai bersarang di bagian terakhir; payload harus valid JSON, `tail` tetap dimuat, `rows` disebut omitted, workbook memuat `NESTED-TAIL-VALUE` di kolom `__nested`, dan Summary tidak lagi memuat janji payload.
+**Belum diuji:** [BU] Regresi P2 pada CI belum dijalankan; Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T17:08:43+07:00
+
+## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
+**Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.
+**Diverifikasi:** [F] `main` bergerak ke `6fe9f2c` (PR #132 PWA Absen); merge `545c264` berkonflik hanya di `docs/HANDOFF.md` dan kedua sisi dipertahankan urut waktu (348 entri main + 2 entri baru). [F] PR #133 **12/12 check hijau** pada `545c264` (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift 19m4s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate) dan status `MERGEABLE`.
+**Belum diuji:** [BU] Deploy database demo + login admin demo; geometri browser; tie-out; PDF; sign-off; payroll/FIN36/55/56; I3. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy. PR #131 (I2-2) belum merge, jadi PR #133 belum boleh dideploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T15:29:17+07:00
+
+## 2026-11-14T14:40:48+07:00 — Agent-Opencode — I2-3: blok aktivasi PASS di CI (12/12), PR #133
+**Berubah:** `docs/finance/I2_ACTIVATION.md` (bukti exact-SHA + keluaran JSON), `docs/HANDOFF.md`, `agent-log/opencode.log`.
+**Diverifikasi:** [F] PR #133 **12/12 check hijau** pada `038d42f` (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate). [F] `init-test` run `43570682742` job `132374227786`: kedua penanda muncul **tepat sekali** setelah restart, dua modul `installed`, `INIT_FINANCE_ACTIVATION=PASS` → `{"admin": "admin", "menu": "Finance/Finance Reports", "modules": {"id_finance_foundation": "installed", "id_finance_reporting": "installed"}, "other_reader_users": [], "reader_group": "Finance Reader", "report_menu_action": "Journal Items Audit Trail (FIN04)"}`. [F] Upgrade runtime run `43570682677` job `132374214936` (18m38s): `UPGRADE_BASELINE_PHASE=SUCCESS`, `UPGRADE_VERIFY_PHASE=SUCCESS`, `UPGRADE_REPLAY_ZERO_DRIFT=PASS`; `deploy/init.sh` ditambahkan ke path trigger `upgrade-runtime.yml`.
+**Belum diuji:** [BU] Deploy ke database demo (Railway) dan login admin demo; geometri browser; tie-out per report ID; PDF; sign-off Finance Controller/QA; payroll serta FIN36/55/56; I3. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy. [F] Deploy PR ini hanya setelah PR #131 (I2-2 export XLSX) merge.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T14:40:48+07:00
+
+## 2026-11-14T14:09:12+07:00 — Agent-Opencode — I2-3: blok aktivasi finance bertanda di deploy/init.sh (staged, belum deploy)
+**Konteks:** [F] Keputusan pemilik: aktivasi bertahap, modul + admin demo sebagai Finance Reader. [F] PR #131 (I2-2 export XLSX) masih terbuka di `2084cdb`; blok aktivasi hanya boleh dideploy setelah #131 merge karena instalasi memakai `-i` (versi modul mengikuti image saat deploy pertama).
+**Berubah:** `deploy/init.sh` (`activate_finance_reports_v1`: `-i id_finance_reporting,id_finance_foundation`; `demo_finance_reader_v1`: beri `group_finance_reader` hanya ke `base.user_admin`; fail-closed bila gagal, tanpa `RESET_DB`, tanpa mengubah `INIT_MODULES`/chart/costing/seed/bahasa); `.github/workflows/ci.yml` (langkah `init-test` baru: tiap penanda tepat sekali setelah restart, dua modul `installed`, lalu `verify_finance_activation_demo.py`); `scripts/ops/verify_finance_activation_demo.py` (bukti read-only: grup masih meng-implikasi `account.group_account_readonly`, menu Finance Reports dibatasi reader, tidak bocor ke user lain); `docs/finance/I2_ACTIVATION.md`; indeks `docs/finance/README.md`; `docs/finance/OWNER_DECISIONS.md` baris 6.
+**Diverifikasi:** [F] `ruff check .` PASS, `scripts/check_manifests.py` PASS, `bash -n` pada salinan LF PASS, YAML `ci.yml` ter-parse dan langkah `init-test` menjadi 13. [BU] Bukti runtime menunggu CI PR: instalasi dua modul pada DB kosong, idempotensi mark saat restart, dan assertion grup/menu/admin.
+**Belum diuji:** [BU] Deploy ke database demo (Railway) dan login admin demo; geometri browser; tie-out per report ID; PDF; sign-off Finance Controller/QA; payroll serta FIN36/55/56; I3. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T14:09:12+07:00
+
 ## 2026-11-14T13:18:09+07:00 — claude-design (Claude-Dev1) — Fase 3B-8: Absen (04–08) mengikuti DS
 
 - `AttendanceScreen` ditulis ulang: chip dalam/luar area, sheet Aturan geofence, Ambil selfie (kamera depan, terkunci di luar area terverifikasi), kartu Selfie tersimpan, Absen masuk/pulang. `AttendanceCapture` dan cabang absen di `TaskForm` dihapus; ikon `info` ditambah.
 - Tes: `attendance-geofence.spec.ts` baru; helper/spec absen diperbarui ke label baru. Utang di DS_RECONCILIATION K22.
+
+## 2026-11-14T11:50:56+07:00 — Agent-Opencode — I2-2: bukti XLSX PASS di CI, 12/12 hijau
+**Berubah:** `docs/finance/I2_XLSX_EXPORT.md` (status exact-SHA + keluaran tiap kasus), `docs/finance/I2_EXPOSURE.md` (butir XLSX dipisahkan dari PDF), `docs/HANDOFF.md`, `agent-log/opencode.log`.
+**Diverifikasi:** [F] Run `43556711792` langkah `I2 exposure` PASS pada `b23cf09` (SHA yang memuat fitur); komponen `xlsx` berisi 13 kasus PASS: helper guard, guard level workbook (tidak ada elemen `<f>`, `=SUM(1+1)`/`@cmd`/`-7.5+1` tersimpan berapostrof, `7.5` sel numerik), 8/8 jenis laporan, pembersihan workbook basi, reader boleh, sales `ACCESS_DENIED`. [F] PR #131 **12/12 check hijau** pada `b23cf09` (static, install-test 9m43s, init-test, `candidate-install-upgrade` 7m24s, upgrade runtime + replay zero drift 22m2s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate). [F] Branch memuat `main` `99ad910`; merge `b23cf09` berkonflik hanya di `docs/HANDOFF.md` dan kedua entri dipertahankan.
+**Belum diuji:** [BU] Membuka workbook di Excel/LibreOffice desktop/tablet; export pada volume demo (1.324 invoice) dan waktu; PDF; tie-out per report ID; sign-off. [BU] Aktivasi DB demo (I2-3) belum dijalankan; payroll, FIN36/55/56, I3–I8 terbuka. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T11:50:56+07:00
 
 ## 2026-11-14T11:30:00+07:00 — antigravity — F4: Perbaikan Truthiness Model Odoo & Resolusi Produk Langsung dari Baris SO di _apply_invoices (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
@@ -49,6 +87,13 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-14T11:30:00+07:00
+
+## 2026-11-14T11:16:55+07:00 — Agent-Opencode — I2-2: export XLSX wizard laporan + guard formula injection
+**Konteks:** [F] PR #123 di-merge pemilik ke `main` pada `3c143c6`; lima workflow main hijau (CI, Upgrade Runtime Verification, Full Dataset Runtime Verification, Seed supervision, PWA quality), `result_html` di main sudah `sanitize=True`, katalog tetap 58/58 `BELUM_DITERIMA`. [F] Urutan kerja disetujui pemilik: 2 (XLSX) → 1 (aktivasi) → 3 (I3).
+**Berubah:** `addons/id_finance_reporting/wizards/finance_report_wizard.py` (`action_export_xlsx`, field `result_xlsx`/`result_filename`, builder Summary + satu sheet per bagian, `_xlsx_text` guard, batas ekspor eksplisit); `views/finance_report_wizard_views.xml` (tombol **Export XLSX**); `i18n/id.po` (+20 entri); `__manifest__.py` `19.0.1.5.0`; `scripts/ops/verify_finance_i2_exposure.py` (`check_xlsx_export`); `docs/finance/I2_XLSX_EXPORT.md` + indeks `docs/finance/README.md`.
+**Diverifikasi:** [F] `ruff check .` PASS, `scripts/check_manifests.py` PASS, `compileall` PASS, PO `id_finance_reporting` 92 entri + `id_finance_foundation` 20 entri lolos pemeriksa lokal (placeholder parity, tanpa duplikat). [BU] Bukti runtime `FINANCE_I2_EXPOSURE` dengan komponen `xlsx` (helper guard, guard level workbook, 8/8 jenis laporan, pembersihan workbook basi, izin baca/tolak) menunggu CI pada SHA PR ini.
+**Belum diuji:** [BU] Membuka workbook di Excel/LibreOffice desktop/tablet; export pada volume demo (1.324 invoice) dan pengukuran waktu; PDF atau padanan terdokumentasi; tie-out angka per report ID; sign-off Finance Controller/QA. [BU] Aktivasi DB demo (I2-3) belum dijalankan; payroll, FIN36/55/56, I3–I8 tetap terbuka. [F] Katalog tidak diubah; tidak ada merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-14T11:16:55+07:00
 
 ## 2026-11-14T10:10:00+07:00 — antigravity — F4: Resolusi Pembuatan Faktur Penjualan Native dengan Kode Pajak 04 & DPP Nilai Lain 11/12 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
@@ -5543,7 +5588,6 @@ mengaktifkan required checks setelah nama check tersedia dari run GitHub.
 **Batas:** DTO/OpenAPI0.12 client-owned; no new endpoint/backend. Seeding dependency belum diambil. Cashier handoff/upload resi tidak diimplementasi. Tidak ada revisi accepted/pending/recovery data rusak atau reopen trip; perubahan setelah closing butuh review. Approval/closing/map/hash/sesi client bukan auth/financial/server authority. Runtime Odoo lokal tidak diulang karena addon tidak berubah. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh.
 **Menunggu:** CI/review PR baru, tidak merge/deploy.
 
-
 ## 2026-10-28 Ã¢â‚¬â€ codex supervisor Ã¢â‚¬â€ Integrasi PR #32 dengan main
 **Mandat:** pemilik meminta merge setelah verdict layak merge pada 766a60e. Main sudah memuat PR #33 (d2a54bf).
 **Resolusi:** konflik hanya docs/HANDOFF.md; seluruh entri UI dan PWA dipertahankan. Runtime dan tes tetap persis hasil gabungan kedua branch. CI integrasi harus hijau sebelum merge PR #32.
@@ -5553,7 +5597,6 @@ mengaktifkan required checks setelah nama check tersedia dari run GitHub.
 **Perbaikan:** menambahkan `getEditableTitleInput(block)` sebagai satu guard bersama untuk render spec dan aktivasi editor. Hidden input dikecualikan, sementara satu-satunya input visible yang lolos validasi (text/search non-required dalam h1) dipilih konsisten. Handler tidak lagi menggunakan `querySelector("h1 input")` yang dapat memilih hidden input.
 **Regresi:** memperluas `docs/ui/e2e/test_title_spec.py` untuk hidden input sebelum input draft, hidden-only dengan judul readonly, dan hidden plus dua visible controls. Fixture hidden-before-visible memanggil helper produksi dan memastikan input text asli menjadi activeElement; unsupported second visible control tetap ditolak.
 **Verifikasi:** belum mengklaim tes lulus lokal. Perlu menunggu CI pada SHA baru dan review ulang supervisor. Status sebelumnya untuk SHA `9abcd5f` hijau, tetapi tidak mencakup residual P2 ini. Tidak merge/deploy.
-
 
 ## 2026-10-28 Ã¢â‚¬â€ implementer Ã¢â‚¬â€ Perbaikan akses keyboard dan validasi judul form PR #32
 **Basis:** PR #32, checkpoint supervisor `aa38722346ba88a1a8488f74f1befb21bc39cfcd`; branch `agen/ui-form-title-v8`. Fokus hanya dua temuan P2, tidak mengubah seed/accounting atau deployment.
@@ -5568,7 +5611,6 @@ mengaktifkan required checks setelah nama check tersedia dari run GitHub.
 **Diverifikasi lokal:** 239 unit +1 hosting PASS; 84 browser phone/tablet PASS, seluruh 64 lama +20 regresi, satu run final tanpa retry dan worker default. Browser resmi Chrome for Testing Headless Shell145.0.7632.6 (versi Playwright1.58.2), bukan Chromium153 pengganti. Full Chrome resmi gagal launch karena socket singleton dibatasi lingkungan; verifikasi resmi memakai headless shell yang sesuai runner. Format/typecheck/contracts/demo+live/budget (demo67,1 KiB gzip/font47,1 KiB), Ruff/4 manifest dan diff check PASS.
 **Batas/menunggu:** CI remote pada SHA perbaikan diperiksa setelah publikasi dan URL/hasil dicatat pada PR. Docker/Odoo lokal tidak diulang; tidak ada perubahan backend/addon/seed/hosting/workflow/ruleset/Railway. Tetap simulator/live terkunci, HOLD menunggu review ulang; tidak merge/deploy.
 
-
 ## 2026-10-28 Ã¢â‚¬â€ agent-codex-pwa Ã¢â‚¬â€ Implementasi rules Sales Order dan Delivery
 **Basis:** main 2feadf3; branch agen/pwa-sales-delivery-rules, sesuai mandat pemilik. Aturan Ã‚Â§17 ditulis sebelum implementasi; protocol/development/handoff dan log codex dibaca.
 **Berubah:** list Sales/Delivery wajib daily sync; driver memakai sesi pagi dan manifest tersimpan bersama snapshot. SO demo mendukung karton144/pack12/pcs1, qty/SKU, estimasi harga dan diskon order dengan alasan. Pengajuan diskon Normal menunggu approval; kontrol simulator di Lainnya membuat keputusan approved/rejected beralasan dengan CAS satu kali dan command immutable. Delivery manifest v2 multi-SKU pcs, lima status sesuai label pemilik, alasan non-partial disalin ke semua baris dan partial wajib per item terdampak. Foto toko Ã¢â€ â€™ set pinpoint Ã¢â€ â€™ mulai sesi Ã¢â€ â€™ penerimaan Ã¢â€ â€™ foto closing berbeda Ã¢â€ â€™ enqueue+closed atomik Ã¢â€ â€™ summary/list updated Ã¢â€ â€™ DO berikutnya; satu sesi delivery aktif per owner/DB, restore offline dan validasi media opening/closing/ancestor. Sesi Sales existing diperluas urutan foto/pinpoint dan status closed pada list.
@@ -5576,15 +5618,12 @@ mengaktifkan required checks setelah nama check tersedia dari run GitHub.
 **Batas:** diskon demo persen integer pada total order, approve seluruh nilai diminta atau reject; limit/tier/per-line/promo belum ditetapkan. Cancel/pending hanya hasil simulator, bukan pembatalan picking/approval server. Same-day aksi/koreksi; sesi tertinggal lintas hari/rusak ditahan untuk review, belum recovery. Pinpoint tetap grid simulasi tanpa basemap; timestamp aksi set pin berbeda dari sampel GPS. Snapshot/receipt/hash client bukan authority backend. OpenAPI0.11 additive; riwayat lama dipertahankan, tanpa migrasi/destructive rewrite. Backend/addon/seed/loader/workflow/ruleset/Railway tidak disentuh; live terkunci.
 **Menunggu:** review PR dan CI remote; tidak merge/deploy.
 
-
 ## 2026-10-28 Ã¢â‚¬â€ agent-codex-pwa Ã¢â‚¬â€ Rules SO, penerimaan dan sesi lapangan
 **Berubah:** SCOPE Ã‚Â§14 merujuk blueprint mobile Ã‚Â§17: lima status delivery, alasan per baris dengan input massal non-partial, tier SKU demo 144 pcs/karton dan 12 pcs/pack, simulasi approval diskon, daily sync sebelum list dan siklus sesi foto opening/pinpointÃ¢â‚¬â€œintraÃ¢â‚¬â€œfoto closingÃ¢â‚¬â€œupdate list pada Sales/Delivery.
 **Diverifikasi:** dokumentasi dan konsistensi requirement diperiksa; git diff --check.
 **Belum diuji:** tidak ada perubahan runtime; seluruh requirement baru masih pekerjaan implementasi.
 **Butir terbuka:** authority/transisi cancel-pending dan parameter approval diskon; backend tetap dependency, live terkunci.
 **Menunggu:** implementasi sesuai urutan Ã‚Â§17.5; tidak deploy.
-
-
 
 ## 2026-10-28 Ã¢â‚¬â€ codex agent Ã¢â‚¬â€ Koreksi collection ditolak simulator
 **Basis:** main f99e117 (PR #30 merged), branch agen/mobile-collection-corrections; whats_new/protocol/development/handoff dibaca dan plan sebelum kode.
