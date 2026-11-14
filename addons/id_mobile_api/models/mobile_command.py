@@ -444,8 +444,10 @@ class MobileCommand(models.Model):
             checkins_today = []
             checkouts_today = []
             for cmd in prior_visit_cmds:
-                if to_wita_date(cmd.create_date) == day:
-                    p = extract_cmd_payload(cmd)
+                p = extract_cmd_payload(cmd)
+                cmd_date = to_wita_date(cmd.create_date)
+                cmd_day = p.get("business_date")
+                if cmd_date == day or cmd_day == day.isoformat():
                     cmd_outlet = str(p.get("outlet_id") or "")
                     if cmd_outlet == str(outlet_id):
                         if cmd.command_type == "sales.visit.check_in":
@@ -671,8 +673,10 @@ class MobileCommand(models.Model):
             accepted_dos_in_trip = set()
             valid_pod_uuids_for_trip = set()
             for pod_cmd in submitted_pods:
-                if to_wita_date(pod_cmd.create_date) == day:
-                    p = extract_cmd_payload(pod_cmd)
+                p = extract_cmd_payload(pod_cmd)
+                cmd_date = to_wita_date(pod_cmd.create_date)
+                cmd_day = p.get("business_date")
+                if cmd_date == day or cmd_day == day.isoformat():
                     p_src = p.get("source") or {}
                     p_trip = str(p_src.get("trip") or p.get("trip_id") or p.get("manifest_id") or "").strip()
                     p_do = str(p_src.get("id") or p.get("do_id") or "").strip()

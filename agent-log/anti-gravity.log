@@ -2742,3 +2742,20 @@
   * python -m ruff check addons/id_mobile_api: PASS clean (0 error).
   * Zero touch live Railway / production database.
 - Task managed by antigravity at 2026-11-15T01:25:00+07:00
+
+[2026-11-15T01:35:00+07:00] [INFO] CI: Resolusi Pengikatan Tanggal Bisnis Command & Scheduled Picking (id_mobile_api)
+- Analisis Kegagalan install-test (Run 43626346362 Job 132543017201):
+  * Error 1: odoo.exceptions.UserError: Check-out ditolak: belum ada sesi check-in yang sah untuk outlet ini pada hari ini. (test_commands_api.py:628)
+  * Error 2: odoo.exceptions.UserError: DO DO-FMCG-001 dijadwalkan pada 2026-11-15, bukan untuk pengiriman hari ini (2026-11-14). (test_commands_api.py:943)
+  * Root Cause:
+    1. Pada _handle_visit (check-out) dan _handle_trip_close: pencarian perintah check-in/POD sebelumnya hanya memeriksa 'to_wita_date(cmd.create_date) == day'. Saat tes dijalankan pada hari Minggu (WITA) dengan business_date() yang dimundurkan ke Sabtu oleh MobileFixture, create_date (Minggu) berbeda dengan day (Sabtu).
+    2. Pada test_delivery_pod_and_trip_close_validation: pembuatan stock.picking menggunakan fields.Datetime.now() yang mengevaluasi waktu sekarang (Minggu WITA), sedangkan workday assignment pengiriman menggunakan business_date() (Sabtu), memicu penolakan validasi tanggal operasional DO.
+  * Solusi:
+    1. Pada addons/id_mobile_api/models/mobile_command.py: memperluas pencocokan perintah check-in dan POD hari ini dengan memeriksa to_wita_date(create_date) == day ATAU payload.business_date == day.isoformat().
+    2. Pada addons/id_mobile_api/tests/test_commands_api.py: mengikat scheduled_date seluruh picking pengiriman uji ke datetime.combine(day, datetime.min.time()) yang selaras dengan business_date() aktif.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 56/56 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check addons/id_mobile_api: PASS clean (0 error).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-15T01:35:00+07:00

@@ -1,3 +1,18 @@
+## 2026-11-15T01:35:00+07:00 — antigravity — CI: Resolusi Pengikatan Tanggal Bisnis Command & Scheduled Picking (id_mobile_api) (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `addons/id_mobile_api/models/mobile_command.py`:
+  - Pada `_handle_visit` (check-out) dan `_handle_trip_close` (trip close), memperluas pencocokan perintah check-in dan POD hari ini agar memeriksa `to_wita_date(create_date) == day` ATAU `p.get("business_date") == day.isoformat()`. Menghilangkan kegagalan check-out saat tanggal kalender server berbeda dengan tanggal shift operasional/uji.
+- `addons/id_mobile_api/tests/test_commands_api.py`:
+  - Mengikat `scheduled_date` pada pembuatan `stock.picking` uji ke `datetime.combine(day, datetime.min.time())` yang selaras dengan `business_date()` aktif, menggantikan `fields.Datetime.now()` yang melompat ke hari Minggu (WITA).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 56/56 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check addons/id_mobile_api`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T01:35:00+07:00
+
 ## 2026-11-15T01:25:00+07:00 — antigravity — CI: Resolusi Rollover Kalender Minggu pada Mock business_date staging.py (id_mobile_api) (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `addons/id_mobile_api/staging.py`:
