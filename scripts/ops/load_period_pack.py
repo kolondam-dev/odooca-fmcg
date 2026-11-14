@@ -1746,6 +1746,23 @@ class GenericPeriodPackLoader:
 
         return tax_rec
 
+    def _set_sol_taxes(self, sol: Any, tax_id: int) -> None:
+        """Assign canonical tax to sale.order.line across Odoo schema variations."""
+        tax_cmd = [(6, 0, [tax_id])]
+        sol_fields = getattr(sol, "_fields", {}) or {}
+        sol_vals = {}
+        if "tax_ids" in sol_fields:
+            sol_vals["tax_ids"] = tax_cmd
+        elif "tax_id" in sol_fields:
+            sol_vals["tax_id"] = tax_cmd
+        elif "taxes_id" in sol_fields:
+            sol_vals["taxes_id"] = tax_cmd
+        else:
+            sol_vals["tax_ids"] = tax_cmd
+
+        if sol_vals and hasattr(sol, "write"):
+            sol.write(sol_vals)
+
     def _assign_lots_to_picking(self, pick: Any, lines_data: List[Dict[str, Any]]) -> None:
         """Map canonical source lots and target quantities into stock.move and stock.move.line deterministically.
 
@@ -2407,10 +2424,9 @@ class GenericPeriodPackLoader:
             so_rec = SaleOrder.create(so_vals)
             if canonical_tax_04 and hasattr(so_rec, "order_line"):
                 for sol in so_rec.order_line:
-                    cur_t = getattr(sol, "tax_id", None)
+                    cur_t = getattr(sol, "tax_ids", None) or getattr(sol, "tax_id", None) or getattr(sol, "taxes_id", None)
                     if not cur_t or (hasattr(cur_t, "ids") and canonical_tax_04.id not in cur_t.ids):
-                        if hasattr(sol, "write"):
-                            sol.write({"tax_id": [(6, 0, [canonical_tax_04.id])]})
+                        self._set_sol_taxes(sol, canonical_tax_04.id)
             so_rec.with_context(fmcg_seed_load=True).action_confirm()
             so_count += 1
 
@@ -2520,10 +2536,9 @@ class GenericPeriodPackLoader:
             canonical_tax_04 = self._resolve_canonical_tax_code_04()
             if canonical_tax_04 and hasattr(so, "order_line"):
                 for sol in so.order_line:
-                    cur_t = getattr(sol, "tax_id", None)
+                    cur_t = getattr(sol, "tax_ids", None) or getattr(sol, "tax_id", None) or getattr(sol, "taxes_id", None)
                     if not cur_t or (hasattr(cur_t, "ids") and canonical_tax_04.id not in cur_t.ids):
-                        if hasattr(sol, "write"):
-                            sol.write({"tax_id": [(6, 0, [canonical_tax_04.id])]})
+                        self._set_sol_taxes(sol, canonical_tax_04.id)
 
             # Generate invoice from SO
             inv = so._create_invoices()

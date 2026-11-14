@@ -2613,3 +2613,18 @@
   * python -m ruff check .: PASS (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-13T23:55:00+07:00
+
+[2026-11-14T08:21:00+07:00] [INFO] F4: Kompatibilitas Skema Many2many Field Pajak sale.order.line Odoo 19
+- Analisis Kegagalan install-test Langkah 10 (Run 43467559367):
+  * Pada commit 6e90cd4, 14 dari 15 checks CI berhasil lulus penuh (Full Dataset 22m16s, Module Upgrade 25m18s, Candidate Install 7m10s, seluruh PWA suite, unit contract, static, invariant tests).
+  * Pada install-test Langkah 10, terjadi ValueError: Invalid field 'tax_id' in 'sale.order.line' saat menulis pajak ke baris SO pasca-create.
+  * Root Cause: Pada Odoo 19, nama field relasi pajak pada model sale.order.line didefinisikan sebagai 'tax_ids' (jamak), bukan 'tax_id'.
+  * Solusi:
+    - Menambahkan helper method _set_sol_taxes() yang adaptif terhadap _fields sale.order.line ('tax_ids', 'tax_id', 'taxes_id').
+    - Menggunakan _set_sol_taxes() pada _apply_sales_orders_and_deliveries() dan _apply_invoices().
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 54/54 tests PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check scripts/ops/load_period_pack.py: PASS (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-14T08:21:00+07:00

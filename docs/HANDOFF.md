@@ -1,3 +1,17 @@
+## 2026-11-14T08:21:00+07:00 — antigravity — F4: Kompatibilitas Skema Many2many Field Pajak sale.order.line Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menambahkan metode pembantu `_set_sol_taxes(sol, tax_id)` yang secara adaptif mendeteksi nama field relasi pajak pada model `sale.order.line` (`tax_ids` pada Odoo 19, dengan fallback `tax_id` / `taxes_id`).
+  - Mengoreksi penulisan field pajak pada baris SO di `_apply_sales_orders_and_deliveries()` dan `_apply_invoices()` yang sebelumnya memicu `ValueError: Invalid field 'tax_id' in 'sale.order.line'` pada saat Odoo 19 `write()` dieksekusi.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-14T08:21:00+07:00
+
 ## 2026-11-13T23:55:00+07:00 — antigravity — F4: Kalibrasi Repartition Factor DPP Nilai Lain 11/12 (PMK 131/2024) & Persistensi Pajak SO Order Line (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/load_fmcg_seed.py`:
