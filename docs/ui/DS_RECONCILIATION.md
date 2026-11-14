@@ -186,6 +186,12 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Kontrak lama `collection.receipt.submit` (v1)** dan domain `collection*.ts` dipertahankan untuk antrean lama; UI lama (`CollectionWorkspace`) **tetap menjadi jalur pencatatan saat `collection_v2` mati** (review #127 P1) dan disembunyikan hanya bila flag hidup; tombol Tagihan v2 hanya ditawarkan saat flag hidup. Hapus v1 setelah backend v2 hidup.
 - **Tracker hub:** langkah "Tagihan" belum berubah status otomatis.
 
+### K21. Fase 3B-7 — Ajukan cuti (47): layar DS, kontrak tetap
+
+**Selesai di PWA:** layar penuh `AjukanCutiScreen` (Saldo, Jenis cuti, Mulai/Selesai, Durasi hari kerja, Alasan, Callout "diteruskan ke atasan, tanpa notifikasi otomatis", Kirim pengajuan) menggantikan dialog `TaskForm` lama; Back menutup layar. Payload `hris.leave.request` tidak berubah (`date_from`, `date_to`, `reason`), divalidasi `LeaveRequestSchema` strict. Durasi hanya tampilan (Senin–Jumat).
+
+**Utang (butuh backend):** jenis cuti selain tahunan, lampiran surat dokter (cuti sakit), saldo cuti nyata (kini "Dihitung server"), pengurangan libur nasional pada durasi, layar riwayat/saldo cuti (tidak ada di mockup terkunci). Pengecekan layar 48 menunggu mockup tersedia (tidak ditemukan di artifact Design).
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).
