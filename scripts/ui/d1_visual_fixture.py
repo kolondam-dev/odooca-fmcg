@@ -205,4 +205,5 @@ expected.update({"target": len(target_users) * 50000000, "refund": 60000,
     "first_user_id": users[0].id, "first_user_net": by_user[str(users[0].id)]["net"],
     "sku": products[0].id, "negative_net": -900000})
 env.cr.commit()
-print("D1_VISUAL_FIXTURE=" + json.dumps({"expected": expected, "reconciliation": checks, "geo": evidence_geo}, sort_keys=True))
+report = {"expected": expected, "reconciliation": checks, "geo": evidence_geo}
+print("D1_VISUAL_FIXTURE=" + json.dumps(report, sort_keys=True))
