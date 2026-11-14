@@ -946,6 +946,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "client_uuid": pod_uuid1,
             "type": "delivery.pod.submit",
             "payload": {
+                "business_date": day_str,
                 "pod_version": 1,
                 "source": {
                     "id": picking1.name,
@@ -997,6 +998,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "client_uuid": pod_uuid2,
             "type": "delivery.pod.submit",
             "payload": {
+                "business_date": day_str,
                 "pod_version": 1,
                 "source": {
                     "id": picking2.name,

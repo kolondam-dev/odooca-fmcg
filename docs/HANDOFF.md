@@ -1,3 +1,18 @@
+## 2026-11-15T01:45:00+07:00 — antigravity — CI: Resolusi Pengikatan Tanggal Bisnis POD ke Manifest Trip (id_mobile_api) (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `addons/id_mobile_api/models/mobile_command.py`:
+  - Pada `delivery.trip.close` (`_handle_delivery`), mengakui POD yang diterima jika DO termasuk dalam manifest trip hari ini (`p_do in required_do_names`) atau tanggalnya cocok (`cmd_date == day or cmd_day == day.isoformat()`). Mencegah penolakan penutupan trip akibat pergeseran kalender Minggu pada command creation time.
+- `addons/id_mobile_api/tests/test_commands_api.py`:
+  - Menambahkan `"business_date": day_str` pada payload `delivery.pod.submit` untuk DO-FMCG-001 dan DO-FMCG-002 agar eksplisit terikat pada tanggal operasional trip.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 56/56 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check addons/id_mobile_api`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T01:45:00+07:00
+
 ## 2026-11-15T01:35:00+07:00 — antigravity — CI: Resolusi Pengikatan Tanggal Bisnis Command & Scheduled Picking (id_mobile_api) (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `addons/id_mobile_api/models/mobile_command.py`:

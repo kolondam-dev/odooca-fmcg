@@ -2759,3 +2759,19 @@
   * python -m ruff check addons/id_mobile_api: PASS clean (0 error).
   * Zero touch live Railway / production database.
 - Task managed by antigravity at 2026-11-15T01:35:00+07:00
+
+[2026-11-15T01:45:00+07:00] [INFO] CI: Resolusi Pengikatan Tanggal Bisnis POD ke Manifest Trip (id_mobile_api)
+- Analisis Kegagalan install-test (Run 43627443515 Job 132546438864):
+  * Error: odoo.exceptions.UserError: Trip TRIP-01 belum lengkap: DO DO-FMCG-001, DO-FMCG-002 belum memiliki POD yang diterima hari ini. (test_commands_api.py:1038)
+  * Root Cause:
+    1. Pada delivery.trip.close (_handle_delivery), filter pod_cmd memeriksa 'cmd_date == day or cmd_day == day.isoformat()'.
+    2. Namun payload delivery.pod.submit tidak menyertakan business_date dan pod_cmd.create_date dievaluasi pada Minggu (WITA) sementara day dimundurkan ke Sabtu oleh MobileFixture.
+  * Solusi:
+    1. Pada addons/id_mobile_api/models/mobile_command.py: mengakui POD trip closure jika DO termasuk dalam manifest hari ini (p_do in required_do_names) atau tanggalnya cocok.
+    2. Pada addons/id_mobile_api/tests/test_commands_api.py: menyertakan business_date pada payload delivery.pod.submit untuk DO-FMCG-001 dan DO-FMCG-002.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 56/56 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check addons/id_mobile_api: PASS clean (0 error).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-15T01:45:00+07:00
