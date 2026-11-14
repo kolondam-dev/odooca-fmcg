@@ -79,3 +79,38 @@
 - [F] Branch memuat main 488bd87 lewat merge fab0cbc; konflik hanya docs/HANDOFF.md, entri claude-design dan Agent-Opencode sama-sama dipertahankan urut waktu terbaru.
 - [BU] Aktivasi DB demo, export XLSX/PDF + guard formula injection, geometri browser, tie-out per report ID, sign-off, payroll, FIN36/55/56, I3-I8 tetap terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy/verdict.
 - Task managed by Agent-Opencode at 2026-11-13T12:46:38+07:00
+
+[2026-11-14T11:16:55+07:00] [INFO] I2-2: export XLSX wizard laporan + guard formula injection
+- [F] PR #123 di-merge pemilik ke main pada 3c143c6; lima workflow main hijau (CI, Upgrade Runtime, Full Dataset, Seed supervision, PWA quality). Katalog tetap 58/58 BELUM_DITERIMA.
+- [F] Wizard id.finance.report.wizard kini punya action_export_xlsx: snapshot yang sama dengan pratinjau, workbook Summary + satu sheet per bagian, nama berkas FIN<id>-<jenis>-<periode>.xlsx, unduhan lewat /web/content/<model>/<id>/result_xlsx/<nama>?download=true.
+- [F] Guard formula injection dua lapis: semua teks ditulis sebagai string; nilai yang diawali = + - @ tab atau carriage return diberi apostrof. Karakter kontrol XML dibuang, teks dibatasi 32.000 karakter dengan penanda, baris di atas 20.000 ditolak (bukan dipotong), kolom di atas 40 dicatat di Summary, workbook lama dihapus saat laporan dijalankan ulang.
+- [F] Verifikasi lokal: ruff check . PASS, check_manifests PASS, compileall PASS, id.po 92 + 20 entri valid tanpa duplikat. Modul 19.0.1.5.0.
+- [BU] Bukti runtime FINANCE_I2_EXPOSURE dengan komponen xlsx (helper guard, guard workbook, 8/8 jenis laporan, pembersihan workbook basi, izin baca/tolak) menunggu CI pada SHA PR. Workbook belum dibuka di Excel/LibreOffice; volume demo, PDF, tie-out dan sign-off belum diuji.
+- [BU] Aktivasi DB demo (I2-3) belum dijalankan. Tidak ada merge/deploy/katalog yang diubah.
+- Task managed by Agent-Opencode at 2026-11-14T11:16:55+07:00
+
+[2026-11-14T11:50:56+07:00] [INFO] I2-2 XLSX PASS di CI pada b23cf09; PR #131 12/12 hijau
+- [F] Run 43556711792 langkah I2 exposure PASS pada b23cf09. Komponen xlsx memuat 13 kasus PASS: helper guard, guard level workbook, 8/8 jenis laporan, cleared_on_rerun, reader_can_export_xlsx; sales_export_denied ACCESS_DENIED.
+- [F] Guard level workbook: tidak ada elemen <f>; =SUM(1+1), @cmd, -7.5+1 tersimpan berapostrof; 7.5 tersimpan sebagai sel numerik <v>7.5</v>.
+- [F] PR #131 12/12 check hijau pada b23cf09 (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate).
+- [F] Branch memuat main 99ad910 lewat merge b23cf09; konflik hanya docs/HANDOFF.md, entri claude-design dan Agent-Opencode dipertahankan.
+- [BU] Workbook belum dibuka di Excel/LibreOffice; volume demo 1.324 invoice, PDF, tie-out, sign-off, aktivasi DB demo (I2-3), payroll, FIN36/55/56, I3-I8 masih terbuka. Katalog tetap 58/58 BELUM_DITERIMA. Tidak ada merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-14T11:50:56+07:00
+
+[2026-11-14T17:08:43+07:00] [INFO] I2-2 P2: koreksi kontrak kelengkapan XLSX (__nested, payload valid, disclosure)
+- [F] Menutup P2 review #5902486524: janji 'nested values available in the JSON payload' dihapus.
+- [F] Wizard: kolom __nested menyimpan nilai bersarang + kolom skalar di atas 40 (atau seluruh baris bila tidak ada kolom skalar), sehingga workbook lengkap di bawah batas baris.
+- [F] _xlsx_text_parts mengembalikan flag pemotongan; Summary menyebut batas sel 32.000, batas payload 200.000, dan jumlah sel terpotong + sel bersarang per bagian.
+- [F] _payload_json: di atas 200.000 karakter tidak lagi dipotong mentah. JSON tetap valid, bagian utuh dimasukkan selama muat, sisanya disebut di __truncation__.omitted_sections.
+- [F] Regresi CI check_xlsx_completeness: payload_cap_valid_json, nested_completeness (NESTED-TAIL-VALUE di workbook), cell_truncation_disclosed. check_wizard_runs mem-parse result_json 8/8 laporan.
+- [F] Verifikasi lokal: ruff PASS, check_manifests PASS, compileall PASS, id.po 97 entri. Modul 19.0.1.5.1.
+- [BU] Bukti runtime P2 menunggu CI pada HEAD PR #131. Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-14T17:08:43+07:00
+
+[2026-11-14T17:37:13+07:00] [INFO] I2-2 P2: bukti CI exact-SHA fe26a28 (5/5 workflow hijau, completeness 3/3)
+- [F] P2 review #5902486524 dikoreksi di 54c316f; main 6fe9f2c di-merge ke cabang sebagai fe26a28 (konflik hanya docs/HANDOFF.md).
+- [F] Bukti CI exact-SHA fe26a28: CI 43584001596, Upgrade Runtime 43584001555, Finance I0 candidate spike 43584001640 (job 132414505091), Seed supervision 43584001537, PWA quality 43584001651 — semuanya success.
+- [F] FINANCE_I2_EXPOSURE=PASS; completeness 3/3 (payload_cap_valid_json, nested_completeness, cell_truncation_disclosed); xlsx 12 PASS + sales_export_denied; runs 8/8; sanitization 2/2; surface 9/9; roles 1 izin + 5 penolakan.
+- [F] docs/finance/I2_XLSX_EXPORT.md memuat run/job exact-SHA dan keluaran completeness.
+- [BU] Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-14T17:37:13+07:00

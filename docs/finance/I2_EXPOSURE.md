@@ -96,7 +96,10 @@ di-rollback; skrip memeriksa tidak ada kebocoran company/user.
 
 ## Yang belum dibuktikan (tetap `BELUM_DITERIMA`)
 
-- [BU] Export XLSX/PDF dan guard formula injection.
+- [BU] Export PDF atau padanan terdokumentasi. Export XLSX + guard formula
+  injection sudah dibuktikan di `docs/finance/I2_XLSX_EXPORT.md`
+  (`b23cf09`, run `43556711792`); membuka workbook di Excel/LibreOffice dan
+  volume demo belum diuji.
 - [BU] Geometri browser desktop/tablet dan uji visual.
 - [BU] Tie-out angka per report ID terhadap oracle independen di database demo
   (oracle angka sudah ada di paket I2a/I2b/I2c, tetapi bukan penerimaan UI).
