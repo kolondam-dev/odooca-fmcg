@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 
 from odoo.exceptions import AccessError
+from odoo.addons.id_dashboard_redesign.models.dashboard_bridge import _geo_boundaries
 
 if not env.cr.dbname.startswith("d1_"):
     raise RuntimeError("D1 visual fixture requires a disposable d1_ database")
@@ -45,13 +46,28 @@ for i in range(8):
     district = env["id.district"].search([("city_id.kode_kemendagri", "=", code)], limit=1)
     if not district:
         raise AssertionError(f"Missing seeded district for {code}")
-    village = env["id.subdistrict"]
+    coordinates = {}
     if code == "71.71":
         village = env.ref("id_base.subdistrict_calaca")
         district = village.district_id
+    elif code == "71.73":
+        district = env["id.district"].search([("kode_kemendagri", "=", "71.73.02")], limit=1)
+        village = env["id.subdistrict"].create({
+            "name": "D1 QA Legacy Paslaten", "district_id": district.id,
+        })
+        coordinates = {"partner_latitude": 1.320063, "partner_longitude": 124.829968}
+    else:
+        shape = _geo_boundaries("sulut_villages.geojson")[district.kode_kemendagri][0]
+        village = env["id.subdistrict"].search([
+            ("kode_kemendagri", "=", shape["code"]),
+        ], limit=1) or env["id.subdistrict"].create({
+            "name": shape["name"], "district_id": district.id, "kode_kemendagri": shape["code"],
+        })
+    if not village:
+        raise AssertionError(f"Missing mapped fixture village for {code}")
     outlets = env["res.partner"].create([{"name": f"D1 QA Outlet {i + 1}-{j}",
-        "district_id": district.id, "subdistrict_id": village.id, "channel_id": channels[i % 4].id}
-        for j in range(2 + i % 4)])
+        "district_id": district.id, "subdistrict_id": village.id, "channel_id": channels[i % 4].id,
+        **coordinates} for j in range(2 + i % 4)])
     own = {"gross": 0, "discount": 0, "net": 0, "orders": 28}
     for day in range(1, 29):
         outlet = outlets[(day - 1) % len(outlets)]
@@ -129,6 +145,44 @@ for key in ("gross", "discount", "net", "orders"):
     equal(source["total"][key], expected[key], "whole_scope_" + key)
 for key in ("principal", "channel", "city", "salesmen"):
     equal(sum(row["net"] for row in source[key]), expected["net"], "ranking_tie_out_" + key)
+city_shapes = {feature["code"] for features in _geo_boundaries("sulut_kab_kota.geojson").values()
+               for feature in features}
+dashboard = service.with_user(admin)
+conversion = dashboard._service("D1")
+evidence_geo = []
+for label, filters in (("all", {}), ("sku", {"sku": {"mode": "in", "ids": [products[2].id]}})):
+    data = dashboard.get_data("D1", {"query": {**query, "filters": filters}})["source"]
+    net = data["total"]["net"]
+    city_total = district_total = village_total = 0
+    for city_row in data["city"]:
+        city = city_row.get("code")
+        assert city in city_shapes, (label, city_row["name"])
+        city_total += city_row["net"]
+        district_shapes = {feature["code"] for feature in dashboard.get_geo_boundaries("D1", city)}
+        district_amounts = data["geo"].get(city, {})
+        equal(sum(district_amounts.values()), city_row["net"], f"{label}: districts of {city}")
+        for district, amount in district_amounts.items():
+            assert district in district_shapes, (label, city, district)
+            district_total += amount
+            village_shapes = {feature["code"] for feature in dashboard.get_geo_boundaries("D1", district)}
+            village_amounts = data["geo"].get(district, {})
+            equal(sum(village_amounts.values()), amount, f"{label}: villages of {district}")
+            for village, value in village_amounts.items():
+                assert village in village_shapes, (label, district, village)
+                village_total += value
+                ids = data["geo_partners"][district][village]
+                lines = env["sale.order.line"].with_user(admin).search([
+                    *data["line_domain"], ("order_id.partner_id", "in", ids),
+                ])
+                fx = {}
+                equal(sum(line.price_subtotal * conversion._conversion(line.order_id, fx)
+                          for line in lines), value, f"{label}: source lines of {village}")
+    assert data["geo"]["71.73.02"]["71.73.02.1012"] > 0
+    for level, total in (("city", city_total), ("district", district_total), ("village", village_total)):
+        equal(total, net, f"{label}: {level} vs KPI")
+    evidence_geo.append({"company": company.name, "period": data["period"], "filters": filters,
+                         "net": net, "city": city_total, "district": district_total,
+                         "village": village_total, "outside_orders": 0, "outside_net": 0})
 equal(source["total"]["pjp"]["visits"], expected["visits"], "accepted_visits")
 equal(source["total"]["pjp"]["effective"], expected["effective"], "effective_after_checkin")
 equal(source["total"]["calls_per_day"], expected["visits"] / 224, "assigned_day_denominator")
@@ -151,4 +205,4 @@ expected.update({"target": len(target_users) * 50000000, "refund": 60000,
     "first_user_id": users[0].id, "first_user_net": by_user[str(users[0].id)]["net"],
     "sku": products[0].id, "negative_net": -900000})
 env.cr.commit()
-print("D1_VISUAL_FIXTURE=" + json.dumps({"expected": expected, "reconciliation": checks}, sort_keys=True))
+print("D1_VISUAL_FIXTURE=" + json.dumps({"expected": expected, "reconciliation": checks, "geo": evidence_geo}, sort_keys=True))
