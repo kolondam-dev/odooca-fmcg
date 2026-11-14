@@ -59,6 +59,10 @@ MAX_JSON_CHARS = 200000
 MAX_XLSX_ROWS = 20000
 MAX_XLSX_COLUMNS = 40
 MAX_XLSX_CELL_CHARS = 32000
+# Bookkeeping column that carries everything a row holds beyond the scalar
+# columns: nested lists/objects and scalar columns past the column limit. It is
+# added on top of MAX_XLSX_COLUMNS, never counted as one of them.
+NESTED_COLUMN = "__nested"
 FORMULA_TRIGGERS = ("=", "+", "-", "@", "\t", "\r")
 INVALID_XML_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 SHEET_NAME_FORBIDDEN = re.compile(r"[\[\]:*?/\\]")
@@ -99,8 +103,8 @@ def _is_scalar(value):
     return value is None or isinstance(value, (str, int, float, bool))
 
 
-def _xlsx_text(value):
-    """Render one cell as inert text.
+def _xlsx_text_parts(value):
+    """Render one cell as inert text and report whether the cell had to be cut.
 
     Cells are written with ``write_string`` so a spreadsheet stores them as
     strings, and a leading formula trigger is quoted as well. Both layers are
@@ -110,11 +114,17 @@ def _xlsx_text(value):
     """
     text = "" if value is None else str(value)
     text = INVALID_XML_CHARS.sub("", text)
-    if len(text) > MAX_XLSX_CELL_CHARS:
+    truncated = len(text) > MAX_XLSX_CELL_CHARS
+    if truncated:
         text = text[:MAX_XLSX_CELL_CHARS] + " ... (truncated)"
     if text[:1] in FORMULA_TRIGGERS:
         text = "'" + text
-    return text
+    return text, truncated
+
+
+def _xlsx_text(value):
+    """Inert text for an XLSX cell, without the truncation flag."""
+    return _xlsx_text_parts(value)[0]
 
 
 class FinanceReportWizard(models.TransientModel):
@@ -389,10 +399,35 @@ class FinanceReportWizard(models.TransientModel):
         try:
             payload = json.dumps(snapshot, default=str, indent=1)
         except (TypeError, ValueError):
-            payload = json.dumps({"error": "payload is not JSON serialisable"}, default=str)
-        if len(payload) > MAX_JSON_CHARS:
-            payload = payload[:MAX_JSON_CHARS] + "\n... (truncated)"
-        return payload
+            return json.dumps({"error": "payload is not JSON serialisable"}, default=str)
+        if len(payload) <= MAX_JSON_CHARS:
+            return payload
+        # A raw cut would produce invalid JSON and drop everything after the cut
+        # without a trace. Keep the payload valid and make the omission explicit:
+        # include whole sections while they fit, then name what was left out.
+        meta = {key: value for key, value in snapshot.items() if key in META_KEYS}
+        keys = [key for key in snapshot if key not in META_KEYS]
+        included = []
+        for key in keys:
+            trial = included + [key]
+            omitted = [other for other in keys if other not in trial]
+            if len(self._json_with_disclosure(meta, snapshot, trial, omitted)) <= MAX_JSON_CHARS:
+                included = trial
+        omitted = [key for key in keys if key not in included]
+        return self._json_with_disclosure(meta, snapshot, included, omitted)
+
+    def _json_with_disclosure(self, meta, snapshot, included, omitted):
+        payload = dict(meta)
+        for key in included:
+            payload[key] = snapshot[key]
+        payload["__truncation__"] = {
+            "applied": True,
+            "limit_chars": MAX_JSON_CHARS,
+            "included_sections": list(included),
+            "omitted_sections": list(omitted),
+            "note": _("The JSON payload is capped; omitted sections are exported in the workbook."),
+        }
+        return json.dumps(payload, default=str, indent=1)
 
     # --------------------------------------------------------------- rendering
     def _render(self, snapshot):
@@ -552,17 +587,22 @@ class FinanceReportWizard(models.TransientModel):
         return name
 
     def _xlsx_write_cell(self, sheet, row, column, value, formats):
+        """Write one cell; return True when the stored text had to be cut."""
         if isinstance(value, bool):
             sheet.write_string(row, column, _("Yes") if value else _("No"))
-        elif isinstance(value, float) and not math.isfinite(value):
+            return False
+        if isinstance(value, float) and not math.isfinite(value):
             # NaN/inf would make Excel repair the file; keep the raw value visible as text.
             sheet.write_string(row, column, _xlsx_text(value))
-        elif isinstance(value, (int, float)):
+            return False
+        if isinstance(value, (int, float)):
             # No number format: the stored value stays exactly what the report
             # service returned, including rates that a 2-decimal display would hide.
             sheet.write_number(row, column, value)
-        else:
-            sheet.write_string(row, column, _xlsx_text(value))
+            return False
+        text, truncated = _xlsx_text_parts(value)
+        sheet.write_string(row, column, text)
+        return truncated
 
     def _xlsx_list_sheet(self, workbook, key, values, used, formats):
         name = self._xlsx_sheet_name(key, used)
@@ -577,13 +617,17 @@ class FinanceReportWizard(models.TransientModel):
             ))
         if not values:
             sheet.write_string(0, 0, _xlsx_text(_("No rows.")))
-            return {"section": key, "type": "list", "rows": 0, "columns": 0, "dropped": []}
+            return {"section": key, "type": "list", "rows": 0, "columns": 0, "dropped": [],
+                    "truncated_cells": 0, "nested_cells": 0, "nested_truncated": 0}
         if not isinstance(values[0], dict):
             sheet.write_string(0, 0, "value", formats["header"])
+            truncated_cells = 0
             for row, item in enumerate(values, start=1):
-                self._xlsx_write_cell(sheet, row, 0, item, formats)
+                cell = item if _is_scalar(item) else json.dumps(item, default=str)
+                truncated_cells += int(self._xlsx_write_cell(sheet, row, 0, cell, formats))
             sheet.freeze_panes(1, 0)
-            return {"section": key, "type": "list", "rows": len(values), "columns": 1, "dropped": []}
+            return {"section": key, "type": "list", "rows": len(values), "columns": 1, "dropped": [],
+                    "truncated_cells": truncated_cells, "nested_cells": 0, "nested_truncated": 0}
 
         columns = []
         for item in values:
@@ -593,16 +637,49 @@ class FinanceReportWizard(models.TransientModel):
         dropped = columns[MAX_XLSX_COLUMNS:]
         columns = columns[:MAX_XLSX_COLUMNS]
         if not columns:
-            sheet.write_string(0, 0, _xlsx_text(_("No scalar columns; see the JSON payload.")))
-            return {"section": key, "type": "list", "rows": len(values), "columns": 0, "dropped": dropped}
+            # Every value in this section is nested: keep the whole row as JSON
+            # instead of pointing the reader at a payload that may be capped.
+            sheet.write_string(0, 0, NESTED_COLUMN, formats["header"])
+            truncated_cells = nested_truncated = 0
+            for row, item in enumerate(values, start=1):
+                text = json.dumps(item, default=str)
+                if self._xlsx_write_cell(sheet, row, 0, text, formats):
+                    truncated_cells += 1
+                    nested_truncated += 1
+            sheet.freeze_panes(1, 0)
+            return {"section": key, "type": "list", "rows": len(values), "columns": 1, "dropped": dropped,
+                    "truncated_cells": truncated_cells, "nested_cells": len(values),
+                    "nested_truncated": nested_truncated}
+
+        kept = set(columns)
+        has_extras = any(any(column not in kept for column in item) for item in values)
         for column_index, column in enumerate(columns):
             sheet.write_string(0, column_index, _xlsx_text(column), formats["header"])
+        if has_extras:
+            sheet.write_string(0, len(columns), NESTED_COLUMN, formats["header"])
+
+        truncated_cells = nested_cells = nested_truncated = 0
         for row, item in enumerate(values, start=1):
             for column_index, column in enumerate(columns):
-                self._xlsx_write_cell(sheet, row, column_index, item.get(column), formats)
+                truncated_cells += int(self._xlsx_write_cell(sheet, row, column_index, item.get(column), formats))
+            if has_extras:
+                extras = {column: cell for column, cell in item.items() if column not in kept}
+                if extras:
+                    nested_cells += 1
+                    # Nested structures and scalar columns past the limit travel
+                    # together, so a workbook below the row limit loses nothing.
+                    text = json.dumps(extras, default=str)
+                    if self._xlsx_write_cell(sheet, row, len(columns), text, formats):
+                        truncated_cells += 1
+                        nested_truncated += 1
+                else:
+                    sheet.write_string(row, len(columns), "")
         sheet.freeze_panes(1, 0)
-        sheet.autofilter(0, 0, len(values), len(columns) - 1)
-        return {"section": key, "type": "list", "rows": len(values), "columns": len(columns), "dropped": dropped}
+        sheet.autofilter(0, 0, len(values), len(columns) + int(has_extras) - 1)
+        return {"section": key, "type": "list", "rows": len(values),
+                "columns": len(columns) + int(has_extras), "dropped": dropped,
+                "truncated_cells": truncated_cells, "nested_cells": nested_cells,
+                "nested_truncated": nested_truncated}
 
     def _xlsx_dict_sheet(self, workbook, key, value, used, formats):
         name = self._xlsx_sheet_name(key, used)
@@ -617,17 +694,24 @@ class FinanceReportWizard(models.TransientModel):
             ))
         if not value:
             sheet.write_string(0, 0, _xlsx_text(_("Empty.")))
-            return {"section": key, "type": "dict", "rows": 0, "columns": 0, "dropped": []}
+            return {"section": key, "type": "dict", "rows": 0, "columns": 0, "dropped": [],
+                    "truncated_cells": 0, "nested_cells": 0, "nested_truncated": 0}
         sheet.write_string(0, 0, "key", formats["header"])
         sheet.write_string(0, 1, "value", formats["header"])
+        truncated_cells = nested_cells = nested_truncated = 0
         for row, (sub_key, sub_value) in enumerate(value.items(), start=1):
             sheet.write_string(row, 0, _xlsx_text(sub_key))
             if _is_scalar(sub_value):
-                self._xlsx_write_cell(sheet, row, 1, sub_value, formats)
+                truncated_cells += int(self._xlsx_write_cell(sheet, row, 1, sub_value, formats))
             else:
-                sheet.write_string(row, 1, _xlsx_text(json.dumps(sub_value, default=str)))
+                nested_cells += 1
+                if self._xlsx_write_cell(sheet, row, 1, json.dumps(sub_value, default=str), formats):
+                    truncated_cells += 1
+                    nested_truncated += 1
         sheet.freeze_panes(1, 0)
-        return {"section": key, "type": "dict", "rows": len(value), "columns": 2, "dropped": []}
+        return {"section": key, "type": "dict", "rows": len(value), "columns": 2, "dropped": [],
+                "truncated_cells": truncated_cells, "nested_cells": nested_cells,
+                "nested_truncated": nested_truncated}
 
     def _xlsx_summary_sheet(self, sheet, snapshot, filename, sections, formats):
         company = self.env["res.company"].browse(snapshot.get("company_id") or self.company_id.id)
@@ -655,7 +739,7 @@ class FinanceReportWizard(models.TransientModel):
         row += 1
         sheet.write_string(row, 0, _xlsx_text(_("Sections")), formats["label"])
         row += 1
-        for column, header in enumerate((_("Section"), _("Type"), _("Rows"), _("Columns"))):
+        for column, header in enumerate((_("Section"), _("Type"), _("Rows"), _("Columns"), _("Nested cells"))):
             sheet.write_string(row, column, _xlsx_text(header), formats["header"])
         row += 1
         for section in sections:
@@ -663,6 +747,7 @@ class FinanceReportWizard(models.TransientModel):
             sheet.write_string(row, 1, _xlsx_text(section["type"]))
             sheet.write_number(row, 2, section["rows"])
             sheet.write_number(row, 3, section["columns"])
+            sheet.write_number(row, 4, section.get("nested_cells", 0))
             row += 1
         row += 1
         notes = [
@@ -671,15 +756,33 @@ class FinanceReportWizard(models.TransientModel):
             _("Text that starts with =, +, -, @, tab or carriage return is prefixed with an apostrophe "
               "and stored as text, so it is never evaluated as a formula."),
             _("Rows are not truncated: a section above %(limit)s rows is refused instead.", limit=MAX_XLSX_ROWS),
-            _("Values nested inside a row (lists or objects) are available in the JSON payload, "
-              "not as extra columns."),
+            _("Nested values (lists or objects) and scalar columns beyond the column limit are written as "
+              "JSON in the '%(column)s' column of their sheet, so the workbook stays complete below the "
+              "row limit.", column=NESTED_COLUMN),
+            _("A cell above %(limit)s characters is cut in the cell and counted in the disclosure below.",
+              limit=MAX_XLSX_CELL_CHARS),
+            _("The JSON payload is capped at %(limit)s characters. When the cap applies it stays valid JSON "
+              "and names its omitted sections in '__truncation__'; those sections keep their own sheet here.",
+              limit=MAX_JSON_CHARS),
         ]
         for section in sections:
+            if section.get("nested_truncated") or section.get("truncated_cells"):
+                notes.append(_(
+                    "Section '%(section)s': %(truncated)s of %(total)s cells exceeded %(limit)s characters "
+                    "and were cut in the cell; nested cells affected: %(nested)s.",
+                    section=section["section"],
+                    truncated=section["truncated_cells"],
+                    total=section["rows"],
+                    limit=MAX_XLSX_CELL_CHARS,
+                    nested=section.get("nested_truncated", 0),
+                ))
             if section["dropped"]:
                 notes.append(_(
-                    "Section '%(section)s' has more than %(limit)s scalar columns; excluded: %(columns)s.",
+                    "Section '%(section)s' has more than %(limit)s scalar columns; these are not separate "
+                    "columns but their values remain in '%(column)s': %(columns)s.",
                     section=section["section"],
                     limit=MAX_XLSX_COLUMNS,
+                    column=NESTED_COLUMN,
                     columns=", ".join(section["dropped"]),
                 ))
         for note in notes:

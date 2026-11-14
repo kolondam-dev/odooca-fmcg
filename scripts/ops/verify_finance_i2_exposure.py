@@ -281,6 +281,72 @@ def _xlsx_parts(payload):
     return workbook, shared, sheets
 
 
+def check_xlsx_completeness(env, company):
+    """The workbook and payload must not promise or lose nested values silently."""
+    from odoo.addons.id_finance_reporting.wizards.finance_report_wizard import (
+        MAX_JSON_CHARS,
+        MAX_XLSX_CELL_CHARS,
+        NESTED_COLUMN,
+    )
+
+    record = wizard(env, company, "audit_trail", {"date_from": "2026-07-01", "date_to": "2026-07-31"})
+    evidence = []
+
+    long_label = "L" * 600
+    rows = [{"line_id": index, "label": f"{long_label}{index}", "amount": index} for index in range(400)]
+    tail = [{"id": 999001, "label": "NESTED-TAIL-MARKER", "detail": {"nested": "NESTED-TAIL-VALUE"}}]
+    wide = [{"id": 999002, "detail": {"payload": "W" * (MAX_XLSX_CELL_CHARS + 500)}}]
+    snapshot = {
+        "report_id": "FIN99",
+        "company_id": company.id,
+        "currency_id": company.currency_id.id,
+        "date_from": "2026-07-01",
+        "date_to": "2026-07-31",
+        "rows": rows,
+        "tail": tail,
+        "wide": wide,
+    }
+    full = json.dumps(snapshot, default=str, indent=1)
+    require(len(full) > MAX_JSON_CHARS,
+            f"Completeness fixture is not above the payload cap: {len(full)} < {MAX_JSON_CHARS}")
+    require(len(rows) < 20000, "Completeness fixture must stay below the workbook row limit")
+
+    payload = record._payload_json(snapshot)
+    require(len(payload) <= MAX_JSON_CHARS, "Bounded payload exceeds its own cap")
+    parsed = json.loads(payload)  # a cap must never produce invalid JSON
+    truncation = parsed.get("__truncation__") or {}
+    require(truncation.get("applied") is True, "Payload truncation is not disclosed")
+    require("rows" in truncation.get("omitted_sections", []),
+            f"Oversized section is not named as omitted: {truncation.get('omitted_sections')}")
+    require("tail" in truncation.get("included_sections", []),
+            f"A small trailing section was dropped although it fits: {truncation.get('included_sections')}")
+    require("detail" in json.dumps(parsed.get("tail", []), default=str),
+            "A trailing nested section did not survive the bounded payload")
+    small = {"report_id": "FIN99", "rows": [{"id": 1}]}
+    require(json.loads(record._payload_json(small)) == small,
+            "Small snapshots must stay byte-for-byte equivalent")
+    evidence.append({"case": "xlsx_payload_cap_valid_json", "result": "PASS"})
+
+    blob = record._xlsx_payload(snapshot, "FIN99-completeness.xlsx")
+    _workbook, shared, sheets = _xlsx_parts(blob)
+    joined = "".join(sheets.values())
+    require(NESTED_COLUMN in shared, f"Workbook has no '{NESTED_COLUMN}' column")
+    require("NESTED-TAIL-MARKER" in shared, "A scalar cell of the trailing section is missing")
+    require("NESTED-TAIL-VALUE" in shared, "A nested trailing value is missing from the workbook")
+    require("available in the JSON payload" not in shared,
+            "Workbook still points at a payload that may be capped")
+    require("JSON payload is capped" in shared, "Workbook does not disclose the payload cap")
+    evidence.append({"case": "xlsx_nested_completeness", "result": "PASS"})
+
+    require("(truncated)" in shared, "A cell above the cell limit was not marked inside the cell")
+    require("exceeded 32000 characters" in shared or "exceeded 32,000 characters" in shared,
+            "Workbook does not disclose cell truncation per section")
+    require("wide" in shared, "The truncated section is not named in the disclosure")
+    require(joined.count("<row ") > len(rows), "Workbook rows are fewer than the fixture")
+    evidence.append({"case": "xlsx_cell_truncation_disclosed", "result": "PASS"})
+    return evidence
+
+
 def check_xlsx_export(env, company, fixture):
     """Every report type must export a workbook that cannot run a formula."""
     from odoo.addons.id_finance_reporting.wizards.finance_report_wizard import _xlsx_text
@@ -394,6 +460,7 @@ def run(env):
             evidence["roles"] = check_roles(env, company)
             evidence["sanitization"] = check_html_sanitization(env, company)
             evidence["xlsx"] = check_xlsx_export(env, company, fixture)
+            evidence["completeness"] = check_xlsx_completeness(env, company)
             raise RollbackFixture()
     except RollbackFixture:
         env.invalidate_all()

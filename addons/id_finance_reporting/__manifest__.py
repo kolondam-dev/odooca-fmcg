@@ -1,7 +1,7 @@
 {
     "name": "FMCG Finance Reporting Boundaries",
     "summary": "Server-side role and company boundaries for finance reports",
-    "version": "19.0.1.5.0",
+    "version": "19.0.1.5.1",
     "category": "Accounting",
     "license": "LGPL-3",
     "author": "kolondam-dev",

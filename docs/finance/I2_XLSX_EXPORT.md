@@ -17,15 +17,15 @@ XLSX belum terpenuhi dan pengguna tidak bisa membawa angka keluar dari Odoo.
 | `addons/id_finance_reporting/wizards/finance_report_wizard.py` | `action_export_xlsx`: membangun workbook dari snapshot yang sama dengan pratinjau, menyimpan `result_xlsx` + `result_filename`, mengembalikan tautan `/web/content` |
 | `addons/id_finance_reporting/views/finance_report_wizard_views.xml` | Tombol **Export XLSX** di footer form |
 | `scripts/ops/verify_finance_i2_exposure.py` | `check_xlsx_export`: helper guard, guard level workbook, 8 jenis laporan, pembersihan workbook basi, izin baca/tolak |
-| `addons/id_finance_reporting/i18n/id.po` | 20 entri baru |
+| `addons/id_finance_reporting/i18n/id.po` | 27 entri baru (20 paket awal + 7 koreksi P2) |
 
-Versi modul: `19.0.1.5.0`.
+Versi modul: `19.0.1.5.1`.
 
 ## Bentuk workbook
 
 - **Summary** — report ID dan nama, nama berkas, company, currency, periode,
-  filter, waktu dan pembuat, daftar bagian beserta jumlah baris/kolom, dan
-  catatan batas.
+  filter, waktu dan pembuat, daftar bagian beserta jumlah baris/kolom/sel
+  bersarang, dan catatan batas.
 - **Satu sheet per bagian** snapshot (kunci `rows`, `documents`, `totals`,
   dst.). Daftar berisi objek menjadi tabel dengan header kolom skalar; daftar
   skalar menjadi satu kolom `value`; objek menjadi pasangan `key`/`value`.
@@ -34,6 +34,28 @@ Versi modul: `19.0.1.5.0`.
 - Angka ditulis sebagai sel numerik dengan nilai persis dari layanan laporan.
   Tidak ada format tampilan yang membulatkan, karena laju kurs juga diekspor.
 - Header dibekukan dan autofilter dipasang pada tabel.
+
+## Kontrak kelengkapan
+
+Koreksi P2 (review #5902486524) menghapus janji bahwa data bersarang "tersedia
+di payload JSON": payload dibatasi 200.000 karakter, sehingga janji itu bisa
+menunjuk ke data yang sudah hilang. Sekarang:
+
+- **Kolom `__nested`.** Setiap baris yang punya nilai bersarang (daftar/objek),
+  atau kolom skalar di atas batas 40 kolom, menulis sisanya sebagai satu sel
+  JSON di kolom `__nested` pada sheet yang sama. Bagian yang seluruh barisnya
+  bersarang memakai `__nested` sebagai satu-satunya kolom. Workbook tetap
+  lengkap di bawah batas baris tanpa bergantung pada payload.
+- **Sel di atas 32.000 karakter** dipotong di dalam sel dengan penanda
+  `... (truncated)`, dan **Summary** menyebut bagian, jumlah sel, serta jumlah
+  sel bersarang yang terdampak. Tidak ada pemotongan tanpa jejak.
+- **Payload JSON selalu valid.** Bila snapshot melebihi 200.000 karakter,
+  payload tidak lagi dipotong mentah. Bagian utuh dimasukkan selama muat,
+  lalu objek `__truncation__` menyebut `included_sections`,
+  `omitted_sections`, dan batasnya. Bagian yang dihilangkan dari payload tetap
+  punya sheet lengkap di workbook.
+- **Summary** menyatakan ketiga hal di atas, bukan lagi mengarahkan pembaca ke
+  payload.
 
 ## Guard formula injection
 
@@ -47,14 +69,14 @@ Tambahan pertahanan:
 
 - karakter kontrol yang tidak sah untuk XML (`\x00`–`\x08`, `\x0b`, `\x0c`,
   `\x0e`–`\x1f`) dibuang sebelum ditulis;
-- teks dibatasi 32.000 karakter (batas sel Excel) dan penanda pemotongan
-  ditulis eksplisit;
+- teks dibatasi 32.000 karakter (batas sel Excel) dengan penanda pemotongan di
+  dalam sel dan hitungan per bagian di **Summary**;
 - baris **tidak** dipotong diam-diam. Bagian dengan lebih dari 20.000 baris
   ditolak dengan `UserError` yang menyebut nama bagian dan jumlah baris;
-- kolom skalar di atas 40 dicatat namanya di sheet **Summary** sebagai
-  pengecualian, bukan dihilangkan tanpa jejak;
-- nilai bersarang di dalam baris (daftar/objek) tetap tersedia di payload JSON
-  dan disebutkan di **Summary**;
+- kolom skalar di atas 40 tidak menjadi kolom sendiri, nilainya tetap ada di
+  `__nested` dan namanya disebut di **Summary**;
+- payload JSON di atas 200.000 karakter tetap valid dan menyebut bagian yang
+  dihilangkan; datanya ada di workbook;
 - menjalankan ulang laporan menghapus workbook lama (`result_xlsx = False`)
   supaya unduhan tidak pernah menyajikan snapshot basi.
 
@@ -73,9 +95,8 @@ Tambahan pertahanan:
 
 `scripts/ops/verify_finance_i2_exposure.py` pada
 `finance_i0_reports_disposable`, langkah CI `I2 exposure`.
-**Status: PASS pada CI exact-SHA
-`b23cf09` (`b23cf09` pada run `43556711792`, job `132331093982`),
-dengan 12/12 check PR hijau.**
+**Status: PASS pada CI exact-SHA `b23cf09` untuk paket awal; koreksi P2
+(lihat di bawah) menunggu run CI pada HEAD PR #131.**
 
 Keluaran `FINANCE_I2_EXPOSURE` memuat komponen `xlsx`:
 
@@ -110,6 +131,27 @@ Rincian setiap kasus:
 - `reader_can_export_xlsx` — Finance Reader bisa mengekspor.
 - `sales_export_denied` — Sales ditolak pada pembuatan wizard/ekspor.
 
+### Koreksi P2 — regresi kelengkapan
+
+`check_xlsx_completeness` memakai snapshot sintetis berisi 400 baris × ~610
+karakter (di atas batas payload 200.000 karakter, jauh di bawah batas 20.000
+baris), dengan nilai bersarang di bagian **terakhir** snapshot:
+
+- `xlsx_payload_cap_valid_json` — payload hasil `_payload_json` tetap dapat
+  di-parse `json.loads`; `__truncation__` menyebut `rows` sebagai bagian yang
+  dihilangkan dan `tail` sebagai bagian yang masih dimuat; snapshot kecil tetap
+  identik byte-per-byte.
+- `xlsx_nested_completeness` — workbook memuat kolom `__nested`, label dan
+  nilai bersarang bagian terakhir (`NESTED-TAIL-MARKER`,
+  `NESTED-TAIL-VALUE`), dan **tidak** lagi memuat kalimat "available in the
+  JSON payload".
+- `xlsx_cell_truncation_disclosed` — sel bersarang di atas 32.000 karakter
+  diberi penanda `(truncated)` dan **Summary** menyebut bagian, jumlah sel,
+  serta sel bersarang yang terdampak.
+
+`check_wizard_runs` juga mem-parse `result_json` dengan `json.loads` untuk 8/8
+jenis laporan, sehingga payload yang tidak valid akan menggagalkan CI.
+
 ## Yang belum dibuktikan (tetap `BELUM_DITERIMA`)
 
 - [BU] XLSX dibuka di Excel/LibreOffice pada desktop dan tablet; pemeriksaan
@@ -118,6 +160,13 @@ Rincian setiap kasus:
 - [BU] PDF atau padanan terdokumentasi untuk laporan yang menuntut PDF.
 - [BU] Tie-out angka per report ID terhadap oracle independen di database demo.
 - [BU] Sign-off Finance Controller + QA.
+
+Catatan batas yang sudah diungkapkan, bukan klaim kelengkapan tanpa syarat:
+
+- satu sel Excel dibatasi 32.000 karakter; sel yang melewatinya dipotong dan
+  dihitung per bagian di **Summary**;
+- payload JSON dibatasi 200.000 karakter; bagian yang tidak muat disebut di
+  `__truncation__`, dan datanya tetap ada di sheet bagian tersebut.
 
 `docs/finance/REPORT_CATALOG.csv` tidak diubah oleh paket ini; seluruh 58 ID
 tetap `BELUM_DITERIMA`.

@@ -493,12 +493,6 @@ msgstr "Kolom"
 #. module: id_finance_reporting
 #. odoo-python
 #: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
-msgid "No scalar columns; see the JSON payload."
-msgstr "Tidak ada kolom skalar; lihat payload JSON."
-
-#. module: id_finance_reporting
-#. odoo-python
-#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
 msgid "Read-only projection of posted journal items and partial reconciliations; no entry is created."
 msgstr "Proyeksi hanya-baca atas item jurnal terposting dan rekonsiliasi parsial; tidak ada entri yang dibuat."
 
@@ -523,12 +517,6 @@ msgstr "Baris tidak dipotong: bagian di atas %(limit)s baris ditolak, bukan diek
 #. module: id_finance_reporting
 #. odoo-python
 #: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
-msgid "Values nested inside a row (lists or objects) are available in the JSON payload, not as extra columns."
-msgstr "Nilai bersarang di dalam baris (daftar atau objek) tersedia di payload JSON, bukan sebagai kolom tambahan."
-
-#. module: id_finance_reporting
-#. odoo-python
-#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
 msgid "Section '%(section)s' has more than %(limit)s scalar columns; excluded: %(columns)s."
 msgstr "Bagian '%(section)s' memiliki lebih dari %(limit)s kolom skalar; yang dikecualikan: %(columns)s."
 
@@ -537,3 +525,45 @@ msgstr "Bagian '%(section)s' memiliki lebih dari %(limit)s kolom skalar; yang di
 #: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
 msgid "Section '%(section)s' returns %(rows)s rows, above the %(limit)s-row export limit. Narrow the period or filters."
 msgstr "Bagian '%(section)s' mengembalikan %(rows)s baris, di atas batas ekspor %(limit)s baris. Persempit periode atau filter."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Nested cells"
+msgstr "Sel bersarang"
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Nested values (lists or objects) and scalar columns beyond the column limit are written as JSON in the '%(column)s' column of their sheet, so the workbook stays complete below the row limit."
+msgstr "Nilai bersarang (daftar atau objek) dan kolom skalar di atas batas kolom ditulis sebagai JSON di kolom '%(column)s' pada sheet-nya, sehingga workbook tetap lengkap di bawah batas baris."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "A cell above %(limit)s characters is cut in the cell and counted in the disclosure below."
+msgstr "Sel di atas %(limit)s karakter dipotong di dalam sel dan dihitung pada pengungkapan di bawah."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "The JSON payload is capped at %(limit)s characters. When the cap applies it stays valid JSON and names its omitted sections in '__truncation__'; those sections keep their own sheet here."
+msgstr "Payload JSON dibatasi %(limit)s karakter. Bila batas itu berlaku, payload tetap JSON yang valid dan menyebut bagian yang dihilangkan di '__truncation__'; bagian tersebut tetap memiliki sheet sendiri di sini."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "The JSON payload is capped; omitted sections are exported in the workbook."
+msgstr "Payload JSON dibatasi; bagian yang dihilangkan diekspor di workbook."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Section '%(section)s': %(truncated)s of %(total)s cells exceeded %(limit)s characters and were cut in the cell; nested cells affected: %(nested)s."
+msgstr "Bagian '%(section)s': %(truncated)s dari %(total)s sel melebihi %(limit)s karakter dan dipotong di dalam sel; sel bersarang terdampak: %(nested)s."
+
+#. module: id_finance_reporting
+#. odoo-python
+#: code:addons/id_finance_reporting/wizards/finance_report_wizard.py:0
+msgid "Section '%(section)s' has more than %(limit)s scalar columns; these are not separate columns but their values remain in '%(column)s': %(columns)s."
+msgstr "Bagian '%(section)s' memiliki lebih dari %(limit)s kolom skalar; kolom itu tidak menjadi kolom terpisah, tetapi nilainya tetap ada di '%(column)s': %(columns)s."
