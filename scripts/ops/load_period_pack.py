@@ -2502,14 +2502,20 @@ class GenericPeriodPackLoader:
         for lrow in self.reader.order_lines:
             lines_by_so.setdefault(lrow["so_number"], []).append(lrow)
 
-        rejections_by_so_sku = {}
+        rejections_by_line_key = {}
+        rejections_by_so_sku_pool = {}
         for rrow in getattr(self.reader, "rejections", []):
             r_so = rrow.get("so_number")
             r_sku = rrow.get("sku_code")
+            r_lot = rrow.get("lot_number")
+            r_qty = float(rrow.get("qty_cartons", 0.0) or 0.0)
             if r_so and r_sku:
-                r_key = (r_so, r_sku)
-                rejections_by_so_sku[r_key] = rejections_by_so_sku.get(r_key, 0.0) + float(
-                    rrow.get("qty_cartons", 0.0) or 0.0
+                if r_lot:
+                    rejections_by_line_key[(r_so, r_sku, r_lot)] = (
+                        rejections_by_line_key.get((r_so, r_sku, r_lot), 0.0) + r_qty
+                    )
+                rejections_by_so_sku_pool[(r_so, r_sku)] = (
+                    rejections_by_so_sku_pool.get((r_so, r_sku), 0.0) + r_qty
                 )
 
         # Pastikan konfigurasi pajak Kode 04 aktif dan presisi sebelum membuat faktur
@@ -2599,10 +2605,25 @@ class GenericPeriodPackLoader:
             inv_lines = []
             used_sol_ids = set()
             so_lines = lines_by_so.get(so_num, [])
+            so_rej_sku_rem = {}
+            for (r_so, r_sku), q in rejections_by_so_sku_pool.items():
+                if r_so == so_num:
+                    so_rej_sku_rem[r_sku] = q
+
             for lrow in so_lines:
                 sku = lrow["sku_code"]
+                lot = lrow.get("lot_number")
                 qty_cartons = float(lrow.get("qty_cartons", 0.0) or 0.0)
-                rej_cartons = rejections_by_so_sku.get((so_num, sku), 0.0)
+                lot_key = (so_num, sku, lot) if lot else None
+                if lot_key and lot_key in rejections_by_line_key:
+                    rej_cartons = rejections_by_line_key[lot_key]
+                elif sku in so_rej_sku_rem:
+                    rem = so_rej_sku_rem[sku]
+                    rej_cartons = min(qty_cartons, rem)
+                    so_rej_sku_rem[sku] = max(0.0, rem - rej_cartons)
+                else:
+                    rej_cartons = 0.0
+
                 net_cartons = qty_cartons - rej_cartons
                 if net_cartons <= 0.0:
                     continue
@@ -2694,9 +2715,10 @@ class GenericPeriodPackLoader:
                 inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
             if "l10n_id_tax_transaction_code" in am_fields or not am_fields:
                 inv_vals["l10n_id_tax_transaction_code"] = "04"
-            inv_vals["amount_untaxed"] = float(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0.0))
-            inv_vals["amount_tax"] = float(inv_row.get("ppn_amount", 0.0))
-            inv_vals["amount_total"] = float(inv_row.get("total_invoice_with_ppn", 0.0))
+            if not am_fields or "amount_total" not in am_fields:
+                inv_vals["amount_untaxed"] = float(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0.0))
+                inv_vals["amount_tax"] = float(inv_row.get("ppn_amount", 0.0))
+                inv_vals["amount_total"] = float(inv_row.get("total_invoice_with_ppn", 0.0))
 
             inv_rec = AccountMove.create(inv_vals)
 

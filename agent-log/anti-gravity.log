@@ -2682,3 +2682,22 @@
   * python -m ruff check scripts/ops/load_period_pack.py: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-14T17:25:00+07:00
+
+[2026-11-14T19:15:00+07:00] [INFO] F4: Resolusi Netting Retur per Lot & Entri Seimbang Faktur Native Odoo 19
+- Analisis Kegagalan install-test Langkah 10 (Run 43585237472):
+  * Error: odoo.exceptions.UserError: The entry is not balanced pada AccountMove.create(inv_vals) di _apply_invoices().
+  * Root Cause:
+    1. Pada order penjualan dengan multi-baris untuk SKU yang sama dan memiliki retur (misal SO-202608-0083 pada SKU MYR-BBG-03 dengan 2 baris: 13 ctn dan 3 ctn, retur 13 ctn pada lot LOT-ORA-20260615-INIT-17):
+       - Pemetaan retur sebelumnya berbasis agregat (so_num, sku) memotong 13 ctn dari baris 1 (netto 0 ctn, dilewati) dan memotong 13 ctn lagi dari baris 2 (netto -10 ctn, ikut dilewati).
+       - Akibatnya, baris sah 3 ctn terhapus dari pembuatan faktur, menyebabkan subtotal baris faktur hanya Rp 1.808.467,20 dari yang seharusnya Rp 2.700.475,20.
+    2. Pada saat yang sama, inv_vals mengisi amount_untaxed/amount_total dari inv_row (Rp 2.700.475,20 / Rp 2.997.527,47) yang tidak seimbang dengan baris faktur riil (Rp 1.808.467,20), sehingga Odoo ORM _check_balanced memicu 'The entry is not balanced'.
+  * Solusi:
+    1. Memetakan retur secara presisi per (so_number, sku_code, lot_number) dengan fallback saldo berjalan per SKU. Baris lot 1 (13 ctn) terpotong habis, baris lot 2 (3 ctn) tetap terfakturkan secara utuh.
+    2. Mengonfirmasi bahwa dengan pemetaan per lot, seluruh 1.240 faktur Agustus memiliki total baris yang tepat 100% tanpa selisih terhadap commercial_dpp register (0 mismatch).
+    3. Membatasi penulisan amount_untaxed, amount_tax, dan amount_total pada inv_vals hanya untuk lingkungan mock/offline ('if not am_fields or "amount_total" not in am_fields:'), membiarkan Odoo ORM di runtime menghitung debet-kredit piutang dan pajak secara native seimbang.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 54/54 tests PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check scripts/ops/load_period_pack.py: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-14T19:15:00+07:00

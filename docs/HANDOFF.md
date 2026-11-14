@@ -1,3 +1,17 @@
+## 2026-11-14T19:15:00+07:00 — antigravity — F4: Resolusi Netting Retur per Lot & Entri Seimbang Faktur Native Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Mengoreksi penanganan retur karantina pada `_apply_invoices()`: sebelumnya pengurangan kuantitas retur dilakukan berbasis agregat SKU (`(so_num, sku)`), sehingga pada order dengan multi-baris untuk SKU yang sama (seperti `SO-202608-0083` pada `MYR-BBG-03`), kuantitas retur terpotong berulang kali pada seluruh baris dan menghapus sisa baris yang sah. Netting retur kini dipetakan eksak per `(so_number, sku_code, lot_number)` dengan fallback saldo berjalan per SKU, menjamin nominal DPP baris faktur (`commercial_dpp`) selalu tepat dan seimbang 100% terhadap register.
+  - Membatasi penulisan atribut moneter terkomputasi (`amount_untaxed`, `amount_tax`, `amount_total`) pada `inv_vals` hanya untuk lingkungan offline/mock (`if not am_fields or "amount_total" not in am_fields:`), membiarkan Odoo ORM pada environment produksi/disposable menghitung seluruh baris jurnal debet-kredit dan piutang secara native seimbang (mengeliminasi `UserError: The entry is not balanced`).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 54/54 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-14T19:15:00+07:00
+
 ## 2026-11-14T17:25:00+07:00 — antigravity — F4: Resolusi Scoping Perusahaan & Jurnal Penjualan pada Pembuatan Faktur Native Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
