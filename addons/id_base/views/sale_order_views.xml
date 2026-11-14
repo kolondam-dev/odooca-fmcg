@@ -6,6 +6,13 @@
         <field name="model">sale.order</field>
         <field name="inherit_id" ref="sale.view_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/list/field[@name='product_uom_id']" position="after">
+                <field name="fmcg_qty_breakdown" string="Rincian Kemasan" optional="show" readonly="1"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/form//div[@name='ordered_qty']" position="after">
+                <label for="fmcg_qty_breakdown" string="Rincian Kemasan" invisible="not fmcg_qty_breakdown"/>
+                <field name="fmcg_qty_breakdown" readonly="1" invisible="not fmcg_qty_breakdown"/>
+            </xpath>
             <!-- Header Approval Buttons -->
             <xpath expr="//header" position="inside">
                 <button name="action_request_credit_approval"

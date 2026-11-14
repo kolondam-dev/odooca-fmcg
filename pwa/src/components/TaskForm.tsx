@@ -2,7 +2,6 @@ import { useState } from "preact/hooks";
 import type { Dialog } from "../ui/navigation";
 import { SheetHeader } from "../ui";
 import { useDialog } from "../ui/useDialog";
-import { LocalDateInput } from "./LocalDateInput";
 import { AttendanceCapture } from "./AttendanceCapture";
 import { Icon } from "./Icon";
 import { EvidenceCapture, type EvidenceRef } from "./Evidence";
@@ -52,9 +51,8 @@ export function TaskForm({
     const title = {
         proof: "Bukti pengiriman",
         attendance: "Absensi foto & lokasi",
-        leave: "Pengajuan cuti",
         profile: "Profil & Sesi Akun",
-    }[dialog.type];
+    }[dialog.type as "proof" | "attendance" | "profile"];
     async function send(e: SubmitEvent) {
         e.preventDefault();
         if (busy) return;
@@ -65,21 +63,7 @@ export function TaskForm({
             let type: Command["type"];
             let payload: Record<string, unknown>;
             let label: string;
-            if (dialog.type === "leave") {
-                const from = String(f.get("from")),
-                    to = String(f.get("to"));
-                if (to < from)
-                    throw new Error(
-                        "Tanggal selesai tidak boleh sebelum mulai.",
-                    );
-                type = "hris.leave.request";
-                payload = {
-                    date_from: from,
-                    date_to: to,
-                    reason: f.get("reason"),
-                };
-                label = "Pengajuan cuti";
-            } else {
+            {
                 if (!evidence)
                     throw new Error("Simpan foto dan lokasi dahulu.");
                 if (dialog.type === "attendance") {
@@ -202,30 +186,6 @@ export function TaskForm({
                                     owner={owner}
                                     onChange={setEvidence}
                                 />
-                            </>
-                        )}
-                        {dialog.type === "leave" && (
-                            <>
-                                <LocalDateInput
-                                    name="from"
-                                    label="Tanggal mulai"
-                                />
-                                <LocalDateInput
-                                    name="to"
-                                    label="Tanggal selesai"
-                                />
-                                <label>
-                                    Alasan
-                                    <textarea
-                                        name="reason"
-                                        required
-                                        maxLength={500}
-                                    />
-                                </label>
-                                <p class="footnote">
-                                    Pengajuan menunggu validasi saldo cuti dan
-                                    persetujuan atasan.
-                                </p>
                             </>
                         )}
                         {dialog.type === "profile" && (

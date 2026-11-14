@@ -5,6 +5,11 @@
 **Belum diuji:** [BU] Membuka workbook di Excel/LibreOffice desktop/tablet; export pada volume demo (1.324 invoice) dan pengukuran waktu; PDF atau padanan terdokumentasi; tie-out angka per report ID; sign-off Finance Controller/QA. [BU] Aktivasi DB demo (I2-3) belum dijalankan; payroll, FIN36/55/56, I3–I8 tetap terbuka. [F] Katalog tidak diubah; tidak ada merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-14T11:16:55+07:00
 
+## 2026-11-14T08:20:50+07:00 — claude-design (Claude-Dev1) — Fase 3B-7: Ajukan cuti (47) mengikuti DS
+
+- `AjukanCutiScreen` layar penuh menggantikan dialog cuti di `TaskForm` (cabang cuti dan `LocalDateInput` dihapus); payload `hris.leave.request` tetap.
+- Tes: `leave.test.ts`, `leave.spec.ts`, Back test di `ux-improvements.spec.ts` diperbarui. Utang di DS_RECONCILIATION K21.
+
 ## 2026-11-13T12:46:38+07:00 — Agent-Opencode — PR #123: sanitasi terbukti di CI, branch sinkron dengan `main`
 **Berubah:** `docs/finance/I2_EXPOSURE.md` (status exact-SHA `fab0cbc`, tambah butir bukti sanitasi ke daftar pemeriksaan, prasyarat aktivasi menunjuk `fab0cbc`); `docs/HANDOFF.md`; `agent-log/opencode.log`. Tidak ada perubahan kode pada entri ini.
 **Diverifikasi:** [F] Run `43371935122` langkah `I2 exposure` PASS pada `fab0cbca13c1c120b2dddbdf6ed41a5a28af8319`; keluaran `FINANCE_I2_EXPOSURE` memuat `sanitization: [{"case": "reader_direct_write_sanitized", "result": "PASS"}, {"case": "reader_preview_keeps_table", "result": "PASS"}]`, bersama 8/8 `wizard_run_*`, 9/9 `menu_action_*` + view, `reader_can_run` PASS, lima penolakan peran `ACCESS_DENIED`, dan `fixture_rollback` PASS. [F] PR #123 **12/12 check hijau** pada `fab0cbc` (static, install-test 11m37s, init-test, `candidate-install-upgrade`, upgrade runtime + replay zero drift 19m36s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate). [F] Branch sudah memuat `main` `488bd87`; merge `fab0cbc` hanya berkonflik di `docs/HANDOFF.md` dan entri kedua agen dipertahankan.
@@ -22,6 +27,11 @@
 **Diverifikasi:** [F] Run `43357437999` langkah `I2 exposure` PASS: 8/8 `wizard_run_*`, 9/9 `menu_action_*` + view, `reader_can_run`, Sales/Driver ditolak pada wizard dan `_snapshot`, reader lintas company ditolak, `fixture_rollback` PASS. [F] PR #123 **12/12 check hijau** pada SHA `34452fe094da03f6d073d2585e9e1ff2db1f0abc` (static, install-test, init-test, `candidate-install-upgrade`, upgrade runtime + replay zero drift, invariant, seed, PWA). [F] Kegagalan pertama hanya nama field Odoo 19 (`groups_id` → `group_ids`); install/upgrade, ACL, view, dan wizard tidak pernah gagal.
 **Belum diuji:** [BU] Aktivasi `id_finance_foundation`/`id_finance_reporting` di DB demo; export XLSX/PDF; geometri browser; tie-out angka per report ID; sign-off Finance Controller/QA; payroll, FIN36/55/56, I3–I8. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-13T10:35:07+07:00
+## 2026-11-13T15:56:29+07:00 — claude-design (Claude-Dev1) — Fase 3B-6: Penagihan (30–33, 52) mengikuti DS
+
+- Penagihan_toko/bukti/Tidak_tertagih di PWA: `PenagihanScreen`, `useCollectionTasks`; tombol Tagihan di daftar toko + baris di hub; `CollectionWorkspace` dihapus.
+- Kontrak usulan `collection.settlement.submit` (multi-faktur satu bukti, sisa + janji bayar) dikunci flag `collection_v2` (mati di LIVE); `tripMoney` menghitung alokasi.
+- Tes: unit `collection-settlement.test.ts`, e2e `collection.spec.ts` ditulis ulang; utang di DS_RECONCILIATION K20.
 
 ## 2026-11-13T10:15:16+07:00 — claude-design (Claude-Dev1) — PR #124: POD ditolak server tidak lagi dihitung selesai (review #5885182618)
 

@@ -13,9 +13,13 @@ test("browser Back closes camera before form and returns through pages", async (
     await page.goto("./");
     await page.getByRole("button", { name: "HRIS", exact: true }).click();
     await page.getByRole("button", { name: /Pengajuan cuti/ }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(
+        page.getByRole("region", { name: "Ajukan cuti" }),
+    ).toBeVisible();
     await page.goBack();
-    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Ajukan cuti" })).toHaveCount(
+        0,
+    );
     await expect(page).toHaveURL(/#hris$/);
     await page.goBack();
     await expect(page).toHaveURL(/#home$/);
