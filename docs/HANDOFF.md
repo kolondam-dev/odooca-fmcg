@@ -32,6 +32,11 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-14T19:15:00+07:00
 
+## 2026-11-14T18:11:33+07:00 — claude-design (Claude-Dev1) — Fase 3B-9: Status_gps/izin/offline/401
+
+- Absen: lembar Akurasi lokasi rendah (±30 m, kunci selfie, LIVE saja) dan Akses lokasi ditolak; pita Offline global di bawah header; lembar Sesi berakhir di atas Login. Login_gagal sudah sesuai DS.
+- Tes: `status-sheets.spec.ts` baru; `login-attendance-ux.spec.ts` diperbarui. Perbedaan dan utang di DS_RECONCILIATION K23.
+
 ## 2026-11-14T17:37:13+07:00 — Agent-Opencode — I2-2 P2: bukti CI exact-SHA fe26a28 (5/5 workflow hijau, completeness 3/3)
 **Berubah:** koreksi P2 di-commit (`54c316f`), `main` `6fe9f2c` di-merge (`fe26a28`, konflik hanya `docs/HANDOFF.md`, kedua entri dipertahankan dan diurutkan), lalu `docs/finance/I2_XLSX_EXPORT.md` diisi bukti exact-SHA + keluaran `completeness`.
 **Diverifikasi:** [F] Push `fe26a28`; kelima workflow hijau pada `fe26a2883903b5ca6c67285e17b73f3683a16d05`: CI (`43584001596`: static, init-test, install-test), Upgrade Runtime Verification (`43584001555`, replay zero drift), Finance I0 candidate spike (`43584001640`, job `132414505091`), Seed supervision (`43584001537`), PWA quality (`43584001651`). [F] `FINANCE_I2_EXPOSURE=PASS` dengan `completeness` 3/3 PASS: `xlsx_payload_cap_valid_json`, `xlsx_nested_completeness`, `xlsx_cell_truncation_disclosed`; `xlsx` 12 PASS + `sales_export_denied` `ACCESS_DENIED`; `runs` 8/8; `sanitization` 2/2; `surface` 9/9; `roles` 1 izin + 5 penolakan. [F] GitHub melaporkan PR #131 `mergeable: MERGEABLE` pada HEAD tersebut.
@@ -80,6 +85,7 @@
 **Diverifikasi:** [F] `ruff check .` PASS, `scripts/check_manifests.py` PASS, `bash -n` pada salinan LF PASS, YAML `ci.yml` ter-parse dan langkah `init-test` menjadi 13. [BU] Bukti runtime menunggu CI PR: instalasi dua modul pada DB kosong, idempotensi mark saat restart, dan assertion grup/menu/admin.
 **Belum diuji:** [BU] Deploy ke database demo (Railway) dan login admin demo; geometri browser; tie-out per report ID; PDF; sign-off Finance Controller/QA; payroll serta FIN36/55/56; I3. [F] Katalog tetap 58/58 `BELUM_DITERIMA`; tidak ada merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-14T14:09:12+07:00
+
 
 ## 2026-11-14T13:18:09+07:00 — claude-design (Claude-Dev1) — Fase 3B-8: Absen (04–08) mengikuti DS
 

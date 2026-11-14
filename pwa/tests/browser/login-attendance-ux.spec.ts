@@ -221,6 +221,12 @@ test("denied GPS keeps check-in disabled and returning restores focus", async ({
         .first();
     await attendance.click();
     await expect(page.getByRole("alert")).toContainText("Izin lokasi ditolak");
+    const denied = page.getByRole("dialog", { name: "Akses lokasi ditolak" });
+    await expect(denied).toContainText("izinkan lokasi");
+    await denied
+        .getByRole("button", { name: "Tutup", exact: true })
+        .last()
+        .click();
     await expect(
         page.getByRole("button", { name: "Ambil selfie", exact: true }),
     ).toBeDisabled();
@@ -246,7 +252,11 @@ test("expired session clears the workspace before another account can enter", as
     await expect(page.locator(".topbar, .bottom-nav, .greeting")).toHaveCount(
         0,
     );
-    await expect(page.getByRole("alert")).toContainText("Sesi berakhir");
+    const sheet = page.getByRole("dialog", { name: "Sesi berakhir" });
+    await expect(sheet).toContainText("Data yang belum terkirim tetap aman");
+    await sheet.getByRole("button", { name: "Masuk lagi" }).click();
+    await expect(sheet).toHaveCount(0);
+    await expect(page.getByLabel("Nama pengguna")).toBeVisible();
 });
 
 for (const retake of [false, true])
