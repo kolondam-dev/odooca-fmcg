@@ -798,6 +798,6 @@ msgstr "Min"
 
 #. module: id_dashboard_ui
 #. odoo-javascript
-#: addons/id_dashboard_ui/static/src/core/controls_controller.js
+#: code:addons/id_dashboard_ui/static/src/core/controls_controller.js:0
 msgid "Period & filters stay on the toolbar"
 msgstr "Periode dan filter menempel pada toolbar"
