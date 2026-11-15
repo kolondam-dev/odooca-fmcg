@@ -1,3 +1,11 @@
+## 2026-11-15 — Codex-Dashboard — Drill-down D1 ke D7
+
+**Berubah:** Dialog D1 membuka dashboard rincian D7 dengan cakupan baris sumber, periode, dan filter terpilih. Tombol kembali memakai stack aksi Odoo. Jalur dokumen sumber tetap tersedia.
+
+**Diverifikasi:** [F] ORM pada snapshot production terisolasi merekonsiliasi Net Sales Juli tanpa filter dan dengan SKU 128, termasuk per kota. [BU] Playwright pada HEAD PR menunggu CI.
+
+**Signature:** Task Managed by Agent Codex-Dashboard
+
 ## 2026-11-13 — Codex-Dashboard — Pemulihan konteks D1
 
 **Berubah:** Breadcrumb dari dokumen sumber memulihkan kueri dan posisi peta D1 melalui state aksi Odoo. Baris wilayah di luar poligon membuka dokumen sumber pada cakupan yang sama.
