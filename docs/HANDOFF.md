@@ -1,3 +1,10 @@
+## 2026-11-15T22:27:27+07:00 — Agent-Opencode — P1 fix: scope diagnostik HPP dan regresi dua perusahaan
+**Konteks:** [F] Review pemilik menahan PR #140 pada HEAD `7fc3853`: `collect(env)` dapat mencampur nilai antarperusahaan. Main bergerak hingga `a03b944`; branch disinkronkan lewat merge `3eeac2a` dan `a0e7901`, dengan riwayat HANDOFF kedua sisi dipertahankan.
+**Berubah:** [F] `collect(env, company=None)` memakai `allowed_company_ids=[company.id]`; seluruh kategori/properti company-dependent, hitungan per kategori, stock.move, fallback stock.valuation.layer, sisa stok, standard_price, dan agregat dibaca dalam konteks/domain perusahaan tunggal. [F] Regresi native opt-in membuat dua perusahaan, satu kategori bersama, metode fifo/average, produk standard_price 0/7, dan pergerakan bernilai 100/250; hasil A/B diuji terpisah lalu fixture di-rollback. Job init-test menjalankan regresi melalui `FINANCE_I3_COMPANY_SCOPE_DB=fmcg`.
+**Diverifikasi:** [F] Lokal self-test, ruff, compileall PASS. [F] CI sebelum P1 fix tetap 5/5 workflow dan 12/12 job lulus pada `7fc3853`; CI pertama setelah merge main `a0e7901` menemukan hanya `AttributeError: Environment.with_company` pada regresi baru; diperbaiki dengan `env(context=...)`.
+**Belum diuji:** [BU] CI native dua perusahaan setelah perbaikan belum selesai; hasil diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T22:27:27+07:00
+
 ## 2026-11-15T13:23:35+07:00 — Agent-Opencode — PR #140: lima workflow hijau pada fbab3a4 (integrasi main + diagnostik I3)
 **Konteks:** [F] Lanjutan entri 12:55:34. `Upgrade Runtime Verification` pada commit `dc13ee7` sebelumnya terhenti karena commit baru; commit `fbab3a4` (log + HANDOFF) menjalankan ulang seluruh workflow pada satu commit yang sama.
 **Berubah:** hanya `agent-log/opencode.log` dan `docs/HANDOFF.md`; tidak ada perubahan kode sejak `dc13ee7`.

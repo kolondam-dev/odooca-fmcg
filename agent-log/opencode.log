@@ -174,3 +174,9 @@
 - [F] install-test merah sebelumnya terbukti berasal dari jam uji id_mobile_api dan sudah diperbaiki di main fdb2fc0 (PR #138); branch ini hanya di-merge.
 - [BU] Diagnostik DB demo production dan checklist PRODUCTION_FINANCE_UAT.md belum dijalankan; tanpa merge/deploy. Katalog 58/58 BELUM_DITERIMA.
 - Task managed by Agent-Opencode at 2026-11-15T13:23:35+07:00
+
+[2026-11-15T22:27:27+07:00] [INFO] P1 fix: scope diagnostik HPP dan regresi dua perusahaan
+- [F] P1 ditutup dengan company scope pada semua pembacaan costing/valuasi dan regresi native dua perusahaan.
+- [F] Lokal self-test, ruff, compileall PASS.
+- [BU] CI setelah perbaikan dan regresi native belum selesai; tanpa merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-15T22:27:27+07:00

@@ -129,7 +129,6 @@ def collect(env, company=None):
     """
     company = company or env.company
     scoped_env = env(context={**env.context, "allowed_company_ids": [company.id]})
-    scoped_env = scoped_env.with_company(company)
     product_model = scoped_env["product.product"]
     category_model = scoped_env["product.category"]
     move_model = scoped_env["stock.move"] if "stock.move" in scoped_env else None
@@ -379,7 +378,8 @@ def _company_scope_fixture(env):
             product, stock_location, 1,
         )
 
-        report = collect(env.with_company(company), company=company)
+        company_env = env(context={**env.context, "allowed_company_ids": [company.id]})
+        report = collect(company_env, company=company)
         row = next(item for item in report["categories"] if item["id"] == category.id)
         evidence[str(company.id)] = {
             "company": report["company"],
