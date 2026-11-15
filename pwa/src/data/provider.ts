@@ -1,5 +1,6 @@
 import {
     ApiError,
+    PayloadRejectedError,
     IdentitySchema,
     ReceiptSchema,
     SnapshotSchema,
@@ -76,6 +77,8 @@ export class HttpProvider implements FieldProvider {
         if (!this.identity)
             throw new ApiError(401, "Bootstrap wajib sebelum snapshot.");
         const identity = this.identity;
+        // Kegagalan skema tetap ZodError (dipetakan "belum dapat dibaca" oleh
+        // read-session); open() menandainya sebagai tahap validasi.
         const snapshot = SnapshotSchema.parse(
             await this.request("sync/snapshot"),
         );
@@ -89,8 +92,7 @@ export class HttpProvider implements FieldProvider {
             snapshot.scope.user_id !== identity.id ||
             snapshot.scope.business_date !== identity.businessDate
         )
-            throw new ApiError(
-                422,
+            throw new PayloadRejectedError(
                 "Scope/satuan snapshot tidak cocok dengan sesi bootstrap.",
             );
         return snapshot;

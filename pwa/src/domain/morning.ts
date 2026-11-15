@@ -4,6 +4,7 @@ import { assertLocalEvidence } from "./evidence-package";
 import { DeliveryTaskSchema } from "./delivery-contracts";
 import { z } from "zod";
 import {
+    PayloadRejectedError,
     SnapshotSchema,
     ownerKey,
     type FieldProvider,
@@ -265,18 +266,32 @@ export class MorningSimulation {
         await this.store.draft(record.owner, MORNING_KEY, record);
         return record;
     }
-    async open() {
+    async open(
+        onStage?: (stage: "check" | "download" | "validate" | "save") => void,
+    ) {
+        onStage?.("check");
         const date = await this.checkConnection();
         const attendance = await this.restore();
         const isDemo = isDemoMode();
         if (!attendance || (!isDemo && attendance.businessDate !== date))
             throw new Error("Absensi belum diterima. Buka sesi kerja dahulu.");
-        const snapshot = SnapshotSchema.parse(await this.provider.snapshot());
+        onStage?.("download");
+        let received: unknown;
+        let receivedTasks: unknown;
+        try {
+            received = await this.provider.snapshot();
+            if (this.identity.roles.includes("delivery"))
+                receivedTasks = await this.provider.deliveryTasks?.();
+        } catch (e) {
+            // Server sudah menjawab tetapi payload ditolak: tahapnya validasi, bukan unduh.
+            if (e instanceof PayloadRejectedError || e instanceof z.ZodError)
+                onStage?.("validate");
+            throw e;
+        }
+        onStage?.("validate");
+        const snapshot = SnapshotSchema.parse(received);
         const deliveryManifest = this.identity.roles.includes("delivery")
-            ? z
-                  .array(DeliveryTaskSchema)
-                  .min(1)
-                  .parse(await this.provider.deliveryTasks?.())
+            ? z.array(DeliveryTaskSchema).min(1).parse(receivedTasks)
             : undefined;
         if (
             !isDemo &&
@@ -307,6 +322,7 @@ export class MorningSimulation {
         };
         if (!morningReady(record, ownerKey(this.identity), date))
             throw new Error("Paket sesi tidak valid. Sesi belum dibuka.");
+        onStage?.("save");
         // One IndexedDB record: never publish ready before the complete bundle is durable.
         await this.store.draft(record.owner, MORNING_KEY, record);
         return record;

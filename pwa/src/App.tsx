@@ -489,6 +489,12 @@ function Workspace({
             q.command?.type === "sales.order.submit" &&
             q.command.payload?.business_date === identity.businessDate,
     ).length;
+    const confirmedOrderCount = queue.filter(
+        (q) =>
+            q.command?.type === "sales.order.submit" &&
+            q.command.payload?.business_date === identity.businessDate &&
+            q.state === "accepted",
+    ).length;
     const go = (id: Page) => {
         if (canOpen(identity.roles, id)) {
             setPage(id);
@@ -656,6 +662,7 @@ function Workspace({
                                 outlets={snapshot.outlets}
                                 doneIds={doneOutletIds}
                                 orders={orderCount}
+                                confirmedOrders={confirmedOrderCount}
                                 canWork={dailyReady && attended && !checkedOut}
                                 isSales={identity.roles.includes("sales")}
                                 isDelivery={identity.roles.includes("delivery")}
