@@ -109,6 +109,7 @@ export function App() {
     }>();
     const [checking, setChecking] = useState(true);
     const [loginError, setLoginError] = useState("");
+    const [sessionExpired, setSessionExpired] = useState(false);
     const generation = useRef(0);
     async function connect() {
         const ticket = ++generation.current;
@@ -177,7 +178,8 @@ export function App() {
                 ) {
                     generation.current++;
                     setBoot(undefined);
-                    setLoginError("Sesi berakhir. Silakan masuk kembali.");
+                    setLoginError("");
+                    setSessionExpired(true);
                 }
             }
         };
@@ -201,9 +203,12 @@ export function App() {
     if (!boot)
         return (
             <Login
+                key={sessionExpired ? "expired" : "login"}
                 message={loginError}
+                expired={sessionExpired}
                 onSuccess={async () => {
                     setLoginError("");
+                    setSessionExpired(false);
                     try {
                         await connect();
                     } catch (failure) {
@@ -595,6 +600,14 @@ function Workspace({
                                 </button>
                             }
                         />
+                        {!online ? (
+                            <div class="offline-banner" role="status">
+                                <Icon name="signal" size={20} />
+                                {pending > 0
+                                    ? `Offline · ${pending} item menunggu kirim`
+                                    : "Offline · aktivitas disimpan di perangkat"}
+                            </div>
+                        ) : null}
                         {runningMode === "demo" && (
                             <div
                                 class="mode-indicator demo-running-banner"
@@ -982,11 +995,6 @@ function Workspace({
                         }))}
                         onSelect={(id) => go(id as Page)}
                     />
-                    <div class="sr-only" aria-live="polite">
-                        {online
-                            ? ""
-                            : "Offline · aktivitas disimpan di perangkat"}
-                    </div>
                     {toast && (
                         <div class="toast" role="status">
                             <Icon name="check" size={22} />

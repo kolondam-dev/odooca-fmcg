@@ -1,14 +1,18 @@
 import { useRef, useState } from "preact/hooks";
 import { Brand } from "./Brand";
 import { signIn } from "../data/auth";
-import { Button, Callout, Field } from "../ui";
+import { BottomSheet, Button, Callout, Field } from "../ui";
 export function Login({
     onSuccess,
     message = "",
+    expired = false,
 }: {
     onSuccess: () => Promise<void>;
     message?: string;
+    /** Sesi habis (401): tampilkan lembar "Sesi berakhir" (DS: Status_401). */
+    expired?: boolean;
 }) {
+    const [sheet, setSheet] = useState(expired);
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const running = useRef(false);
@@ -96,6 +100,18 @@ export function Login({
             >
                 Ganti akun / keluar dari sesi sebelumnya
             </a>
+            {sheet ? (
+                <BottomSheet
+                    title="Sesi berakhir"
+                    onClose={() => setSheet(false)}
+                >
+                    <p class="ui-sheet__text">
+                        Masuk lagi untuk melanjutkan. Data yang belum terkirim
+                        tetap aman di perangkat.
+                    </p>
+                    <Button onClick={() => setSheet(false)}>Masuk lagi</Button>
+                </BottomSheet>
+            ) : null}
         </main>
     );
 }

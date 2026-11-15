@@ -8,7 +8,7 @@ test("office check-in previews real fix and handles failed road tiles without au
     await context.setGeolocation({
         latitude: -6.2,
         longitude: 106.8,
-        accuracy: 35,
+        accuracy: 25,
     });
     let tiles = 0;
     await page.route("https://tile.openstreetmap.org/**", (route) => {

@@ -1667,3 +1667,21 @@ select.ui-select {
     font: 500 15px/22px var(--font, Inter, system-ui, sans-serif);
     color: #e6eefa;
 }
+
+/* Isi teks pada lembar bawah (DS: Status_gps, Status_izin, Status_401). */
+.ui-sheet__text {
+    margin: 0;
+    font: 400 15px/22px var(--font);
+    color: var(--c-ink-2, #52647a);
+}
+
+/* Pita offline di bawah header (DS: Status_offline). */
+.offline-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--c-warn-bg);
+    color: var(--c-warn);
+    font: 600 14px/20px var(--font);
+}

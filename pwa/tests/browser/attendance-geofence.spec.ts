@@ -68,7 +68,14 @@ test("Absen: titik terverifikasi mengunci Ambil selfie di luar area dan membukan
 
 test("Absen: sheet Aturan geofence terbuka dari header, Back dan Mengerti menutupnya", async ({
     page,
+    context,
 }) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({
+        latitude: 1.465,
+        longitude: 124.833,
+        accuracy: 3,
+    });
     await page.goto("./");
     await page
         .getByRole("button", { name: "Absen masuk", exact: true })
