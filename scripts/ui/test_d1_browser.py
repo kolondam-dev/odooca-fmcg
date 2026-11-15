@@ -9,7 +9,7 @@ import os
 from urllib.parse import urlparse
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 from d1_evidence import REPORT, capture, checked, full_dashboard, set_page
 
 base = os.environ.get("D1_BASE_URL", "http://127.0.0.1:18069")
@@ -185,13 +185,31 @@ with sync_playwright() as playwright:
     page.locator('[data-action="apply"]').click()
     page.wait_for_function("JSON.parse(document.querySelector('.id-dashboard-controls').dataset.query).filters.sku?.ids.length")
     check(not page.locator(".alert-danger").count(), "SKU filter reaches server")
-    # Period and SKU slice must survive the native document action.
-    page.locator(".id-dash-row").first.locator('[role="button"]').first.click()
+    applied = json.loads(page.locator(".id-dashboard-controls").get_attribute("data-query"))
+    city.press("Enter")
+    district_map.wait_for()
+    district.press("Enter")
+    village_map = coverage.locator('svg[aria-label="Village / ward"]')
+    village_map.wait_for()
+    village_map.locator('path[aria-label="Calaca"]').press("Enter")
+    selected_row = coverage.get_by_role("row", name="Calaca")
+    active_calaca = selected_row.and_(coverage.locator("tr.table-active"))
+    expect(active_calaca).to_be_visible()
+    selected_row.get_by_role("button", name="Source documents: Calaca").click()
     page.get_by_role("button", name="Matching sales order lines", exact=True).click()
     page.locator(".o_list_view").wait_for()
     page.locator(".o_data_row").first.wait_for()
     check("D1 QA" in page.locator("body").inner_text(), "Scoped drill opens native order lines")
     capture(page, "scoped-native-drill-1440")
+    page.get_by_role("link", name="Sales Performance & Salesforce Productivity").click()
+    controls = page.locator('.id-dashboard-controls[data-ready="true"]')
+    controls.wait_for()
+    restored = controls.evaluate("(root) => root.__controls.getState()")
+    check(restored["period"] == applied["period"], "D1 breadcrumb restores the applied period")
+    check(restored["filters"]["sku"] == applied["filters"]["sku"], "D1 breadcrumb restores the exact SKU filter")
+    village_map.wait_for()
+    check(coverage.get_by_text("Manado › Wenang", exact=True).is_visible(), "D1 restores the geographic path")
+    expect(active_calaca).to_be_visible()
     if expectations := os.environ.get("D1_EXPECTATIONS_FILE"):
         evidence = json.loads(Path(expectations).read_text())
         wanted = evidence["expected"]

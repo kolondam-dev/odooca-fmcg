@@ -43,6 +43,35 @@ def _geo_boundaries(filename):
     raise UserError(_("Geographic boundaries are unavailable."))
 
 
+def _ring_contains(ring, longitude, latitude):
+    inside = False
+    for (ax, ay), (bx, by) in zip(ring, ring[1:]):
+        if (ay > latitude) != (by > latitude):
+            crossing = ax + (bx - ax) * (latitude - ay) / (by - ay)
+            if longitude < crossing:
+                inside = not inside
+    return inside
+
+
+def _village_code(features, declared, longitude, latitude):
+    if declared and any(feature["code"] == declared for feature in features):
+        return declared
+    if not longitude or not latitude:
+        return ""
+    matches = []
+    for feature in features:
+        geometry = feature["geometry"]
+        coordinates = geometry["coordinates"]
+        polygons = [coordinates] if geometry["type"] == "Polygon" else coordinates
+        if any(
+            _ring_contains(shell, longitude, latitude)
+            and not any(_ring_contains(hole, longitude, latitude) for hole in holes)
+            for shell, *holes in polygons
+        ):
+            matches.append(feature["code"])
+    return matches[0] if len(matches) == 1 else ""
+
+
 PRODUCT_DIMENSIONS = {"principal", "brand", "sku"}
 
 
@@ -205,6 +234,7 @@ class DashboardBridge(models.AbstractModel):
         buckets = {key: defaultdict(float) for key in ("principal", "channel", "area", "city", "salesman")}
         geo = defaultdict(lambda: defaultdict(float))
         geo_partners = defaultdict(lambda: defaultdict(set))
+        village_codes = {}
         daily = defaultdict(lambda: {"net": 0., "gross": 0., "discount": 0.})
         daily_orders = defaultdict(int)
         for order in orders:
@@ -237,7 +267,13 @@ class DashboardBridge(models.AbstractModel):
                     geo[city_code][district_code or ""] += net
                     geo_partners[city_code][district_code or ""].add(partner.id)
                 if district_code:
-                    village_code = village.kode_kemendagri if village.district_id == district else ""
+                    if partner.id not in village_codes:
+                        declared = village.kode_kemendagri if village.district_id == district else ""
+                        features = _geo_boundaries("sulut_villages.geojson").get(district_code, [])
+                        village_codes[partner.id] = _village_code(
+                            features, declared, partner.partner_longitude, partner.partner_latitude,
+                        )
+                    village_code = village_codes[partner.id]
                     geo[district_code][village_code or ""] += net
                     geo_partners[district_code][village_code or ""].add(partner.id)
             for key in buckets:

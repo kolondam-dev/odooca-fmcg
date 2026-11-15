@@ -25,6 +25,13 @@
 **Diverifikasi:** [F] Railway project `pleasant-caring` / production / service `odooca-fmcg`: deploy `50866b8` `SUCCESS`; log `2026-11-14T12:03:09Z` `activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation`, `12:03:25Z` `demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo`, `12:03:27Z` `admin memiliki grup Finance Reader`; `Loading module id_finance_foundation (126/126)` `12:03:20Z`. [F] Deploy `16f686a` `SUCCESS` tanpa baris aktivasi ulang (mark bekerja); registry loaded `12:50:51Z`. [F] `/web/login` HTTP 200 pada 2026-11-15; cron rutin berjalan. [A] Versi terpasang `19.0.1.5.1` mengikuti manifest image `50866b8`; `latest_version` DB belum dibaca langsung.
 **Belum diuji:** [BU] Login admin demo → Finance Reports → jalankan laporan → unduh XLSX di production; pemeriksaan DB langsung; tie-out; sign-off. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada deploy/merge dari asisten.
 **Signature:** Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
+## 2026-11-13 — Codex-Dashboard — Pemulihan konteks D1
+
+**Berubah:** Breadcrumb dari dokumen sumber memulihkan kueri dan posisi peta D1 melalui state aksi Odoo. Baris wilayah di luar poligon membuka dokumen sumber pada cakupan yang sama.
+
+**Verifikasi:** Regresi Playwright memeriksa pemulihan periode dan filter SKU. Validasi produksi menunggu merge dan auto-deploy.
+
+**Signature:** Task Managed by Agent Codex-Dashboard
 
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.
