@@ -648,6 +648,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "payload": checkout_payload_a,
         })
         self.assertEqual(rc_checkout_a["status"], "accepted")
+        self._set_command_fixture_date(checkout_uuid_a)
         self.assertEqual(rc_checkout_a["reference"], f"VISIT-{checkout_uuid_a[:8]}")
 
         # Counterexample: Second checkout for Session A with NEW command UUID -> UserError (session already closed)
