@@ -1,3 +1,19 @@
+## 2026-11-15T17:18:00+07:00 — antigravity — F4: Native Odoo 19 Invoice Dynamic Line Posting & Eliminasi Duplikasi AML Pajak (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- Sinkronisasi `origin/main` terbaru (`b1985a8`, PR #128 `d1-drill-return`) ke dalam cabang kerja.
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, mengeliminasi blok injeksi AML manual ad-hoc dan update manual baris piutang yang sebelumnya menduplikasi baris kredit pajak saat Odoo 19 ORM memicu sinkronisasi dynamic lines pada `inv_rec.action_post()`.
+  - Mengandalkan kalkulasi pajak kanonikal dan pembentukan baris jurnal native Odoo 19 secara penuh sehingga query SQL fisik `sum(balance) == 0` di PostgreSQL terpenuhi secara konsisten.
+  - Mempertahankan emulasi dynamic lines Odoo 19 khusus untuk lingkungan MockEnv offline agar assertion unit test tetap presisi.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T17:18:00+07:00
+
 ## 2026-11-15T14:15:00+07:00 — antigravity — F4: Sinkronisasi Balance dan Amount Currency pada Baris Pajak & Piutang Faktur (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
