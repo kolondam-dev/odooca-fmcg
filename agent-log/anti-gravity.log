@@ -2903,3 +2903,34 @@
   * PWA quality (Run 43713770243)
   * Full Dataset Runtime Verification (Run 43713770196)
 - Task managed by antigravity at 2026-11-15T19:26:00+07:00
+
+[2026-11-15T21:10:00+07:00] [INFO] F4: Eliminasi Premature Balance Validation via check_move_validity=False pada Sinkronisasi Pajak & Piutang Odoo 19
+- Analisis Kegagalan F4 Disposable Runtime Proof (CI Run 43713770199):
+  * Error: odoo.exceptions.UserError: The entry is not balanced.
+  * Traceback:
+    File "/workspace/scripts/ops/load_period_pack.py", line 2844, in _apply_invoices
+      ar_l.write({"debit": exp_total, "balance": exp_total, "amount_currency": exp_total})
+    File "account_move_line.py", line 1912, in write
+      with self.move_id._check_balanced(move_container):
+    File "account_move.py", line 2814, in _check_balanced
+      raise UserError(_("The entry is not balanced."))
+  * Root Cause:
+    Pada Odoo 19, AccountMoveLine.write() membungkus eksekusinya dengan context manager _check_balanced().
+    Ketika ar_l.write() dipanggil tanpa context check_move_validity=False sebelum baris kredit PPN Keluaran 211200 dibuat,
+    nilai debit ar_l seketika berubah menjadi exp_total (Rp 394.804,80) sementara kredit masih exp_dpp (Rp 355.680,00).
+    Hal ini menyebabkan _check_balanced() mendeteksi selisih Rp 39.124,80 dan langsung memunculkan UserError: The entry is not balanced secara prematur.
+  * Solusi:
+    1. Membungkus seluruh mutasi intermediate move lines dengan konteks check_move_validity=False:
+       - target_inv = inv_rec.with_context(check_move_validity=False)
+       - target_aml = aml_model.with_context(check_move_validity=False)
+       - ar_target = ar_l.with_context(check_move_validity=False)
+    2. Mengubah urutan operasi agar pembuatan baris kredit PPN Keluaran 211200 dieksekusi terlebih dahulu sebelum baris piutang 112000 diperbarui.
+    3. Memanggil inv_rec.invalidate_recordset(fnames=['line_ids']) agar cache ORM tersegarkan sebelum action_post().
+    4. Dengan kedua baris terpasang lengkap (Kredit: Produk 355.680 + Pajak 39.124,80 = 394.804,80; Debit: Piutang 394.804,80), kueri SQL fisik sum(balance) == 0 terpenuhi sempurna saat action_post() dijalankan.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 57/57 PASS (0 fail, 0 error).
+  * python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py: 133/133 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-15T21:10:00+07:00

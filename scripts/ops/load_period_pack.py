@@ -2817,6 +2817,17 @@ class GenericPeriodPackLoader:
             is_mock_env = not hasattr(self.env, "cr") or getattr(getattr(self.env, "cr", None), "dbname", None) is None
 
             # Verify whether native Odoo generated dynamic tax lines on account 211200
+            target_inv = (
+                inv_rec.with_context(check_move_validity=False)
+                if hasattr(inv_rec, "with_context") and callable(getattr(inv_rec, "with_context"))
+                else inv_rec
+            )
+            target_aml = (
+                aml_model.with_context(check_move_validity=False)
+                if aml_model is not None and hasattr(aml_model, "with_context") and callable(getattr(aml_model, "with_context"))
+                else aml_model
+            )
+
             current_lines = getattr(inv_rec, "line_ids", None) or []
             tax_lines = [
                 line for line in current_lines
@@ -2831,44 +2842,10 @@ class GenericPeriodPackLoader:
                     else None
                 ) or (AccountAccount.search([("code", "=", "211200")], limit=1) if AccountAccount is not None else None)
 
-                # Locate receivable line (display_type == 'payment_term' or account 112000)
-                ar_lines = [
-                    line for line in current_lines
-                    if getattr(line, "display_type", "") == "payment_term"
-                    or getattr(getattr(line, "account_id", None), "code", "") == "112000"
-                    or getattr(getattr(line, "account_id", None), "account_type", "") in ("asset_receivable", "receivable")
-                ]
-                if ar_lines:
-                    for ar_l in ar_lines:
-                        if hasattr(ar_l, "write"):
-                            ar_l.write({
-                                "debit": exp_total,
-                                "balance": exp_total,
-                                "amount_currency": exp_total,
-                            })
-                elif not is_mock_env and aml_model is not None:
-                    ar_acc = (
-                        self._resolve_account("112000", fallback_type="asset_receivable")
-                        if hasattr(self, "_resolve_account")
-                        else None
-                    ) or (AccountAccount.search([("code", "=", "112000")], limit=1) if AccountAccount is not None else None)
-                    if ar_acc:
-                        aml_model.create({
-                            "move_id": inv_rec.id,
-                            "name": inv_num,
-                            "account_id": ar_acc.id,
-                            "partner_id": so.partner_id.id,
-                            "date": inv_row["date_invoice"],
-                            "company_id": self.company.id,
-                            "display_type": "payment_term",
-                            "debit": exp_total,
-                            "credit": 0.0,
-                            "balance": exp_total,
-                            "amount_currency": exp_total,
-                        })
-
-                if not tax_lines and tax_acc and canonical_tax_04 and aml_model is not None:
-                    aml_model.create({
+                # 1. Pastikan baris kredit PPN Keluaran 211200 terbuat atau tersinkronisasi
+                created_tax_line = None
+                if not tax_lines and tax_acc and canonical_tax_04 and target_aml is not None:
+                    created_tax_line = target_aml.create({
                         "move_id": inv_rec.id,
                         "display_type": "tax",
                         "name": getattr(canonical_tax_04, "name", "PPN Keluaran 12% (DPP Nilai Lain - Kode 04)"),
@@ -2883,10 +2860,84 @@ class GenericPeriodPackLoader:
                         "balance": -exp_ppn,
                         "amount_currency": -exp_ppn,
                     })
+                    if hasattr(inv_rec, "line_ids") and isinstance(inv_rec.line_ids, list):
+                        inv_rec.line_ids.append(created_tax_line)
+                elif tax_lines:
+                    for tl in tax_lines:
+                        tl_target = (
+                            tl.with_context(check_move_validity=False)
+                            if hasattr(tl, "with_context") and callable(getattr(tl, "with_context"))
+                            else tl
+                        )
+                        if hasattr(tl_target, "write"):
+                            tl_target.write({
+                                "credit": exp_ppn,
+                                "debit": 0.0,
+                                "balance": -exp_ppn,
+                                "amount_currency": -exp_ppn,
+                                "tax_base_amount": exp_tb,
+                            })
 
-                if hasattr(inv_rec, "write"):
+                # 2. Sinkronkan baris debit piutang (payment_term / 112000) ke nilai total faktur dengan PPN
+                ar_lines = [
+                    line for line in current_lines
+                    if getattr(line, "display_type", "") == "payment_term"
+                    or getattr(getattr(line, "account_id", None), "code", "") == "112000"
+                    or getattr(getattr(line, "account_id", None), "account_type", "") in ("asset_receivable", "receivable")
+                ]
+                if ar_lines:
+                    for ar_l in ar_lines:
+                        ar_target = (
+                            ar_l.with_context(check_move_validity=False)
+                            if hasattr(ar_l, "with_context") and callable(getattr(ar_l, "with_context"))
+                            else ar_l
+                        )
+                        if hasattr(ar_target, "write"):
+                            ar_target.write({
+                                "debit": exp_total,
+                                "credit": 0.0,
+                                "balance": exp_total,
+                                "amount_currency": exp_total,
+                            })
+                elif not is_mock_env and target_aml is not None:
+                    ar_acc = (
+                        self._resolve_account("112000", fallback_type="asset_receivable")
+                        if hasattr(self, "_resolve_account")
+                        else None
+                    ) or (AccountAccount.search([("code", "=", "112000")], limit=1) if AccountAccount is not None else None)
+                    if ar_acc:
+                        created_ar = target_aml.create({
+                            "move_id": inv_rec.id,
+                            "name": inv_num,
+                            "account_id": ar_acc.id,
+                            "partner_id": so.partner_id.id,
+                            "date": inv_row["date_invoice"],
+                            "company_id": self.company.id,
+                            "display_type": "payment_term",
+                            "debit": exp_total,
+                            "credit": 0.0,
+                            "balance": exp_total,
+                            "amount_currency": exp_total,
+                        })
+                        if hasattr(inv_rec, "line_ids") and isinstance(inv_rec.line_ids, list):
+                            inv_rec.line_ids.append(created_ar)
+
+                # 3. Invalidasi cache ORM agar recordset membaca baris jurnal baru secara konsisten
+                if hasattr(inv_rec, "invalidate_recordset") and callable(getattr(inv_rec, "invalidate_recordset")):
                     try:
-                        inv_rec.write({
+                        inv_rec.invalidate_recordset(fnames=["line_ids"])
+                    except Exception:
+                        pass
+                elif hasattr(self.env, "invalidate_all") and callable(getattr(self.env, "invalidate_all")):
+                    try:
+                        self.env.invalidate_all()
+                    except Exception:
+                        pass
+
+                # 4. Perbarui header amount move jika field didukung
+                if hasattr(target_inv, "write"):
+                    try:
+                        target_inv.write({
                             "amount_untaxed": exp_dpp,
                             "amount_tax": exp_ppn,
                             "amount_total": exp_total,

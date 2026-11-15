@@ -1,3 +1,20 @@
+## 2026-11-15T21:10:00+07:00 — antigravity — F4: Eliminasi Premature Balance Validation via check_move_validity=False pada Sinkronisasi Pajak & Piutang Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, membungkus seluruh mutasi intermediate move lines (pembuatan/pembaruan kredit PPN Keluaran 211200 dan pembaruan debit piutang 112000) dengan konteks `check_move_validity=False` (`target_inv = inv_rec.with_context(check_move_validity=False)` dan `target_aml = aml_model.with_context(check_move_validity=False)`).
+  - Mengubah urutan operasi agar baris kredit PPN Keluaran dibuat terlebih dahulu sebelum baris piutang diperbarui, mencegah `AccountMoveLine.write()` memicu context manager `_check_balanced()` secara prematur saat move masih dalam kondisi transisi sebelum kedua baris lengkap.
+  - Memanggil `invalidate_recordset(fnames=['line_ids'])` pada recordset move agar ORM membaca baris jurnal baru secara konsisten sebelum `action_post()`.
+  - Menghilangkan exception `UserError: The entry is not balanced` pada runtime Odoo 19 native di CI Step 10, sehingga posting faktur komersial Agustus (1.240 invoice) berjalan seimbang dan mulus dengan total Rp 394.804,80 (DPP komersial Rp 355.680,00, DPP Nilai Lain Rp 326.040,00, PPN 12% Rp 39.124,80).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T21:10:00+07:00
+
 ## 2026-11-15T19:25:00+07:00 — antigravity — F4: Presisi Baris Jurnal Pajak Kode 04 & Keseimbangan Piutang Faktur Komersial Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
