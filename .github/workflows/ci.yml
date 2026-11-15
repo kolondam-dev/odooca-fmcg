@@ -316,6 +316,13 @@ jobs:
             < scripts/ops/verify_finance_i3_costing.py | tee finance_i3_costing.log
           grep -q 'FINANCE_I3_COSTING_RUN=PASS' finance_i3_costing.log
           grep -q '"categories_total"' finance_i3_costing.log
+      - name: Regresi lingkup perusahaan diagnostik I3
+        run: |
+          set -euo pipefail
+          # Fixture dua perusahaan dibuat lalu di-rollback; hanya di DB disposable CI.
+          docker exec -e FINANCE_I3_COMPANY_SCOPE_DB=fmcg -i odoo /opt/deploy/init.sh shell --no-http \
+            < scripts/ops/verify_finance_i3_costing.py | tee finance_i3_company_scope.log
+          grep -q 'FINANCE_I3_COMPANY_SCOPE=PASS' finance_i3_company_scope.log
       - name: Siapkan database terisolasi untuk eksperimen
         run: |
           docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='fmcg' AND pid <> pg_backend_pid();"

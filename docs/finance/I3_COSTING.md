@@ -106,6 +106,43 @@ sebelumnya. Catatan: database CI sudah menunjukkan default Odoo 19 (`standard` +
 `periodic`) untuk 46/46 kategori, jadi memilih B berarti menerima keadaan
 default, bukan mengubah ke arah yang lebih sederhana.
 
+## Lingkup perusahaan
+
+`collect(env, company=None)` selalu membaca untuk **satu perusahaan**: `env.company`
+atau argumen `company`. Tanpa itu, sesi yang boleh membaca dua perusahaan dapat
+mencampur nilai keduanya ke dalam total yang diberi label satu perusahaan.
+
+Yang di-scope:
+
+- context `allowed_company_ids=[company.id]` dan `with_company(company)` untuk
+  seluruh pembacaan;
+- domain `company_id = company.id` pada `stock.move` dan fallback
+  `stock.valuation.layer`, termasuk hitungan per kategori dan sisa stok;
+- properti kategori (`property_cost_method`, `property_valuation`) dan
+  `standard_price` produk, yang keduanya company-dependent;
+- keluaran memuat `company_id`, nama perusahaan, dan mata uangnya.
+
+### Regresi dua perusahaan (native Odoo)
+
+`FINANCE_I3_COMPANY_SCOPE_DB=<nama-db>` menjalankan regresi yang membuat dua
+perusahaan yang sama-sama dapat dibaca, satu kategori bersama dengan metode
+berbeda per perusahaan (`fifo` vs `average`), satu produk bersama dengan
+`standard_price` 0 dan 7, serta satu pergerakan bernilai 100 dan 250 dengan sisa
+stok masing-masing satu. Diagnostik untuk A harus menghasilkan 1 pergerakan,
+nominal 100, sisa 1/100, dan metode `fifo`; untuk B 1 pergerakan, nominal 250,
+sisa 1/250, dan metode `average`. Semua fixture dibuat di dalam savepoint lalu
+di-rollback; variabel DB wajib disebut agar regresi tidak pernah berjalan tanpa
+sengaja pada database demo.
+
+```bash
+docker exec -e FINANCE_I3_COMPANY_SCOPE_DB=fmcg -i odoo \
+  /opt/deploy/init.sh shell --no-http \
+  < scripts/ops/verify_finance_i3_costing.py
+```
+
+Job `init-test` menjalankan perintah ini dan menuntut
+`FINANCE_I3_COMPANY_SCOPE=PASS`.
+
 ## Yang sudah dibuktikan
 
 - [F] Logika agregasi lulus `--self-test` di job `static` CI.
