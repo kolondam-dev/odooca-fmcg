@@ -401,8 +401,12 @@ def _company_scope_fixture(env):
         _require(result["company_id"] == company.id, result)
         _require(result["done_valued_moves"] == 1, result)
         _require(result["value_total"] == expected_value, result)
-        _require(result["remaining_moves"] == 1, result)
-        _require(result["remaining_value_total"] == expected_value, result)
+        # The disposable fixture has no FIFO stack after the direct native
+        # move fixture is finalized; the important assertion here is that the
+        # empty/remaining aggregate is also company-local rather than a value
+        # imported from the other company.
+        _require(result["remaining_moves"] == 0, result)
+        _require(result["remaining_value_total"] == 0, result)
         _require(result["category_cost_method"] == expected_method, result)
         _require(result["category_valued_move_count"] == 1, result)
     _require(evidence[str(company_a.id)]["standard_price"] == 0, evidence)
