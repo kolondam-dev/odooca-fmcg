@@ -1756,3 +1756,42 @@ select.ui-select {
     color: var(--c-mute);
     text-align: center;
 }
+
+/* Beranda per peran (DS: Beranda_sesi / Beranda_delivery / Beranda_canvasser) */
+.ui-meta {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0 12px;
+    font: 400 14px/20px var(--font-sans, Inter, system-ui, sans-serif);
+    color: var(--c-ink);
+}
+.ui-meta--between {
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+}
+.ui-meta__i {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.ui-meta__i svg {
+    color: var(--c-mute);
+}
+.ui-kind {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: 600 14px/20px var(--font-sans, Inter, system-ui, sans-serif);
+    color: var(--c-pri);
+}
+.ui-home__actions {
+    display: flex;
+    gap: 10px;
+}
+.ui-home__actions > .ui-btn {
+    flex: 1;
+}
+a.ui-btn {
+    text-decoration: none;
+}

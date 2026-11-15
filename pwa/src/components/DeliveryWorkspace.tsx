@@ -22,7 +22,7 @@ import { collectionV2Enabled } from "../domain/collection-settlement";
 import { PenagihanScreen } from "./PenagihanScreen";
 import { useCollectionTasks } from "./useCollectionTasks";
 import type { Snapshot } from "../domain/contracts";
-import { businessRejected } from "../domain/outbox-state";
+import { deliveryDoneChecker } from "../domain/delivery-progress";
 import { useBackLayer } from "../ui/navigation";
 import {
     Button,
@@ -115,14 +115,7 @@ export function DeliveryWorkspace({
      * DO selesai hanya bila ada POD di antrean yang bersumber manifest sama (bukan sisa hari/manifest lain)
      * dan tidak ditolak server. POD ditolak masih butuh koreksi; koreksi valid (anak) baru menghitung selesai.
      */
-    const sources = new Set(
-        queue.flatMap((r) =>
-            r.command.type === "delivery.pod.submit" && !businessRejected(r)
-                ? [JSON.stringify(r.command.payload.source)]
-                : [],
-        ),
-    );
-    const isDone = (t: DeliveryTask) => sources.has(JSON.stringify(t));
+    const isDone = deliveryDoneChecker(queue);
     const trips = [...new Set((tasks ?? []).map((t) => t.trip))];
     const openTrip = tripOpen
         ? tasks?.filter((t) => t.trip === tripOpen)
