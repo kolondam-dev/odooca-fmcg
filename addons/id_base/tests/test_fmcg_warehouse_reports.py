@@ -84,22 +84,6 @@ class TestFMCGWarehouseReports(TransactionCase):
             html = html.decode()
         return html
 
-    def _assert_pdf_download(self, xmlid, picking):
-        report = self.env.ref(xmlid)
-        # Odoo deliberately falls back to HTML while running tests unless
-        # force_report_rendering is enabled. Exercise the real wkhtmltopdf path
-        # so this smoke test verifies a downloadable PDF, not the HTML fallback.
-        pdf, content_type = report.with_context(
-            force_report_rendering=True
-        )._render_qweb_pdf(report.report_name, picking.ids)
-        self.assertEqual(content_type, "pdf")
-        self.assertIsInstance(pdf, bytes)
-        self.assertTrue(
-            pdf.startswith(b"%PDF-"),
-            "Expected PDF bytes, received: %r" % pdf[:80],
-        )
-        self.assertGreater(len(pdf), 1000)
-
     def test_empty_packlist_states_empty_without_fabricated_rows(self):
         html = self._render_html(
             "id_base.action_report_fmcg_packlist", self.empty_picking
@@ -136,7 +120,7 @@ class TestFMCGWarehouseReports(TransactionCase):
         self.assertIn("PACK-WMS-REPORT-001", packlist)
         self.assertEqual(operation.mapped("result_package_id"), package)
 
-    def test_done_delivery_order_uses_partial_actual_quantity_and_pdf(self):
+    def test_done_delivery_order_uses_partial_actual_quantity_and_templates(self):
         picking, lot = self._create_lot_picking(
             "SO-FMCG-PARTIAL-DONE", demand=5
         )
@@ -193,9 +177,15 @@ class TestFMCGWarehouseReports(TransactionCase):
         self.assertRegex(html, r">\s*3(?:[.,]0+)?\s*<")
         self.assertNotRegex(html, r">\s*5(?:[.,]0+)?\s*<")
 
+        # Keep transactional QWeb checks here; real wkhtmltopdf rendering runs
+        # in a separate smoke against the started CI Odoo HTTP server.
         for xmlid in (
             "id_base.action_report_fmcg_picklist",
             "id_base.action_report_fmcg_packlist",
             "id_base.action_report_fmcg_delivery_order",
         ):
-            self._assert_pdf_download(xmlid, picking)
+            report = self.env.ref(xmlid)
+            self.assertEqual(report.report_type, "qweb-pdf")
+            self.assertEqual(report.model, "stock.picking")
+            rendered = self._render_html(xmlid, picking)
+            self.assertTrue(rendered)
