@@ -355,7 +355,6 @@ def _company_scope_fixture(env):
             "company_id": company.id,
         })
         move = env["stock.move"].sudo().with_company(company).create({
-            "name": "I3 scope move %s" % company.id,
             "product_id": product.id,
             "product_uom_qty": 1,
             "product_uom": product.uom_id.id,
