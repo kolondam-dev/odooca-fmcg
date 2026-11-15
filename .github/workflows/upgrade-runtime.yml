@@ -2,19 +2,20 @@
 # lalu replay idempotensi zero-drift pada container Odoo 19 + PostgreSQL 16 disposable.
 name: Upgrade Runtime Verification
 on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact branch, tag, or SHA to verify
+        required: false
+        type: string
   push:
-    branches: [main, 'agen/persisted-baseline*']
+    branches: [main]
   pull_request:
-    paths:
-      - 'scripts/ops/verify_upgrade_baseline.py'
-      - 'scripts/ops/verify_disposable_full.py'
-      - 'scripts/load_canonical_perpetual.py'
-      - 'tests/test_full_dataset_cutoff_and_upgrade.py'
-      - '.github/workflows/upgrade-runtime.yml'
-      - 'deploy/init.sh'
-      - 'data/registers/**'
-      - 'addons/**'
 
 permissions:
   contents: read
@@ -24,11 +25,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Upgrade impact plan
+    runs-on: ubuntu-24.04
+    outputs:
+      upgrade: ${{ steps.plan.outputs.upgrade }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BASE_SHA" ]; then args=(--force-suite upgrade --files); else args=(--base "$BASE_SHA" --head HEAD); fi
+          python scripts/ci/plan.py "${args[@]}" --github-output "$GITHUB_OUTPUT"
+
   contract-tests:
     name: Kontrak Runner Upgrade (unit)
+    if: needs.changes.outputs.upgrade == 'true'
+    needs: changes
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -37,7 +63,8 @@ jobs:
 
   upgrade-proof:
     name: Module Upgrade from Persisted Baseline + Replay Zero Drift
-    needs: contract-tests
+    if: needs.changes.outputs.upgrade == 'true'
+    needs: [changes, contract-tests]
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
@@ -57,9 +84,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
-      - name: Build image
-        run: docker build -t fmcg-odoo:ci .
+      - uses: docker/setup-buildx-action@v3
+      - name: Build cached image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: fmcg-odoo:ci
+          cache-from: type=gha,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }}
 
       - name: Ekstrak Docker Image Digest
         run: |
@@ -207,3 +243,24 @@ jobs:
             upgrade_runtime_summary.md
             odoo_container.log
           retention-days: 30
+
+  upgrade-gate:
+    name: upgrade-gate
+    if: always()
+    needs: [changes, contract-tests, upgrade-proof]
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          PLAN: ${{ needs.changes.result }}
+          SELECTED: ${{ needs.changes.outputs.upgrade }}
+          CONTRACT: ${{ needs.contract-tests.result }}
+          PROOF: ${{ needs.upgrade-proof.result }}
+        run: |
+          test "$PLAN" = success
+          if [ "$SELECTED" = true ]; then
+            test "$CONTRACT" = success
+            test "$PROOF" = success
+          else
+            test "$CONTRACT" = skipped
+            test "$PROOF" = skipped
+          fi

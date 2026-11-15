@@ -13,3 +13,4 @@
 
 9. Gate seed wajib mengikuti `docs/reviews/SEED_INVARIANT_CONTRACT.md`; CI hijau
    dasar bukan penerimaan seed. Supervisor `codex` memakai `agent-log/codex.log`.
+10. **Pemilihan CI:** sebelum PR jalankan `python scripts/ci/plan.py --base origin/main --head HEAD`; ikuti suite minimum `.ci/test-impact.yml` dan `docs/CI_SELECTION.md`. Label hanya menambah cakupan. Path tak dikenal/perubahan workflow atau selector = full regression; dilarang melemahkan selector agar cepat hijau.

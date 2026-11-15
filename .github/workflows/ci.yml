@@ -2,6 +2,26 @@
 # STATUS: BELUM DIJALANKAN (draf M0). Verifikasi versi action dan image saat run pertama.
 name: CI
 on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
+      force_all:
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact branch, tag, or SHA to verify
+        required: false
+        type: string
+      force_all:
+        description: Run every CI suite
+        required: false
+        default: true
+        type: boolean
   push:
     branches: [main]
   pull_request:
@@ -12,10 +32,65 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: CI impact plan
+    runs-on: ubuntu-24.04
+    outputs:
+      odoo_install: ${{ steps.plan.outputs.odoo_install }}
+      odoo_init: ${{ steps.plan.outputs.odoo_init }}
+      odoo_ui: ${{ steps.plan.outputs.odoo_ui }}
+      dashboard: ${{ steps.plan.outputs.dashboard }}
+      mobile: ${{ steps.plan.outputs.mobile }}
+      pwa: ${{ steps.plan.outputs.pwa }}
+      seed: ${{ steps.plan.outputs.seed }}
+      finance: ${{ steps.plan.outputs.finance }}
+      upgrade: ${{ steps.plan.outputs.upgrade }}
+      full_dataset: ${{ steps.plan.outputs.full_dataset }}
+      full: ${{ steps.plan.outputs.full }}
+      plan: ${{ steps.plan.outputs.plan }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Select minimum safe suites (fail-closed)
+        id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORCE_ALL: ${{ inputs.force_all || contains(github.event.pull_request.labels.*.name, 'full-ci') }}
+        run: |
+          args=()
+          if [ "$FORCE_ALL" = "true" ] || [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            args+=(--force-all --files)
+          else
+            args+=(--base "$BASE_SHA" --head HEAD)
+          fi
+          python scripts/ci/plan.py "${args[@]}" --github-output "$GITHUB_OUTPUT" --json-out ci-impact-plan.json
+      - name: Publish selected suites
+        run: |
+          cat ci-impact-plan.json
+          {
+            echo '## CI impact plan'
+            echo '```json'
+            cat ci-impact-plan.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-impact-plan-${{ github.sha }}
+          path: ci-impact-plan.json
+          retention-days: 14
+
   static:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -25,6 +100,12 @@ jobs:
         run: ruff check .
       - name: Manifest addon
         run: python scripts/check_manifests.py
+      - name: Kontrak pemilihan suite CI
+        run: python -m unittest tests.test_ci_impact -v
+      - name: Kontrak occurrence terjemahan Odoo 19
+        run: |
+          python scripts/ci/check_po_occurrences.py
+          python -m unittest tests.test_po_occurrences -v
       - name: Kontrak runner upgrade modul (unit)
         run: python -m unittest tests.test_full_dataset_cutoff_and_upgrade.TestUpgradeBaselineRunner -v
       - name: Dashboard RPC regression
@@ -35,8 +116,9 @@ jobs:
         run: python -c "import glob,yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+['docker-compose.yml']]"
 
   install-test:
-    needs: static
+    needs: [static, changes]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:16
@@ -50,9 +132,24 @@ jobs:
           --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t fmcg-odoo:ci .
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Odoo runtime not selected
+        if: needs.changes.outputs.odoo_install != 'true'
+        run: echo "PASS — no Odoo runtime path changed; see CI impact plan."
+      - uses: docker/setup-buildx-action@v3
+        if: needs.changes.outputs.odoo_install == 'true'
+      - name: Build cached Odoo image
+        if: needs.changes.outputs.odoo_install == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: fmcg-odoo:ci
+          cache-from: type=gha,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }}
       - name: Instal dan uji addon id_* pada DB kosong
+        if: needs.changes.outputs.odoo_install == 'true'
         run: |
           set -o pipefail
           docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -61,11 +158,13 @@ jobs:
               -i id_base,id_approval,id_ui_form,id_mobile_api,id_promo_governance,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,sale_management,account,fleet,l10n_id --test-tags /id_base,/id_approval,/id_ui,/id_ui_shell,/id_mobile_api,/id_promo_governance,/id_dashboard_monetary,/id_dashboard_wms,/id_dashboard_sales --stop-after-init --log-level=test
           ' 2>&1 | tee odoo.log
       - name: Log harus bersih
+        if: needs.changes.outputs.odoo_install == 'true'
         run: |
           if grep -E " (ERROR|CRITICAL) |Traceback" odoo.log; then
             echo "Ditemukan ERROR/Traceback pada log"; exit 1
           fi
       - name: D1 redesign install and upgrade on isolated database
+        if: needs.changes.outputs.dashboard == 'true'
         run: |
           set -o pipefail
           docker run --rm -v d1-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -79,6 +178,7 @@ jobs:
           ' 2>&1 | tee d1-redesign.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' d1-redesign.log; then exit 1; fi
       - name: Disposable mobile staging provisioning shell smoke
+        if: needs.changes.outputs.mobile == 'true'
         run: |
           set -o pipefail
           docker run --rm --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -90,6 +190,7 @@ jobs:
           grep -q 'STAGING_PROVISION_SMOKE=PASS' staging-provision.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' staging-provision.log; then exit 1; fi
       - name: Existing-demo provisioning preservation smoke
+        if: needs.changes.outputs.mobile == 'true'
         run: |
           set -o pipefail
           docker run --rm --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -101,6 +202,7 @@ jobs:
           grep -q 'EXISTING_DEMO_PROVISION=PASS' existing-demo.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' existing-demo.log; then exit 1; fi
       - name: Upgrade dashboard addons on persisted database
+        if: needs.changes.outputs.dashboard == 'true'
         run: |
           set -o pipefail
           docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -110,6 +212,7 @@ jobs:
           ' 2>&1 | tee dashboard-upgrade.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' dashboard-upgrade.log; then exit 1; fi
       - name: Prepare disposable UI fixtures
+        if: needs.changes.outputs.odoo_ui == 'true'
         run: |
           set -o pipefail
           docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -119,6 +222,7 @@ jobs:
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["order"])' > ui-order.txt
           python -c 'import json; d=json.loads(next(x.split("UI_FIXTURE=",1)[1] for x in open("fixture.log") if x.startswith("UI_FIXTURE="))); print(d["invoice"])' > ui-invoice.txt
       - name: Start Odoo for browser smoke
+        if: needs.changes.outputs.odoo_ui == 'true'
         run: |
           docker run -d --name ui-smoke -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             exec odoo -d ci_db --db-filter "^ci_db$" --db_host localhost --db_port 5432 -r odoo -w odoo \
@@ -129,7 +233,14 @@ jobs:
             sleep 2
           done
           curl -sf -o /dev/null http://localhost:8069/web/login
+      - name: Cache Playwright Chromium
+        if: needs.changes.outputs.odoo_ui == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: odoo-playwright-${{ runner.os }}-1.58.0
       - name: Browser smoke (UI modules, two-record pager, classic/sidebar)
+        if: needs.changes.outputs.odoo_ui == 'true'
         env:
           UI_TEST_PASSWORD: ci-ui
         run: |
@@ -140,6 +251,7 @@ jobs:
       # Posting the first invoice changes Odoo's native draft-number placeholder.
       # Keep dashboard fixtures after keyboard/title smoke to preserve its isolated precondition.
       - name: Prepare native dashboard visual fixtures
+        if: needs.changes.outputs.dashboard == 'true'
         run: |
           set -o pipefail
           docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
@@ -148,10 +260,12 @@ jobs:
           ' < scripts/ui/dashboard_fixture.py | tee dashboard-fixture.log
           grep -q 'DASHBOARD_VISUAL_FIXTURE=PASS' dashboard-fixture.log
       - name: Native dashboard visual audit
+        if: needs.changes.outputs.dashboard == 'true'
         env:
           UI_TEST_PASSWORD: ci-ui
         run: python docs/ui/e2e/dashboard_visual.py http://localhost:8069
       - name: Prepare representative native D1 visual fixtures
+        if: needs.changes.outputs.dashboard == 'true'
         env:
           D1_TEST_PASSWORD: ci-d1-visual
         run: |
@@ -164,6 +278,7 @@ jobs:
           ' < scripts/ui/d1_visual_fixture.py | tee d1-visual/fixture.log
           python -c 'import json,pathlib; p=pathlib.Path("d1-visual"); d=json.loads(next(x.split("D1_VISUAL_FIXTURE=",1)[1] for x in (p/"fixture.log").read_text().splitlines() if x.startswith("D1_VISUAL_FIXTURE="))); (p/"fixture.json").write_text(json.dumps(d,indent=2))'
       - name: Start isolated D1 webclient
+        if: needs.changes.outputs.dashboard == 'true'
         run: |
           docker run -d --name d1-visual -v d1-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             exec odoo -d d1_ci --db-filter "^d1_ci$" --db_host localhost --db_port 5432 -r odoo -w odoo \
@@ -177,6 +292,7 @@ jobs:
           docker exec d1-visual python3 /opt/scripts/ui/d1_runtime_sources.py > d1-visual/runtime-source.json
           echo "D1_IMAGE_DIGEST=$(docker inspect --format='{{.Image}}' d1-visual)" >> "$GITHUB_ENV"
       - name: Native D1 browser, screenshots, role and numeric reconciliation
+        if: needs.changes.outputs.dashboard == 'true'
         env:
           D1_TEST_PASSWORD: ci-d1-visual
           D1_BASE_URL: http://127.0.0.1:8071
@@ -191,7 +307,7 @@ jobs:
           python scripts/ui/test_d1_browser.py 2>&1 | tee d1-visual/browser.log
           python -c 'import json; r=json.load(open("d1-visual/report.json")); assert r["status"] == "PASS" and len(r["screenshots"]) >= 20'
       - name: UI runtime diagnostics
-        if: always()
+        if: always() && needs.changes.outputs.odoo_install == 'true'
         run: |
           docker logs ui-smoke > ui-runtime.log 2>&1 || true
           mkdir -p d1-visual
@@ -201,14 +317,14 @@ jobs:
           docker rm -f ui-smoke || true
           docker volume rm ui-filestore || true
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && needs.changes.outputs.dashboard == 'true'
         with:
           name: d1-native-visual-${{ github.event.pull_request.head.sha || github.sha }}
           path: d1-visual/
           if-no-files-found: error
           retention-days: 30
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && needs.changes.outputs.odoo_install == 'true'
         with:
           name: ui-smoke-diagnostics
           path: |
@@ -222,8 +338,9 @@ jobs:
 
   init-test:
     # Meniru uji sandbox A dan B: init.sh pada DB kosong (build penuh) lalu restart (semua langkah dilewati).
-    needs: static
+    needs: [static, changes]
     runs-on: ubuntu-24.04
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16
@@ -237,9 +354,24 @@ jobs:
           --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -t fmcg-odoo:ci .
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Entrypoint runtime not selected
+        if: needs.changes.outputs.odoo_init != 'true'
+        run: echo "PASS — no init/deployment contract changed; see CI impact plan."
+      - uses: docker/setup-buildx-action@v3
+        if: needs.changes.outputs.odoo_init == 'true'
+      - name: Build cached Odoo image
+        if: needs.changes.outputs.odoo_init == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: fmcg-odoo:ci
+          cache-from: type=gha,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }}
       - name: init.sh pada DB kosong (build penuh)
+        if: needs.changes.outputs.odoo_init == 'true'
         run: |
           docker run -d --name odoo --network host \
             -e PGHOST=localhost -e PGUSER=postgres -e PGPASSWORD=ci-postgres -e PGDATABASE=fmcg \
@@ -254,6 +386,7 @@ jobs:
           curl -sf -o /dev/null http://localhost:8069/web/login || { tail -n 100 init1.log; exit 1; }
           grep -q "tanpa dump: build penuh" init1.log
       - name: Restart idempoten
+        if: needs.changes.outputs.odoo_init == 'true'
         run: |
           docker restart odoo
           for i in $(seq 1 60); do
@@ -264,10 +397,12 @@ jobs:
           curl -sf -o /dev/null http://localhost:8069/web/login || { tail -n 100 init2.log; exit 1; }
           grep -q "init.base sudah ada; lewati" init2.log
       - name: Log harus bersih
+        if: needs.changes.outputs.odoo_init == 'true'
         run: |
           cat init1.log init2.log > init.log
           if grep -E " (ERROR|CRITICAL) |Traceback" init.log; then exit 1; fi
       - name: Laporan OCA terpasang dan blok idempoten
+        if: needs.changes.outputs.odoo_init == 'true'
         run: |
           set -euo pipefail
           grep -q "install_account_financial_report_v1: memasang" init1.log
@@ -282,6 +417,7 @@ jobs:
           [ "$(q "SELECT state FROM ir_module_module WHERE name='account_financial_report'")" = "installed" ]
           [ "$(q "SELECT count(*) FROM ir_module_module WHERE name IN ('date_range','report_xlsx') AND state='installed'")" = "2" ]
       - name: Aktivasi finance bertanda dan idempoten
+        if: needs.changes.outputs.odoo_init == 'true'
         run: |
           set -euo pipefail
           grep -q "activate_finance_reports_v1: memasang" init1.log
@@ -303,21 +439,23 @@ jobs:
             < scripts/ops/verify_finance_activation_demo.py | tee finance_activation.log
           grep -q 'INIT_FINANCE_ACTIVATION=PASS' finance_activation.log
       - name: Siapkan database terisolasi untuk eksperimen
+        if: needs.changes.outputs.seed == 'true'
         run: |
           docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo psql -h localhost -U postgres -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='fmcg' AND pid <> pg_backend_pid();"
           docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo dropdb -h localhost -U postgres --if-exists fmcg_exp
           docker exec -e PGUSER=postgres -e PGPASSWORD=ci-postgres odoo createdb -h localhost -U postgres -O odoo_app -T fmcg fmcg_exp
       - name: Eksekusi eksperimen seeding historis minimal pada Odoo 19 disposable
+        if: needs.changes.outputs.seed == 'true'
         run: |
           set -o pipefail
           docker exec -i -e PGDATABASE=fmcg_exp odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_historical_experiment.py 2>&1 | tee experiment.log
       - name: Ekstraksi laporan eksperimen historis
-        if: always()
+        if: always() && needs.changes.outputs.seed == 'true'
         run: |
           docker exec odoo cat /tmp/historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || docker exec odoo cat historical_experiment_report.json > historical_experiment_report.json 2>/dev/null || true
           [ -s historical_experiment_report.json ] || echo "[WARN] Laporan eksperimen historis kosong"
       - name: Upload artifact diagnostik eksperimen historis Odoo 19
-        if: always()
+        if: always() && needs.changes.outputs.seed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: odoo19-historical-experiment-report
@@ -326,11 +464,12 @@ jobs:
             experiment.log
           retention-days: 14
       - name: Eksekusi dan verifikasi slice representatif pada Odoo 19 disposable
+        if: needs.changes.outputs.seed == 'true'
         run: |
           set -o pipefail
           docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py 2>&1 | tee slice_runtime.log
       - name: Upload artifact verifikasi runtime disposable
-        if: always()
+        if: always() && needs.changes.outputs.seed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: odoo19-disposable-slice-log

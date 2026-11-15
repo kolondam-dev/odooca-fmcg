@@ -1,38 +1,47 @@
 name: Finance I0 candidate spike
 on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact branch, tag, or SHA to verify
+        required: false
+        type: string
   pull_request:
-    paths:
-      - 'addons/id_base/**'
-      - 'addons/id_finance_reporting/**'
-      - 'addons/id_finance_foundation/**'
-      - 'scripts/ops/finance_activation.py'
-      - 'scripts/ops/verify_finance_foundation.py'
-      - 'tests/test_finance_activation.py'
-      - 'scripts/ops/finance_i0*'
-      - 'scripts/ops/verify_finance_golden_ledger.py'
-      - 'scripts/ops/verify_finance_ledger_security.py'
-      - 'scripts/ops/verify_finance_stock_bridge.py'
-      - 'scripts/ops/verify_finance_i2_ledgers_core.py'
-      - 'scripts/ops/verify_finance_i2_arap_subledger.py'
-      - 'scripts/ops/verify_finance_i2c_schedules.py'
-      - 'scripts/ops/verify_finance_i2_exposure.py'
-      - 'tests/test_finance_i2c_schedules.py'
-      - 'tests/test_finance_stock_bridge.py'
-      - 'tests/test_finance_golden_ledger.py'
-      - 'tests/test_finance_i2_ledgers_core.py'
-      - 'tests/test_finance_i2_arap_subledger.py'
-      - 'tests/test_finance_report_scope.py'
-      - 'docs/finance/**'
-      - 'oca.lock'
-      - '.github/workflows/finance-i0-spike.yml'
 permissions:
   contents: read
 concurrency:
   group: finance-i0-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  changes:
+    name: Finance impact plan
+    runs-on: ubuntu-24.04
+    outputs:
+      finance: ${{ steps.plan.outputs.finance }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BASE_SHA" ]; then args=(--force-suite finance --files); else args=(--base "$BASE_SHA" --head HEAD); fi
+          python scripts/ci/plan.py "${args[@]}" --github-output "$GITHUB_OUTPUT"
+
   candidate-install-upgrade:
+    if: needs.changes.outputs.finance == 'true'
+    needs: changes
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     services:
@@ -48,8 +57,17 @@ jobs:
           --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - name: Build pinned project image
-        run: docker build -t fmcg-finance:i0 .
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: docker/setup-buildx-action@v3
+      - name: Build cached pinned project image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: fmcg-finance:i0
+          cache-from: type=gha,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }}
       - name: Install separate candidate profiles and upgrade persisted databases
         shell: bash
         run: |
@@ -175,3 +193,17 @@ jobs:
         with:
           name: finance-i0-candidate-evidence
           path: finance-i0-evidence/
+
+  finance-gate:
+    name: finance-gate
+    if: always()
+    needs: [changes, candidate-install-upgrade]
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          PLAN: ${{ needs.changes.result }}
+          SELECTED: ${{ needs.changes.outputs.finance }}
+          RESULT: ${{ needs.candidate-install-upgrade.result }}
+        run: |
+          test "$PLAN" = success
+          if [ "$SELECTED" = true ]; then test "$RESULT" = success; else test "$RESULT" = skipped; fi

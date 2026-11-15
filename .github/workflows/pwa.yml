@@ -1,57 +1,132 @@
 name: PWA quality
 on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
+      force_all:
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact branch, tag, or SHA to verify
+        required: false
+        type: string
+      force_all:
+        description: Run PWA suite regardless of diff
+        required: false
+        default: true
+        type: boolean
   pull_request:
   push:
-    branches: [main, 'agen/mobile-*', 'agen/pwa-*']
+    branches: [main]
 permissions:
   contents: read
 concurrency:
   group: pwa-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  pwa-quality:
+  changes:
+    name: PWA impact plan
     runs-on: ubuntu-24.04
+    outputs:
+      pwa: ${{ steps.plan.outputs.pwa }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - name: Select PWA suite
+        id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORCE_ALL: ${{ inputs.force_all || contains(github.event.pull_request.labels.*.name, 'full-ci') || contains(github.event.pull_request.labels.*.name, 'pwa-ci') }}
+        run: |
+          args=()
+          if [ "$FORCE_ALL" = "true" ] || [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            args+=(--force-suite pwa --files)
+          else
+            args+=(--base "$BASE_SHA" --head HEAD)
+          fi
+          python scripts/ci/plan.py "${args[@]}" --github-output "$GITHUB_OUTPUT"
+
+  pwa-quality:
+    needs: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: pwa
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: PWA suite not selected
+        if: needs.changes.outputs.pwa != 'true'
+        run: echo "PASS — no PWA path changed; see impact plan."
       - uses: actions/setup-node@v4
+        if: needs.changes.outputs.pwa == 'true'
         with:
           node-version: '24'
           cache: npm
           cache-dependency-path: pwa/package-lock.json
-      - run: npm ci --no-fund
-      - run: npm run format:check
-      - run: npm run typecheck
-      - run: npm run contracts:check
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm ci --no-fund
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run format:check
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run typecheck
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run contracts:check
       - name: Design token parity (tokens.css = design/tokens.json)
+        if: needs.changes.outputs.pwa == 'true'
         run: npm run test:tokens
-      - run: npm test
-      - run: npm run test:hosting
-      - run: npm run build:demo
-      - run: node scripts/check-qa-tools.mjs disabled
-      - run: npm run build:demo
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm test
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run test:hosting
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run build:demo
+      - if: needs.changes.outputs.pwa == 'true'
+        run: node scripts/check-qa-tools.mjs disabled
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run build:demo
         env:
           VITE_QA_TOOLS: "true"
-      - run: node scripts/check-qa-tools.mjs enabled
-      - run: npm run build
-      - run: npm run build:staging
-      - run: npm run check:build
+      - if: needs.changes.outputs.pwa == 'true'
+        run: node scripts/check-qa-tools.mjs enabled
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run build
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run build:staging
+      - if: needs.changes.outputs.pwa == 'true'
+        run: npm run check:build
       - uses: actions/upload-artifact@v4
+        if: needs.changes.outputs.pwa == 'true'
         with:
           name: pwa-builds
           path: pwa/dist/
           if-no-files-found: error
           retention-days: 7
   pwa-browser:
-    needs: pwa-quality
+    if: needs.changes.outputs.pwa == 'true'
+    needs: [changes, pwa-quality]
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: pwa
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -62,6 +137,10 @@ jobs:
         with:
           name: pwa-builds
           path: pwa/dist/
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pwa-playwright-${{ runner.os }}-${{ hashFiles('pwa/package-lock.json') }}
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - name: Print failure page snapshots (diagnostics in job log)
@@ -82,10 +161,14 @@ jobs:
             pwa/playwright-report/
           retention-days: 7
   pwa-container:
-    needs: pwa-quality
+    if: needs.changes.outputs.pwa == 'true'
+    needs: [changes, pwa-quality]
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
       - name: Build isolated hosting image and smoke health/static/API boundary
         run: |
           docker build -t fmcg-pwa ./pwa
@@ -100,12 +183,21 @@ jobs:
           bash pwa/hosting/test-railway-gateway.sh
   pwa-gate:
     if: always()
-    needs: [pwa-quality, pwa-browser, pwa-container]
+    needs: [changes, pwa-quality, pwa-browser, pwa-container]
     runs-on: ubuntu-24.04
     steps:
       - name: Require client and hosting gates
         env:
+          SELECTED: ${{ needs.changes.outputs.pwa }}
           QUALITY_RESULT: ${{ needs.pwa-quality.result }}
           BROWSER_RESULT: ${{ needs.pwa-browser.result }}
           CONTAINER_RESULT: ${{ needs.pwa-container.result }}
-        run: test "$QUALITY_RESULT" = success && test "$BROWSER_RESULT" = success && test "$CONTAINER_RESULT" = success
+        run: |
+          if [ "$SELECTED" != "true" ]; then
+            test "$QUALITY_RESULT" = success
+            echo "PASS — PWA suite intentionally not selected."
+          else
+            test "$QUALITY_RESULT" = success
+            test "$BROWSER_RESULT" = success
+            test "$CONTAINER_RESULT" = success
+          fi

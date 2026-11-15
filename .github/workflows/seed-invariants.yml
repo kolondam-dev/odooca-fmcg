@@ -1,40 +1,112 @@
 name: Seed supervision
 on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
+      force_all:
+        required: false
+        default: true
+        type: boolean
   pull_request:
   push:
-    branches: [main, 'agen/**']
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact branch, tag, or SHA to verify
+        required: false
+        type: string
+      force_all:
+        description: Run seed suite regardless of diff
+        required: false
+        default: true
+        type: boolean
 permissions:
   contents: read
 concurrency:
   group: seed-supervision-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  invariant-tests:
+  changes:
+    name: Seed impact plan
     runs-on: ubuntu-24.04
+    outputs:
+      seed: ${{ steps.plan.outputs.seed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - name: Select seed suite
+        id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORCE_ALL: ${{ inputs.force_all || contains(github.event.pull_request.labels.*.name, 'full-ci') || contains(github.event.pull_request.labels.*.name, 'seed-ci') }}
+        run: |
+          args=()
+          if [ "$FORCE_ALL" = "true" ] || [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            args+=(--force-suite seed --files)
+          else
+            args+=(--base "$BASE_SHA" --head HEAD)
+          fi
+          python scripts/ci/plan.py "${args[@]}" --github-output "$GITHUB_OUTPUT"
+
+  invariant-tests:
+    needs: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Seed suite not selected
+        if: needs.changes.outputs.seed != 'true'
+        run: echo "PASS — no seed/test path changed; see impact plan."
+      - uses: actions/setup-python@v5
+        if: needs.changes.outputs.seed == 'true'
         with:
           python-version: '3.12'
       - name: Install geometry regression dependencies
+        if: needs.changes.outputs.seed == 'true'
         run: python -m pip install shapely==2.2.0 numpy==2.5.4
-      - run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - if: needs.changes.outputs.seed == 'true'
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
   seed-invariants:
-    needs: invariant-tests
+    if: always()
+    needs: [changes, invariant-tests]
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Require selected unit gate or record intentional no-op
+        env:
+          SELECTED: ${{ needs.changes.outputs.seed }}
+          UNIT_RESULT: ${{ needs.invariant-tests.result }}
+        run: |
+          test "$UNIT_RESULT" = success
+          if [ "$SELECTED" != "true" ]; then
+            echo "PASS — seed suite intentionally not selected."
+          fi
       - uses: actions/setup-python@v5
+        if: needs.changes.outputs.seed == 'true'
         with:
           python-version: '3.12'
       - name: Validate committed artifacts independently
+        if: needs.changes.outputs.seed == 'true'
         run: python scripts/ops/verify_seed_invariants.py --report invariant-report.json
       - name: Validate source acceptance independently
-        if: always()
+        if: always() && needs.changes.outputs.seed == 'true'
         run: python scripts/ops/verify_seed_acceptance.py --report acceptance-report.json
       - name: Publish diagnostics on success or failure
-        if: always()
+        if: always() && needs.changes.outputs.seed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: seed-invariant-report-${{ github.sha }}

@@ -1,3 +1,12 @@
+## 2026-11-15T23:13:56+07:00 — claude-dev — Restrukturisasi CI berbasis dampak, nightly, dan release exact-SHA
+**Konteks:** [F] Ruleset `main-quality-gate` mewajibkan enam context lama, sementara CI/PWA/seed sebelumnya berjalan pukul rata dan push feature branch menggandakan beberapa suite. [F] `install-test` telah menampung instalasi, mobile, browser, dan D1 sekaligus; branch seed F4 pernah menambah runtime ±80 menit ke job ini.
+**Berubah:** `.ci/test-impact.yml` + `scripts/ci/plan.py` (planner fail-closed, override aditif); kontrak planner dan occurrence PO Odoo 19; workflow CI/PWA/seed/finance/upgrade/full-dataset menjadi targeted dengan gate stabil, timeout, cache BuildKit/Playwright, dan tanpa trigger push feature branch; `Full Regression Gate` nightly 01:00 WITA/manual exact-SHA; PR template; panduan di `AGENTS.md`, `docs/AGENT_PROTOCOL.md`, `docs/DEVELOPMENT.md`, dan `docs/CI_SELECTION.md`.
+**Diverifikasi:** [F] Lokal PASS: 14 unittest selector/PO, scan occurrence 12 PO, `ruff check .`, `check_manifests.py` (14 addon), parse YAML, actionlint 1.7.12, dan `git diff --check`. [F] Hotfix PO #144 (`dd0cf4d`) sudah menjadi basis dan `--load-language=id_ID` pada D1 upgrade tetap dipertahankan.
+**Belum diuji:** [BU] Seluruh runtime workflow menunggu CI pada PR exact-SHA. [BU] Cache hit/miss dan penghematan durasi baru dapat diukur setelah dua run. [BU] Ruleset belum boleh ditambah tiga context baru sebelum workflow tersedia di default branch.
+**Butir terbuka:** setelah merge, pemilik menambah `finance-gate`, `upgrade-gate`, dan `full-dataset-gate` ke ruleset; lalu jalankan `Full Regression Gate` manual pada SHA merge sebelum deployment berikutnya.
+**Menunggu:** pemilik untuk commit/push/PR sesuai protokol, review impact map, dan pembaruan ruleset pasca-merge.
+**Signature:** task managed by claude-dev agent at 2026-11-15T23:13:56+07:00
+
 ## 2026-11-15 — Codex-Dashboard — Drill-down D1 ke D7
 
 **Berubah:** Dialog D1 membuka dashboard rincian D7 dengan cakupan baris sumber, periode, dan filter terpilih. Tombol kembali memakai stack aksi Odoo. Jalur dokumen sumber tetap tersedia.

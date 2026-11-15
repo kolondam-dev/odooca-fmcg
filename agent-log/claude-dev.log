@@ -406,3 +406,12 @@
 - Bukti lokal: oracle dan helper produksi identik pada 15/31 Juli dan 31 Agustus (bucket bulanan vs prorata harian untuk jendela satu bulan); ruff PASS; check_manifests PASS (14 addon); 106 tes finance PASS.
 - [BU] Native exact-SHA menunggu CI PR ini; FIN38 non-sintetis tetap terbuka; REPORT_CATALOG FIN37/FIN38 tetap BELUM_DITERIMA. Tidak ada deploy/mutasi DB live; INIT_MODULES tidak berubah.
 - Task managed by Agent-Opencode at 2026-11-12T08:24:55+07:00
+
+[2026-11-15T23:13:56+07:00] [INFO] Restrukturisasi CI berbasis impact planner fail-closed
+- [F] Menambah .ci/test-impact.yml, planner dan 14 kontrak selector/PO; path tak dikenal atau control-plane memilih semua suite.
+- [F] CI/PWA/seed/finance/upgrade/full-dataset kini targeted dengan gate stabil; trigger push feature branch dihapus; BuildKit dan Playwright cache ditambahkan.
+- [F] Full Regression Gate nightly 01:00 WITA dan manual exact-SHA mencakup core, PWA, seed, finance, upgrade, full dataset tanpa memberi otorisasi deploy.
+- [F] Dokumentasi wajib diperbarui: AGENTS.md, AGENT_PROTOCOL.md, DEVELOPMENT.md, CI_SELECTION.md, dan PR template.
+- [F] Lokal PASS: 14 unittest, PO scan 12 file, ruff, 14 manifest, YAML, actionlint 1.7.12, git diff --check.
+- [BU] Seluruh workflow runtime menunggu CI pada PR; ruleset perlu menambah finance-gate, upgrade-gate, full-dataset-gate setelah workflow tersedia di main.
+- Task managed by claude-dev agent at 2026-11-15T23:13:56+07:00
