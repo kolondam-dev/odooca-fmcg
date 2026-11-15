@@ -410,9 +410,14 @@ class GenericPeriodPackLoader:
         if self.env is None:
             return None
         Account = self.env["account.account"].sudo()
-        acc = Account.search(
-            [("code", "=", code), ("company_id", "in", [self.company.id, False])], limit=1
-        )
+        acc_fields = _safe_fields(Account)
+        has_company = self.company is not None
+        comp_domain = []
+        if "company_ids" in acc_fields and has_company:
+            comp_domain = [("company_ids", "in", [self.company.id])]
+        elif "company_id" in acc_fields and has_company:
+            comp_domain = [("company_id", "in", [False, self.company.id])]
+        acc = Account.search([("code", "=", code)] + comp_domain, limit=1)
         if not acc and self.strict:
             c_name = getattr(self.company, "name", "unknown")
             raise PreflightContinuityError(

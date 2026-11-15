@@ -67,13 +67,18 @@ class MockModel:
                                 break
                         elif op == "in":
                             val_set = set(val) if isinstance(val, (list, tuple, set)) else {val}
-                            if (
-                                r_val not in val_set
-                                and (r_id is None or r_id not in val_set)
-                                and (r_val is not None or False not in val_set)
-                            ):
-                                match = False
-                                break
+                            if isinstance(r_val, (list, tuple, set)):
+                                if not any(x in val_set for x in r_val):
+                                    match = False
+                                    break
+                            else:
+                                if (
+                                    r_val not in val_set
+                                    and (r_id is None or r_id not in val_set)
+                                    and (r_val is not None or False not in val_set)
+                                ):
+                                    match = False
+                                    break
                         elif op == "ilike" and (r_val is None or str(val).lower() not in str(r_val).lower()):
                             match = False
                             break
@@ -2017,6 +2022,34 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             loader._validate_existing_invoice(mock_inv, inv_row)
         expected_msg = "Drift detected on Invoice INV-202608-0001: expected total 394804.80, found 355680.00"
         self.assertIn(expected_msg, str(ctx.exception))
+
+    def test_resolve_account_supports_odoo19_company_ids_schema(self):
+        """Odoo 19 schema: account.account uses company_ids (Many2many) rather than company_id.
+        _resolve_account must query company_ids without raising invalid field error."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_acc_211200 = MockRecord(id=88, code="211200", name="PPN Keluaran", company_ids=[1])
+        account_model = MockModel(records=[mock_acc_211200])
+        account_model._fields = {"code": None, "company_ids": None}
+
+        # Subclass or wrap search to reject 'company_id' like native Odoo 19
+        orig_search = account_model.search
+        def guarded_search(domain, limit=None):
+            for term in domain:
+                if isinstance(term, tuple) and term[0] == "company_id":
+                    raise ValueError(
+                        "Invalid field account.account.company_id in condition ('company_id', 'in', [1, False])"
+                    )
+            return orig_search(domain, limit=limit)
+        account_model.search = guarded_search
+
+        env = MockEnv({"account.account": account_model, "res.company": MockModel(records=[mock_company])})
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
+        loader.company = mock_company
+
+        resolved = loader._resolve_account("211200")
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.id, 88)
+        self.assertEqual(resolved.code, "211200")
 
 
 if __name__ == "__main__":

@@ -1,3 +1,21 @@
+## 2026-11-15T10:50:00+07:00 — antigravity — F4: Resolusi Skema Multi-Company account.account Odoo 19 (company_ids vs company_id) (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_resolve_account`, memeriksa keberadaan field `company_ids` vs `company_id` pada model `account.account` dan membentuk query domain secara adaptif (`[("company_ids", "in", [self.company.id])]` pada Odoo 19). Mengeliminasi `ValueError: Invalid field account.account.company_id in condition ('company_id', 'in', [1, False])` saat resolusi akun pajak PPN 211200.
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Menambahkan helper `_resolve_audit_account` dengan deteksi field `company_ids` / `company_id` untuk akun audit 211200 (PPN Keluaran), 114100 (PPN Masukan), 113000 (Persediaan), 112000 (Piutang), dan 211000 (Utang).
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan tes regresi `test_resolve_account_supports_odoo19_company_ids_schema` yang memverifikasi `_resolve_account` berhasil menyelesaikan akun dengan skema `company_ids` Odoo 19 dan menolak domain `company_id`.
+  - Memperbarui `MockModel.search` untuk mendukung evaluasi operator `in` pada field relasional Many2many (list ids).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T10:50:00+07:00
+
 ## 2026-11-15T01:45:00+07:00 — antigravity — CI: Resolusi Pengikatan Tanggal Bisnis POD ke Manifest Trip (id_mobile_api) (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `addons/id_mobile_api/models/mobile_command.py`:

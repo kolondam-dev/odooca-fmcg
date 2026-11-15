@@ -311,6 +311,14 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     AccountMove = env["account.move"].sudo()
     AccountMoveLine = env["account.move.line"].sudo()
     AccountAccount = env["account.account"].sudo()
+    acc_fields = set(getattr(AccountAccount, "_fields", {}).keys())
+
+    def _resolve_audit_account(code: str):
+        if "company_ids" in acc_fields:
+            return AccountAccount.search([("code", "=", code), ("company_ids", "in", [company.id])], limit=1)
+        elif "company_id" in acc_fields:
+            return AccountAccount.search([("code", "=", code), ("company_id", "in", [company.id, False])], limit=1)
+        return AccountAccount.search([("code", "=", code)], limit=1)
     PurchaseOrder = env["purchase.order"].sudo()
     AccountPayment = env["account.payment"].sudo()
     StockPicking = env["stock.picking"].sudo()
@@ -388,9 +396,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         report["violations"].append(f"Invoices missing is_fmcg_seed_invoice flag: {oracle.expected_inv_count - seed_flag_count}")
 
     # Tax Account 211200 (PPN Keluaran) - Mandatory and exact
-    tax_out_acc = AccountAccount.search(
-        [("code", "=", "211200"), ("company_id", "in", [company.id, False])], limit=1
-    )
+    tax_out_acc = _resolve_audit_account("211200")
     if not tax_out_acc:
         report["violations"].append("Mandatory GL account '211200' (PPN Keluaran) not found in database")
     else:
@@ -538,9 +544,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             )
 
     # Tax Account 114100 (PPN Masukan) - Mandatory and independently derived from pack po_lines.csv
-    tax_in_acc = AccountAccount.search(
-        [("code", "=", "114100"), ("company_id", "in", [company.id, False])], limit=1
-    )
+    tax_in_acc = _resolve_audit_account("114100")
     if not tax_in_acc:
         report["violations"].append("Mandatory GL account '114100' (PPN Masukan) not found in database")
     else:
@@ -767,9 +771,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     report["checks"]["opex_total_debit"] = str(opex_total_debit)
 
     # 9. Stock-to-GL Audit (Account 113000 vs Internal Quants Monetary Valuation)
-    stock_acc = AccountAccount.search(
-        [("code", "=", "113000"), ("company_id", "in", [company.id, False])], limit=1
-    )
+    stock_acc = _resolve_audit_account("113000")
     if not stock_acc:
         report["violations"].append("Mandatory GL account '113000' (Persediaan Barang Dagang) not found in database")
     else:
@@ -963,9 +965,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 )
 
     # 10. AR-to-GL Audit (Account 112000 vs Open Invoices Residual)
-    ar_acc = AccountAccount.search(
-        [("code", "=", "112000"), ("company_id", "in", [company.id, False])], limit=1
-    )
+    ar_acc = _resolve_audit_account("112000")
     if not ar_acc:
         report["violations"].append("Mandatory GL account '112000' (Piutang Usaha) not found in database")
     else:
@@ -999,9 +999,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             )
 
     # 11. AP-to-GL Audit (Account 211000 vs Open Bills Residual)
-    ap_acc = AccountAccount.search(
-        [("code", "=", "211000"), ("company_id", "in", [company.id, False])], limit=1
-    )
+    ap_acc = _resolve_audit_account("211000")
     if not ap_acc:
         report["violations"].append("Mandatory GL account '211000' (Utang Usaha) not found in database")
     else:
