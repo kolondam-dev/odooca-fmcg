@@ -48,17 +48,22 @@ test('D1 map drill offers both exact lines and containing native orders',async()
     const domain=[['company_id','in',[8]],['product_id','in',[9]]];
     d.state.data={cityDrills:{'71.71':{model:'sale.order.line',domain}}};
     await d.openDocument({dimension:'city_code',code:'71.71'});
-    await choice(true);
+    await choice('lines');
     assert.equal(calls[0].res_model,'sale.order.line');
     assert.equal(calls[0].domain,domain);
-    await choice(false);
+    await choice('orders');
     assert.equal(calls[1].res_model,'sale.order');
     assert.equal(calls[1].domain[1][0],'order_line');
     assert.equal(calls[1].domain[1][1],'any');
     assert.equal(calls[1].domain[1][2],domain);
+    d.query=query();
+    await choice('dashboard');
+    assert.equal(calls[2].tag,'id_dashboard_redesign.d7');
+    assert.equal(calls[2].params.drill.domain,domain);
+    assert.equal(calls[2].params.query,d.query);
     d.generation++;
-    await choice(true);
-    assert.equal(calls.length,2);
+    await choice('lines');
+    assert.equal(calls.length,3);
 });
 test('Dashboards entry dispatches by Sales group',async()=>{
     assert.equal(await action().actions.get('id_dashboard_redesign.default')(),
@@ -68,7 +73,7 @@ test('Dashboards entry dispatches by Sales group',async()=>{
 });
 test('D1 adapter uses company currency, signed values, real comparison and no fixture fallback',()=>{
     let source=fs.readFileSync(path.join(root,'addons/id_dashboard_redesign/static/src/adapters.js'),'utf8');
-    source=source.replace(/^import .*;\s*$/mg,'').replace('export function adaptSource','function adaptSource')+'\nglobalThis.adapt=adaptSource;';
+    source=source.replace(/^import .*;\s*$/mg,'').replace(/^export (?=function )/mg,'')+'\nglobalThis.adapt=adaptSource;';
     const ctx={Intl,_t:s=>s};vm.createContext(ctx);vm.runInContext(source,ctx);
     const raw={total:{net:-50,gross:-60,discount:-10,orders:1,aov:-50,pjp:{}},
         period:{start:'2026-10-01',end:'2026-10-01'},currency:'USD',line_domain:[['id','in',[99]]],

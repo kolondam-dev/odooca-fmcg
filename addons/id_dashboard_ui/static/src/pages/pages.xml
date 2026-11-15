@@ -572,8 +572,8 @@
   <t t-name="id_dashboard_ui.D7">
     <div style="font-family:Inter,system-ui,sans-serif;background:var(--tint);max-width:1440px;margin:0 auto;min-height:100%;font-size:13px;color:#12223f" class="id-dash-page id-dash--d7">
       <DashHeader title="v.drillTitles.panel0" sub="v.sub" role="v.role" sync="v.sync"/>
-      <ApprovedControls options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
-        <Breadcrumb crumbs="v.crumbs" onEvent="props.onEvent" onDrill="props.onDrill"/>
+      <ApprovedControls t-if="v.controlOptions" options="v.controlOptions" onApply="props.onApply"/><main style="padding:14px 24px;display:flex;flex-direction:column;gap:12px" class="id-dash-main">
+        <Breadcrumb t-if="v.crumbs" crumbs="v.crumbs" onEvent="props.onEvent" onDrill="props.onDrill"/>
         <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 340px;gap:12px;align-items:start" class="id-dash-row">
           <t t-if="!v.__available || v.__available[&quot;D7.0&quot;] !== false">
             <BarRows title="v.drillTitles.panel3" rows="v.brands" height="&quot;330&quot;" onEvent="props.onEvent" onDrill="props.onDrill"/>

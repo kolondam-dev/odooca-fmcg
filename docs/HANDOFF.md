@@ -31,6 +31,14 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-15T19:25:00+07:00
 
+## 2026-11-15 — Codex-Dashboard — Drill-down D1 ke D7
+
+**Berubah:** Dialog D1 membuka dashboard rincian D7 dengan cakupan baris sumber, periode, dan filter terpilih. Tombol kembali memakai stack aksi Odoo. Jalur dokumen sumber tetap tersedia.
+
+**Diverifikasi:** [F] ORM pada snapshot production terisolasi merekonsiliasi Net Sales Juli tanpa filter dan dengan SKU 128, termasuk per kota. [BU] Playwright pada HEAD PR menunggu CI.
+
+**Signature:** Task Managed by Agent Codex-Dashboard
+
 ## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
 **Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.
 **Diverifikasi:** [F] tes browser beranda-roles (3 tes, phone+tablet) dan unit delivery-progress (5) lulus; gate penuh dijalankan sebelum PR.

@@ -367,3 +367,27 @@ msgstr "Effective call · scope sendiri"
 #: addons/id_dashboard_redesign/static/src/adapters.js
 msgid "Calls / assigned day · own scope"
 msgstr "Call / hari tugas · scope sendiri"
+
+msgid "Sales detail"
+msgstr "Rincian penjualan"
+
+msgid "Open detail dashboard"
+msgstr "Buka dashboard rincian"
+
+msgid "Back to Sales Productivity"
+msgstr "Kembali ke Produktivitas Penjualan"
+
+msgid "Net sales by brand"
+msgstr "Penjualan bersih per merek"
+
+msgid "Net sales by outlet"
+msgstr "Penjualan bersih per outlet"
+
+msgid "Net sales by SKU"
+msgstr "Penjualan bersih per SKU"
+
+msgid "Sales summary"
+msgstr "Ringkasan penjualan"
+
+msgid "A sales detail scope is required."
+msgstr "Cakupan rincian penjualan wajib diisi."
