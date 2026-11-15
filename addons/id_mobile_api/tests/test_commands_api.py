@@ -4,7 +4,7 @@ import json
 import uuid
 from unittest.mock import patch
 
-from odoo import Command
+from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
 from ..models.mobile_workday import MobileReadConflict

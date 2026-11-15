@@ -1,3 +1,15 @@
+## 2026-11-15T12:43:00+07:00 — antigravity — CI: Penambahan Import fields pada test_commands_api (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `addons/id_mobile_api/tests/test_commands_api.py`:
+  - Menambahkan import `fields` dari `odoo` yang dibutuhkan fungsi `_set_command_fixture_date` pasca-merge PR #138, mengeliminasi error `F821 Undefined name fields` pada static job CI.
+**Diverifikasi:**
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T12:43:00+07:00
+
 ## 2026-11-15T12:45:00+07:00 — antigravity — F4: Bootstrap & Resolusi Akun GL Otoritatif FMCG (PPN 211200, 114100, 112000, 211000) & Integrasi Main PR #138 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - Sinkronisasi `origin/main` (`fdb2fc0`, PR #138 `mobile-api-deterministic-test-clock`) ke dalam cabang kerja.
