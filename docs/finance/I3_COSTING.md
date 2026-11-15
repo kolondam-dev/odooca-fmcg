@@ -110,15 +110,22 @@ default, bukan mengubah ke arah yang lebih sederhana.
 
 - [F] Logika agregasi lulus `--self-test` di job `static` CI.
 - [F] Pembacaan registry berjalan di database disposable CI (`init-test` run
-  `43679620076`, 2026-11-15): 46 kategori, seluruhnya `standard` + `periodic`.
-- [F] Pada Odoo 19 model `stock.valuation.layer` tidak ada; skrip kini membaca
+  `43681641152`, 2026-11-15, commit `e0b5602`): 46 kategori, seluruhnya
+  `standard` + `periodic`; `stock_account` terpasang; sumber valuasi terbaca
+  `stock.move (Odoo 19)`.
+- [F] Database disposable itu tidak punya pergerakan stok, sehingga
+  `done_valued_moves` = 0 dan total bernilai 0. CI membuktikan jalur baca dan
+  bentuk keluaran, bukan angka HPP.
+- [F] Pada Odoo 19 model `stock.valuation.layer` tidak ada; skrip membaca
   `stock.move.value` dan tetap punya jalur baca layer untuk database pra-19.
+- [F] `install-test` dan `init-test` hijau pada commit integrasi `e0b5602`
+  setelah PR #138 (jam uji deterministik `id_mobile_api`) masuk `main`.
 
 ## Yang belum dibuktikan
 
 - [BU] Eksekusi pada database demo production dan hasil `FINANCE_I3_COSTING`.
-- [BU] Angka `stock.move` pada database disposable (dibaca pada CI berikutnya,
-  setelah skrip memakai model valuasi Odoo 19).
+- [BU] Angka `stock.move` pada database yang benar-benar punya pergerakan dan
+  nilai; database disposable CI kosong.
 - [BU] Tie-out HPP per report ID terhadap oracle independen.
 - [BU] Perlakuan selisih kurs, landed cost, dan return terhadap nilai pergerakan.
 - [BU] Sign-off Finance Controller.
