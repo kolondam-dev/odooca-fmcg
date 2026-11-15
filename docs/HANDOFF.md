@@ -1,3 +1,9 @@
+## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
+**Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser beranda-roles (3 tes, phone+tablet) dan unit delivery-progress (5) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] chip Absen/Data tersinkron sebagai pengganti kartu hari, tab Delivery Canvasser, jarak Delivery.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-15T17:27:07+07:00
+
 ## 2026-11-13 — Codex-Dashboard — Pemulihan konteks D1
 
 **Berubah:** Breadcrumb dari dokumen sumber memulihkan kueri dan posisi peta D1 melalui state aksi Odoo. Baris wilayah di luar poligon membuka dokumen sumber pada cakupan yang sama.
