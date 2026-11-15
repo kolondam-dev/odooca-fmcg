@@ -7,6 +7,25 @@ async function attendThenReload(
     mode: { fail: boolean; hold?: Promise<void> },
 ) {
     await page.context().grantPermissions(["geolocation"]);
+    // Uji gagal-simpan: tolak penulisan draf sesi pagi saat flag menyala.
+    await page.addInitScript(() => {
+        const put = IDBObjectStore.prototype.put;
+        IDBObjectStore.prototype.put = function (
+            this: IDBObjectStore,
+            value: unknown,
+            key?: IDBValidKey,
+        ) {
+            const k = (value as { key?: string } | undefined)?.key;
+            if (
+                (window as unknown as { __failMorningSave?: boolean })
+                    .__failMorningSave &&
+                typeof k === "string" &&
+                k.endsWith(":morning-session-v1")
+            )
+                throw new DOMException("quota", "QuotaExceededError");
+            return put.call(this, value, key);
+        };
+    });
     await page.route("**/api/v1/sync/snapshot", async (route) => {
         if (mode.hold) await mode.hold;
         if (!mode.fail) return route.fallback();
@@ -143,4 +162,46 @@ test("Beranda sales memakai angka Outlet selesai, Order, Order terkonfirmasi", a
     await expect(
         page.getByText("Order terkonfirmasi", { exact: true }),
     ).toBeVisible();
+});
+
+test("Gagal simpan setelah unduh menampilkan Terunduh belum tersimpan, sesi tetap terkunci, Ulangi sinkron membukanya", async ({
+    page,
+}) => {
+    const mode = { fail: true };
+    await attendThenReload(page, mode);
+    mode.fail = false;
+    await page.evaluate(() => {
+        (
+            window as unknown as { __failMorningSave: boolean }
+        ).__failMorningSave = true;
+    });
+    await page
+        .getByRole("button", { name: "Sinkronkan data harian", exact: true })
+        .click();
+    await expect(
+        page.getByRole("heading", { name: "Sync belum selesai" }),
+    ).toBeVisible();
+    for (const id of ["outlet", "produk"]) {
+        await expect(page.locator(`[data-sync-row="${id}"]`)).toHaveAttribute(
+            "data-state",
+            "error",
+        );
+        await expect(page.locator(`[data-sync-row="${id}"]`)).toContainText(
+            "Terunduh, belum tersimpan",
+        );
+    }
+    await expect(page.getByText("Belum terunduh")).toHaveCount(0);
+    await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
+    await page.evaluate(() => {
+        (
+            window as unknown as { __failMorningSave: boolean }
+        ).__failMorningSave = false;
+    });
+    await page
+        .getByRole("button", { name: "Ulangi sinkron", exact: true })
+        .click();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
+    await expect(
+        page.getByRole("heading", { name: "Sync belum selesai" }),
+    ).toHaveCount(0);
 });

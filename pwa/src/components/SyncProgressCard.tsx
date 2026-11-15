@@ -25,15 +25,26 @@ const ROWS: {
     { id: "diskon", title: "Program diskon & budget", source: "later" },
 ];
 
+/** Paket sudah diterima (snapshot lolos unduh) tetapi gagal divalidasi atau disimpan. */
+const downloaded = (at?: SyncStage) => at === "validate" || at === "save";
+
 function rowState(
     source: "snapshot" | "later",
     index: number,
     stage: SyncStage | undefined,
     failed: boolean,
+    failedAt?: SyncStage,
 ): RowState {
     if (source === "later") return "soon";
-    if (failed) return index === 0 ? "error" : "pending";
+    if (failed)
+        return index === 0 || downloaded(failedAt) ? "error" : "pending";
     return stage ? "active" : "pending";
+}
+
+function errorText(at?: SyncStage) {
+    if (at === "save") return "Terunduh, belum tersimpan";
+    if (at === "validate") return "Terunduh, belum lolos validasi";
+    return "Belum terunduh";
 }
 
 /**
@@ -45,11 +56,13 @@ function rowState(
 export function SyncProgressCard({
     stage,
     failed,
+    failedAt,
     online,
     onRetry,
 }: {
     stage?: SyncStage;
     failed: boolean;
+    failedAt?: SyncStage;
     online: boolean;
     onRetry: () => void;
 }) {
@@ -75,7 +88,13 @@ export function SyncProgressCard({
             />
             <ul class="ui-sync__list">
                 {ROWS.map((row, i) => {
-                    const state = rowState(row.source, i, stage, failed);
+                    const state = rowState(
+                        row.source,
+                        i,
+                        stage,
+                        failed,
+                        failedAt,
+                    );
                     return (
                         <li
                             key={row.id}
@@ -100,7 +119,7 @@ export function SyncProgressCard({
                                     <span class="ui-sync__sub">Mengunduh…</span>
                                 ) : state === "error" ? (
                                     <span class="ui-sync__sub is-bad">
-                                        Belum terunduh
+                                        {errorText(failedAt)}
                                     </span>
                                 ) : state === "soon" ? (
                                     <span class="ui-sync__sub">

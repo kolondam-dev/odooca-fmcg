@@ -40,6 +40,8 @@ export function MorningSession({
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
     const [stage, setStage] = useState<SyncStage>();
+    const stageRef = useRef<SyncStage | undefined>(undefined);
+    const [failedAt, setFailedAt] = useState<SyncStage>();
     const [online, setOnline] = useState(navigator.onLine);
     const [date, setDate] = useState(fieldBusinessDate());
     const running = useRef(false);
@@ -78,11 +80,20 @@ export function MorningSession({
         running.current = true;
         setBusy(true);
         setError("");
-        setStage("check");
+        setFailedAt(undefined);
+        stageRef.current = undefined;
+        const track = (next: SyncStage) => {
+            stageRef.current = next;
+            setStage(next);
+        };
+        track("check");
         try {
-            const next = await service.open(setStage);
+            const next = await service.open(track);
             changed.current(next);
         } catch (e) {
+            // Simpan tahap terakhir yang tercapai agar kartu tidak menyebut
+            // "belum terunduh" untuk paket yang sudah diunduh tetapi gagal tersimpan.
+            setFailedAt(stageRef.current ?? "check");
             setError(
                 e instanceof Error
                     ? e.message
@@ -157,6 +168,7 @@ export function MorningSession({
                 <SyncProgressCard
                     stage={stage}
                     failed={!busy && !!error}
+                    failedAt={failedAt}
                     online={online}
                     onRetry={() => void advance()}
                 />
