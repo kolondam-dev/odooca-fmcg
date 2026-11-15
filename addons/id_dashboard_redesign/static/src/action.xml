@@ -12,10 +12,23 @@
   <Dialog title="title" size="'md'">
    <p>Matching lines show the products included in the dashboard calculation. Sales Orders shows the complete orders containing those lines.</p>
    <t t-set-slot="footer">
-    <button type="button" class="btn btn-primary" t-on-click="() => this.select(true)">Matching sales order lines</button>
-    <button type="button" class="btn btn-secondary" t-on-click="() => this.select(false)">Sales Orders</button>
+    <button type="button" class="btn btn-secondary" t-on-click="() => this.select('dashboard')">Open detail dashboard</button>
+    <button type="button" class="btn btn-primary" t-on-click="() => this.select('lines')">Matching sales order lines</button>
+    <button type="button" class="btn btn-secondary" t-on-click="() => this.select('orders')">Sales Orders</button>
     <button type="button" class="btn btn-link" t-on-click="props.close">Cancel</button>
    </t>
   </Dialog>
+ </t>
+ <t t-name="id_dashboard_redesign.SalesDetail">
+  <div class="o_action id-dash-action id-d1-scroll" t-att-aria-busy="state.loading">
+   <div class="d-flex flex-wrap gap-2 px-4 py-2">
+    <button type="button" class="btn btn-secondary" t-on-click="back">Back to Sales Productivity</button>
+    <button t-if="state.data" type="button" class="btn btn-primary" t-on-click="matchingLines">Matching sales order lines</button>
+    <button t-if="state.data" type="button" class="btn btn-secondary" t-on-click="salesOrders">Sales Orders</button>
+   </div>
+   <p t-if="state.loading" class="p-3" role="status">Loading dashboard…</p>
+   <div t-if="state.error" class="alert alert-danger" role="alert" t-out="state.error"/>
+   <DashboardShell t-if="state.data" dashboard="'D7'" data="state.data"/>
+  </div>
  </t>
 </templates>

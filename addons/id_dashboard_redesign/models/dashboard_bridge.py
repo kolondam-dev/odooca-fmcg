@@ -11,6 +11,7 @@ from datetime import date, timedelta
 from calendar import monthrange
 
 from odoo import _, api, fields, models
+from odoo.fields import Domain
 from odoo.exceptions import AccessError, UserError
 from odoo.addons.id_dashboard_sales.models.sales_productivity import (
     CONFIRMED_STATES, MAX_ORDERS, _local_date, _ratio, _to_utc,
@@ -215,6 +216,49 @@ class DashboardBridge(models.AbstractModel):
             source["previous_period"] = previous["period"]
             source["previous_trend"] = previous["trend"]
         return {"dashboard": dashboard, "source": source, "read_at": str(fields.Datetime.now())}
+
+    @api.model
+    def get_sales_detail(self, domain):
+        service = self._service("D1")
+        if not isinstance(domain, list) or not domain:
+            raise UserError(_("A sales detail scope is required."))
+        scope = Domain(domain) & Domain([
+            ("order_id.state", "in", CONFIRMED_STATES),
+            ("company_id", "in", self.env.companies.ids),
+            ("display_type", "=", False),
+            ("product_id", "!=", False),
+        ])
+        lines = self.env["sale.order.line"].search(scope, limit=MAX_ORDERS * 10 + 1)
+        if len(lines) > MAX_ORDERS * 10 or len(lines.order_id) > MAX_ORDERS:
+            raise UserError(_("Too many sales lines; narrow the period or filters."))
+        by_brand, by_outlet, by_sku, daily = (defaultdict(float) for _ in range(4))
+        net = gross = discount = 0.0
+        fx = {}
+        for line in lines:
+            order = line.order_id
+            factor = service._conversion(order, fx)
+            amount = line.price_subtotal * factor
+            reduction = line.price_unit * line.product_uom_qty * line.discount / 100 * factor
+            net += amount
+            gross += amount + reduction
+            discount += reduction
+            by_brand[line.product_id.brand_id] += amount
+            by_outlet[order.partner_id] += amount
+            by_sku[line.product_id] += amount
+            daily[_local_date(order.date_order)] += amount
+
+        def ranked(groups):
+            return [{"name": record.display_name or _("Unassigned"), "net": amount}
+                    for record, amount in sorted(groups.items(), key=lambda item: (-item[1], item[0].id or 0))]
+
+        return {
+            "net": net, "gross": gross, "discount": discount,
+            "orders": len(lines.order_id), "lines": len(lines), "aov": _ratio(net, len(lines.order_id)),
+            "currency": self.env.company.currency_id.name, "companies": self.env.companies.mapped("name"),
+            "brands": ranked(by_brand), "outlets": ranked(by_outlet), "products": ranked(by_sku),
+            "daily": [amount for _, amount in sorted(daily.items())],
+            "domain": list(scope),
+        }
 
     def _aggregate(self, service, start, end, line_filter, filters, details=True):
         company_ids = self.env.companies.ids

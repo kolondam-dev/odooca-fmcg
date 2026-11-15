@@ -320,6 +320,12 @@ export class ApiError extends Error {
         this.status = status;
     }
 }
+/** Respons diterima dari server tetapi payload-nya ditolak validasi klien (skema/scope). */
+export class PayloadRejectedError extends ApiError {
+    constructor(message: string) {
+        super(422, message);
+    }
+}
 export interface FieldProvider {
     readonly mode: "demo" | "live";
     bootstrap(): Promise<Identity>;

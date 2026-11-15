@@ -25,6 +25,20 @@
 **Diverifikasi:** [F] Railway project `pleasant-caring` / production / service `odooca-fmcg`: deploy `50866b8` `SUCCESS`; log `2026-11-14T12:03:09Z` `activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation`, `12:03:25Z` `demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo`, `12:03:27Z` `admin memiliki grup Finance Reader`; `Loading module id_finance_foundation (126/126)` `12:03:20Z`. [F] Deploy `16f686a` `SUCCESS` tanpa baris aktivasi ulang (mark bekerja); registry loaded `12:50:51Z`. [F] `/web/login` HTTP 200 pada 2026-11-15; cron rutin berjalan. [A] Versi terpasang `19.0.1.5.1` mengikuti manifest image `50866b8`; `latest_version` DB belum dibaca langsung.
 **Belum diuji:** [BU] Login admin demo → Finance Reports → jalankan laporan → unduh XLSX di production; pemeriksaan DB langsung; tie-out; sign-off. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada deploy/merge dari asisten.
 **Signature:** Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
+## 2026-11-15 — Codex-Dashboard — Drill-down D1 ke D7
+
+**Berubah:** Dialog D1 membuka dashboard rincian D7 dengan cakupan baris sumber, periode, dan filter terpilih. Tombol kembali memakai stack aksi Odoo. Jalur dokumen sumber tetap tersedia.
+
+**Diverifikasi:** [F] ORM pada snapshot production terisolasi merekonsiliasi Net Sales Juli tanpa filter dan dengan SKU 128, termasuk per kota. [BU] Playwright pada HEAD PR menunggu CI.
+
+**Signature:** Task Managed by Agent Codex-Dashboard
+
+## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
+**Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser beranda-roles (3 tes, phone+tablet) dan unit delivery-progress (5) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] chip Absen/Data tersinkron sebagai pengganti kartu hari, tab Delivery Canvasser, jarak Delivery.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-15T17:27:07+07:00
+
 ## 2026-11-13 — Codex-Dashboard — Pemulihan konteks D1
 
 **Berubah:** Breadcrumb dari dokumen sumber memulihkan kueri dan posisi peta D1 melalui state aksi Odoo. Baris wilayah di luar poligon membuka dokumen sumber pada cakupan yang sama.
@@ -32,6 +46,11 @@
 **Verifikasi:** Regresi Playwright memeriksa pemulihan periode dan filter SKU. Validasi produksi menunggu merge dan auto-deploy.
 
 **Signature:** Task Managed by Agent Codex-Dashboard
+## 2026-11-14T23:29:12+07:00 — Agent-Claude-Dev1 — Fase 3B-10: Sinkron (jalan/gagal) + angka Beranda Sales
+**Berubah:** `pwa/src/components/SyncProgressCard.tsx` (baru), `MorningSession.tsx`, `Home.tsx`, `App.tsx`, `domain/morning.ts` (`open(onStage)`), `ui/ui.css`, `tests/browser/sync-progress.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K24), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser sync-progress (3 tes, phone+tablet) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] Lanjut offline (menunggu backend memecah bagian opsional snapshot), Beranda canvasser/delivery/sesi.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-14T23:29:12+07:00
 
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.

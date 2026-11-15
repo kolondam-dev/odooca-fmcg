@@ -105,6 +105,7 @@ export class CoveragePanel extends Chart {
         const ids = this.sourceIds(code);
         if (ids.length) this.props.onDrill?.({
             model: "sale.order.line",
+            label: this.ranking.find(row => row.code === code)?.name,
             domain: [...this.props.geoDomain, ["order_id.partner_id", "in", ids]],
         });
     }
