@@ -346,26 +346,49 @@ msgstr "Effective call · scope sendiri"
 msgid "Calls / assigned day · own scope"
 msgstr "Call / hari tugas · scope sendiri"
 
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: code:addons/id_dashboard_redesign/static/src/adapters.js:0
 msgid "Sales detail"
 msgstr "Rincian penjualan"
 
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: code:addons/id_dashboard_redesign/static/src/action.xml:0
 msgid "Open detail dashboard"
 msgstr "Buka dashboard rincian"
 
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: code:addons/id_dashboard_redesign/static/src/action.xml:0
 msgid "Back to Sales Productivity"
 msgstr "Kembali ke Produktivitas Penjualan"
 
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: code:addons/id_dashboard_redesign/static/src/adapters.js:0
 msgid "Net sales by brand"
 msgstr "Penjualan bersih per merek"
 
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: code:addons/id_dashboard_redesign/static/src/adapters.js:0
 msgid "Net sales by outlet"
 msgstr "Penjualan bersih per outlet"
 
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: code:addons/id_dashboard_redesign/static/src/adapters.js:0
 msgid "Net sales by SKU"
 msgstr "Penjualan bersih per SKU"
 
+#. module: id_dashboard_redesign
+#. odoo-javascript
+#: code:addons/id_dashboard_redesign/static/src/adapters.js:0
 msgid "Sales summary"
 msgstr "Ringkasan penjualan"
 
+#. module: id_dashboard_redesign
+#: code:addons/id_dashboard_redesign/models/dashboard_bridge.py:0
 msgid "A sales detail scope is required."
 msgstr "Cakupan rincian penjualan wajib diisi."
