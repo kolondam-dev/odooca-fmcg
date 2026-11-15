@@ -774,6 +774,11 @@ class CanonicalPerpetualAdapter:
             discount_acc = _resolve_or_create_explicit_account(
                 "410200", "Potongan Penjualan (Cash Discount) FMCG", "expense", "income"
             )
+            _resolve_or_create_explicit_account("211200", "PPN Keluaran FMCG", "liability_current")
+            _resolve_or_create_explicit_account("114100", "PPN Masukan FMCG", "asset_current")
+            _resolve_or_create_explicit_account("112000", "Piutang Usaha FMCG", "asset_receivable")
+            _resolve_or_create_explicit_account("211000", "Utang Usaha FMCG", "liability_payable")
+            _resolve_or_create_explicit_account("410100", "Pendapatan Penjualan FMCG", "income")
 
             # Buktikan akun-akun wajib secara fail-fast
             if not stock_valuation_acc:

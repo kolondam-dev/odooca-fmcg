@@ -705,6 +705,33 @@ def load_canonical_taxes():
         ) or AccountAccount.search(
             comp_acc_domain + [("name", "ilike", "PPN Keluaran")], limit=1
         )
+        if not tax_out_acc and callable(getattr(AccountAccount, "create", None)):
+            acc_vals = {"code": "211200", "name": "PPN Keluaran FMCG", "account_type": "liability_current"}
+            if "company_ids" in acc_fields:
+                acc_vals["company_ids"] = [(4, company.id)]
+            elif "company_id" in acc_fields:
+                acc_vals["company_id"] = company.id
+            try:
+                tax_out_acc = AccountAccount.create(acc_vals)
+            except Exception:
+                pass
+
+        # Cari atau buat akun GL PPN Masukan 114100
+        tax_in_acc = AccountAccount.search(
+            comp_acc_domain + [("code", "=", "114100")], limit=1
+        ) or AccountAccount.search(
+            comp_acc_domain + [("name", "ilike", "PPN Masukan")], limit=1
+        )
+        if not tax_in_acc and callable(getattr(AccountAccount, "create", None)):
+            acc_vals_in = {"code": "114100", "name": "PPN Masukan FMCG", "account_type": "asset_current"}
+            if "company_ids" in acc_fields:
+                acc_vals_in["company_ids"] = [(4, company.id)]
+            elif "company_id" in acc_fields:
+                acc_vals_in["company_id"] = company.id
+            try:
+                AccountAccount.create(acc_vals_in)
+            except Exception:
+                pass
 
     # Tax Group PPN
     tax_group = None

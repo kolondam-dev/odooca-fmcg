@@ -413,11 +413,30 @@ class GenericPeriodPackLoader:
         acc_fields = _safe_fields(Account)
         has_company = self.company is not None
         comp_domain = []
+        comp_vals = {}
         if "company_ids" in acc_fields and has_company:
             comp_domain = [("company_ids", "in", [self.company.id])]
+            comp_vals = {"company_ids": [(4, self.company.id)]}
         elif "company_id" in acc_fields and has_company:
             comp_domain = [("company_id", "in", [False, self.company.id])]
+            comp_vals = {"company_id": self.company.id}
         acc = Account.search([("code", "=", code)] + comp_domain, limit=1)
+        if not acc and fallback_type and callable(getattr(Account, "create", None)):
+            name_map = {
+                "211200": "PPN Keluaran FMCG",
+                "114100": "PPN Masukan FMCG",
+                "112000": "Piutang Usaha FMCG",
+                "211000": "Utang Usaha FMCG",
+                "113000": "Persediaan Barang Dagang FMCG",
+                "510000": "Harga Pokok Penjualan (HPP) FMCG",
+            }
+            acc_name = name_map.get(code, f"Akun {code} FMCG")
+            vals = {"code": code, "name": acc_name, "account_type": fallback_type}
+            vals.update(comp_vals)
+            try:
+                acc = Account.create(vals)
+            except Exception:
+                pass
         if not acc and self.strict:
             c_name = getattr(self.company, "name", "unknown")
             raise PreflightContinuityError(
@@ -521,6 +540,10 @@ class GenericPeriodPackLoader:
         stock_in_acc = _resolve_or_create_acc("113900", "Penerimaan Barang Sementara (Interim)", "asset_current", "liability_current")
         stock_out_acc = _resolve_or_create_acc("113910", "Pengiriman Barang Sementara (Interim)", "asset_current")
         cogs_acc = _resolve_or_create_acc("510000", "Harga Pokok Penjualan (HPP) FMCG", "expense_direct_cost", "expense")
+        _resolve_or_create_acc("211200", "PPN Keluaran FMCG", "liability_current")
+        _resolve_or_create_acc("114100", "PPN Masukan FMCG", "asset_current")
+        _resolve_or_create_acc("112000", "Piutang Usaha FMCG", "asset_receivable")
+        _resolve_or_create_acc("211000", "Utang Usaha FMCG", "liability_payable")
 
         self.stock_valuation_acc = stock_val_acc
         self.stock_input_acc = stock_in_acc
@@ -719,13 +742,13 @@ class GenericPeriodPackLoader:
 
         report["checks"].append(f"company_resolved: {self.company.name} (id={self.company.id})")
 
+        # B. Ensure FMCG Perpetual Accounting, Journals & Locations (first so required GL accounts exist)
+        self._ensure_accounting_and_stock_configuration()
+
         # Resolve & pastikan konfigurasi otoritatif Pajak Kode 04 (12% DPP Nilai Lain) aktif
         if "account.tax" in self.env:
             canonical_tax = self._resolve_canonical_tax_code_04()
             report["checks"].append(f"canonical_tax_04_resolved: {canonical_tax.name} (id={canonical_tax.id})")
-
-        # B. Ensure FMCG Perpetual Accounting, Journals & Locations
-        self._ensure_accounting_and_stock_configuration()
         if not self.wh_stock_loc:
             Location = self.env["stock.location"].sudo()
             self.wh_location = Location.search(
@@ -2793,7 +2816,11 @@ class GenericPeriodPackLoader:
                 for m_line in lines_list
                 if getattr(getattr(m_line, "account_id", None), "code", "") == "211200"
             ]
-            tax_acc = self._resolve_account("211200") if hasattr(self, "_resolve_account") else None
+            tax_acc = (
+                self._resolve_account("211200", fallback_type="liability_current")
+                if hasattr(self, "_resolve_account")
+                else None
+            )
             if canonical_tax_04 and (not t_lines or abs(float(getattr(inv_rec, "amount_tax", 0.0) or 0.0) - exp_ppn) > 0.01):
                 if aml_model is not None and tax_acc:
                     tax_line_vals = {

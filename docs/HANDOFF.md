@@ -1,3 +1,24 @@
+## 2026-11-15T12:45:00+07:00 — antigravity — F4: Bootstrap & Resolusi Akun GL Otoritatif FMCG (PPN 211200, 114100, 112000, 211000) & Integrasi Main PR #138 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- Sinkronisasi `origin/main` (`fdb2fc0`, PR #138 `mobile-api-deterministic-test-clock`) ke dalam cabang kerja.
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_resolve_account`, menambahkan dukungan pembuatan akun on-demand yang terikat pada company jika `fallback_type` diberikan dan akun belum ada.
+  - Pada `_ensure_accounting_and_stock_configuration`, menambahkan bootstrap akun 211200 (PPN Keluaran), 114100 (PPN Masukan), 112000 (Piutang Usaha), dan 211000 (Utang Usaha).
+  - Mengubah urutan inisialisasi agar `_ensure_accounting_and_stock_configuration` dieksekusi sebelum `_resolve_canonical_tax_code_04`.
+  - Mengoper `fallback_type="liability_current"` saat resolusi akun 211200 di `_apply_invoices`.
+- `scripts/load_fmcg_seed.py`:
+  - Pada `load_canonical_taxes`, membuat akun 211200 dan 114100 secara eksplisit jika belum ditemukan sebelum mengonfigurasi pajak kanonikal.
+- `scripts/load_canonical_perpetual.py`:
+  - Menambahkan pembuatan akun 211200, 114100, 112000, 211000, dan 410100 saat bootstrap baseline kanonikal Juli.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py scripts/load_fmcg_seed.py scripts/load_canonical_perpetual.py tests/test_period_pack_loader.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T12:45:00+07:00
+
 ## 2026-11-15T10:50:00+07:00 — antigravity — F4: Resolusi Skema Multi-Company account.account Odoo 19 (company_ids vs company_id) (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

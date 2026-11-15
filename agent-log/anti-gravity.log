@@ -2793,3 +2793,30 @@
   * python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py tests/test_period_pack_loader.py: PASS clean (0 error).
   * Zero touch live Railway / production database.
 - Task managed by antigravity at 2026-11-15T10:50:00+07:00
+
+[2026-11-15T12:45:00+07:00] [INFO] F4: Bootstrap & Resolusi Akun GL Otoritatif FMCG (PPN 211200, 114100, 112000, 211000) & Integrasi Main PR #138
+- Integrasi Main:
+  * Merge origin/main (commit fdb2fc0, PR #138 mobile-api-deterministic-test-clock).
+  * Uji unit mobile API tersinkronisasi pada Senin 09:00 WITA.
+- Analisis Kegagalan F4 Disposable Runtime Proof (CI Run 43674077935 Job 132690304521):
+  * Error: PreflightContinuityError: Account for code '211200' not found in account.account for company 'My Company'
+  * Root Cause:
+    1. _ensure_accounting_and_stock_configuration() pada load_period_pack.py hanya membuat akun persediaan dan HPP (113000, 113900, 113910, 510000), tanpa memastikan keberadaan akun PPN (211200, 114100) dan buku pembantu (112000, 211000).
+    2. _resolve_canonical_tax_code_04() dieksekusi sebelum _ensure_accounting_and_stock_configuration(), sehingga pengikatan akun repartition line PPN tidak menemukan akun 211200.
+    3. scripts/load_fmcg_seed.py dan scripts/load_canonical_perpetual.py belum mem-bootstrap akun 211200 dan 114100 saat inisialisasi master disposable database.
+  * Solusi:
+    1. Pada scripts/ops/load_period_pack.py:
+       - Memperluas _resolve_account() untuk membuat akun secara on-demand dengan kode, nama terstandar, dan tipe yang tepat jika fallback_type diberikan dan akun belum ada.
+       - Menambahkan bootstrap akun 211200, 114100, 112000, dan 211000 pada _ensure_accounting_and_stock_configuration().
+       - Menjalankan _ensure_accounting_and_stock_configuration() sebelum _resolve_canonical_tax_code_04().
+       - Mengoper fallback_type='liability_current' pada resolusi akun 211200 di _apply_invoices().
+    2. Pada scripts/load_fmcg_seed.py:
+       - Memastikan load_canonical_taxes() membuat akun 211200 dan 114100 jika belum tersedia sebelum konfigurasi pajak kanonikal.
+    3. Pada scripts/load_canonical_perpetual.py:
+       - Memastikan pembuatan akun 211200, 114100, 112000, 211000, dan 410100 saat bootstrap baseline Juli.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 57/57 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py scripts/load_fmcg_seed.py scripts/load_canonical_perpetual.py tests/test_period_pack_loader.py: PASS clean (0 error).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-15T12:45:00+07:00
