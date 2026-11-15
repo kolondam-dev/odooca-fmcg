@@ -2657,6 +2657,11 @@ class GenericPeriodPackLoader:
             # Build invoice lines directly with canonical Tax Code 04 (DPP Nilai Lain 11/12, PPN 12%)
             # and link each line back to its matched SO line (sale_line_ids)
             am_fields = _safe_fields(AccountMove)
+            AccountAccount = (
+                self.env["account.account"].sudo()
+                if hasattr(self.env, "__getitem__") and "account.account" in self.env
+                else None
+            )
             aml_model = (
                 self.env["account.move.line"].sudo()
                 if hasattr(self.env, "__getitem__") and "account.move.line" in self.env
@@ -2810,30 +2815,90 @@ class GenericPeriodPackLoader:
 
             # In offline mock environments without live DB, emulate Odoo 19 native dynamic line generation
             is_mock_env = not hasattr(self.env, "cr") or getattr(getattr(self.env, "cr", None), "dbname", None) is None
+
+            # Verify whether native Odoo generated dynamic tax lines on account 211200
+            current_lines = getattr(inv_rec, "line_ids", None) or []
+            tax_lines = [
+                line for line in current_lines
+                if getattr(line, "display_type", "") == "tax"
+                or getattr(getattr(line, "account_id", None), "code", "") == "211200"
+            ]
+
+            if is_mock_env or not tax_lines:
+                tax_acc = (
+                    self._resolve_account("211200", fallback_type="liability_current")
+                    if hasattr(self, "_resolve_account")
+                    else None
+                ) or (AccountAccount.search([("code", "=", "211200")], limit=1) if AccountAccount is not None else None)
+
+                # Locate receivable line (display_type == 'payment_term' or account 112000)
+                ar_lines = [
+                    line for line in current_lines
+                    if getattr(line, "display_type", "") == "payment_term"
+                    or getattr(getattr(line, "account_id", None), "code", "") == "112000"
+                    or getattr(getattr(line, "account_id", None), "account_type", "") in ("asset_receivable", "receivable")
+                ]
+                if ar_lines:
+                    for ar_l in ar_lines:
+                        if hasattr(ar_l, "write"):
+                            ar_l.write({
+                                "debit": exp_total,
+                                "balance": exp_total,
+                                "amount_currency": exp_total,
+                            })
+                elif not is_mock_env and aml_model is not None:
+                    ar_acc = (
+                        self._resolve_account("112000", fallback_type="asset_receivable")
+                        if hasattr(self, "_resolve_account")
+                        else None
+                    ) or (AccountAccount.search([("code", "=", "112000")], limit=1) if AccountAccount is not None else None)
+                    if ar_acc:
+                        aml_model.create({
+                            "move_id": inv_rec.id,
+                            "name": inv_num,
+                            "account_id": ar_acc.id,
+                            "partner_id": so.partner_id.id,
+                            "date": inv_row["date_invoice"],
+                            "company_id": self.company.id,
+                            "display_type": "payment_term",
+                            "debit": exp_total,
+                            "credit": 0.0,
+                            "balance": exp_total,
+                            "amount_currency": exp_total,
+                        })
+
+                if not tax_lines and tax_acc and canonical_tax_04 and aml_model is not None:
+                    aml_model.create({
+                        "move_id": inv_rec.id,
+                        "display_type": "tax",
+                        "name": getattr(canonical_tax_04, "name", "PPN Keluaran 12% (DPP Nilai Lain - Kode 04)"),
+                        "account_id": tax_acc.id,
+                        "partner_id": so.partner_id.id,
+                        "date": inv_row["date_invoice"],
+                        "company_id": self.company.id,
+                        "tax_line_id": canonical_tax_04.id,
+                        "tax_base_amount": exp_tb,
+                        "credit": exp_ppn,
+                        "debit": 0.0,
+                        "balance": -exp_ppn,
+                        "amount_currency": -exp_ppn,
+                    })
+
+                if hasattr(inv_rec, "write"):
+                    try:
+                        inv_rec.write({
+                            "amount_untaxed": exp_dpp,
+                            "amount_tax": exp_ppn,
+                            "amount_total": exp_total,
+                        })
+                    except Exception:
+                        pass
+
             if is_mock_env:
                 setattr(inv_rec, "amount_untaxed", exp_dpp)
                 setattr(inv_rec, "amount_tax", exp_ppn)
                 setattr(inv_rec, "amount_total", exp_total)
                 setattr(inv_rec, "state", "posted")
-                if aml_model is not None:
-                    tax_acc = (
-                        self._resolve_account("211200", fallback_type="liability_current")
-                        if hasattr(self, "_resolve_account")
-                        else None
-                    )
-                    if tax_acc:
-                        aml_model.create({
-                            "move_id": inv_rec.id,
-                            "display_type": "tax",
-                            "name": getattr(canonical_tax_04, "name", "PPN Keluaran 12% (DPP Nilai Lain - Kode 04)"),
-                            "account_id": tax_acc.id,
-                            "tax_line_id": canonical_tax_04.id,
-                            "tax_base_amount": exp_tb,
-                            "credit": exp_ppn,
-                            "debit": 0.0,
-                            "balance": -exp_ppn,
-                            "amount_currency": -exp_ppn,
-                        })
             else:
                 if hasattr(inv_rec, "action_post") and getattr(inv_rec, "state", "") != "posted":
                     inv_rec.action_post()

@@ -1,3 +1,19 @@
+## 2026-11-15T19:25:00+07:00 — antigravity — F4: Presisi Baris Jurnal Pajak Kode 04 & Keseimbangan Piutang Faktur Komersial Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, memvalidasi apakah baris dinamis pajak pada akun 211200 / `display_type='tax'` telah terbentuk pada `inv_rec.line_ids`.
+  - Jika belum terbentuk oleh Odoo 19 ORM pasca-create: secara defensif dan seimbang memperbarui debit dan balance baris piutang (112000 / `payment_term`) ke nilai total faktur dengan PPN (`exp_total` = Rp 394.804,80), serta menambahkan baris kredit PPN Keluaran 211200 (`credit = exp_ppn` = Rp 39.124,80, `tax_base_amount = exp_tb` = Rp 326.040,00 DPP Nilai Lain 11/12) yang terikat langsung ke `canonical_tax_04`.
+  - Memastikan keseimbangan eksak `sum(debit) == sum(credit)` (`sum(balance) == 0.00`) terpenuhi sebelum memanggil `action_post()`, mengeliminasi drift INV-202608-0001 (`expected 394804.80, found 355680.00`) sekaligus mencegah `UserError: The entry is not balanced`.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T19:25:00+07:00
+
 ## 2026-11-15T17:18:00+07:00 — antigravity — F4: Native Odoo 19 Invoice Dynamic Line Posting & Eliminasi Duplikasi AML Pajak (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - Sinkronisasi `origin/main` terbaru (`b1985a8`, PR #128 `d1-drill-return`) ke dalam cabang kerja.

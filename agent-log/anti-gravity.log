@@ -2866,3 +2866,22 @@
   * python -m ruff check .: PASS clean (0 error).
   * Zero touch live Railway / production database.
 - Task managed by antigravity at 2026-11-15T17:18:00+07:00
+
+[2026-11-15T19:25:00+07:00] [INFO] F4: Presisi Baris Jurnal Pajak Kode 04 & Keseimbangan Piutang Faktur Komersial Odoo 19
+- Analisis Kegagalan F4 Disposable Runtime Proof (CI Run 43703472444):
+  * Error: StateInconsistencyError: Drift detected on Invoice INV-202608-0001: expected total 394804.80, found 355680.00
+  * Root Cause:
+    1. Pada Odoo 19, pembuatan faktur via AccountMove.create(inv_vals) dengan invoice_line_ids tidak otomatis membangkitkan baris dynamic tax (display_type='tax') dan receivable lines hanya membukukan nilai komersial DPP (Rp 355.680,00).
+    2. Hal ini menyebabkan amount_tax bernilai 0.00 dan amount_total hanya Rp 355.680,00 (drift dari register Rp 394.804,80).
+    3. Menambahkan baris pajak tanpa menyelaraskan debit piutang memicu UserError (tidak seimbang), sedangkan membiarkan tanpa baris pajak memicu StateInconsistencyError drift.
+  * Solusi:
+    1. Pada _apply_invoices di scripts/ops/load_period_pack.py, periksa apakah baris pajak pada akun 211200 / display_type='tax' telah tergenerasi pada inv_rec.line_ids.
+    2. Jika belum ada: perbarui debit & balance baris piutang (112000) ke nilai exp_total (Rp 394.804,80) dan buat baris kredit PPN Keluaran 211200 sebesar exp_ppn (Rp 39.124,80) dengan tax_base_amount = exp_tb (Rp 326.040,00, DPP Nilai Lain 11/12) terikat pada canonical_tax_04.
+    3. Mutasi ini menjamin query SQL fisik sum(balance) == 0 terpenuhi sempurna sebelum action_post(), menghasilkan faktur posted dengan DPP komersial Rp 355.680,00, DPP Nilai Lain Rp 326.040,00, PPN 12% Rp 39.124,80, dan total Rp 394.804,80.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 57/57 PASS (0 fail, 0 error).
+  * python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py: 133/133 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS clean (0 error).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-15T19:25:00+07:00
