@@ -38,6 +38,7 @@ import { AjukanCutiScreen } from "./components/AjukanCutiScreen";
 import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
 import { MorePage } from "./components/MorePage";
+import { deliveryProgress } from "./domain/delivery-progress";
 import { MorningSession } from "./components/MorningSession";
 import {
     morningReady,
@@ -666,10 +667,16 @@ function Workspace({
                                 canWork={dailyReady && attended && !checkedOut}
                                 isSales={identity.roles.includes("sales")}
                                 isDelivery={identity.roles.includes("delivery")}
-                                deliveries={snapshot.deliveries.length}
+                                delivery={
+                                    morning?.deliveryManifest
+                                        ? deliveryProgress(
+                                              morning.deliveryManifest,
+                                              queue,
+                                          )
+                                        : undefined
+                                }
                                 pendingExpense={pending + review}
                                 onOpenVisit={(id) => openVisit(id)}
-                                onSales={() => go("sales")}
                                 onDelivery={() => go("delivery")}
                                 onExpense={() => setDialog({ type: "expense" })}
                             />

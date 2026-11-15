@@ -232,6 +232,22 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Absen masih memicu sinkron:** `openDay` menyinkronkan langsung setelah absen (alur lama); kartu progres muncul saat sinkron dijalankan dari Beranda (ulang/muat ulang). Memisahkan Absen dan Sinkron seperti Beranda_wajib_sync adalah perubahan alur terpisah.
 - **Beranda lain belum:** Beranda_canvasser/delivery (chip "Absen"/"Data tersinkron", kartu "Berikutnya" ganda, tombol "Mulai kirim", statistik DO/Toko/Selesai) dan Beranda_sesi (jarak "0,1 km", "Navigasi ke outlet") belum diterapkan; kartu hari tetap memakai "Sesi aktif".
 
+### K25. Fase 3B-11 — Beranda per peran (Sales sesi, Delivery, Canvasser)
+
+**Selesai di PWA:**
+- **Beranda_sesi (Sales):** "Outlet berikutnya · n dari m" dengan nama, alamat, jam dan jarak (`outlet.distance` dari snapshot), tautan "Navigasi ke outlet", tombol "Mulai kunjungan · nama". "Lihat semua outlet" dihapus dari kartu (outlet lengkap ada di tab Sales).
+- **Beranda_delivery:** statistik "DO hari ini", "Toko", "Selesai x/y"; "Pengiriman berikutnya" (outlet, chip nomor DO, alamat, muatan per satuan, "Navigasi"); tombol "Mulai pengiriman".
+- **Beranda_canvasser:** statistik "Outlet selesai", "DO selesai x/y", "Order"; label "Berikutnya" dengan kartu "Kunjungan Sales" dan "Pengiriman <DO>" (chip Belum mulai/Berjalan, "n toko · muatan", nama trip); dua tombol "Mulai kunjungan" dan "Mulai kirim".
+- `domain/delivery-progress.ts`: aturan "DO selesai" (POD di antrean, tidak ditolak bisnis) diekstrak dari `DeliveryWorkspace` dan dipakai bersama, plus ringkasan muatan dan tautan navigasi.
+
+**Perbedaan yang disengaja / utang:**
+- **Chip "Absen HH.MM" dan "Data tersinkron" belum menggantikan kartu hari:** kartu "Sesi aktif · Masuk … · Absen pulang" tetap tampil untuk semua peran karena Absen pulang belum punya tempat lain di mockup Delivery/Canvasser.
+- **Tombol aksi inline, bukan footer lengket:** "Mulai kunjungan/kirim/pengiriman" berada di akhir konten Beranda.
+- **Jarak:** hanya `outlet.distance` dari backend bila ada; kartu Delivery tanpa jarak (Beranda tidak membaca GPS). Muatan tanpa konversi "(1.760 pcs)" karena butuh konversi UoM dari backend.
+- **Navigasi:** tautan Google Maps eksternal (tab baru) ke koordinat outlet/DO; tanpa lokasi pengguna.
+- **"Mulai kirim/pengiriman" membuka tab Delivery** (daftar trip), bukan langsung DO pertama.
+- **Belum:** tab bawah "Delivery" khusus Canvasser dan layar Navigasi (DS `Navigasi`) belum diverifikasi ulang; Outlet*/Kunjungan_hub tetap fase berikutnya.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).
