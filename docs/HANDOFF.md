@@ -1,3 +1,19 @@
+## 2026-11-15T23:05:00+07:00 — antigravity — WMS: Imunisasi Cohort Date Clocks Warehouse Depth terhadap Midnight Boundary WITA (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `addons/id_dashboard_wms/tests/test_warehouse_depth.py`:
+  - Pada `test_clock_server_facts_native_completion_and_worker_guard`, menggunakan cohort date eksak dari `clock.ended_at` (`ended_day = str(local_day(clock.ended_at))`) saat memanggil `id.warehouse.depth._data(ended_day, ended_day, wh.id)`.
+  - Mengeliminasi test failure ketika runner CI mengeksekusi tes di sekitar tengah malam WITA (23:50–23:59 WITA), di mana penambahan durasi 12 menit (`clock.started_at + timedelta(minutes=12)`) menyeberang ke hari berikutnya sehingga query berbasis `day` awal menghasilkan `count=0` alih-alih `count=1`.
+  - Pada `test_movement_flow_stock_age_and_selected_company_scope`, menyelaraskan cohort query date dengan waktu pembuatan baris move line (`local_day(now_dt)`).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 tests PASS.
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+**Signature:** Task managed by antigravity at 2026-11-15T23:05:00+07:00
+
 ## 2026-11-15T22:50:00+07:00 — antigravity — F4: Perbaikan Pool Deduplikasi Rejeksi Split-Lot SKU pada Pembentukan Baris Faktur Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

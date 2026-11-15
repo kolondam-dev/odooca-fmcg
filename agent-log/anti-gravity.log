@@ -2971,3 +2971,19 @@
   * python -m ruff check .: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-15T22:50:00+07:00
+
+2026-11-15T23:05:00+07:00 [INFO] WMS: Imunisasi Cohort Date Clocks Warehouse Depth terhadap Midnight Boundary WITA
+- Konteks: Runtime CI install-test pada addon id_dashboard_wms (PR #110, branch agen/seed-f4-period-pack-loader).
+- Root Cause Analisis:
+  * Pada test_clock_server_facts_native_completion_and_worker_guard, variabel day diinisialisasi di _source() berdasarkan local_day(fields.Datetime.now()) dalam timezone Asia/Makassar (WITA).
+  * Ketika runner CI mengeksekusi tes pada 15:58 UTC (23:58 WITA), patchDatetime clock.action_complete() menambahkan 12 menit sehingga clock.ended_at menjadi 00:10 WITA (hari berikutnya).
+  * Pemanggilan _data(day, day, wh.id) menggunakan rentang tanggal hari sebelumnya sehingga clock yang selesai di hari berikutnya tidak terjaring (count=0).
+- Solusi:
+  * Menyelaraskan cohort date query secara defensif dengan tanggal penyelesaian clock yang sebenarnya: ended_day = str(local_day(clock.ended_at)), menjamin tes deterministik terlepas dari jam eksekusi runner CI.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 58/58 PASS.
+  * python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py: 133/133 PASS.
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-15T23:05:00+07:00
