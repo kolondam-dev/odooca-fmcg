@@ -156,3 +156,14 @@
 - [F] Lokal PASS: ruff, manifests 14 addon, compileall, PO 117 entri, selftest I3, YAML.
 - [BU] CI HEAD PR dan eksekusi diagnostik/UAT di production belum ada. Katalog 58/58 BELUM_DITERIMA; tanpa merge/deploy.
 - Task managed by Agent-Opencode at 2026-11-15T12:04:30+07:00
+
+[2026-11-15T12:55:34+07:00] [INFO] PR #140 hijau setelah merge #138; diagnostik I3 membaca model valuasi Odoo 19
+- [F] PR #138 (jam uji deterministik id_mobile_api) sudah di main fdb2fc0; branch PR #140 di-merge, merge commit e0b5602.
+- [F] install-test merah 2026-11-15 bukan karena finance: 11 ERROR id_mobile_api; branch dokumentasi-saja gagal identik hari itu (43678645109); PR #138 hijau hari itu (43679269662).
+- [F] CI e0b5602 run 43681641152: static, init-test, install-test success.
+- [F] CI dc13ee7 run 43682494007: static, init-test, install-test success; FINANCE_I3_COSTING_RUN=PASS.
+- [F] Odoo 19 tidak punya stock.valuation.layer; skrip membaca stock.move.value/remaining_qty/remaining_value, dengan perbaikan bool(recordset) dan normalisasi total kosong ke 0.
+- [F] Diagnostik DB disposable: 46/46 kategori standard+periodic, valuation source stock.move (Odoo 19), done_valued_moves 0, value_total 0, zero_cost_products 0.
+- [F] docs/finance/I3_COSTING.md dan body PR #140 diperbarui dengan hasil CI serta batas bukti.
+- [BU] Upgrade Runtime Verification dc13ee7 masih berjalan saat entri ditulis; diagnostik DB demo dan checklist UAT belum dijalankan. Katalog 58/58 BELUM_DITERIMA; tanpa merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-15T12:55:34+07:00
