@@ -1,3 +1,10 @@
+## 2026-11-15T11:51:27+07:00 — Agent-Opencode — I2-3: bukti read-only aktivasi finance di production (deploy 50866b8, restart 16f686a)
+**Konteks:** [F] Pemilik merge PR #131 (`0e17039`) dan #133 (`50866b8`); `main` kini `16f686a`. Status rollout production belum diperiksa.
+**Berubah:** `docs/finance/I2_ACTIVATION.md` — status dari "staged, belum dieksekusi" menjadi "diekskusi di production" dengan bagian bukti read-only; "Yang belum dibuktikan" dipersempit ke login admin/DB langsung. Tidak ada perubahan kode, konfigurasi, atau data.
+**Diverifikasi:** [F] Railway project `pleasant-caring` / production / service `odooca-fmcg`: deploy `50866b8` `SUCCESS`; log `2026-11-14T12:03:09Z` `activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation`, `12:03:25Z` `demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo`, `12:03:27Z` `admin memiliki grup Finance Reader`; `Loading module id_finance_foundation (126/126)` `12:03:20Z`. [F] Deploy `16f686a` `SUCCESS` tanpa baris aktivasi ulang (mark bekerja); registry loaded `12:50:51Z`. [F] `/web/login` HTTP 200 pada 2026-11-15; cron rutin berjalan. [A] Versi terpasang `19.0.1.5.1` mengikuti manifest image `50866b8`; `latest_version` DB belum dibaca langsung.
+**Belum diuji:** [BU] Login admin demo → Finance Reports → jalankan laporan → unduh XLSX di production; pemeriksaan DB langsung; tie-out; sign-off. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada deploy/merge dari asisten.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
+
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.
 **Diverifikasi:** [F] `main` bergerak ke `6fe9f2c` (PR #132 PWA Absen); merge `545c264` berkonflik hanya di `docs/HANDOFF.md` dan kedua sisi dipertahankan urut waktu (348 entri main + 2 entri baru). [F] PR #133 **12/12 check hijau** pada `545c264` (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift 19m4s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate) dan status `MERGEABLE`.

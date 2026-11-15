@@ -1,7 +1,8 @@
 # I2-3 — Blok aktivasi laporan keuangan di database demo
 
-Status: **staged di `deploy/init.sh`; belum dieksekusi pada database demo.**
-Branch: `Opencode-finance-i2-3-activation` dari `main` `99ad910`.
+Status: **diekskusi pada database demo production (Railway) pada deploy
+`main` `50866b8`; bukti read-only di bawah.** Branch asal:
+`Opencode-finance-i2-3-activation` dari `main` `99ad910`; merge `50866b8`.
 Keputusan pemilik: modul + admin demo sebagai Finance Reader.
 
 ## Masalah yang diselesaikan
@@ -87,6 +88,37 @@ restart, lalu memeriksa:
   perubahan jalur boot tidak lolos tanpa bukti zero-drift.
 
 
+## Status produksi (bukti read-only, 2026-11-15)
+
+Diperiksa dari Railway (project `pleasant-caring`, environment `production`,
+service `odooca-fmcg`, database demo) tanpa mengubah apa pun:
+
+- [F] Deploy `50866b8` (merge PR #133) berjalan `SUCCESS`; log boot
+  `2026-11-14T12:03:09Z` memuat
+  `[init] activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation...`
+  dan `2026-11-14T12:03:25Z`
+  `[init] demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo...`,
+  ditutup `2026-11-14T12:03:27Z`
+  `[init] demo_finance_reader_v1: admin memiliki grup Finance Reader`.
+- [F] `odoo.modules.loading` mencatat
+  `Loading module id_finance_foundation (126/126)` pada
+  `2026-11-14T12:03:20Z`, jadi instalasi benar-benar terjadi pada boot itu.
+- [F] Deploy berikutnya `16f686a` (merge PR #136) juga `SUCCESS` dan **tidak**
+  memuat baris aktivasi lagi — mark bekerja, blok tidak diulang. Registry
+  `loaded in 1.295s` pada `2026-11-14T12:50:51Z`.
+- [F] `https://odooca-fmcg-demo.up.railway.app/web/login` menjawab HTTP `200`
+  pada pemeriksaan 2026-11-15, dan cron (`QRIS Fetch Status`, `Mail: Email
+  Queue Manager`) berjalan normal.
+- [A] Versi modul yang terpasang adalah `19.0.1.5.1` karena image `50866b8`
+  memuat manifest tersebut; angka `latest_version` di `ir_module_module` belum
+  dibaca langsung.
+- [BU] Login sebagai admin demo lalu membuka **Finance → Finance Reports**,
+  menjalankan satu laporan, dan mengunduh XLSX di production belum dilakukan.
+- Catatan kebisingan log: `_()` pada level modul memicu
+  `no translation language detected, skipping translation` beserta stack
+  pada setiap boot. Itu peringatan, bukan kegagalan; kandidat pembersihan
+  berikutnya.
+
 ## Rollback
 
 Tidak ada rollback otomatis. Untuk menghentikan aktivasi, pemilik/agen deploy
@@ -97,8 +129,9 @@ akuntansi.
 
 ## Yang belum dibuktikan
 
-- [BU] Eksekusi blok pada database demo (Railway) dan pemeriksaan menu dengan
-  login admin demo.
+- [BU] Login sebagai admin demo di production, membuka menu **Finance
+  Reports**, menjalankan laporan, dan mengunduh XLSX; pemeriksaan DB langsung
+  (`ir_module_module.latest_version`, keanggotaan grup) juga belum.
 - [BU] Geometri browser desktop/tablet; tie-out angka per report ID;
   sign-off Finance Controller + QA.
 - [BU] Export PDF atau padanan terdokumentasi (XLSX sudah dibuktikan di
