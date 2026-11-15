@@ -31,7 +31,13 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             ("company_id", "=", self.company.id),
         ])
         command.ensure_one()
-        command.write({"create_date": fields.Datetime.now()})
+        command.flush_recordset()
+        self.env.cr.execute(
+            "UPDATE id_mobile_command SET create_date = %s WHERE id = %s",
+            (fields.Datetime.now(), command.id),
+        )
+        command.invalidate_recordset(["create_date"])
+        self.assertEqual(command.create_date.date(), business_date())
 
     def _command_model(self, user=None):
         target_user = user or self.mobile
