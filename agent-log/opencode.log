@@ -146,3 +146,13 @@
 - [F] docs/finance/I2_ACTIVATION.md diperbarui: status produksi + bukti read-only, sisa [BU] login admin, DB langsung, tie-out, sign-off.
 - [BU] Login admin demo di production lalu buka Finance Reports, jalankan laporan, unduh XLSX belum dilakukan; versi modul di DB belum dibaca langsung. Katalog 58/58 BELUM_DITERIMA; tanpa merge/deploy.
 - Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
+
+[2026-11-15T12:04:30+07:00] [INFO] I3 kesiapan: label tanpa _(), diagnostik HPP read-only, checklist verifikasi production (1 PR)
+- [F] PR #139 ditutup; bukti aktivasi production dipindahkan ke PR gabungan ini.
+- [F] Label finance tidak lagi memakai _() saat import: string sumber + env._ di _label; modul 19.0.1.5.2.
+- [F] CI: init-test menolak 'no translation language detected' untuk id_finance_reporting; langkah diagnostik I3 read-only; static menjalankan --self-test.
+- [F] scripts/ops/verify_finance_i3_costing.py: metode costing/valuasi per kategori, layer negatif/nilai nol, produk biaya nol; hanya membaca.
+- [F] docs/finance/I3_COSTING.md dan PRODUCTION_FINANCE_UAT.md ditambahkan; README finance diperbarui.
+- [F] Lokal PASS: ruff, manifests 14 addon, compileall, PO 117 entri, selftest I3, YAML.
+- [BU] CI HEAD PR dan eksekusi diagnostik/UAT di production belum ada. Katalog 58/58 BELUM_DITERIMA; tanpa merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-15T12:04:30+07:00

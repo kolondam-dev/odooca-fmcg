@@ -1,9 +1,12 @@
 # Finance, Accounting & Tax — gap analysis dan implementation plan
 
 Tanggal analisis: 4 November 2026 (WIB). Baseline: `f65b41a0cdbd7fb0a2d9776410bdf63285ca61e3`.
-Status: **rencana implementasi; modul finance belum diaktifkan di demo** kecuali
-`account_financial_report` yang disetujui pemilik untuk presentasi (lihat
-[demo accounting](DEMO_ACCOUNTING_REPORTS.md)).
+Status: **paket laporan custom I2 aktif di demo production; penerimaan katalog
+belum** — `id_finance_reporting` + `id_finance_foundation` sudah terpasang dan
+menu **Finance Reports** aktif untuk admin demo (lihat
+[aktivasi](I2_ACTIVATION.md)), sedangkan seluruh 58 ID katalog tetap
+`BELUM_DITERIMA`. `account_financial_report` tetap disetujui untuk presentasi
+(lihat [demo accounting](DEMO_ACCOUNTING_REPORTS.md)).
 
 Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA dan custom bila dibutuhkan; wajib mencakup HPP, General Ledger, Trial Balance, MIS dan laporan standar lainnya. Kelengkapan diukur melalui katalog dan rekonsiliasi, bukan banyaknya menu atau jumlah addon.
 
@@ -33,8 +36,14 @@ Permintaan pemilik: paket lengkap Finance/Accounting/Tax Indonesia dengan OCA da
     formula injection, sel numerik asli, dan batas ekspor yang eksplisit.
 12. [Aktivasi I2-3](I2_ACTIVATION.md): blok bermark di `deploy/init.sh` untuk
     memasang `id_finance_reporting` + `id_finance_foundation` dan memberi peran
-    Finance Reader kepada admin demo; belum dijalankan di database demo.
-13. [Keputusan pemilik](OWNER_DECISIONS.md) dan [lisensi](LICENSING.md):
+    Finance Reader kepada admin demo; sudah dieksekusi di production dan
+    bukti read-only-nya tercatat di dokumen itu.
+13. [Diagnostik HPP dan valuasi I3](I3_COSTING.md): skrip read-only untuk metode
+    costing/valuasi per kategori, layer, dan produk berbiaya nol; belum
+    dijalankan pada database demo.
+14. [Verifikasi produksi](PRODUCTION_FINANCE_UAT.md): daftar klik untuk admin
+    demo — menu, laporan, unduh XLSX, penolakan Sales, dan pembacaan kategori.
+15. [Keputusan pemilik](OWNER_DECISIONS.md) dan [lisensi](LICENSING.md):
     model AGPL-compliant, scope `FIN55`/`FIN56`/payroll, serta batas aktivasi
     demo bertahap.
 
