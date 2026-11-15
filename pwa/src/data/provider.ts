@@ -77,13 +77,11 @@ export class HttpProvider implements FieldProvider {
         if (!this.identity)
             throw new ApiError(401, "Bootstrap wajib sebelum snapshot.");
         const identity = this.identity;
-        const received = await this.request("sync/snapshot");
-        const parsed = SnapshotSchema.safeParse(received);
-        if (!parsed.success)
-            throw new PayloadRejectedError(
-                "Paket snapshot dari server tidak sesuai skema.",
-            );
-        const snapshot = parsed.data;
+        // Kegagalan skema tetap ZodError (dipetakan "belum dapat dibaca" oleh
+        // read-session); open() menandainya sebagai tahap validasi.
+        const snapshot = SnapshotSchema.parse(
+            await this.request("sync/snapshot"),
+        );
         if (this.identity !== identity)
             throw new ApiError(409, "Sesi berubah saat snapshot dibaca.");
 
