@@ -67,7 +67,7 @@ jobs:
           load: true
           tags: fmcg-finance:i0
           cache-from: type=gha,scope=odoo-ci-${{ github.job }}
-          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }},ignore-error=true
       - name: Install separate candidate profiles and upgrade persisted databases
         shell: bash
         run: |

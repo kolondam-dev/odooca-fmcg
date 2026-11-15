@@ -72,9 +72,9 @@ jobs:
         if: needs.changes.outputs.seed == 'true'
         with:
           python-version: '3.12'
-      - name: Install geometry regression dependencies
+      - name: Install invariant and planner test dependencies
         if: needs.changes.outputs.seed == 'true'
-        run: python -m pip install shapely==2.2.0 numpy==2.5.4
+        run: python -m pip install shapely==2.2.0 numpy==2.5.4 pyyaml
       - if: needs.changes.outputs.seed == 'true'
         run: python -m unittest discover -s tests -p 'test_*.py' -v
   seed-invariants:

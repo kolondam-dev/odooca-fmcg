@@ -415,3 +415,11 @@
 - [F] Lokal PASS: 14 unittest, PO scan 12 file, ruff, 14 manifest, YAML, actionlint 1.7.12, git diff --check.
 - [BU] Seluruh workflow runtime menunggu CI pada PR; ruleset perlu menambah finance-gate, upgrade-gate, full-dataset-gate setelah workflow tersedia di main.
 - Task managed by claude-dev agent at 2026-11-15T23:13:56+07:00
+
+[2026-11-15T23:52:35+07:00] [INFO] Perbaikan bootstrap seed gate PR 145
+- [F] Log exact job membuktikan 464 test existing lulus; satu error hanya ModuleNotFoundError yaml saat test planner baru ditemukan oleh full unittest discovery.
+- [F] Job invariant-tests kini memasang pyyaml bersama shapely dan numpy; seed-invariants tetap mensyaratkan unit gate sukses tanpa pelemahan.
+- [F] Ekspor cache BuildKit diberi ignore-error=true agar cache read-only/fork tidak menggagalkan test.
+- [F] Lokal PASS: 14 test planner/PO, import planner dengan PyYAML, ruff, manifest, PO scan, actionlint, dan diff check.
+- [BU] Full unittest lokal dihentikan timeout harness 15 menit saat test existing berat; verifikasi otoritatif menunggu rerun GitHub Actions exact SHA.
+- Task managed by claude-dev agent at 2026-11-15T23:52:35+07:00

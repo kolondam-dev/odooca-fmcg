@@ -147,7 +147,7 @@ jobs:
           load: true
           tags: fmcg-odoo:ci
           cache-from: type=gha,scope=odoo-ci-${{ github.job }}
-          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }},ignore-error=true
       - name: Instal dan uji addon id_* pada DB kosong
         if: needs.changes.outputs.odoo_install == 'true'
         run: |
@@ -369,7 +369,7 @@ jobs:
           load: true
           tags: fmcg-odoo:ci
           cache-from: type=gha,scope=odoo-ci-${{ github.job }}
-          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }},ignore-error=true
       - name: init.sh pada DB kosong (build penuh)
         if: needs.changes.outputs.odoo_init == 'true'
         run: |
