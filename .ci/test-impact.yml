@@ -1,0 +1,101 @@
+version: 1
+
+# The planner is fail-closed: a changed path that matches no rule selects every
+# suite in `all_suites`. Labels and manual inputs may add suites, never remove
+# the suites selected here.
+all_suites:
+  - odoo_install
+  - odoo_init
+  - odoo_ui
+  - dashboard
+  - mobile
+  - pwa
+  - seed
+  - finance
+  - upgrade
+  - full_dataset
+
+always_full:
+  # A selector or workflow change can weaken every gate, so prove everything.
+  - ".ci/**"
+  - ".github/workflows/**"
+  - "scripts/ci/**"
+  - "tests/test_ci_impact.py"
+
+ignore_runtime:
+  # Static validation still runs for these paths.
+  - "*.md"
+  - "docs/**"
+  - "agent-log/**"
+  - ".gitignore"
+  - ".gitattributes"
+  - ".editorconfig"
+
+rules:
+  - name: Root Odoo image and deployment contract
+    paths:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "oca.lock"
+      - "deploy/**"
+      - "scripts/fetch_oca.sh"
+      - "scripts/oca_bump.sh"
+    suites: [odoo_install, odoo_init, odoo_ui, dashboard, mobile, finance, upgrade, full_dataset]
+
+  - name: Odoo addons default
+    paths: ["addons/**"]
+    suites: [odoo_install, upgrade]
+
+  - name: Shared Odoo foundation
+    paths: ["addons/id_base/**"]
+    suites: [odoo_install, odoo_init, odoo_ui, dashboard, mobile, finance, upgrade, full_dataset]
+
+  - name: Odoo UI shell and native browser surface
+    paths:
+      - "addons/id_ui*/**"
+      - "docs/ui/e2e/**"
+      - "scripts/ui/smoke_fixture.py"
+    suites: [odoo_install, odoo_ui]
+
+  - name: Dashboard runtime and visual evidence
+    paths:
+      - "addons/id_dashboard*/**"
+      - "scripts/ui/dashboard_fixture.py"
+      - "scripts/ui/d1_*.py"
+      - "docs/ui/e2e/dashboard*"
+    suites: [odoo_install, odoo_ui, dashboard, upgrade]
+
+  - name: Mobile API and provisioning
+    paths:
+      - "addons/id_mobile_api/**"
+      - "scripts/ops/verify_mobile_*.py"
+    suites: [odoo_install, mobile, upgrade]
+
+  - name: PWA client and hosting
+    paths:
+      - "pwa/**"
+    suites: [pwa]
+
+  - name: Seed contracts and canonical data
+    paths:
+      - "data/registers/**"
+      - "scripts/load_canonical_perpetual.py"
+      - "scripts/ops/verify_seed_*.py"
+      - "scripts/ops/verify_disposable_full.py"
+      - "scripts/ops/verify_upgrade_baseline.py"
+      - "tests/test_full_dataset*.py"
+      - "tests/test_seed*.py"
+      - "docs/reviews/SEED_INVARIANT_CONTRACT.md"
+    suites: [odoo_init, seed, full_dataset, upgrade]
+
+  - name: Finance runtime
+    paths:
+      - "addons/id_finance*/**"
+      - "scripts/ops/finance_*.py"
+      - "scripts/ops/verify_finance_*.py"
+      - "tests/test_finance*.py"
+    suites: [odoo_install, odoo_init, finance, upgrade]
+
+  - name: Generic Python tests
+    paths: ["tests/**"]
+    suites: [seed]

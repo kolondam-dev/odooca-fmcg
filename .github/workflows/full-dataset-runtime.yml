@@ -1,15 +1,19 @@
 name: Full Dataset Runtime Verification
 on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact branch, tag, or SHA to verify
+        required: false
+        type: string
   push:
-    branches: [main, 'agen/full-dataset*']
+    branches: [main]
   pull_request:
-    paths:
-      - 'scripts/ops/verify_disposable_full.py'
-      - 'scripts/load_canonical_perpetual.py'
-      - 'tests/test_full_dataset_cutoff_and_upgrade.py'
-      - '.github/workflows/full-dataset-runtime.yml'
-      - 'data/registers/**'
 
 permissions:
   contents: read
@@ -19,8 +23,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Full-dataset impact plan
+    runs-on: ubuntu-24.04
+    outputs:
+      full_dataset: ${{ steps.plan.outputs.full_dataset }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BASE_SHA" ]; then args=(--force-suite full_dataset --files); else args=(--base "$BASE_SHA" --head HEAD); fi
+          python scripts/ci/plan.py "${args[@]}" --github-output "$GITHUB_OUTPUT"
+
   full-runtime-proof:
     name: Full Dataset Disposable Runtime Proof
+    if: needs.changes.outputs.full_dataset == 'true'
+    needs: changes
     runs-on: ubuntu-24.04
     timeout-minutes: 180
 
@@ -38,9 +65,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
-      - name: Build image
-        run: docker build -t fmcg-odoo:ci .
+      - uses: docker/setup-buildx-action@v3
+      - name: Build cached image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: fmcg-odoo:ci
+          cache-from: type=gha,scope=odoo-ci-${{ github.job }}
+          cache-to: type=gha,mode=max,scope=odoo-ci-${{ github.job }},ignore-error=true
 
       - name: Ekstrak Docker Image Digest
         run: |
@@ -121,3 +157,17 @@ jobs:
             full_dataset_runtime_summary.md
             odoo_container.log
           retention-days: 30
+
+  full-dataset-gate:
+    name: full-dataset-gate
+    if: always()
+    needs: [changes, full-runtime-proof]
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          PLAN: ${{ needs.changes.result }}
+          SELECTED: ${{ needs.changes.outputs.full_dataset }}
+          RESULT: ${{ needs.full-runtime-proof.result }}
+        run: |
+          test "$PLAN" = success
+          if [ "$SELECTED" = true ]; then test "$RESULT" = success; else test "$RESULT" = skipped; fi

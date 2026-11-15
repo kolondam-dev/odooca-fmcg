@@ -52,3 +52,19 @@ Tanda tangan tidak diverifikasi otomatis; pemilik menulis commit sehingga tidak 
 `codex` / tanda tangan `codex agent` / `agent-log/codex.log`: supervisi invariant,
 validator independen, CI, dan bukti penerimaan. Kontrak dan workflow bersama:
 `docs/reviews/SEED_INVARIANT_CONTRACT.md`.
+
+## 10. Pemilihan CI dan kontrak test
+
+Sebelum membuka atau memperbarui PR, setiap agen menjalankan
+`python scripts/ci/plan.py --base origin/main --head HEAD` dan mencatat suite +
+alasan di PR/HANDOFF. `.ci/test-impact.yml` adalah sumber kebenaran mesin;
+`docs/CI_SELECTION.md` menjelaskan gate, budget, nightly, dan release exact-SHA.
+
+- Agen boleh menambah test/label (`full-ci`, `pwa-ci`, `seed-ci`), tidak boleh
+  mengurangi minimum planner.
+- Path tak dikenal dan perubahan workflow/planner fail-closed ke semua suite.
+- Test baru wajib punya suite, trigger, risiko, budget, isolasi, bukti, jadwal,
+  dan pemilik kegagalan; perubahan map wajib punya counterexample planner.
+- Dilarang menumpuk eksperimen area tertentu ke job umum `install-test`, membuat
+  `skip-ci`, atau melemahkan oracle/log guard supaya PR hijau.
+- PASS nightly/release adalah bukti verifikasi, bukan izin merge/deploy.
