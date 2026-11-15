@@ -14,6 +14,12 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-15T19:25:00+07:00
 
+## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
+**Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser beranda-roles (3 tes, phone+tablet) dan unit delivery-progress (5) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] chip Absen/Data tersinkron sebagai pengganti kartu hari, tab Delivery Canvasser, jarak Delivery.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-15T17:27:07+07:00
+
 ## 2026-11-15T17:18:00+07:00 — antigravity — F4: Native Odoo 19 Invoice Dynamic Line Posting & Eliminasi Duplikasi AML Pajak (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - Sinkronisasi `origin/main` terbaru (`b1985a8`, PR #128 `d1-drill-return`) ke dalam cabang kerja.
@@ -217,6 +223,11 @@
 **Verifikasi:** Regresi Playwright memeriksa pemulihan periode dan filter SKU. Validasi produksi menunggu merge dan auto-deploy.
 
 **Signature:** Task Managed by Agent Codex-Dashboard
+## 2026-11-14T23:29:12+07:00 — Agent-Claude-Dev1 — Fase 3B-10: Sinkron (jalan/gagal) + angka Beranda Sales
+**Berubah:** `pwa/src/components/SyncProgressCard.tsx` (baru), `MorningSession.tsx`, `Home.tsx`, `App.tsx`, `domain/morning.ts` (`open(onStage)`), `ui/ui.css`, `tests/browser/sync-progress.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K24), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser sync-progress (3 tes, phone+tablet) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] Lanjut offline (menunggu backend memecah bagian opsional snapshot), Beranda canvasser/delivery/sesi.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-14T23:29:12+07:00
 
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.
