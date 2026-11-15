@@ -205,3 +205,39 @@ test("Gagal simpan setelah unduh menampilkan Terunduh belum tersimpan, sesi teta
         page.getByRole("heading", { name: "Sync belum selesai" }),
     ).toHaveCount(0);
 });
+
+test("Respons 200 dengan payload tidak sesuai skema menampilkan Terunduh belum lolos validasi dan sesi tetap terkunci", async ({
+    page,
+}) => {
+    const mode = { fail: true };
+    await attendThenReload(page, mode);
+    let invalid = true;
+    await page.route("**/api/v1/sync/snapshot", (route) =>
+        invalid
+            ? route.fulfill({ status: 200, json: { bukan: "snapshot" } })
+            : route.fallback(),
+    );
+    mode.fail = false;
+    await page
+        .getByRole("button", { name: "Sinkronkan data harian", exact: true })
+        .click();
+    await expect(
+        page.getByRole("heading", { name: "Sync belum selesai" }),
+    ).toBeVisible();
+    for (const id of ["outlet", "produk"]) {
+        await expect(page.locator(`[data-sync-row="${id}"]`)).toHaveAttribute(
+            "data-state",
+            "error",
+        );
+        await expect(page.locator(`[data-sync-row="${id}"]`)).toContainText(
+            "Terunduh, belum lolos validasi",
+        );
+    }
+    await expect(page.getByText("Belum terunduh")).toHaveCount(0);
+    await expect(page.getByText("Sesi aktif", { exact: true })).toHaveCount(0);
+    invalid = false;
+    await page
+        .getByRole("button", { name: "Ulangi sinkron", exact: true })
+        .click();
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
+});

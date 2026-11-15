@@ -4,6 +4,7 @@ import { assertLocalEvidence } from "./evidence-package";
 import { DeliveryTaskSchema } from "./delivery-contracts";
 import { z } from "zod";
 import {
+    PayloadRejectedError,
     SnapshotSchema,
     ownerKey,
     type FieldProvider,
@@ -275,12 +276,22 @@ export class MorningSimulation {
         if (!attendance || (!isDemo && attendance.businessDate !== date))
             throw new Error("Absensi belum diterima. Buka sesi kerja dahulu.");
         onStage?.("download");
-        const snapshot = SnapshotSchema.parse(await this.provider.snapshot());
+        let received: unknown;
+        let receivedTasks: unknown;
+        try {
+            received = await this.provider.snapshot();
+            if (this.identity.roles.includes("delivery"))
+                receivedTasks = await this.provider.deliveryTasks?.();
+        } catch (e) {
+            // Server sudah menjawab tetapi payload ditolak: tahapnya validasi, bukan unduh.
+            if (e instanceof PayloadRejectedError || e instanceof z.ZodError)
+                onStage?.("validate");
+            throw e;
+        }
+        onStage?.("validate");
+        const snapshot = SnapshotSchema.parse(received);
         const deliveryManifest = this.identity.roles.includes("delivery")
-            ? z
-                  .array(DeliveryTaskSchema)
-                  .min(1)
-                  .parse(await this.provider.deliveryTasks?.())
+            ? z.array(DeliveryTaskSchema).min(1).parse(receivedTasks)
             : undefined;
         if (
             !isDemo &&
@@ -291,7 +302,6 @@ export class MorningSimulation {
             )
         )
             throw new Error("Manifest daily sync tidak cocok.");
-        onStage?.("validate");
         if (!validMorningSnapshot(snapshot, date, isDemo))
             throw new Error(
                 "Paket PJP, stok dan harga belum lengkap atau tanggalnya tidak sesuai. Sesi belum dibuka.",

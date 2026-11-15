@@ -1,5 +1,6 @@
 import {
     ApiError,
+    PayloadRejectedError,
     IdentitySchema,
     ReceiptSchema,
     SnapshotSchema,
@@ -76,9 +77,13 @@ export class HttpProvider implements FieldProvider {
         if (!this.identity)
             throw new ApiError(401, "Bootstrap wajib sebelum snapshot.");
         const identity = this.identity;
-        const snapshot = SnapshotSchema.parse(
-            await this.request("sync/snapshot"),
-        );
+        const received = await this.request("sync/snapshot");
+        const parsed = SnapshotSchema.safeParse(received);
+        if (!parsed.success)
+            throw new PayloadRejectedError(
+                "Paket snapshot dari server tidak sesuai skema.",
+            );
+        const snapshot = parsed.data;
         if (this.identity !== identity)
             throw new ApiError(409, "Sesi berubah saat snapshot dibaca.");
 
@@ -89,8 +94,7 @@ export class HttpProvider implements FieldProvider {
             snapshot.scope.user_id !== identity.id ||
             snapshot.scope.business_date !== identity.businessDate
         )
-            throw new ApiError(
-                422,
+            throw new PayloadRejectedError(
                 "Scope/satuan snapshot tidak cocok dengan sesi bootstrap.",
             );
         return snapshot;
