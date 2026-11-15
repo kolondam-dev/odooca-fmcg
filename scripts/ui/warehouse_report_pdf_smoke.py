@@ -1,5 +1,8 @@
 """Render the three FMCG warehouse PDFs against the running CI Odoo server."""
 
+# Executed by ``odoo shell``, which injects ``env`` into the script namespace.
+# ruff: noqa: F821
+
 from odoo import Command
 
 
