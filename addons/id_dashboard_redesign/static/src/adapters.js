@@ -61,17 +61,18 @@ export function adaptSource(dashboard, response, scope = {}) {
             value.kpis[index].delta = (delta >= 0 ? "+" : "") + fmt(delta) + "%";
             value.kpis[index].good = delta >= 0;
         }
-        value.kpis[index].drill = { model: "sale.order.line", domain: raw.line_domain };
+        value.kpis[index].drill = { model: "sale.order.line", domain: raw.line_domain, metric: key, label: value.kpis[index].label };
     }
-    value.kpis[4].drill = { model: "sale.order.line", domain: [...raw.line_domain, ["discount", "!=", 0]] };
-    const bars = rows => rows.map(r => ({ n: r.name, v: r.net / 1e6, t: fmt(r.net / 1e6) + " · " + fmt((rate(r.net, t.net) ?? NaN) * 100) + "%", drill: r.drill }));
+    value.kpis[4].drill = { model: "sale.order.line", domain: [...raw.line_domain, ["discount", "!=", 0]],
+        metric: "discount", label: value.kpis[4].label };
+    const bars = rows => rows.map(r => ({ n: r.name, v: r.net / 1e6, t: fmt(r.net / 1e6) + " · " + fmt((rate(r.net, t.net) ?? NaN) * 100) + "%", drill: { ...r.drill, label: r.name } }));
     value.principal = bars(raw.principal);
     value.channel = bars(raw.channel);
     value.area = bars(raw.city);
     value.areaVals = {};
     for (const row of raw.city) if (row.code) {
         value.areaVals[row.code] = row.net / 1e6;
-        value.cityDrills[row.code] = row.drill;
+        value.cityDrills[row.code] = { ...row.drill, label: row.name };
     }
     value.trend = [{ v: raw.trend.map(r => r.net / 1e6) }];
     value.trendLegend = [{ t: _t("Selected period"), c: "var(--ac)" }];
@@ -84,7 +85,7 @@ export function adaptSource(dashboard, response, scope = {}) {
     value.config.panel6 = { min: low, max: high, target: undefined };
     value.trendTicks = [low, (low + high) / 2, high].map(n => Math.round(n * 10) / 10);
     value.trendX = raw.trend.map((r, i) => i % Math.ceil(raw.trend.length / 7) === 0 || i === raw.trend.length - 1 ? r.date.slice(5) : "");
-    value.mBars = raw.monthly.map(r => ({ l: r.month, v: r.net / 1e9, t: fmt(r.net / 1e9, Math.abs(r.net / 1e9) < .01 ? 9 : 2), drill: r.drill }));
+    value.mBars = raw.monthly.map(r => ({ l: r.month, v: r.net / 1e9, t: fmt(r.net / 1e9, Math.abs(r.net / 1e9) < .01 ? 9 : 2), drill: { ...r.drill, label: r.month, period: r.month } }));
     value.mLine = raw.monthly.map(r => ({ v: pct(r.discount_ratio), t: fmt(pct(r.discount_ratio)) + "%" }));
     value.config.panel7 = { barMax: Math.max(.001, ...value.mBars.map(r => Math.abs(r.v))),
         lineMin: Math.min(0, ...value.mLine.map(r => r.v).filter(Number.isFinite)), lineMax: Math.max(1, ...value.mLine.map(r => r.v).filter(Number.isFinite)) };
@@ -92,11 +93,11 @@ export function adaptSource(dashboard, response, scope = {}) {
         { h: _t("Sales team"), w: "1fr" }, { h: _t("Net SO (million)"), w: "1.5fr" },
         { h: _t("Achievement"), w: "80px" }, { h: _t("EC %"), w: "65px" }, { h: _t("Active outlets"), w: "80px" }];
     const maxSales = Math.max(1, ...raw.salesmen.map(r => Math.abs(r.net)));
-    value.trows = raw.salesmen.slice(0, 8).map((r, index) => [index + 1, { t: r.name, drill: r.drill, b: true },
+    value.trows = raw.salesmen.slice(0, 8).map((r, index) => [index + 1, { t: r.name, drill: { ...r.drill, label: r.name }, b: true },
         (r.teams || []).join(", ") || "—", { t: fmt(r.net / 1e6), bar: Math.abs(r.net) / maxSales * 100 },
         Number.isFinite(r.achievement) ? fmt(pct(r.achievement)) + "%" : "—", fmt(r.pjp?.available ? pct(r.pjp.ec_ratio) : null), fmt(r.outlets, 0)]);
     value.sp = raw.salesmen.filter(r => Number.isFinite(r.calls_per_day)).map((r, index) => ({
-        x: r.calls_per_day, y: r.net / 1e6, r: Math.min(36, 8 + Math.sqrt(r.outlets) * 2), l: r.name, showLabel: index < 2, drill: r.drill,
+        x: r.calls_per_day, y: r.net / 1e6, r: Math.min(36, 8 + Math.sqrt(r.outlets) * 2), l: r.name, showLabel: index < 2, drill: { ...r.drill, label: r.name },
     }));
     value.__available["D1.7"] = value.sp.length > 0;
     value.spx = [0, Math.max(1, ...value.sp.map(r => r.x)) * 1.2];
@@ -104,4 +105,39 @@ export function adaptSource(dashboard, response, scope = {}) {
     value.spxt = value.spx.map(n => Math.round(n * 10) / 10);
     value.spyt = value.spy.map(n => Math.round(n * 10) / 10);
     return value;
+}
+
+export function adaptSalesDetail(raw, { drill, query, period }) {
+    const currency = raw.currency === "IDR" ? "Rp" : raw.currency;
+    const amount = value => currency + " " + fmt(value, 2);
+    const metrics = {
+        net: _t("Net SO (ex-tax)"), gross: _t("Gross SO (ex-tax)"),
+        discount: _t("Native SO discount"), aov: _t("Average SO value"),
+    };
+    const metric = drill.metric || "net";
+    const columns = label => [{ h: label, w: "2fr" }, { h: metrics.net, a: "right" }];
+    const rows = groups => groups.map(row => [row.name, amount(row.net)]);
+    const filterLabels = {
+        salesman: _t("Salesperson"), channel: _t("Channel"), area: _t("Coverage area"),
+        city: _t("City / regency"), principal: _t("Principal"), brand: _t("Brand"), sku: _t("SKU"),
+    };
+    const filters = Object.entries(query.filters).map(([key, spec]) =>
+        filterLabels[key] + " " + (spec.mode === "in" ? _t("Include") : _t("Exclude")) + " " + spec.ids.join(", "));
+    return {
+        sub: [period, ...raw.companies, ...filters].join(" · "),
+        drillTitles: {
+            panel0: drill.label ? _t("Sales detail") + " · " + drill.label : _t("Sales detail"),
+            panel3: _t("Net sales by brand"), panel4: _t("Net sales by outlet"),
+            panel5: _t("Sales summary"), panel6: _t("Net sales by SKU"),
+        },
+        brands: raw.brands.map(row => ({ n: row.name, v: row.net, t: amount(row.net) })),
+        scols: columns(_t("Outlet")), srows: rows(raw.outlets),
+        dcols: columns(_t("SKU")), drows: rows(raw.products),
+        mini: [
+            { a: metrics[metric], b: amount(raw[metric]) },
+            { a: _t("Sales orders"), b: fmt(raw.orders, 0) },
+            { a: _t("Matching sales order lines"), b: fmt(raw.lines, 0) },
+        ],
+        spark: raw.daily.length ? raw.daily : [0], ex: [],
+    };
 }

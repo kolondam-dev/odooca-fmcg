@@ -9,16 +9,16 @@ import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { ApprovedControls } from "@id_dashboard_ui/components/approved_controls";
 import { DashboardShell } from "@id_dashboard_ui/pages/dashboard";
-import { adaptSource } from "@id_dashboard_redesign/adapters";
+import { adaptSalesDetail, adaptSource } from "@id_dashboard_redesign/adapters";
 
 class SalesSourceDialog extends Component {
     static template = "id_dashboard_redesign.SalesSourceDialog";
     static components = { Dialog };
     static props = { close: Function, open: Function };
     get title() { return _t("Sales source documents"); }
-    select(lines) {
+    select(destination) {
         this.props.close();
-        return this.props.open(lines);
+        return this.props.open(destination);
     }
 }
 
@@ -100,9 +100,19 @@ export class RedesignAction extends Component {
         if (drill.model === "sale.order.line") {
             const generation = this.generation;
             this.dialog.add(SalesSourceDialog, {
-                open: lines => {
+                open: destination => {
                     if (generation !== this.generation) return;
-                    return lines ? this.openSalesLines(drill.domain) : this.openNativeDocument(drill);
+                    if (destination === "dashboard") {
+                        return this.action.doAction({
+                            type: "ir.actions.client",
+                            name: _t("Sales detail"),
+                            tag: "id_dashboard_redesign.d7",
+                            params: {
+                                drill, query: this.query, period: drill.period || this.state.data.period,
+                            },
+                        });
+                    }
+                    return destination === "lines" ? this.openSalesLines(drill.domain) : this.openNativeDocument(drill);
                 },
             });
             return;
@@ -131,8 +141,37 @@ export class RedesignAction extends Component {
         });
     }
 }
+class SalesDetailAction extends RedesignAction {
+    static template = "id_dashboard_redesign.SalesDetail";
+    setup() {
+        this.orm = useService("orm");
+        this.action = useService("action");
+        this.generation = 0;
+        this.state = useState({ loading: true, data: null, error: null });
+        const release = this.env.services.id_shell?.enterDashboard?.();
+        onWillDestroy(() => release?.());
+        onWillStart(async () => {
+            try {
+                const params = this.props.action.params;
+                const raw = await this.orm.call("id.dashboard.redesign", "get_sales_detail", [params.drill.domain]);
+                this.domain = raw.domain;
+                this.state.data = adaptSalesDetail(raw, params);
+            } catch (error) {
+                this.state.error = error?.data?.message || error.message;
+            } finally {
+                this.state.loading = false;
+            }
+        });
+    }
+    back() { return this.action.restore(); }
+    matchingLines() { return this.openSalesLines(this.domain); }
+    salesOrders() {
+        return this.openNativeDocument({ model: "sale.order.line", domain: this.domain });
+    }
+}
 const actions = registry.category("actions");
 actions.add("id_dashboard_redesign.d1", RedesignAction);
+actions.add("id_dashboard_redesign.d7", SalesDetailAction);
 actions.add("id_dashboard_redesign.default", async () =>
     await user.hasGroup("sales_team.group_sale_salesman")
         ? "id_dashboard_sales.action_sales_productivity"

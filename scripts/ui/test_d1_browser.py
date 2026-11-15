@@ -210,6 +210,16 @@ with sync_playwright() as playwright:
     village_map.wait_for()
     check(coverage.get_by_text("Manado › Wenang", exact=True).is_visible(), "D1 restores the geographic path")
     expect(active_calaca).to_be_visible()
+    selected_row.get_by_role("button", name="Source documents: Calaca").click()
+    page.get_by_role("button", name="Open detail dashboard", exact=True).click()
+    detail = page.locator(".id-dash-page.id-dash--d7")
+    expect(detail.get_by_role("heading", name="Sales detail · Calaca")).to_be_visible()
+    expect(detail.get_by_text("2026-10-10 – 2026-10-20", exact=False)).to_be_visible()
+    expect(detail.get_by_text("D1 QA SKU 1", exact=False).first).to_be_visible()
+    page.get_by_role("button", name="Back to Sales Productivity").click()
+    expect(active_calaca).to_be_visible()
+    check(controls.evaluate("(root) => root.__controls.getState()") == applied,
+          "D7 return restores the exact D1 query")
     if expectations := os.environ.get("D1_EXPECTATIONS_FILE"):
         evidence = json.loads(Path(expectations).read_text())
         wanted = evidence["expected"]
