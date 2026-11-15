@@ -1,6 +1,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from odoo import Command
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import HttpCase, TransactionCase, tagged
@@ -10,36 +12,25 @@ from ..models import mobile_workday
 from ..models.mobile_workday import MobileReadConflict
 
 
-def business_date():
-    """Tanggal bisnis uji yang deterministik terhadap kalender.
+# Monday, 09:00 WITA. Keep fixture timestamps and the real business clock aligned.
+MOBILE_TEST_UTC = "2026-11-16 01:00:00"
 
-    Operasional order/kunjungan libur hari Minggu (WITA). Agar regression guard
-    tetap berjalan setiap hari, hari Minggu digeser ke Sabtu sebelumnya; tes
-    tidak pernah dilewati karena kalender. Fixture mem-patch
-    `mobile_workday.business_date` dengan fungsi ini, jadi model dan tes selalu
-    memakai hari yang sama. Aturan libur Minggu diuji eksplisit dengan
-    `sunday_business_date()`.
-    """
-    day = _real_business_date()
-    return day - timedelta(days=1) if day.weekday() == 6 else day
+
+def business_date():
+    return mobile_workday.business_date()
 
 
 def sunday_business_date():
-    """Hari Minggu terdekat sebelum atau pada hari ini (untuk tes aturan libur)."""
-    day = _real_business_date()
-    return day - timedelta(days=(day.weekday() + 1) % 7)
-
-
-_real_business_date = mobile_workday.business_date
+    return business_date() - timedelta(days=1)
 
 
 class MobileFixture:
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        patcher = patch.object(mobile_workday, "business_date", business_date)
-        patcher.start()
-        cls.addClassCleanup(patcher.stop)
+        clock = freeze_time(MOBILE_TEST_UTC, tick=True)
+        clock.start()
+        cls.addClassCleanup(clock.stop)
         currency = cls.env.ref("base.IDR")
         currency.active = True
         cls.company = cls.env["res.company"].create({"name": "Mobile API Company", "currency_id": currency.id})
