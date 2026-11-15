@@ -1,11 +1,3 @@
-## 2026-11-13 — Codex-Dashboard — Pemulihan konteks D1
-
-**Berubah:** Breadcrumb dari dokumen sumber memulihkan kueri dan posisi peta D1 melalui state aksi Odoo. Baris wilayah di luar poligon membuka dokumen sumber pada cakupan yang sama.
-
-**Verifikasi:** Regresi Playwright memeriksa pemulihan periode dan filter SKU. Validasi produksi menunggu merge dan auto-deploy.
-
-**Signature:** Task Managed by Agent Codex-Dashboard
-
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.
 **Diverifikasi:** [F] `main` bergerak ke `6fe9f2c` (PR #132 PWA Absen); merge `545c264` berkonflik hanya di `docs/HANDOFF.md` dan kedua sisi dipertahankan urut waktu (348 entri main + 2 entri baru). [F] PR #133 **12/12 check hijau** pada `545c264` (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift 19m4s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate) dan status `MERGEABLE`.
@@ -5194,3 +5186,8 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
 **Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]
+
+## 2026-11-15 — PR #135 warehouse reports
+- Sinkronisasi baseline ke main `fdb2fc0` dengan merge commit; mempertahankan implementasi Picklist, Packlist, Delivery Order dan tes native.
+- Fixture waktu deterministik PR #138 berada pada `id_mobile_api`; tidak mengubah logika WMS, tetapi wajib diverifikasi lewat exact-SHA `install-test`.
+- Tes mencakup empty Packlist, native reservation lot/package, partial done actual quantity, serta PDF smoke; hasil CI exact-SHA tetap menjadi acceptance gate.
