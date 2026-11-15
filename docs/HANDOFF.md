@@ -1,3 +1,10 @@
+
+## 2026-11-16 — Codex — Sinkronisasi main + integrasi PR #135 WMS
+**Basis:** [F] main `4cb81ceff1ffbc25bba901ad27e0f2f107e6b275`; PR branch sebelumnya `014420d7aa798528f723d920c80601bb2391a2bd`. Merge dilakukan sebagai descendant main dengan branch lama sebagai parent kedua; tidak reset/rebase dan tidak mengubah main.
+**Integrasi:** pertahankan CI impact planner/PO validator dan workflow berbasis impact dari main; menambahkan report Picklist/Packlist/Delivery Order, test runtime, script PDF smoke, manifest report, occurrence `model_terms` untuk seluruh string statis QWeb, dan test render HTML dengan context `id_ID` serta assertion label Indonesia.
+**Verifikasi:** [BU] belum dijalankan pada kandidat merge; seluruh suite dari planner control-plane harus dilaksanakan pada exact SHA. PDF smoke tetap butuh server HTTP hidup. Review tetap HOLD sampai CI exact-SHA dan inspeksi PDF/terjemahan selesai.
+**Batas:** tidak ada merge PR #135 ke main, deploy, atau mutasi DB live.
+
 ## 2026-11-15T23:52:35+07:00 — claude-dev — Perbaikan bootstrap seed gate PR #145
 **Konteks:** [F] Pada SHA `3c9ba1e`, semua planner, static, Odoo install/init, PWA, finance, full dataset, dan persisted upgrade lulus. `invariant-tests` gagal setelah 464 test existing lulus karena test planner baru mengimpor `yaml` yang belum dipasang pada environment unit seed; `seed-invariants` gagal sebagai konsekuensi wajib dari unit gate tersebut, sementara acceptance independen tetap PASS.
 **Berubah:** `.github/workflows/seed-invariants.yml` memasang `pyyaml` bersama dependency invariant existing, tanpa mengecualikan test atau melemahkan gate. Ekspor cache BuildKit pada CI/finance/upgrade/full-dataset memakai `ignore-error=true` agar kegagalan menulis cache pada fork/read-only token tidak mengubah verdict test.
