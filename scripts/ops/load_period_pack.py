@@ -2824,25 +2824,40 @@ class GenericPeriodPackLoader:
             if canonical_tax_04 and (not t_lines or abs(float(getattr(inv_rec, "amount_tax", 0.0) or 0.0) - exp_ppn) > 0.01):
                 if aml_model is not None and tax_acc:
                     tax_line_vals = {
-                        "move_id": inv_rec.id,
-                        "display_type": "tax",
                         "name": getattr(canonical_tax_04, "name", "PPN Keluaran 12% (DPP Nilai Lain - Kode 04)"),
                         "account_id": tax_acc.id,
                         "tax_line_id": canonical_tax_04.id,
                         "tax_base_amount": exp_tb,
                         "credit": exp_ppn,
                         "debit": 0.0,
+                        "balance": -exp_ppn,
+                        "amount_currency": -exp_ppn,
                     }
                     if hasattr(self, "company") and self.company:
                         tax_line_vals["company_id"] = self.company.id
+                        if hasattr(self.company, "currency_id") and self.company.currency_id:
+                            tax_line_vals["currency_id"] = self.company.currency_id.id
+
                     target_aml = (
                         aml_model.with_context(check_move_validity=False)
                         if hasattr(aml_model, "with_context") and callable(getattr(aml_model, "with_context"))
                         else aml_model
                     )
-                    created_aml = target_aml.create(tax_line_vals)
-                    if hasattr(inv_rec, "line_ids") and isinstance(inv_rec.line_ids, list):
-                        inv_rec.line_ids.append(created_aml)
+                    if t_lines:
+                        for tl in t_lines:
+                            tl_target = (
+                                tl.with_context(check_move_validity=False)
+                                if hasattr(tl, "with_context") and callable(getattr(tl, "with_context"))
+                                else tl
+                            )
+                            if callable(getattr(tl_target, "write", None)):
+                                tl_target.write(tax_line_vals)
+                    else:
+                        tax_line_vals["move_id"] = inv_rec.id
+                        tax_line_vals["display_type"] = "tax"
+                        created_aml = target_aml.create(tax_line_vals)
+                        if hasattr(inv_rec, "line_ids") and isinstance(inv_rec.line_ids, list):
+                            inv_rec.line_ids.append(created_aml)
 
                     # Update receivable line to match total (debit = exp_total)
                     rec_lines = [
@@ -2851,8 +2866,18 @@ class GenericPeriodPackLoader:
                         or str(getattr(getattr(line_rec, "account_id", None), "code", "")).startswith("112")
                     ]
                     for rl in rec_lines:
-                        if callable(getattr(rl, "write", None)):
-                            rl.write({"debit": exp_total})
+                        rl_target = (
+                            rl.with_context(check_move_validity=False)
+                            if hasattr(rl, "with_context") and callable(getattr(rl, "with_context"))
+                            else rl
+                        )
+                        if callable(getattr(rl_target, "write", None)):
+                            rl_target.write({
+                                "debit": exp_total,
+                                "credit": 0.0,
+                                "balance": exp_total,
+                                "amount_currency": exp_total,
+                            })
 
                     # If move has write, update amounts to exact registered values
                     if hasattr(inv_rec, "write"):

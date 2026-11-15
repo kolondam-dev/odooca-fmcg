@@ -1,3 +1,18 @@
+## 2026-11-15T14:15:00+07:00 — antigravity — F4: Sinkronisasi Balance dan Amount Currency pada Baris Pajak & Piutang Faktur (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, menyertakan field `balance` dan `amount_currency` secara eksplisit pada baris PPN Keluaran 211200 (`balance = -exp_ppn`, `amount_currency = -exp_ppn`) dan baris piutang usaha (`balance = exp_total`, `amount_currency = exp_total`).
+  - Memanggil `rl.with_context(check_move_validity=False).write()` untuk mencegah validasi keseimbangan prematur sebelum seluruh move lines selesai disinkronisasi.
+  - Memperbarui baris pajak secara in-place jika `t_lines` sudah ada, mencegah duplikasi kredit pajak PPN.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T14:15:00+07:00
+
 ## 2026-11-15T12:43:00+07:00 — antigravity — CI: Penambahan Import fields pada test_commands_api (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `addons/id_mobile_api/tests/test_commands_api.py`:
