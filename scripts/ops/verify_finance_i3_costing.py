@@ -126,7 +126,8 @@ def collect(env):
         return category[field] if field in category._fields else default
 
     valued_domain = [("state", "=", "done"), ("value", "!=", 0)]
-    has_move_value = bool(move_model) and "value" in move_model._fields
+    # An empty recordset is falsy, so test for None explicitly.
+    has_move_value = move_model is not None and "value" in move_model._fields
 
     categories = []
     for category in category_model.search([]):
