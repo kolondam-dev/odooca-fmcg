@@ -2051,6 +2051,164 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         self.assertEqual(resolved.id, 88)
         self.assertEqual(resolved.code, "211200")
 
+    def test_split_lot_rejection_invoice_balance_and_contract(self):
+        """Regression test for INV-202608-0083 / SO-202608-0083:
+        When an SO contains multiple lines for the same SKU with different lots
+        (e.g. MYR-BBG-03 lot A: 13 cartons, lot B: 3 cartons) and a rejection
+        specifies lot A (13 cartons), only lot A must be deducted.
+        Lot B (3 cartons) must remain in the invoice, keeping commercial DPP
+        at Rp 2.700.475,20, PPN at Rp 297.052,27, total at Rp 2.997.527,47,
+        and ensuring debit == credit balance without UserError: The entry is not balanced.
+        """
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_partner = MockRecord(
+            id=10,
+            ref="CUST-MT-02",
+            name="Alfamidi DC Manado",
+            property_account_receivable_id=MockRecord(
+                id=110, code="112000", name="Piutang Usaha", account_type="asset_receivable"
+            ),
+        )
+        mock_prod_bbg = MockRecord(id=21, default_code="MYR-BBG-03", name="Beng-Beng Share It", uom_id=MockRecord(id=1))
+        mock_prod_cnd = MockRecord(id=22, default_code="MYR-CND-05", name="Kiss Mint Barley", uom_id=MockRecord(id=1))
+        mock_prod_kpk = MockRecord(id=23, default_code="MYR-KPK-RTD-04", name="Kopiko 78C", uom_id=MockRecord(id=1))
+
+        mock_acc_inc = MockRecord(id=40, code="410100", name="Pendapatan Penjualan")
+        for p in (mock_prod_bbg, mock_prod_cnd, mock_prod_kpk):
+            p._get_product_accounts = lambda: {"income": mock_acc_inc}
+
+        mock_acc_ppn_out = MockRecord(id=50, code="211200", name="PPN Keluaran", company_ids=[1])
+        mock_acc_ar = MockRecord(
+            id=110, code="112000", name="Piutang Usaha", account_type="asset_receivable", company_ids=[1]
+        )
+
+        mock_tax_04 = MockRecord(
+            id=77,
+            name="PPN Keluaran 12% (DPP Nilai Lain - Kode 04)",
+            amount=12.0,
+            type_tax_use="sale",
+            l10n_id_tax_transaction_code="04",
+            company_id=mock_company,
+        )
+
+        mock_sol_1 = MockRecord(id=601, product_id=mock_prod_bbg, product_uom_qty=312.0)
+        mock_sol_2 = MockRecord(id=602, product_id=mock_prod_bbg, product_uom_qty=72.0)
+        mock_sol_3 = MockRecord(id=603, product_id=mock_prod_cnd, product_uom_qty=168.0)
+        mock_sol_4 = MockRecord(id=604, product_id=mock_prod_kpk, product_uom_qty=72.0)
+
+        mock_so = MockRecord(
+            id=701,
+            name="SO/2026/08/0083",
+            client_order_ref="SO-202608-0083",
+            partner_id=mock_partner,
+            company_id=mock_company,
+            order_line=[mock_sol_1, mock_sol_2, mock_sol_3, mock_sol_4],
+            picking_ids=[],
+        )
+
+        created_moves = []
+        class MockAccountMoveModel(MockModel):
+            def create(self, vals):
+                lines = []
+                inv_lines = []
+                vals_copy = dict(vals)
+                vals_copy.pop("invoice_line_ids", None)
+                vals_copy.pop("line_ids", None)
+                vals_copy.setdefault("partner_id", mock_partner)
+                vals_copy.setdefault("state", "draft")
+                inv_rec = MockRecord(
+                    id=len(created_moves) + 1,
+                    line_ids=lines,
+                    invoice_line_ids=inv_lines,
+                    **vals_copy,
+                )
+                for item in vals.get("invoice_line_ids", []):
+                    if isinstance(item, tuple) and len(item) == 3 and item[0] == 0:
+                        lvals = item[2]
+                        # Calculate line subtotal
+                        l_qty = float(lvals.get("quantity", 0.0))
+                        l_price = float(lvals.get("price_unit", 0.0))
+                        l_disc = float(lvals.get("discount", 0.0))
+                        subtotal = round(l_qty * l_price * (1.0 - l_disc / 100.0), 2)
+                        line_rec = MockRecord(
+                            id=len(lines) + 1,
+                            move_id=inv_rec,
+                            display_type="product",
+                            price_subtotal=subtotal,
+                            credit=subtotal,
+                            debit=0.0,
+                            balance=-subtotal,
+                            **lvals,
+                        )
+                        lines.append(line_rec)
+                        inv_rec.invoice_line_ids.append(line_rec)
+                # Odoo automatically creates receivable balancing line
+                tot_sub = sum(line_item.price_subtotal for line_item in lines)
+                ar_line = MockRecord(
+                    id=len(lines) + 1,
+                    move_id=inv_rec,
+                    display_type="payment_term",
+                    account_id=mock_acc_ar,
+                    debit=tot_sub,
+                    credit=0.0,
+                    balance=tot_sub,
+                )
+                lines.append(ar_line)
+                created_moves.append(inv_rec)
+                return inv_rec
+
+        class MockAccountMoveLineModel(MockModel):
+            def create(self, vals):
+                rec = MockRecord(id=999 + len(self._records), **vals)
+                self._records.append(rec)
+                return rec
+
+        env = MockEnv({
+            "res.company": MockModel(records=[mock_company]),
+            "res.partner": MockModel(records=[mock_partner]),
+            "product.product": MockModel(records=[mock_prod_bbg, mock_prod_cnd, mock_prod_kpk]),
+            "sale.order": MockModel(records=[mock_so]),
+            "account.tax": MockModel(records=[mock_tax_04]),
+            "account.account": MockModel(records=[mock_acc_inc, mock_acc_ppn_out, mock_acc_ar]),
+            "account.move": MockAccountMoveModel(records=[]),
+            "account.move.line": MockAccountMoveLineModel(records=[]),
+            "account.journal": MockModel(records=[MockRecord(id=1, code="SJL", type="sale", company_id=mock_company)]),
+        })
+
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=False, strict=True)
+        loader.company = mock_company
+
+        # Target invoice row
+        inv_row = {
+            "invoice_number": "INV-202608-0083",
+            "so_number": "SO-202608-0083",
+            "date_invoice": "2026-08-04",
+            "due_date": "2026-09-18",
+            "commercial_dpp": "2700475.20",
+            "dpp_amount": "2475435.60",
+            "ppn_amount": "297052.27",
+            "total_invoice_with_ppn": "2997527.47",
+        }
+        loader.reader.set_override("invoices.csv", [inv_row])
+
+        processed = loader._apply_invoices()
+        self.assertEqual(processed, 1)
+        self.assertEqual(len(created_moves), 1)
+
+        inv = created_moves[0]
+        # Must have 3 invoice lines (Line 2 BBG lot 17, Line 3 CND, Line 4 KPK)
+        self.assertEqual(len(inv.invoice_line_ids), 3)
+
+        # Check total credit (product lines + tax line) vs total debit (receivable line)
+        product_credits = sum(ml.credit for ml in inv.line_ids if ml.display_type == "product")
+        tax_credits = sum(ml.credit for ml in inv.line_ids if ml.display_type == "tax")
+        ar_debits = sum(ml.debit for ml in inv.line_ids if ml.display_type == "payment_term")
+
+        self.assertAlmostEqual(product_credits, 2700475.20, places=2)
+        self.assertAlmostEqual(tax_credits, 297052.27, places=2)
+        self.assertAlmostEqual(ar_debits, 2997527.47, places=2)
+        self.assertAlmostEqual(product_credits + tax_credits, ar_debits, places=2)
+
 
 if __name__ == "__main__":
     unittest.main()

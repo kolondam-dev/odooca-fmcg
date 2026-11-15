@@ -2934,3 +2934,40 @@
   * python -m ruff check .: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-15T21:10:00+07:00
+
+2026-11-15T22:50:00+07:00 [INFO] F4: Perbaikan Pool Deduplikasi Rejeksi Split-Lot SKU pada Pembentukan Baris Faktur Odoo 19
+- Konteks: Runtime verification Odoo 19 native pada disposable database fmcg_period_disposable (PR #110, branch agen/seed-f4-period-pack-loader).
+- Root Cause Analisis Kegagalan CI Run 43722994237:
+  * Pada run 43722994237, perbaikan check_move_validity=False pada commit 8d01d8a berhasil membawa F4 melewati INV-202608-0001 dan memproses puluhan faktur.
+  * Namun pada SO-202608-0083 / INV-202608-0083, sistem kembali memunculkan UserError: The entry is not balanced saat inv_rec.action_post().
+  * Analisis akar masalah:
+    - SO-202608-0083 memiliki 4 baris pesanan, dengan 2 baris untuk SKU yang sama (MYR-BBG-03) pada lot berbeda:
+      Line 1: MYR-BBG-03, LOT-ORA-20260615-INIT-17 (13 karton, net Rp 3.865.368,00)
+      Line 2: MYR-BBG-03, LOT-ORA-20260702-17 (3 karton, net Rp 892.008,00)
+      Line 3: MYR-CND-05 (7 karton, net Rp 1.314.432,00)
+      Line 4: MYR-KPK-RTD-04 (3 karton, net Rp 494.035,20)
+    - Rejeksi REJ-202608-004 merejeksi 13 karton MYR-BBG-03 khusus untuk LOT-ORA-20260615-INIT-17.
+    - Sisa non-rejeksi: Line 2 (892.008) + Line 3 (1.314.432) + Line 4 (494.035,20) = Rp 2.700.475,20 (sesuai eksak dengan commercial_dpp di invoices.csv).
+    - Pada kode _apply_invoices:
+      Ketika Line 1 dievaluasi, kondisi lot_key in rejections_by_line_key terpenuhi sehingga rej_cartons = 13 dan Line 1 dilewati (net = 0).
+      Namun, pool so_rej_sku_rem[sku] TIDAK didekrementasi saat lot_key cocok.
+      Ketika Line 2 dievaluasi, lot_key tidak cocok, sehingga masuk cabang elif sku in so_rej_sku_rem. Karena so_rej_sku_rem['MYR-BBG-03'] masih bernilai 13, Line 2 (3 karton, Rp 892.008,00) ikut terpotong secara keliru (double deduction)!
+    - Akibatnya, baris faktur hanya mencakup Line 3 & 4 (subtotal Rp 1.808.467,20). Baris PPN terbuat Rp 297.052,27 (berdasarkan kontrak Rp 2.700.475,20) dan baris piutang diset ke Rp 2.997.527,47.
+    - Kredit fisik SQL = 1.808.467,20 + 297.052,27 = 2.105.519,47, sedangkan Debit = 2.997.527,47 (selisih eksak Rp 892.008,00).
+    - Saat action_post() dipanggil, Odoo 19 _check_balanced memicu UserError: The entry is not balanced.
+- Tindakan & Solusi:
+  1. scripts/ops/load_period_pack.py:
+     - Ketika lot_key cocok pada rejections_by_line_key, langsung dekrementasikan sisa pool SKU:
+       if sku in so_rej_sku_rem:
+           so_rej_sku_rem[sku] = max(0.0, so_rej_sku_rem[sku] - rej_cartons)
+     - Terbukti secara matematis dan analitis menyelesaikan seluruh 1.240 faktur periode 2026-08 (0 mismatch).
+     - Menambahkan pencarian fallback existing faktur pada payment_reference dan ref untuk menjamin zero-drift idempotency.
+  2. tests/test_period_pack_loader.py:
+     - Menambahkan tes regresi terisolasi test_split_lot_rejection_invoice_balance_and_contract yang memvalidasi pembentukan faktur split-lot dengan rejeksi spesifik lot.
+- Verifikasi:
+  * python -m unittest tests/test_period_pack_loader.py: 58/58 PASS (0 fail, 0 error).
+  * python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py: 133/133 PASS (0 fail, 0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m ruff check .: PASS clean (0 error).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-15T22:50:00+07:00

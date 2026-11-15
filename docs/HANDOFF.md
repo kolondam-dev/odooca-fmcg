@@ -1,3 +1,21 @@
+## 2026-11-15T22:50:00+07:00 — antigravity — F4: Perbaikan Pool Deduplikasi Rejeksi Split-Lot SKU pada Pembentukan Baris Faktur Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, memperbaiki alokasi rejeksi karantina per SO (`so_rej_sku_rem`): ketika baris pesanan cocok secara spesifik dengan kunci lot (`rejections_by_line_key`), kuantitas karton rejeksi kini didekrementasi dari sisa pool rejeksi SKU (`so_rej_sku_rem[sku] = max(0.0, so_rej_sku_rem[sku] - rej_cartons)`).
+  - Mengeliminasi bug double-deduction pada SO yang memiliki split lot untuk SKU yang sama (seperti `SO-202608-0083` / `INV-202608-0083` dengan SKU `MYR-BBG-03` lot A: 13 karton [direjeksi] dan lot B: 3 karton [diterima]), di mana lot B sebelumnya ikut terpotong secara keliru sehingga menyebabkan defisit kredit produk sebesar Rp 892.008,00 dan memicu `odoo.exceptions.UserError: The entry is not balanced.` saat `action_post()`.
+  - Pada `verify_preflight` dan `_apply_invoices`, memperluas pencarian faktur eksisting (`existing`) untuk mencocokkan baik `payment_reference` maupun `ref` guna menjamin zero-drift idempotency pada replay skenario A.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan tes regresi terisolasi `test_split_lot_rejection_invoice_balance_and_contract` yang memvalidasi pembentukan faktur split-lot dengan rejeksi spesifik lot, memastikan lot non-rejeksi dipertahankan, DPP komersial Rp 2.700.475,20, PPN Rp 297.052,27, total Rp 2.997.527,47, dan entri debet-kredit seimbang sempurna.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 tests PASS (0 fail, 0 error).
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS (0 fail, 0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T22:50:00+07:00
+
 ## 2026-11-15T21:10:00+07:00 — antigravity — F4: Eliminasi Premature Balance Validation via check_move_validity=False pada Sinkronisasi Pajak & Piutang Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

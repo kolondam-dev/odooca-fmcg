@@ -1416,6 +1416,13 @@ class GenericPeriodPackLoader:
                     ("payment_reference", "=", inv_num),
                 ],
                 limit=1,
+            ) or AccountMove.search(
+                [
+                    ("company_id", "=", self.company.id),
+                    ("move_type", "=", "out_invoice"),
+                    ("ref", "=", inv_num),
+                ],
+                limit=1,
             )
             if existing:
                 try:
@@ -2589,6 +2596,13 @@ class GenericPeriodPackLoader:
                     ("payment_reference", "=", inv_num),
                 ],
                 limit=1,
+            ) or AccountMove.search(
+                [
+                    ("company_id", "=", self.company.id),
+                    ("move_type", "=", "out_invoice"),
+                    ("ref", "=", inv_num),
+                ],
+                limit=1,
             )
             if existing:
                 self._validate_existing_invoice(existing, inv_row)
@@ -2684,6 +2698,8 @@ class GenericPeriodPackLoader:
                 lot_key = (so_num, sku, lot) if lot else None
                 if lot_key and lot_key in rejections_by_line_key:
                     rej_cartons = rejections_by_line_key[lot_key]
+                    if sku in so_rej_sku_rem:
+                        so_rej_sku_rem[sku] = max(0.0, so_rej_sku_rem[sku] - rej_cartons)
                 elif sku in so_rej_sku_rem:
                     rem = so_rej_sku_rem[sku]
                     rej_cartons = min(qty_cartons, rem)
