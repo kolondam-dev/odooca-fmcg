@@ -1,3 +1,30 @@
+## 2026-11-15 — Codex-Dashboard — Drill-down D1 ke D7
+
+**Berubah:** Dialog D1 membuka dashboard rincian D7 dengan cakupan baris sumber, periode, dan filter terpilih. Tombol kembali memakai stack aksi Odoo. Jalur dokumen sumber tetap tersedia.
+
+**Diverifikasi:** [F] ORM pada snapshot production terisolasi merekonsiliasi Net Sales Juli tanpa filter dan dengan SKU 128, termasuk per kota. [BU] Playwright pada HEAD PR menunggu CI.
+
+**Signature:** Task Managed by Agent Codex-Dashboard
+
+## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
+**Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser beranda-roles (3 tes, phone+tablet) dan unit delivery-progress (5) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] chip Absen/Data tersinkron sebagai pengganti kartu hari, tab Delivery Canvasser, jarak Delivery.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-15T17:27:07+07:00
+
+## 2026-11-13 — Codex-Dashboard — Pemulihan konteks D1
+
+**Berubah:** Breadcrumb dari dokumen sumber memulihkan kueri dan posisi peta D1 melalui state aksi Odoo. Baris wilayah di luar poligon membuka dokumen sumber pada cakupan yang sama.
+
+**Verifikasi:** Regresi Playwright memeriksa pemulihan periode dan filter SKU. Validasi produksi menunggu merge dan auto-deploy.
+
+**Signature:** Task Managed by Agent Codex-Dashboard
+## 2026-11-14T23:29:12+07:00 — Agent-Claude-Dev1 — Fase 3B-10: Sinkron (jalan/gagal) + angka Beranda Sales
+**Berubah:** `pwa/src/components/SyncProgressCard.tsx` (baru), `MorningSession.tsx`, `Home.tsx`, `App.tsx`, `domain/morning.ts` (`open(onStage)`), `ui/ui.css`, `tests/browser/sync-progress.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K24), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser sync-progress (3 tes, phone+tablet) lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] Lanjut offline (menunggu backend memecah bagian opsional snapshot), Beranda canvasser/delivery/sesi.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-14T23:29:12+07:00
+
 ## 2026-11-14T15:29:17+07:00 — Agent-Opencode — I2-3: sync main 6fe9f2c, PR #133 mergeable (12/12 hijau)
 **Berubah:** `docs/HANDOFF.md`, `agent-log/opencode.log`.
 **Diverifikasi:** [F] `main` bergerak ke `6fe9f2c` (PR #132 PWA Absen); merge `545c264` berkonflik hanya di `docs/HANDOFF.md` dan kedua sisi dipertahankan urut waktu (348 entri main + 2 entri baru). [F] PR #133 **12/12 check hijau** pada `545c264` (static, install-test, init-test, candidate-install-upgrade, upgrade runtime + replay zero drift 19m4s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate) dan status `MERGEABLE`.
@@ -5186,6 +5213,7 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
 **Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]
+
 
 ## 2026-11-15 — PR #135 warehouse reports
 - Sinkronisasi baseline ke main `fdb2fc0` dengan merge commit; mempertahankan implementasi Picklist, Packlist, Delivery Order dan tes native.
