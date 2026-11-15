@@ -27,6 +27,12 @@
 **Diverifikasi:** [F] ORM pada snapshot production terisolasi merekonsiliasi Net Sales Juli tanpa filter dan dengan SKU 128, termasuk per kota. [BU] Playwright pada HEAD PR menunggu CI.
 
 **Signature:** Task Managed by Agent Codex-Dashboard
+## 2026-11-15T21:26:26+07:00 — Agent-Claude-Dev1 — Fase 3B-12: status lokasi Check-in toko + tab Delivery Canvasser
+**Berubah:** `pwa/src/components/LocationNotice.tsx` (baru), `domain/location-accuracy.ts` (baru), `VisitPanel.tsx`, `AttendanceScreen.tsx`, `domain/visits.ts` (`LocationDeniedError`), `App.tsx` (tab Delivery Canvasser), `tests/browser/status-sheets.spec.ts`, `beranda-roles.spec.ts`, `field.spec.ts`, `tests/location-accuracy.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K26), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser (izin ditolak check-in, tab per peran) dan unit akurasi lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] akurasi >30 m di browser untuk check-in toko (e2e memakai outlet demo_unrestricted).
+**Perhatian reviewer:** `field.spec.ts` sebelumnya menegaskan Canvasser tanpa tab Delivery; diubah mengikuti mockup Beranda_canvasser.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-15T21:26:26+07:00
 
 ## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
 **Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.

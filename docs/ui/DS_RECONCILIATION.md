@@ -248,6 +248,19 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **"Mulai kirim/pengiriman" membuka tab Delivery** (daftar trip), bukan langsung DO pertama.
 - **Belum:** tab bawah "Delivery" khusus Canvasser dan layar Navigasi (DS `Navigasi`) belum diverifikasi ulang; Outlet*/Kunjungan_hub tetap fase berikutnya.
 
+### K26. Fase 3B-12 — Status lokasi di check-in toko, tab Delivery Canvasser
+
+**Selesai di PWA:**
+- **Status_gps / Status_izin di Check-in toko:** `VisitPanel` memakai batas akurasi ±30 m (live, bukan demo, bukan outlet `demo_unrestricted`): Callout, lembar "Akurasi lokasi rendah" (Coba lagi/Tutup), "Mulai kunjungan" terkunci dengan keterangan, dan check-in menolak fix baru yang melebihi batas. Izin ditolak di live membuka lembar "Akses lokasi ditolak" ("Check-in butuh lokasi …").
+- **Komponen bersama:** `LocationNoticeSheet` dan `domain/location-accuracy.ts` (`GPS_ACCURACY_LIMIT_M`, `accuracyExceeded`) dipakai Absen dan Check-in toko; teks DS "Batas untuk absen dan check-in adalah ±30 m" kembali utuh karena kini benar untuk keduanya. `LocationDeniedError` membedakan izin ditolak dari galat lokasi lain.
+- **Tab bawah Canvasser:** Beranda, Sales, **Delivery**, HRIS, Lainnya sesuai Beranda_canvasser. Pengecualian lama yang menyembunyikan tab Delivery bagi peran sales dihapus dan `field.spec.ts` diperbarui (sebelumnya menegaskan tanpa tab Delivery).
+
+**Perbedaan yang disengaja / utang:**
+- **Tanpa "Buka pengaturan"** (web tidak punya API), sama seperti K23.
+- **Akurasi check-in tidak bisa diuji di browser:** e2e memakai outlet `demo_unrestricted` (geofence longgar), jadi aturan akurasi check-in diuji sebagai fungsi murni (`location-accuracy.test.ts`); izin ditolak diuji di browser dengan mode live eksplisit. Uji browser akurasi menunggu fixture outlet ketat.
+- **Backend tidak memeriksa akurasi** untuk check-in/absen; batas ±30 m hanya di klien (DS).
+- **`aria-label` navigasi** tetap "Navigasi utama" (mockup memakai "Menu utama"); tes dan pembaca layar mengandalkan nama yang ada.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).

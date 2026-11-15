@@ -555,11 +555,8 @@ function Workspace({
             setSyncing(false);
         }
     }
-    const nav = pages.filter(
-        (p) =>
-            canOpen(identity.roles, p.id) &&
-            !(p.id === "delivery" && identity.roles.includes("sales")),
-    );
+    // DS Beranda_canvasser: Canvasser (sales + delivery) memakai kelima tab.
+    const nav = pages.filter((p) => canOpen(identity.roles, p.id));
     return (
         <EvidenceIdentityContext.Provider
             value={{
