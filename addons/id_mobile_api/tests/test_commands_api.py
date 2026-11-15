@@ -23,6 +23,16 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         )._snapshot_payload()
         self.snapshot_version = snapshot_payload["version"]
 
+    def _set_command_fixture_date(self, client_uuid):
+        # PostgreSQL supplies create_date independently of the frozen Python clock.
+        command = self.env["id.mobile.command"].sudo().search([
+            ("client_uuid", "=", client_uuid),
+            ("user_id", "=", self.mobile.id),
+            ("company_id", "=", self.company.id),
+        ])
+        command.ensure_one()
+        command.write({"create_date": fields.Datetime.now()})
+
     def _command_model(self, user=None):
         target_user = user or self.mobile
         return self.env["id.mobile.command"].with_user(target_user).with_company(self.company)
@@ -580,6 +590,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             },
         })
         self.assertEqual(rc_checkin_a["status"], "accepted")
+        self._set_command_fixture_date(checkin_uuid_a)
 
         # Counterexample: Check-out with nonexistent/unstarted Session B -> UserError
         session_b_visit_uuid = str(uuid.uuid4())
@@ -960,6 +971,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             },
         })
         self.assertEqual(rc_pod1["status"], "accepted")
+        self._set_command_fixture_date(pod_uuid1)
         self.assertEqual(rc_pod1["reference"], f"POD-{pod_uuid1[:8]}")
 
         # Counterexample: Trip close attempted while DO 2 in TRIP-01 is still missing POD -> UserError
@@ -1011,6 +1023,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             },
         })
         self.assertEqual(rc_pod2["status"], "accepted")
+        self._set_command_fixture_date(pod_uuid2)
 
         # 5. Trip close without PODs or nonexistent trip -> rejected
         with self.assertRaises(UserError):
