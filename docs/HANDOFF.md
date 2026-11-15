@@ -5213,3 +5213,9 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
 **Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]
+
+
+## 2026-11-15 — PR #135 warehouse reports
+- Sinkronisasi baseline ke main `fdb2fc0` dengan merge commit; mempertahankan implementasi Picklist, Packlist, Delivery Order dan tes native.
+- Fixture waktu deterministik PR #138 berada pada `id_mobile_api`; tidak mengubah logika WMS, tetapi wajib diverifikasi lewat exact-SHA `install-test`.
+- Tes mencakup empty Packlist, native reservation lot/package, partial done actual quantity, serta PDF smoke; hasil CI exact-SHA tetap menjadi acceptance gate.

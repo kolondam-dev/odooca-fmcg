@@ -344,3 +344,8 @@
 - Perbaiki overflow action D1 dan klik poligon.
 - Gunakan batas Sulut di repo untuk kabupaten/kota → kecamatan → kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
 - Task managed by codex agent at 2026-11-11T19:04:48+07:00
+
+
+[2026-11-15T10:00:00+07:00] [INFO] PR #135: sync main fdb2fc0
+- Merge commit mempertahankan branch WMS sebagai parent kedua; baseline main terbaru mencakup fixture waktu deterministik PR #138.
+- Verifikasi exact-SHA install-test dan seluruh workflow diperlukan sebelum PR keluar dari HOLD.

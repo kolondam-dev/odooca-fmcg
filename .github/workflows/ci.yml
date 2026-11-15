@@ -129,6 +129,15 @@ jobs:
             sleep 2
           done
           curl -sf -o /dev/null http://localhost:8069/web/login
+      - name: FMCG warehouse PDF render against live HTTP server
+        run: |
+          set -o pipefail
+          docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
+            odoo shell -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ui/warehouse_report_pdf_smoke.py 2>&1 | tee warehouse-report-pdf.log
+          grep -q 'WAREHOUSE_PDF_SMOKE=PASS' warehouse-report-pdf.log
+          if grep -E ' (ERROR|CRITICAL) |Traceback' warehouse-report-pdf.log; then exit 1; fi
       - name: Browser smoke (UI modules, two-record pager, classic/sidebar)
         env:
           UI_TEST_PASSWORD: ci-ui
