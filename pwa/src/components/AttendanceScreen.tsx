@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Identity, Snapshot } from "../domain/contracts";
 import { distanceMeters } from "../domain/format";
 import { renderEvidencePackage } from "../domain/evidence-render";
+import { LocationNoticeSheet, type LocationNotice } from "./LocationNotice";
+import {
+    accuracyExceeded,
+    GPS_ACCURACY_LIMIT_M,
+} from "../domain/location-accuracy";
 import { isDemoMode } from "../domain/running-mode";
 import type { MapFix } from "../domain/checkin-map";
 import type { FieldStore } from "../storage/store";
@@ -24,7 +29,6 @@ import { CheckinMap } from "./CheckinMap";
 import type { EvidenceRef } from "./Evidence";
 
 /** Batas akurasi GPS untuk absen (DS: Status_gps). */
-export const GPS_ACCURACY_LIMIT_M = 30;
 
 /**
  * Layar penuh absen masuk/pulang (DS: Absen_info, Absen_dalam, Absen_luar, Absen_selfie, Absen_pulang).
@@ -58,7 +62,7 @@ export function AttendanceScreen({
     const [captured, setCaptured] = useState("");
     const [camera, setCamera] = useState(false);
     const [rules, setRules] = useState(false);
-    const [notice, setNotice] = useState<"accuracy" | "denied">();
+    const [notice, setNotice] = useState<LocationNotice>();
     const [working, setWorking] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
@@ -98,7 +102,7 @@ export function AttendanceScreen({
     const blocked = enforced && outside;
     // Akurasi di atas batas mengunci selfie (kecuali mode demo), selaras DS Status_gps.
     const lowAccuracy =
-        !!fix && !isDemoMode() && fix.accuracy > GPS_ACCURACY_LIMIT_M;
+        !!fix && accuracyExceeded(fix.accuracy, { demo: isDemoMode() });
 
     function locate(precise: boolean) {
         const ticket = ++generation.current;
@@ -122,8 +126,9 @@ export function AttendanceScreen({
                     timestamp: position.timestamp,
                 });
                 if (
-                    !isDemoMode() &&
-                    position.coords.accuracy > GPS_ACCURACY_LIMIT_M
+                    accuracyExceeded(position.coords.accuracy, {
+                        demo: isDemoMode(),
+                    })
                 )
                     setNotice("accuracy");
                 setWorking(false);
@@ -394,7 +399,7 @@ export function AttendanceScreen({
                         {lowAccuracy ? (
                             <Callout tone="warn" icon="warning">
                                 Akurasi saat ini ±{Math.round(fix!.accuracy)} m.
-                                Batas akurasi untuk absen adalah ±
+                                Batas untuk absen dan check-in adalah ±
                                 {GPS_ACCURACY_LIMIT_M} m.
                             </Callout>
                         ) : null}
@@ -443,56 +448,16 @@ export function AttendanceScreen({
                     onClose={() => setCamera(false)}
                 />
             ) : null}
-            {notice === "accuracy" && fix ? (
-                <BottomSheet
-                    title="Akurasi lokasi rendah"
-                    onClose={() => setNotice(undefined)}
-                >
-                    <Callout tone="warn" icon="warning">
-                        Akurasi saat ini ±{Math.round(fix.accuracy)} m. Batas
-                        akurasi untuk absen adalah ±{GPS_ACCURACY_LIMIT_M} m.
-                    </Callout>
-                    <p class="ui-sheet__text">
-                        Pindah ke tempat terbuka, jauhi bangunan tinggi, lalu
-                        coba lagi.
-                    </p>
-                    <Button
-                        icon="sync"
-                        onClick={() => {
-                            setNotice(undefined);
-                            locate(true);
-                        }}
-                    >
-                        Coba lagi
-                    </Button>
-                    <Button variant="sec" onClick={() => setNotice(undefined)}>
-                        Tutup
-                    </Button>
-                </BottomSheet>
-            ) : null}
-            {notice === "denied" ? (
-                <BottomSheet
-                    title="Akses lokasi ditolak"
-                    onClose={() => setNotice(undefined)}
-                >
-                    <p class="ui-sheet__text">
-                        Absen butuh lokasi. Buka pengaturan browser, izinkan
-                        lokasi untuk aplikasi ini, lalu coba lagi. Berlaku juga
-                        untuk kamera.
-                    </p>
-                    <Button
-                        onClick={() => {
-                            setNotice(undefined);
-                            locate(true);
-                        }}
-                    >
-                        Coba lagi
-                    </Button>
-                    <Button variant="sec" onClick={() => setNotice(undefined)}>
-                        Tutup
-                    </Button>
-                </BottomSheet>
-            ) : null}
+            <LocationNoticeSheet
+                notice={notice}
+                accuracy={fix?.accuracy}
+                action="Absen"
+                onRetry={() => {
+                    setNotice(undefined);
+                    locate(true);
+                }}
+                onClose={() => setNotice(undefined)}
+            />
             {rules ? (
                 <BottomSheet
                     title="Aturan geofence"
