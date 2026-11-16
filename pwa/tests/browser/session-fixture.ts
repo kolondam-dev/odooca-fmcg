@@ -4,6 +4,11 @@ import "fake-indexeddb/auto";
 (globalThis as Record<string, unknown>).__DEMO__ = true;
 const actors = new WeakMap<Page, string>();
 const legacyServers = new WeakSet<Page>();
+const strictPages = new WeakSet<Page>();
+/** Snapshot fixture tanpa demo_unrestricted (aturan lokasi outlet aktif). */
+export function useStrictOutlets(page: Page) {
+    strictPages.add(page);
+}
 /** Simulasikan server tanpa kapabilitas baru (`features` tidak dikirim) pada halaman ini. */
 export function useLegacyServer(page: Page) {
     legacyServers.add(page);
@@ -151,7 +156,7 @@ export const test = base.extend({
                 return route.fallback();
             const provider = new MockProvider(
                 actors.get(page) ?? "sales",
-                true,
+                !strictPages.has(page),
             );
             const snapshot = await provider.snapshot();
             const now = await evalRetry(page, () => new Date().toISOString());

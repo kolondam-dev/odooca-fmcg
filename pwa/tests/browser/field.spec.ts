@@ -109,11 +109,12 @@ test("stacked roles and persona switch never show another persona queue", async 
             .getByRole("navigation")
             .getByRole("button", { name: "Sales", exact: true }),
     ).toBeVisible();
+    // DS Beranda_canvasser: Canvasser juga punya tab Delivery.
     await expect(
         page
             .getByRole("navigation")
             .getByRole("button", { name: "Delivery", exact: true }),
-    ).toHaveCount(0);
+    ).toBeVisible();
 });
 test("offline order survives reload, syncs on reconnect, stays separate across accounts", async ({
     page,

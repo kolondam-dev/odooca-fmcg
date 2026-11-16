@@ -71,3 +71,26 @@ test("Beranda Canvasser: dua kartu Berikutnya, DO selesai x/y dan dua tombol aks
         page.getByRole("heading", { name: "Delivery order hari ini" }),
     ).toBeVisible();
 });
+
+test("Tab bawah mengikuti peran: Sales, Delivery dan Canvasser sesuai DS", async ({
+    page,
+}) => {
+    const tabs = async () =>
+        page
+            .getByRole("navigation", { name: "Navigasi utama" })
+            .getByRole("button")
+            .allInnerTexts();
+    await page.goto("./");
+    await ensureDaily(page);
+    expect(await tabs()).toEqual(["Beranda", "Sales", "HRIS", "Lainnya"]);
+    await switchPersona(page, "delivery");
+    expect(await tabs()).toEqual(["Beranda", "Delivery", "HRIS", "Lainnya"]);
+    await switchPersona(page, "canvass");
+    expect(await tabs()).toEqual([
+        "Beranda",
+        "Sales",
+        "Delivery",
+        "HRIS",
+        "Lainnya",
+    ]);
+});

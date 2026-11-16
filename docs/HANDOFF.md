@@ -3,6 +3,10 @@
 **Berubah:** [F] `AGENTS.md`, protokol agen, metode supervisor, panduan pemilihan CI, dan template PR sekarang mewajibkan bagian `Dampak test` berstatus `CUKUP`/`SESUAIKAN`/`TAMBAH`. Rekomendasi perubahan test harus mengikat risiko/invariant, level, counterexample, acceptance, bukti, serta path trigger/suite; gap impact map juga memerlukan counterexample planner.
 **Batas:** [F] Test baru tidak dipaksakan bila bukti existing memadai. Supervisor dilarang melemahkan oracle/minimum planner atau otomatis mengubah branch implementer hanya agar CI hijau; kontribusi supervisor pada implementasi material memerlukan review independen.
 **Diverifikasi:** [F] `python -m pytest tests/test_ci_impact.py -q` PASS (11 test), `python scripts/check_manifests.py` PASS (14 addon), `python -m ruff check .` PASS, dan `git diff --check` bersih. [BU] CI PR belum berjalan.
+## 2026-11-16T09:46:00+07:00 — claude-design — PWA 3B-12: bukti browser guard akurasi check-in
+
+- Menjawab P2 review PR #143: skenario browser dengan outlet aturan lokasi aktif (saklar QA `fmcg:qa-strict-outlets` + fixture `useStrictOutlets`). Fix valid → foto → 31 m saat "Mulai kunjungan" → lembar "Akurasi lokasi rendah", tanpa `sales.visit.check_in` di outbox.
+- Cabang disinkronkan dengan `main`; K26 diperbarui. Flag backend tetap OFF.
 
 ## 2026-11-15T23:52:35+07:00 — claude-dev — Perbaikan bootstrap seed gate PR #145
 **Konteks:** [F] Pada SHA `3c9ba1e`, semua planner, static, Odoo install/init, PWA, finance, full dataset, dan persisted upgrade lulus. `invariant-tests` gagal setelah 464 test existing lulus karena test planner baru mengimpor `yaml` yang belum dipasang pada environment unit seed; `seed-invariants` gagal sebagai konsekuensi wajib dari unit gate tersebut, sementara acceptance independen tetap PASS.
@@ -27,6 +31,12 @@
 **Diverifikasi:** [F] ORM pada snapshot production terisolasi merekonsiliasi Net Sales Juli tanpa filter dan dengan SKU 128, termasuk per kota. [BU] Playwright pada HEAD PR menunggu CI.
 
 **Signature:** Task Managed by Agent Codex-Dashboard
+## 2026-11-15T21:26:26+07:00 — Agent-Claude-Dev1 — Fase 3B-12: status lokasi Check-in toko + tab Delivery Canvasser
+**Berubah:** `pwa/src/components/LocationNotice.tsx` (baru), `domain/location-accuracy.ts` (baru), `VisitPanel.tsx`, `AttendanceScreen.tsx`, `domain/visits.ts` (`LocationDeniedError`), `App.tsx` (tab Delivery Canvasser), `tests/browser/status-sheets.spec.ts`, `beranda-roles.spec.ts`, `field.spec.ts`, `tests/location-accuracy.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K26), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser (izin ditolak check-in, tab per peran) dan unit akurasi lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] akurasi >30 m di browser untuk check-in toko (e2e memakai outlet demo_unrestricted).
+**Perhatian reviewer:** `field.spec.ts` sebelumnya menegaskan Canvasser tanpa tab Delivery; diubah mengikuti mockup Beranda_canvasser.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-15T21:26:26+07:00
 
 ## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
 **Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.
