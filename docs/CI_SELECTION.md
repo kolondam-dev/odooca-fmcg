@@ -96,6 +96,29 @@ Perubahan `.ci/test-impact.yml` harus disertai counterexample di
 `tests/test_ci_impact.py`. Path baru default full bukan alasan untuk membiarkan
 map tidak terawat; tambahkan aturan setelah dampaknya dipahami.
 
+### Review supervisor atas dampak test
+
+Setiap review dan re-review harus memilih `CUKUP`, `SESUAIKAN`, atau `TAMBAH`.
+Penilaian dimulai dari risiko/invariant delta, bukan dari keinginan menambah
+jumlah test:
+
+1. Petakan setiap risiko ke assertion/oracle existing dan bukti eksekusinya.
+2. Gunakan `CUKUP` bila counterexample relevan sudah ditolak pada level yang
+   representatif; catat test dan bukti tersebut.
+3. Gunakan `SESUAIKAN` bila test ada tetapi fixture, oracle, assertion, cakupan,
+   atau trigger belum menangkap counterexample.
+4. Gunakan `TAMBAH` bila tidak ada test existing pada level terendah yang tetap
+   mewakili kegagalan produksi.
+
+Rekomendasi `SESUAIKAN`/`TAMBAH` wajib menyertakan counterexample, acceptance
+yang dapat dieksekusi, bukti hasil, level test, serta path trigger dan suite.
+Periksa rencana aktual dengan `python scripts/ci/plan.py --base origin/main
+--head HEAD`. Bila rekomendasi menyentuh path yang tidak memilih suite yang
+dibutuhkan, perubahan `.ci/test-impact.yml` dan counterexample
+`tests/test_ci_impact.py` menjadi bagian acceptance. Jangan memindahkan test ke
+suite yang lebih lemah, mengurangi minimum planner, atau melemahkan oracle agar
+status berubah menjadi hijau.
+
 ## 6. Nightly dan release gate
 
 `Full Regression Gate` berjalan tiap hari pukul 01:00 WITA dan dapat dijalankan
