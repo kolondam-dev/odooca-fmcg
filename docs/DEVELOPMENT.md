@@ -21,6 +21,7 @@ Aturan koordinasi antar agen: `docs/AGENT_PROTOCOL.md`.
 7. Setiap sesi kerja menulis entri `HANDOFF.md`.
 8. **Verifikasi dengan menjalankan Odoo di sandbox sebelum menyerahkan patch.** "Modul ada di repo" tidak cukup: periksa `installable` dan instal sungguhan. Klaim yang belum dijalankan ditandai [BU].
 9. Penyerahan kerja dari sandbox = **patch zip** + perintah `unzip`, `git commit` (pesan deskriptif), `git push` (§4). Penulis commit = pemilik repo.
+10. Sebelum PR, jalankan impact planner: `python scripts/ci/plan.py --base origin/main --head HEAD`. Suite minimum, aturan fail-closed, label aditif, budget test, dan release gate dijelaskan di `docs/CI_SELECTION.md`.
 
 ## 3. Peta repo (ubah apa → jalankan apa)
 | Ubah | Jalankan |
@@ -53,12 +54,14 @@ EOF
 git push
 ```
 5. **Deploy:** Railway membangun dari `main`; `antigravity` juga bisa `railway up` dari lokal. **Perbaikan yang belum di-merge ke `main` tidak ikut build otomatis.** Pemilik menempelkan log build/deploy bila ada masalah. Hobby: tiap push menyalakan layanan; pasang hard usage limit.
+6. **Gate CI:** required context selalu muncul; suite yang tidak relevan menjadi no-op PASS dengan alasan. Untuk perubahan high-risk, jalankan `Full Regression Gate` pada exact SHA sebelum deploy. PASS tidak mengotorisasi merge/deploy.
 6. Perubahan agen lain sudah ada di repo: selalu mulai dari `whats_new.sh`, bukan dari salinan sandbox lama.
 
 ## 5. Uji statis lokal
 ```bash
 pip install ruff pyyaml
 ruff check . && python scripts/check_manifests.py
+python scripts/ci/plan.py --base origin/main --head HEAD
 bash -n deploy/init.sh deploy/addons_path.sh scripts/*.sh scripts/sandbox/*.sh scripts/agent/*.sh
 ```
 Diagnosis instance yang sedang berjalan (read-only, mis. Railway): `python3 scripts/ops/odoo_snapshot.py --url https://<host> --db <db> --user admin --out snapshot.md` (sandi diminta lewat prompt tersembunyi; tidak disimpan/dicetak). Memuat modul terinstal vs diharapkan, bahasa, menu, jumlah data, kelengkapan field outlet/produk, user, transaksi. Hanya baca; bisa dipakai di proyek lain (`--expect-modules`, `--extra-models`, `--menu-root`).
