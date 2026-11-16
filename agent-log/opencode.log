@@ -219,3 +219,10 @@
 - [F] Tujuan: menghilangkan status BEHIND; regresi P1 sudah terbukti sebelumnya.
 - [BU] Workflow pada commit merge belum berjalan.
 - Task managed by Agent-Opencode at 2026-11-16T10:57:02+07:00
+
+[2026-11-16T14:04:35+07:00] [INFO] Pasca-merge #140: production deploy 2fb6172 sehat, diagnostik demo tetap terbuka
+- [F] main 2fb6172 tree identik dengan 75e81e7; PR #140 merged.
+- [F] Production deploy bab86712 SUCCESS pada commit 2fb6172; registry loaded 1.084s, cron berjalan, 0 issue.
+- [F] Traceback log = WARNING terjemahan dari id_dashboard_monetary/id_dashboard_wms, bukan finance.
+- [BU] Diagnostik DB demo production dan UAT finance belum dijalankan; katalog 58/58 BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-16T14:04:35+07:00
