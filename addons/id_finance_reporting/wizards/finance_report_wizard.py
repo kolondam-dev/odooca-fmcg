@@ -22,15 +22,21 @@ import xlsxwriter
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
+# Labels stay plain at module level and inside the class body. Calling ``_()``
+# there runs before any language exists, so every boot logs "no translation
+# language detected" with a stack; ``_lt`` would avoid that but leaves lazy
+# objects inside ``fields.Selection``, which ``fields_get`` must serialise as
+# JSON. Plain labels are translated by Odoo's selection catalogue in the UI and
+# by ``env._`` where the wizard prints them.
 REPORT_TYPES = [
-    ("audit_trail", _("FIN04 - Journal Items Audit Trail")),
-    ("partner_ledger", _("FIN05/FIN06 - Partner Ledger AR/AP")),
-    ("open_items", _("FIN07 - Open Items AR/AP")),
-    ("aged_partner_balance", _("FIN08/FIN09 - Aged Partner Balance")),
-    ("combined_trial_balance", _("FIN51 - Combined Trial Balance")),
-    ("sales_purchase_register", _("FIN57 - Sales and Purchase Register")),
-    ("accrual_schedule", _("FIN37 - Accrual / Prepayment Schedules")),
-    ("fx_revaluation", _("FIN38 - FX Revaluation")),
+    ("audit_trail", "FIN04 - Journal Items Audit Trail"),
+    ("partner_ledger", "FIN05/FIN06 - Partner Ledger AR/AP"),
+    ("open_items", "FIN07 - Open Items AR/AP"),
+    ("aged_partner_balance", "FIN08/FIN09 - Aged Partner Balance"),
+    ("combined_trial_balance", "FIN51 - Combined Trial Balance"),
+    ("sales_purchase_register", "FIN57 - Sales and Purchase Register"),
+    ("accrual_schedule", "FIN37 - Accrual / Prepayment Schedules"),
+    ("fx_revaluation", "FIN38 - FX Revaluation"),
 ]
 
 RANGE_REPORTS = {
@@ -150,9 +156,9 @@ class FinanceReportWizard(models.TransientModel):
 
     partner_type = fields.Selection(
         [
-            ("customer", _("Customers")),
-            ("supplier", _("Suppliers")),
-            ("all", _("Customers and Suppliers")),
+            ("customer", "Customers"),
+            ("supplier", "Suppliers"),
+            ("all", "Customers and Suppliers"),
         ],
         default="customer",
     )
@@ -163,9 +169,9 @@ class FinanceReportWizard(models.TransientModel):
     only_posted_moves = fields.Boolean(default=True)
     register_type = fields.Selection(
         [
-            ("all", _("All documents")),
-            ("sale", _("Sales only")),
-            ("purchase", _("Purchases only")),
+            ("all", "All documents"),
+            ("sale", "Sales only"),
+            ("purchase", "Purchases only"),
         ],
         default="all",
     )
@@ -386,7 +392,9 @@ class FinanceReportWizard(models.TransientModel):
     # ---------------------------------------------------------------- payload
     @api.model
     def _label(self, report_type):
-        return dict(REPORT_TYPES).get(report_type, report_type)
+        # REPORT_TYPES labels are plain source strings; translate at render time
+        # so the summary follows the user's language.
+        return self.env._(dict(REPORT_TYPES).get(report_type, report_type))
 
     def _summary(self, snapshot):
         parts = [str(snapshot.get("report_id") or ""), self._label(self.report_type)]

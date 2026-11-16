@@ -138,3 +138,84 @@
 - [F] PR #133 12/12 hijau pada 545c264 dan MERGEABLE: init-test, install-test, candidate-install-upgrade, upgrade runtime + replay zero drift 19m4s, Kontrak Runner, invariant, seed, pwa-quality/container/browser/gate, static.
 - [BU] Deploy database demo, login admin demo, geometri browser, tie-out, PDF, sign-off, payroll, FIN36/55/56, I3 belum diuji. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy. PR #131 belum merge sehingga PR #133 belum boleh dideploy.
 - Task managed by Agent-Opencode at 2026-11-14T15:29:17+07:00
+
+[2026-11-15T11:51:27+07:00] [INFO] I2-3: bukti read-only aktivasi finance di production (deploy 50866b8, restart 16f686a)
+- [F] PR #131 merged 0e17039, PR #133 merged 50866b8; main 16f686a (termasuk #136).
+- [F] Production deploy 50866b8 SUCCESS: log 12:03:09Z activate_finance_reports_v1 memasang id_finance_reporting + id_finance_foundation; 12:03:20Z id_finance_foundation 126/126 loaded; 12:03:25Z demo_finance_reader_v1 memberi Finance Reader; 12:03:27Z admin memiliki grup Finance Reader.
+- [F] Deploy 16f686a SUCCESS tanpa baris aktivasi ulang (idempoten), registry loaded 12:50:51Z; /web/login HTTP 200 pada 2026-11-15; cron QRIS dan mail queue berjalan.
+- [F] docs/finance/I2_ACTIVATION.md diperbarui: status produksi + bukti read-only, sisa [BU] login admin, DB langsung, tie-out, sign-off.
+- [BU] Login admin demo di production lalu buka Finance Reports, jalankan laporan, unduh XLSX belum dilakukan; versi modul di DB belum dibaca langsung. Katalog 58/58 BELUM_DITERIMA; tanpa merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
+
+[2026-11-15T12:04:30+07:00] [INFO] I3 kesiapan: label tanpa _(), diagnostik HPP read-only, checklist verifikasi production (1 PR)
+- [F] PR #139 ditutup; bukti aktivasi production dipindahkan ke PR gabungan ini.
+- [F] Label finance tidak lagi memakai _() saat import: string sumber + env._ di _label; modul 19.0.1.5.2.
+- [F] CI: init-test menolak 'no translation language detected' untuk id_finance_reporting; langkah diagnostik I3 read-only; static menjalankan --self-test.
+- [F] scripts/ops/verify_finance_i3_costing.py: metode costing/valuasi per kategori, layer negatif/nilai nol, produk biaya nol; hanya membaca.
+- [F] docs/finance/I3_COSTING.md dan PRODUCTION_FINANCE_UAT.md ditambahkan; README finance diperbarui.
+- [F] Lokal PASS: ruff, manifests 14 addon, compileall, PO 117 entri, selftest I3, YAML.
+- [BU] CI HEAD PR dan eksekusi diagnostik/UAT di production belum ada. Katalog 58/58 BELUM_DITERIMA; tanpa merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-15T12:04:30+07:00
+
+[2026-11-15T12:55:34+07:00] [INFO] PR #140 hijau setelah merge #138; diagnostik I3 membaca model valuasi Odoo 19
+- [F] PR #138 (jam uji deterministik id_mobile_api) sudah di main fdb2fc0; branch PR #140 di-merge, merge commit e0b5602.
+- [F] install-test merah 2026-11-15 bukan karena finance: 11 ERROR id_mobile_api; branch dokumentasi-saja gagal identik hari itu (43678645109); PR #138 hijau hari itu (43679269662).
+- [F] CI e0b5602 run 43681641152: static, init-test, install-test success.
+- [F] CI dc13ee7 run 43682494007: static, init-test, install-test success; FINANCE_I3_COSTING_RUN=PASS.
+- [F] Odoo 19 tidak punya stock.valuation.layer; skrip membaca stock.move.value/remaining_qty/remaining_value, dengan perbaikan bool(recordset) dan normalisasi total kosong ke 0.
+- [F] Diagnostik DB disposable: 46/46 kategori standard+periodic, valuation source stock.move (Odoo 19), done_valued_moves 0, value_total 0, zero_cost_products 0.
+- [F] docs/finance/I3_COSTING.md dan body PR #140 diperbarui dengan hasil CI serta batas bukti.
+- [BU] Upgrade Runtime Verification dc13ee7 masih berjalan saat entri ditulis; diagnostik DB demo dan checklist UAT belum dijalankan. Katalog 58/58 BELUM_DITERIMA; tanpa merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-15T12:55:34+07:00
+
+[2026-11-15T13:23:35+07:00] [INFO] PR #140: lima workflow hijau pada fbab3a4 (integrasi main + diagnostik I3)
+- [F] Workflow fbab3a4: CI 43683214923 (static, init-test, install-test success), Upgrade Runtime 43683214964 success termasuk replay zero-drift, Seed supervision success, PWA quality success, Finance I0 candidate spike success.
+- [F] init-test dc13ee7: FINANCE_I3_COSTING_RUN=PASS; valuation source stock.move (Odoo 19); 46/46 kategori standard+periodic; done_valued_moves 0 pada DB disposable.
+- [F] install-test merah sebelumnya terbukti berasal dari jam uji id_mobile_api dan sudah diperbaiki di main fdb2fc0 (PR #138); branch ini hanya di-merge.
+- [BU] Diagnostik DB demo production dan checklist PRODUCTION_FINANCE_UAT.md belum dijalankan; tanpa merge/deploy. Katalog 58/58 BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-15T13:23:35+07:00
+
+[2026-11-15T22:27:27+07:00] [INFO] P1 fix: scope diagnostik HPP dan regresi dua perusahaan
+- [F] P1 ditutup dengan company scope pada semua pembacaan costing/valuasi dan regresi native dua perusahaan.
+- [F] Lokal self-test, ruff, compileall PASS.
+- [BU] CI setelah perbaikan dan regresi native belum selesai; tanpa merge/deploy.
+- Task managed by Agent-Opencode at 2026-11-15T22:27:27+07:00
+
+[2026-11-16T09:12:04+07:00] [INFO] Sinkronisasi main 4cb81ce dan CI selektif pada PR #140
+- [F] Main 4cb81ce (CI berbasis dampak) di-merge; konflik HANDOFF dan ci.yml diselesaikan tanpa membuang langkah I3 atau entri agen lain.
+- [F] YAML valid, diff check bersih, self-test dan ruff PASS.
+- [BU] CI ulang pada commit merge belum berjalan; perubahan workflow memicu full regression.
+- Task managed by Agent-Opencode at 2026-11-16T09:12:04+07:00
+
+[2026-11-16T09:39:40+07:00] [INFO] P1 regresi lingkup perusahaan: dua fixture sebelum baca, sisa nonnol, kontrol negatif
+- [F] Regresi diperketat: kedua fixture sebelum baca, collect() dipanggil dari konteks dua perusahaan, sisa stok 2/100 dan 4/28, kontrol negatif campuran 2/350.
+- [F] Satu sesi shell menghasilkan FINANCE_I3_COSTING_RUN=PASS dan FINANCE_I3_COMPANY_SCOPE=PASS; init-test memakai satu langkah.
+- [F] Lokal self-test, ruff, manifest, YAML, compileall PASS.
+- [BU] Perilaku native sisa stok dan kontrol negatif menunggu CI.
+- Task managed by Agent-Opencode at 2026-11-16T09:39:40+07:00
+
+[2026-11-16T10:08:33+07:00] [INFO] Regresi I3: warehouse native per perusahaan dan diagnostik pembacaan sisa
+- [F] CI 8da9894: value_total dan metode sudah terpisah, tetapi remaining_moves A masih 0.
+- [F] Fixture memakai warehouse native per perusahaan; keluaran menambah diagnostics env_companies/lokasi tervaluasi/qty_available/quant.
+- [F] Lokal self-test dan ruff PASS.
+- [BU] CI native berikutnya menentukan apakah sisa 2/100 dan 4/28 terbukti.
+- Task managed by Agent-Opencode at 2026-11-16T10:08:33+07:00
+
+[2026-11-16T10:11:54+07:00] [INFO] Sinkronisasi main 6306df8 dan kontrak dampak test pada PR #140
+- [F] a30e613 tidak memicu workflow; main 6306df8 di-merge dan konflik HANDOFF diselesaikan dengan kedua sisi.
+- [F] Tidak ada penanda konflik; self-test dan ruff PASS.
+- [BU] Workflow commit merge dan hasil regresi native belum berjalan.
+- Task managed by Agent-Opencode at 2026-11-16T10:11:54+07:00
+
+[2026-11-16T10:33:27+07:00] [INFO] Regresi dua perusahaan I3 terbukti native pada 6813020
+- [F] init-test 43796734869: A 100/sisa 2/100 fifo; B 250/sisa 4/28 average; kontrol negatif 2/350.
+- [F] 23/23 check lulus pada 6813020, termasuk finance-gate, upgrade-gate, full-dataset-gate.
+- [F] I3_COSTING.md mencatat angka aktual dan kontrol negatif; body PR diperbarui.
+- [BU] Diagnostik demo production dan UAT finance masih terbuka.
+- Task managed by Agent-Opencode at 2026-11-16T10:33:27+07:00
+
+[2026-11-16T10:57:02+07:00] [INFO] Sinkronisasi main 14caec6 pada PR #140
+- [F] main 14caec6 di-merge tanpa konflik; kode finance tidak berubah sejak 6813020.
+- [F] Tujuan: menghilangkan status BEHIND; regresi P1 sudah terbukti sebelumnya.
+- [BU] Workflow pada commit merge belum berjalan.
+- Task managed by Agent-Opencode at 2026-11-16T10:57:02+07:00

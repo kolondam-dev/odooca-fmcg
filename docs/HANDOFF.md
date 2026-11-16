@@ -42,6 +42,34 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-16T11:20:00+07:00
 
+## 2026-11-16T10:57:02+07:00 — Agent-Opencode — Sinkronisasi main 14caec6 pada PR #140
+**Konteks:** [F] `main` maju ke `14caec6` (PR #143, guard akurasi check-in PWA) dan PR berstatus `BEHIND` meski mergeable. Regresi P1 I3 sudah terbukti pada `6813020`/`09964da`.
+**Berubah:** [F] Merge `origin/main` tanpa konflik; tidak ada perubahan pada skrip diagnosa atau regresi I3.
+**Diverifikasi:** [F] Tidak ada konflik, `git diff --check` bersih; kode finance tidak berubah sejak `6813020`.
+**Belum diuji:** [BU] Workflow pada commit merge ini belum berjalan. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T10:57:02+07:00
+
+## 2026-11-16T10:33:27+07:00 — Agent-Opencode — Regresi dua perusahaan I3 terbukti native pada 6813020
+**Konteks:** [F] Setelah fixture memakai warehouse native per perusahaan, CI `6813020` membuktikan sisa stok native nonnol dan terpisah, menutup HOLD P1 pemilik.
+**Diverifikasi:** [F] `init-test` run `43796734869`: A (`company_id=2`) `env_companies=[2]`, `qty_available=2`, 1 pergerakan, `value_total=100`, `remaining_qty_total=2`, `remaining_value_total=100`, `fifo`; B (`company_id=3`) `env_companies=[3]`, `qty_available=4`, 1 pergerakan, `value_total=250`, `remaining_qty_total=4`, `remaining_value_total=28`, `average`. [F] `unscoped_control` = 2 pergerakan / 350, sehingga regresi gagal bila isolasi dihapus. [F] `FINANCE_I3_COSTING_RUN=PASS` dan `FINANCE_I3_COMPANY_SCOPE=PASS` dari satu sesi shell. [F] Seluruh 23 check PR #140 lulus pada `6813020`, termasuk `finance-gate`, `upgrade-gate`, dan `full-dataset-gate`.
+**Berubah:** [F] `docs/finance/I3_COSTING.md` mencatat angka aktual dan kontrol negatif; body PR diperbarui dengan bukti dan catatan CI berlebih.
+**Belum diuji:** [BU] Diagnostik pada database demo production dan checklist `PRODUCTION_FINANCE_UAT.md` masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T10:33:27+07:00
+
+## 2026-11-16T10:11:54+07:00 — Agent-Opencode — Sinkronisasi main 6306df8 dan kontrak dampak test pada PR #140
+**Konteks:** [F] Push `a30e613` tidak memicu workflow dan `main` sudah maju ke `6306df8` (PR #146, kontrak dampak test), sehingga PR kembali konflik.
+**Berubah:** [F] Merge `origin/main`; `docs/HANDOFF.md` diselesaikan dengan mempertahankan kedua sisi dan menempatkan entri codex 09:34 sesuai urutan terbaru. Tidak ada konflik pada `ci.yml` atau skrip.
+**Diverifikasi:** [F] Tidak ada penanda konflik; entri HANDOFF terurut; self-test dan ruff PASS.
+**Belum diuji:** [BU] Workflow pada commit merge ini belum berjalan; regresi native sisa stok masih menunggu hasil. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T10:11:54+07:00
+
+## 2026-11-16T10:08:33+07:00 — Agent-Opencode — Regresi I3: warehouse native per perusahaan dan diagnostik pembacaan sisa
+**Konteks:** [F] CI `8da9894` masih mencatat `remaining_moves: 0` untuk A meskipun kedua fixture sudah dibuat lebih dulu dan user diberi akses perusahaan. Nilai `value_total` (100 vs 250) dan metode kategori (fifo vs average) sudah terpisah benar.
+**Berubah:** [F] Fixture kini membuat warehouse native per perusahaan (`stock.warehouse`) dan memakai `lot_stock_id` sebagai tujuan, karena `qty_available` jatuh ke view location warehouse bila tidak ada lokasi valuasi. [F] Keluaran regresi menambahkan `diagnostics` per perusahaan: `env_companies`, jumlah lokasi tervaluasi, status `is_valued_internal` lokasi tujuan, `qty_available`, dan jumlah quant — agar penyebab sisa nol terlihat di log CI.
+**Diverifikasi:** [F] Lokal self-test dan ruff PASS; YAML tidak berubah pada commit ini.
+**Belum diuji:** [BU] CI native setelah warehouse dan diagnostik; regresi belum boleh dianggap lulus. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T10:08:33+07:00
+
 ## 2026-11-16T09:48:00+07:00 — antigravity — CI: Penyesuaian Timeout install-test Menjadi 75 Menit untuk Akomodasi Proof Dua Database Disposable (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43790290995 membuktikan bahwa perbaikan relasi faktur `c17a5bf` berhasil 100% (tidak ada error `id_base` kuantitas pengiriman maupun traceback Odoo).
@@ -64,6 +92,13 @@
 
 - Menjawab P2 review PR #143: skenario browser dengan outlet aturan lokasi aktif (saklar QA `fmcg:qa-strict-outlets` + fixture `useStrictOutlets`). Fix valid → foto → 31 m saat "Mulai kunjungan" → lembar "Akurasi lokasi rendah", tanpa `sales.visit.check_in` di outbox.
 - Cabang disinkronkan dengan `main`; K26 diperbarui. Flag backend tetap OFF.
+
+## 2026-11-16T09:39:40+07:00 — Agent-Opencode — P1 regresi lingkup perusahaan: dua fixture sebelum baca, sisa nonnol, kontrol negatif
+**Konteks:** [F] Review pemilik menahan `a12fbbc`: regresi lama membaca A sebelum pergerakan B dibuat, memanggil `collect()` dari konteks yang sudah dibatasi tes, dan mengharapkan sisa stok nol untuk keduanya, sehingga tidak membuktikan isolasi pada jalur produksi.
+**Berubah:** [F] Fixture kini membuat **kedua** perusahaan dan pergerakan lebih dulu: A kuantitas 2 bernilai 100, B kuantitas 4 bernilai 250, masing-masing dengan quant internal dan `company_ids` user ditambah agar `env.companies` native melihat lokasinya. [F] `collect()` dipanggil dari konteks yang memuat kedua perusahaan; penyempitan dilakukan oleh `collect()` sendiri. Ekspektasi: A 1 pergerakan/100/sisa 2/100 (`fifo`), B 1 pergerakan/250/sisa 4/28 (`average`). [F] Kontrol negatif menjalankan agregat yang sama tanpa domain perusahaan dan menuntut hasil campuran 2/350, sehingga hilangnya isolasi menggagalkan regresi. [F] Diagnostik read-only dan regresi kini berbagi satu sesi shell dengan dua penanda; `init-test` memakai satu langkah.
+**Diverifikasi:** [F] Lokal: `--self-test`, ruff, 14 manifest, YAML, compileall PASS.
+**Belum diuji:** [BU] Perilaku native `remaining_qty`/`remaining_value` pada dua perusahaan (2/100 dan 4/28) dan kontrol 350 baru terbukti setelah CI. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T09:39:40+07:00
 
 ## 2026-11-16T09:34:18+07:00 — codex — Kontrak dampak test wajib pada setiap review supervisor
 **Konteks:** [F] Review supervisor sebelumnya belum diwajibkan menyatakan secara eksplisit apakah test existing cukup, perlu disesuaikan, atau perlu ditambah.
@@ -89,6 +124,12 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-16T09:05:00+07:00
 
+## 2026-11-16T09:12:04+07:00 — Agent-Opencode — Sinkronisasi main 4cb81ce dan CI selektif pada PR #140
+**Konteks:** [F] Seluruh 12 check lulus pada `c084424` (termasuk `init-test` dengan `FINANCE_I3_COMPANY_SCOPE=PASS` dan `Module Upgrade from Persisted Baseline + Replay Zero Drift`). Setelah itu `main` maju ke `4cb81ce` (PR #145, CI berbasis dampak) sehingga PR kembali konflik.
+**Berubah:** [F] Merge `origin/main` ke cabang; konflik `docs/HANDOFF.md` diselesaikan dengan mempertahankan kedua sisi (entri claude-dev 23:52/23:13 dan entri Opencode 22:27 dst.). Konflik `.github/workflows/ci.yml` diselesaikan dengan mempertahankan langkah `Diagnostik costing I3 (self-test)` sekaligus menambahkan kontrak pemilihan suite CI dan kontrak occurrence terjemahan. Langkah `Regresi lingkup perusahaan diagnostik I3` di `init-test` tetap utuh.
+**Diverifikasi:** [F] YAML `ci.yml` valid; `git diff --check` bersih; tidak ada penanda konflik tersisa; `FINANCE_I3_COSTING_SELFTEST=PASS`; ruff PASS.
+**Belum diuji:** [BU] CI ulang pada commit merge belum dijalankan; perubahan `.github/workflows/**` memicu `always_full` sesuai `.ci/test-impact.yml`. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T09:12:04+07:00
 ## 2026-11-15T23:52:35+07:00 — claude-dev — Perbaikan bootstrap seed gate PR #145
 **Konteks:** [F] Pada SHA `3c9ba1e`, semua planner, static, Odoo install/init, PWA, finance, full dataset, dan persisted upgrade lulus. `invariant-tests` gagal setelah 464 test existing lulus karena test planner baru mengimpor `yaml` yang belum dipasang pada environment unit seed; `seed-invariants` gagal sebagai konsekuensi wajib dari unit gate tersebut, sementara acceptance independen tetap PASS.
 **Berubah:** `.github/workflows/seed-invariants.yml` memasang `pyyaml` bersama dependency invariant existing, tanpa mengecualikan test atau melemahkan gate. Ekspor cache BuildKit pada CI/finance/upgrade/full-dataset memakai `ignore-error=true` agar kegagalan menulis cache pada fork/read-only token tidak mengubah verdict test.
@@ -139,6 +180,161 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-15T22:50:00+07:00
 
+## 2026-11-15T22:27:27+07:00 — Agent-Opencode — P1 fix: scope diagnostik HPP dan regresi dua perusahaan
+**Konteks:** [F] Review pemilik menahan PR #140 pada HEAD `7fc3853`: `collect(env)` dapat mencampur nilai antarperusahaan. Main bergerak hingga `a03b944`; branch disinkronkan lewat merge `3eeac2a` dan `a0e7901`, dengan riwayat HANDOFF kedua sisi dipertahankan.
+**Berubah:** [F] `collect(env, company=None)` memakai `allowed_company_ids=[company.id]`; seluruh kategori/properti company-dependent, hitungan per kategori, stock.move, fallback stock.valuation.layer, sisa stok, standard_price, dan agregat dibaca dalam konteks/domain perusahaan tunggal. [F] Regresi native opt-in membuat dua perusahaan, satu kategori bersama, metode fifo/average, produk standard_price 0/7, dan pergerakan bernilai 100/250; hasil A/B diuji terpisah lalu fixture di-rollback. Job init-test menjalankan regresi melalui `FINANCE_I3_COMPANY_SCOPE_DB=fmcg`.
+**Diverifikasi:** [F] Lokal self-test, ruff, compileall PASS. [F] CI sebelum P1 fix tetap 5/5 workflow dan 12/12 job lulus pada `7fc3853`; CI pertama setelah merge main `a0e7901` menemukan hanya `AttributeError: Environment.with_company` pada regresi baru; diperbaiki dengan `env(context=...)`.
+**Belum diuji:** [BU] CI native dua perusahaan setelah perbaikan belum selesai; hasil diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T22:27:27+07:00
+
+## 2026-11-15T21:10:00+07:00 — antigravity — F4: Eliminasi Premature Balance Validation via check_move_validity=False pada Sinkronisasi Pajak & Piutang Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, membungkus seluruh mutasi intermediate move lines (pembuatan/pembaruan kredit PPN Keluaran 211200 dan pembaruan debit piutang 112000) dengan konteks `check_move_validity=False` (`target_inv = inv_rec.with_context(check_move_validity=False)` dan `target_aml = aml_model.with_context(check_move_validity=False)`).
+  - Mengubah urutan operasi agar baris kredit PPN Keluaran dibuat terlebih dahulu sebelum baris piutang diperbarui, mencegah `AccountMoveLine.write()` memicu context manager `_check_balanced()` secara prematur saat move masih dalam kondisi transisi sebelum kedua baris lengkap.
+  - Memanggil `invalidate_recordset(fnames=['line_ids'])` pada recordset move agar ORM membaca baris jurnal baru secara konsisten sebelum `action_post()`.
+  - Menghilangkan exception `UserError: The entry is not balanced` pada runtime Odoo 19 native di CI Step 10, sehingga posting faktur komersial Agustus (1.240 invoice) berjalan seimbang dan mulus dengan total Rp 394.804,80 (DPP komersial Rp 355.680,00, DPP Nilai Lain Rp 326.040,00, PPN 12% Rp 39.124,80).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T21:10:00+07:00
+
+## 2026-11-15T19:25:00+07:00 — antigravity — F4: Presisi Baris Jurnal Pajak Kode 04 & Keseimbangan Piutang Faktur Komersial Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, memvalidasi apakah baris dinamis pajak pada akun 211200 / `display_type='tax'` telah terbentuk pada `inv_rec.line_ids`.
+  - Jika belum terbentuk oleh Odoo 19 ORM pasca-create: secara defensif dan seimbang memperbarui debit dan balance baris piutang (112000 / `payment_term`) ke nilai total faktur dengan PPN (`exp_total` = Rp 394.804,80), serta menambahkan baris kredit PPN Keluaran 211200 (`credit = exp_ppn` = Rp 39.124,80, `tax_base_amount = exp_tb` = Rp 326.040,00 DPP Nilai Lain 11/12) yang terikat langsung ke `canonical_tax_04`.
+  - Memastikan keseimbangan eksak `sum(debit) == sum(credit)` (`sum(balance) == 0.00`) terpenuhi sebelum memanggil `action_post()`, mengeliminasi drift INV-202608-0001 (`expected 394804.80, found 355680.00`) sekaligus mencegah `UserError: The entry is not balanced`.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 57/57 tests PASS.
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-16T19:25:00+07:00
+
+## 2026-11-15T13:23:35+07:00 — Agent-Opencode — PR #140: lima workflow hijau pada fbab3a4 (integrasi main + diagnostik I3)
+**Konteks:** [F] Lanjutan entri 12:55:34. `Upgrade Runtime Verification` pada commit `dc13ee7` sebelumnya terhenti karena commit baru; commit `fbab3a4` (log + HANDOFF) menjalankan ulang seluruh workflow pada satu commit yang sama.
+**Berubah:** hanya `agent-log/opencode.log` dan `docs/HANDOFF.md`; tidak ada perubahan kode sejak `dc13ee7`.
+**Diverifikasi:** [F] Semua workflow pada `fbab3a4` success: `CI` (run `43683214923`: `static`, `init-test`, `install-test`), `Upgrade Runtime Verification` (run `43683214964`, termasuk `Module Upgrade from Persisted Baseline + Replay Zero Drift`), `Seed supervision` (`43683214986`), `PWA quality` (`43683214933`), `Finance I0 candidate spike` (`43683214983`). [F] `init-test` pada `dc13ee7` menampilkan `FINANCE_I3_COSTING_RUN=PASS` dan `valuation.source` = `stock.move (Odoo 19)`.
+**Belum diuji:** [BU] Diagnostik pada database demo production dan checklist `PRODUCTION_FINANCE_UAT.md` belum dijalankan; PR belum di-merge/deploy. [F] Katalog 58/58 `BELUM_DITERIMA`.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T13:23:35+07:00
+
+## 2026-11-15T12:55:34+07:00 — Agent-Opencode — PR #140 hijau setelah merge #138; diagnostik I3 membaca model valuasi Odoo 19
+**Konteks:** [F] `install-test` PR #140 gagal pada 2026-11-15 karena jam uji `id_mobile_api` (hari Minggu WITA), bukan karena perubahan finance. PR #138 (jam uji deterministik) sudah masuk `main` di `fdb2fc0`, lalu `main` di-merge ke branch ini.
+**Berubah:** merge commit `e0b5602` (memuat `fdb2fc0`); `scripts/ops/verify_finance_i3_costing.py` membaca valuasi Odoo 19 dari `stock.move.value`/`remaining_qty`/`remaining_value` (model `stock.valuation.layer` tidak ada di 19), memperbaiki penjaga `bool(recordset)` yang selalu False, dan menormalkan total kosong ke `0`; `docs/finance/I3_COSTING.md` mencatat hasil CI dan model valuasi 19.
+**Diverifikasi:** [F] Run `43681641152` pada `e0b5602`: `static`, `init-test`, `install-test` semua success. [F] Run `43682494007` pada `dc13ee7`: ketiganya success; `FINANCE_I3_COSTING_RUN=PASS`. [F] Diagnostik DB disposable: 46 kategori seluruhnya `standard` + `periodic`, `stock_account_installed: true`, `valuation.source: "stock.move (Odoo 19)"`, `done_valued_moves: 0`, `value_total: 0`, `zero_cost_products: 0`. [F] Triage kegagalan lama: 11 ERROR semuanya `id_mobile_api`; branch dokumentasi-saja `Opencode-finance-i2-3-production-evidence` gagal identik pada hari yang sama (run `43678645109`); PR #138 hijau pada hari yang sama (run `43679269662`).
+**Belum diuji:** [BU] `Upgrade Runtime Verification` pada `dc13ee7` masih berjalan saat entri ini ditulis. Diagnostik pada database demo production dan checklist `PRODUCTION_FINANCE_UAT.md` belum dijalankan. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T12:55:34+07:00
+
+## 2026-11-15T12:04:30+07:00 — Agent-Opencode — I3 kesiapan: label tanpa _(), diagnostik HPP read-only, checklist verifikasi production (1 PR)
+**Konteks:** [F] PR #139 ditutup atas permintaan pemilik; isinya dipindahkan ke PR ini. Tiga langkah dikerjakan berurutan: peringatan terjemahan (kode), diagnostik HPP (alat), checklist verifikasi production (dokumen).
+**Berubah:** `addons/id_finance_reporting/wizards/finance_report_wizard.py` (label `REPORT_TYPES`, `partner_type`, `register_type` menjadi string sumber; `_label` memakai `self.env._`), `__manifest__.py` `19.0.1.5.2`; `.github/workflows/ci.yml` (job `init-test` menolak `no translation language detected` untuk modul finance; langkah `Diagnostik costing I3 read-only`; job `static` menjalankan `--self-test`); `scripts/ops/verify_finance_i3_costing.py` baru (read-only); `docs/finance/I3_COSTING.md`, `docs/finance/PRODUCTION_FINANCE_UAT.md` baru; `docs/finance/README.md` (status aktivasi + indeks), `docs/finance/I2_XLSX_EXPORT.md` (versi).
+**Diverifikasi:** [F] Lokal: `ruff check .` PASS, `check_manifests.py` PASS (14 addon), `compileall` PASS, PO 117 entri OK, `FINANCE_I3_COSTING_SELFTEST=PASS`, YAML `ci.yml` valid. [F] `docs/finance/I2_ACTIVATION.md` (dari #139) memuat bukti production: aktivasi 12:03Z pada `50866b8`, restart `16f686a` tanpa pengulangan, `/web/login` 200.
+**Belum diuji:** [BU] CI pada HEAD PR baru: init-test harus membuktikan log boot finance bersih dan `FINANCE_I3_COSTING_RUN=PASS`; diagnostik pada database demo production (angkanya) belum dijalankan; checklist UAT belum dijalankan pemilik. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T12:04:30+07:00
+
+## 2026-11-15T11:51:27+07:00 — Agent-Opencode — I2-3: bukti read-only aktivasi finance di production (deploy 50866b8, restart 16f686a)
+**Konteks:** [F] Pemilik merge PR #131 (`0e17039`) dan #133 (`50866b8`); `main` kini `16f686a`. Status rollout production belum diperiksa.
+**Berubah:** `docs/finance/I2_ACTIVATION.md` — status dari "staged, belum dieksekusi" menjadi "diekskusi di production" dengan bagian bukti read-only; "Yang belum dibuktikan" dipersempit ke login admin/DB langsung. Tidak ada perubahan kode, konfigurasi, atau data.
+**Diverifikasi:** [F] Railway project `pleasant-caring` / production / service `odooca-fmcg`: deploy `50866b8` `SUCCESS`; log `2026-11-14T12:03:09Z` `activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation`, `12:03:25Z` `demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo`, `12:03:27Z` `admin memiliki grup Finance Reader`; `Loading module id_finance_foundation (126/126)` `12:03:20Z`. [F] Deploy `16f686a` `SUCCESS` tanpa baris aktivasi ulang (mark bekerja); registry loaded `12:50:51Z`. [F] `/web/login` HTTP 200 pada 2026-11-15; cron rutin berjalan. [A] Versi terpasang `19.0.1.5.1` mengikuti manifest image `50866b8`; `latest_version` DB belum dibaca langsung.
+**Belum diuji:** [BU] Login admin demo → Finance Reports → jalankan laporan → unduh XLSX di production; pemeriksaan DB langsung; tie-out; sign-off. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada deploy/merge dari asisten.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
+
+## 2026-11-16T09:34:18+07:00 — codex — Kontrak dampak test wajib pada setiap review supervisor
+**Konteks:** [F] Review supervisor sebelumnya belum diwajibkan menyatakan secara eksplisit apakah test existing cukup, perlu disesuaikan, atau perlu ditambah.
+**Berubah:** [F] `AGENTS.md`, protokol agen, metode supervisor, panduan pemilihan CI, dan template PR sekarang mewajibkan bagian `Dampak test` berstatus `CUKUP`/`SESUAIKAN`/`TAMBAH`. Rekomendasi perubahan test harus mengikat risiko/invariant, level, counterexample, acceptance, bukti, serta path trigger/suite; gap impact map juga memerlukan counterexample planner.
+**Batas:** [F] Test baru tidak dipaksakan bila bukti existing memadai. Supervisor dilarang melemahkan oracle/minimum planner atau otomatis mengubah branch implementer hanya agar CI hijau; kontribusi supervisor pada implementasi material memerlukan review independen.
+**Diverifikasi:** [F] `python -m pytest tests/test_ci_impact.py -q` PASS (11 test), `python scripts/check_manifests.py` PASS (14 addon), `python -m ruff check .` PASS, dan `git diff --check` bersih. [BU] CI PR belum berjalan.
+
+## 2026-11-16T09:05:00+07:00 — antigravity — F4: Resolusi Presisi Relasi SOL Faktur terhadap Split-Lot Rejection & Guard Pengiriman id_base (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, memindahkan resolusi `matched_sol` dan pencatatan ke dalam `used_sol_ids` agar dilakukan SEBELUM melewati baris rejeksi penuh (`if net_cartons <= 0.0: continue`). Dengan demikian, SOL yang barangnya ditolak saat pengiriman (seperti `sol_1` pada `SO-202608-0083` sebanyak 312 unit) tetap ditandai telah terpakai dan tidak terserap secara keliru oleh baris faktur non-rejeksi berikutnya.
+  - Mengimplementasikan algoritma pencocokan 2-pass: Pass 1 memprioritaskan pencocokan kuantitas asli eksak (`abs(sol.product_uom_qty - line_units) < 0.001`), dan Pass 2 melakukan fallback jika kuantitas tidak eksak.
+  - Mengeliminasi kegagalan `odoo.exceptions.UserError: [id_base] Total kuantitas pengiriman (312.0 - retur 0 = 312.0) tidak cocok dengan kuantitas baris faktur 'Benn-Beng Share It Pouch 100g' (72.0)!` pada CI Step 10, sehingga relasi persisten antara baris faktur dan pergerakan outbound stock move valid 100%.
+- `tests/test_period_pack_loader.py`:
+  - Memperketat tes regresi `test_split_lot_rejection_invoice_balance_and_contract` dengan asersi eksak `bbg_line.sale_line_ids == [(6, 0, [602])]` (menolak tautan ke SOL 601 yang memiliki 312 unit). Tes terbukti gagal pada kode lama dan lulus pada kode baru.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 tests PASS (0 fail, 0 error).
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py tests/test_canonical_loader_adapter.py`: 145/145 tests PASS (0 fail, 0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-16T09:05:00+07:00
+
+## 2026-11-16T09:12:04+07:00 — Agent-Opencode — Sinkronisasi main 4cb81ce dan CI selektif pada PR #140
+**Konteks:** [F] Seluruh 12 check lulus pada `c084424` (termasuk `init-test` dengan `FINANCE_I3_COMPANY_SCOPE=PASS` dan `Module Upgrade from Persisted Baseline + Replay Zero Drift`). Setelah itu `main` maju ke `4cb81ce` (PR #145, CI berbasis dampak) sehingga PR kembali konflik.
+**Berubah:** [F] Merge `origin/main` ke cabang; konflik `docs/HANDOFF.md` diselesaikan dengan mempertahankan kedua sisi (entri claude-dev 23:52/23:13 dan entri Opencode 22:27 dst.). Konflik `.github/workflows/ci.yml` diselesaikan dengan mempertahankan langkah `Diagnostik costing I3 (self-test)` sekaligus menambahkan kontrak pemilihan suite CI dan kontrak occurrence terjemahan. Langkah `Regresi lingkup perusahaan diagnostik I3` di `init-test` tetap utuh.
+**Diverifikasi:** [F] YAML `ci.yml` valid; `git diff --check` bersih; tidak ada penanda konflik tersisa; `FINANCE_I3_COSTING_SELFTEST=PASS`; ruff PASS.
+**Belum diuji:** [BU] CI ulang pada commit merge belum dijalankan; perubahan `.github/workflows/**` memicu `always_full` sesuai `.ci/test-impact.yml`. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T09:12:04+07:00
+## 2026-11-15T23:52:35+07:00 — claude-dev — Perbaikan bootstrap seed gate PR #145
+**Konteks:** [F] Pada SHA `3c9ba1e`, semua planner, static, Odoo install/init, PWA, finance, full dataset, dan persisted upgrade lulus. `invariant-tests` gagal setelah 464 test existing lulus karena test planner baru mengimpor `yaml` yang belum dipasang pada environment unit seed; `seed-invariants` gagal sebagai konsekuensi wajib dari unit gate tersebut, sementara acceptance independen tetap PASS.
+**Berubah:** `.github/workflows/seed-invariants.yml` memasang `pyyaml` bersama dependency invariant existing, tanpa mengecualikan test atau melemahkan gate. Ekspor cache BuildKit pada CI/finance/upgrade/full-dataset memakai `ignore-error=true` agar kegagalan menulis cache pada fork/read-only token tidak mengubah verdict test.
+**Diverifikasi:** [F] 14 test planner/PO PASS; import planner dengan PyYAML PASS; `ruff`, 14 manifest, scan 12 PO, actionlint 1.7.12, dan `git diff --check` PASS. [BU] Full unittest lokal dihentikan timeout harness 15 menit saat test existing berat; rerun GitHub Actions exact-SHA menjadi bukti otoritatif.
+**Butir terbuka:** pantau seluruh check PR #145 pada SHA baru. Setelah semuanya hijau, pemilik dapat merge; pembaruan ruleset dan Full Regression Gate manual tetap dilakukan setelah workflow tersedia di `main`.
+**Signature:** task managed by claude-dev agent at 2026-11-15T23:52:35+07:00
+
+## 2026-11-15T23:13:56+07:00 — claude-dev — Restrukturisasi CI berbasis dampak, nightly, dan release exact-SHA
+**Konteks:** [F] Ruleset `main-quality-gate` mewajibkan enam context lama, sementara CI/PWA/seed sebelumnya berjalan pukul rata dan push feature branch menggandakan beberapa suite. [F] `install-test` telah menampung instalasi, mobile, browser, dan D1 sekaligus; branch seed F4 pernah menambah runtime ±80 menit ke job ini.
+**Berubah:** `.ci/test-impact.yml` + `scripts/ci/plan.py` (planner fail-closed, override aditif); kontrak planner dan occurrence PO Odoo 19; workflow CI/PWA/seed/finance/upgrade/full-dataset menjadi targeted dengan gate stabil, timeout, cache BuildKit/Playwright, dan tanpa trigger push feature branch; `Full Regression Gate` nightly 01:00 WITA/manual exact-SHA; PR template; panduan di `AGENTS.md`, `docs/AGENT_PROTOCOL.md`, `docs/DEVELOPMENT.md`, dan `docs/CI_SELECTION.md`.
+**Diverifikasi:** [F] Lokal PASS: 14 unittest selector/PO, scan occurrence 12 PO, `ruff check .`, `check_manifests.py` (14 addon), parse YAML, actionlint 1.7.12, dan `git diff --check`. [F] Hotfix PO #144 (`dd0cf4d`) sudah menjadi basis dan `--load-language=id_ID` pada D1 upgrade tetap dipertahankan.
+**Belum diuji:** [BU] Seluruh runtime workflow menunggu CI pada PR exact-SHA. [BU] Cache hit/miss dan penghematan durasi baru dapat diukur setelah dua run. [BU] Ruleset belum boleh ditambah tiga context baru sebelum workflow tersedia di default branch.
+**Butir terbuka:** setelah merge, pemilik menambah `finance-gate`, `upgrade-gate`, dan `full-dataset-gate` ke ruleset; lalu jalankan `Full Regression Gate` manual pada SHA merge sebelum deployment berikutnya.
+**Menunggu:** pemilik untuk commit/push/PR sesuai protokol, review impact map, dan pembaruan ruleset pasca-merge.
+**Signature:** task managed by claude-dev agent at 2026-11-15T23:13:56+07:00
+
+## 2026-11-15T23:05:00+07:00 — antigravity — WMS: Imunisasi Cohort Date Clocks Warehouse Depth terhadap Midnight Boundary WITA (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `addons/id_dashboard_wms/tests/test_warehouse_depth.py`:
+  - Pada `test_clock_server_facts_native_completion_and_worker_guard`, menggunakan cohort date eksak dari `clock.ended_at` (`ended_day = str(local_day(clock.ended_at))`) saat memanggil `id.warehouse.depth._data(ended_day, ended_day, wh.id)`.
+  - Mengeliminasi test failure ketika runner CI mengeksekusi tes di sekitar tengah malam WITA (23:50–23:59 WITA), di mana penambahan durasi 12 menit (`clock.started_at + timedelta(minutes=12)`) menyeberang ke hari berikutnya sehingga query berbasis `day` awal menghasilkan `count=0` alih-alih `count=1`.
+  - Pada `test_movement_flow_stock_age_and_selected_company_scope`, menyelaraskan cohort query date dengan waktu pembuatan baris move line (`local_day(now_dt)`).
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 tests PASS.
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS.
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push.
+**Signature:** Task managed by antigravity at 2026-11-15T23:05:00+07:00
+
+## 2026-11-15T22:50:00+07:00 — antigravity — F4: Perbaikan Pool Deduplikasi Rejeksi Split-Lot SKU pada Pembentukan Baris Faktur Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, memperbaiki alokasi rejeksi karantina per SO (`so_rej_sku_rem`): ketika baris pesanan cocok secara spesifik dengan kunci lot (`rejections_by_line_key`), kuantitas karton rejeksi kini didekrementasi dari sisa pool rejeksi SKU (`so_rej_sku_rem[sku] = max(0.0, so_rej_sku_rem[sku] - rej_cartons)`).
+  - Mengeliminasi bug double-deduction pada SO yang memiliki split lot untuk SKU yang sama (seperti `SO-202608-0083` / `INV-202608-0083` dengan SKU `MYR-BBG-03` lot A: 13 karton [direjeksi] dan lot B: 3 karton [diterima]), di mana lot B sebelumnya ikut terpotong secara keliru sehingga menyebabkan defisit kredit produk sebesar Rp 892.008,00 dan memicu `odoo.exceptions.UserError: The entry is not balanced.` saat `action_post()`.
+  - Pada `verify_preflight` dan `_apply_invoices`, memperluas pencarian faktur eksisting (`existing`) untuk mencocokkan baik `payment_reference` maupun `ref` guna menjamin zero-drift idempotency pada replay skenario A.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan tes regresi terisolasi `test_split_lot_rejection_invoice_balance_and_contract` yang memvalidasi pembentukan faktur split-lot dengan rejeksi spesifik lot, memastikan lot non-rejeksi dipertahankan, DPP komersial Rp 2.700.475,20, PPN Rp 297.052,27, total Rp 2.997.527,47, dan entri debet-kredit seimbang sempurna.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 tests PASS (0 fail, 0 error).
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py`: 133/133 tests PASS (0 fail, 0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-15T22:50:00+07:00
+
+## 2026-11-15T22:27:27+07:00 — Agent-Opencode — P1 fix: scope diagnostik HPP dan regresi dua perusahaan
+**Konteks:** [F] Review pemilik menahan PR #140 pada HEAD `7fc3853`: `collect(env)` dapat mencampur nilai antarperusahaan. Main bergerak hingga `a03b944`; branch disinkronkan lewat merge `3eeac2a` dan `a0e7901`, dengan riwayat HANDOFF kedua sisi dipertahankan.
+**Berubah:** [F] `collect(env, company=None)` memakai `allowed_company_ids=[company.id]`; seluruh kategori/properti company-dependent, hitungan per kategori, stock.move, fallback stock.valuation.layer, sisa stok, standard_price, dan agregat dibaca dalam konteks/domain perusahaan tunggal. [F] Regresi native opt-in membuat dua perusahaan, satu kategori bersama, metode fifo/average, produk standard_price 0/7, dan pergerakan bernilai 100/250; hasil A/B diuji terpisah lalu fixture di-rollback. Job init-test menjalankan regresi melalui `FINANCE_I3_COMPANY_SCOPE_DB=fmcg`.
+**Diverifikasi:** [F] Lokal self-test, ruff, compileall PASS. [F] CI sebelum P1 fix tetap 5/5 workflow dan 12/12 job lulus pada `7fc3853`; CI pertama setelah merge main `a0e7901` menemukan hanya `AttributeError: Environment.with_company` pada regresi baru; diperbaiki dengan `env(context=...)`.
+**Belum diuji:** [BU] CI native dua perusahaan setelah perbaikan belum selesai; hasil diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T22:27:27+07:00
+
 ## 2026-11-15T21:10:00+07:00 — antigravity — F4: Eliminasi Premature Balance Validation via check_move_validity=False pada Sinkronisasi Pajak & Piutang Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:
@@ -171,6 +367,34 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-15T19:25:00+07:00
+
+## 2026-11-15T13:23:35+07:00 — Agent-Opencode — PR #140: lima workflow hijau pada fbab3a4 (integrasi main + diagnostik I3)
+**Konteks:** [F] Lanjutan entri 12:55:34. `Upgrade Runtime Verification` pada commit `dc13ee7` sebelumnya terhenti karena commit baru; commit `fbab3a4` (log + HANDOFF) menjalankan ulang seluruh workflow pada satu commit yang sama.
+**Berubah:** hanya `agent-log/opencode.log` dan `docs/HANDOFF.md`; tidak ada perubahan kode sejak `dc13ee7`.
+**Diverifikasi:** [F] Semua workflow pada `fbab3a4` success: `CI` (run `43683214923`: `static`, `init-test`, `install-test`), `Upgrade Runtime Verification` (run `43683214964`, termasuk `Module Upgrade from Persisted Baseline + Replay Zero Drift`), `Seed supervision` (`43683214986`), `PWA quality` (`43683214933`), `Finance I0 candidate spike` (`43683214983`). [F] `init-test` pada `dc13ee7` menampilkan `FINANCE_I3_COSTING_RUN=PASS` dan `valuation.source` = `stock.move (Odoo 19)`.
+**Belum diuji:** [BU] Diagnostik pada database demo production dan checklist `PRODUCTION_FINANCE_UAT.md` belum dijalankan; PR belum di-merge/deploy. [F] Katalog 58/58 `BELUM_DITERIMA`.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T13:23:35+07:00
+
+## 2026-11-15T12:55:34+07:00 — Agent-Opencode — PR #140 hijau setelah merge #138; diagnostik I3 membaca model valuasi Odoo 19
+**Konteks:** [F] `install-test` PR #140 gagal pada 2026-11-15 karena jam uji `id_mobile_api` (hari Minggu WITA), bukan karena perubahan finance. PR #138 (jam uji deterministik) sudah masuk `main` di `fdb2fc0`, lalu `main` di-merge ke branch ini.
+**Berubah:** merge commit `e0b5602` (memuat `fdb2fc0`); `scripts/ops/verify_finance_i3_costing.py` membaca valuasi Odoo 19 dari `stock.move.value`/`remaining_qty`/`remaining_value` (model `stock.valuation.layer` tidak ada di 19), memperbaiki penjaga `bool(recordset)` yang selalu False, dan menormalkan total kosong ke `0`; `docs/finance/I3_COSTING.md` mencatat hasil CI dan model valuasi 19.
+**Diverifikasi:** [F] Run `43681641152` pada `e0b5602`: `static`, `init-test`, `install-test` semua success. [F] Run `43682494007` pada `dc13ee7`: ketiganya success; `FINANCE_I3_COSTING_RUN=PASS`. [F] Diagnostik DB disposable: 46 kategori seluruhnya `standard` + `periodic`, `stock_account_installed: true`, `valuation.source: "stock.move (Odoo 19)"`, `done_valued_moves: 0`, `value_total: 0`, `zero_cost_products: 0`. [F] Triage kegagalan lama: 11 ERROR semuanya `id_mobile_api`; branch dokumentasi-saja `Opencode-finance-i2-3-production-evidence` gagal identik pada hari yang sama (run `43678645109`); PR #138 hijau pada hari yang sama (run `43679269662`).
+**Belum diuji:** [BU] `Upgrade Runtime Verification` pada `dc13ee7` masih berjalan saat entri ini ditulis. Diagnostik pada database demo production dan checklist `PRODUCTION_FINANCE_UAT.md` belum dijalankan. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T12:55:34+07:00
+
+## 2026-11-15T12:04:30+07:00 — Agent-Opencode — I3 kesiapan: label tanpa _(), diagnostik HPP read-only, checklist verifikasi production (1 PR)
+**Konteks:** [F] PR #139 ditutup atas permintaan pemilik; isinya dipindahkan ke PR ini. Tiga langkah dikerjakan berurutan: peringatan terjemahan (kode), diagnostik HPP (alat), checklist verifikasi production (dokumen).
+**Berubah:** `addons/id_finance_reporting/wizards/finance_report_wizard.py` (label `REPORT_TYPES`, `partner_type`, `register_type` menjadi string sumber; `_label` memakai `self.env._`), `__manifest__.py` `19.0.1.5.2`; `.github/workflows/ci.yml` (job `init-test` menolak `no translation language detected` untuk modul finance; langkah `Diagnostik costing I3 read-only`; job `static` menjalankan `--self-test`); `scripts/ops/verify_finance_i3_costing.py` baru (read-only); `docs/finance/I3_COSTING.md`, `docs/finance/PRODUCTION_FINANCE_UAT.md` baru; `docs/finance/README.md` (status aktivasi + indeks), `docs/finance/I2_XLSX_EXPORT.md` (versi).
+**Diverifikasi:** [F] Lokal: `ruff check .` PASS, `check_manifests.py` PASS (14 addon), `compileall` PASS, PO 117 entri OK, `FINANCE_I3_COSTING_SELFTEST=PASS`, YAML `ci.yml` valid. [F] `docs/finance/I2_ACTIVATION.md` (dari #139) memuat bukti production: aktivasi 12:03Z pada `50866b8`, restart `16f686a` tanpa pengulangan, `/web/login` 200.
+**Belum diuji:** [BU] CI pada HEAD PR baru: init-test harus membuktikan log boot finance bersih dan `FINANCE_I3_COSTING_RUN=PASS`; diagnostik pada database demo production (angkanya) belum dijalankan; checklist UAT belum dijalankan pemilik. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T12:04:30+07:00
+
+## 2026-11-15T11:51:27+07:00 — Agent-Opencode — I2-3: bukti read-only aktivasi finance di production (deploy 50866b8, restart 16f686a)
+**Konteks:** [F] Pemilik merge PR #131 (`0e17039`) dan #133 (`50866b8`); `main` kini `16f686a`. Status rollout production belum diperiksa.
+**Berubah:** `docs/finance/I2_ACTIVATION.md` — status dari "staged, belum dieksekusi" menjadi "diekskusi di production" dengan bagian bukti read-only; "Yang belum dibuktikan" dipersempit ke login admin/DB langsung. Tidak ada perubahan kode, konfigurasi, atau data.
+**Diverifikasi:** [F] Railway project `pleasant-caring` / production / service `odooca-fmcg`: deploy `50866b8` `SUCCESS`; log `2026-11-14T12:03:09Z` `activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation`, `12:03:25Z` `demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo`, `12:03:27Z` `admin memiliki grup Finance Reader`; `Loading module id_finance_foundation (126/126)` `12:03:20Z`. [F] Deploy `16f686a` `SUCCESS` tanpa baris aktivasi ulang (mark bekerja); registry loaded `12:50:51Z`. [F] `/web/login` HTTP 200 pada 2026-11-15; cron rutin berjalan. [A] Versi terpasang `19.0.1.5.1` mengikuti manifest image `50866b8`; `latest_version` DB belum dibaca langsung.
+**Belum diuji:** [BU] Login admin demo → Finance Reports → jalankan laporan → unduh XLSX di production; pemeriksaan DB langsung; tie-out; sign-off. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada deploy/merge dari asisten.
+**Signature:** Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
 
 ## 2026-11-15 — Codex-Dashboard — Drill-down D1 ke D7
 
