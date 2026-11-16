@@ -193,3 +193,10 @@
 - [F] Lokal self-test, ruff, manifest, YAML, compileall PASS.
 - [BU] Perilaku native sisa stok dan kontrol negatif menunggu CI.
 - Task managed by Agent-Opencode at 2026-11-16T09:39:40+07:00
+
+[2026-11-16T10:08:33+07:00] [INFO] Regresi I3: warehouse native per perusahaan dan diagnostik pembacaan sisa
+- [F] CI 8da9894: value_total dan metode sudah terpisah, tetapi remaining_moves A masih 0.
+- [F] Fixture memakai warehouse native per perusahaan; keluaran menambah diagnostics env_companies/lokasi tervaluasi/qty_available/quant.
+- [F] Lokal self-test dan ruff PASS.
+- [BU] CI native berikutnya menentukan apakah sisa 2/100 dan 4/28 terbukti.
+- Task managed by Agent-Opencode at 2026-11-16T10:08:33+07:00

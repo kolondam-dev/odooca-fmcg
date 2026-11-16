@@ -372,15 +372,20 @@ def _company_scope_fixture(env):
     product.with_company(company_b).standard_price = 7
 
     supplier = env.ref("stock.stock_location_suppliers")
+    destinations = {}
     for company, quantity, move_value in (
         (company_a, 2, 100.0),
         (company_b, 4, 250.0),
     ):
-        stock_location = env["stock.location"].sudo().with_company(company).create({
-            "name": "I3 scope stock %s" % company.id,
-            "usage": "internal",
+        # A stock company needs a warehouse: qty_available falls back to the
+        # warehouse view location when no valuation location is supplied.
+        warehouse = env["stock.warehouse"].sudo().with_company(company).create({
+            "name": "I3 scope warehouse %s" % company.id,
+            "code": "I3%s" % company.id,
             "company_id": company.id,
         })
+        stock_location = warehouse.lot_stock_id
+        destinations[company.id] = stock_location
         move = env["stock.move"].sudo().with_company(company).create({
             "product_id": product.id,
             "product_uom_qty": quantity,
@@ -425,9 +430,26 @@ def _company_scope_fixture(env):
     for company in (company_a, company_b):
         report = collect(env, company=company)
         row = next(item for item in report["categories"] if item["id"] == category.id)
+        company_env = env(context={**env.context, "allowed_company_ids": [company.id]})
+        product_in_company = company_env["product.product"].browse(product.id)
+        valued_locations = company_env["stock.location"].with_context(active_test=False).search(
+            [("is_valued_internal", "=", True)]
+        )
         evidence[str(company.id)] = {
             "company": report["company"],
             "company_id": report["company_id"],
+            "diagnostics": {
+                "env_companies": company_env.companies.ids,
+                "valued_location_count": len(valued_locations),
+                "stock_location_valued": destinations[company.id].with_env(company_env).is_valued_internal,
+                "qty_available": product_in_company.qty_available,
+                "quant_quantity": sum(
+                    company_env["stock.quant"].search([
+                        ("product_id", "=", product.id),
+                        ("location_id", "=", destinations[company.id].id),
+                    ]).mapped("quantity")
+                ),
+            },
             "done_valued_moves": report["valuation"]["done_valued_moves"],
             "value_total": report["valuation"]["value_total"],
             "remaining_moves": report["valuation"]["remaining_moves"],
