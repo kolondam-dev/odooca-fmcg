@@ -6,6 +6,19 @@
 from odoo import Command
 
 
+# The PDF smoke runs in a separate process after TransactionCase rollback.
+# Activate the locale and explicitly load this addon's translated QWeb terms.
+language = (
+    env["res.lang"]._activate_lang("id_ID")
+    or env["res.lang"]._create_lang("id_ID")
+)
+if not language.active:
+    language.action_unarchive()
+env["ir.module.module"].search(
+    [("name", "=", "id_base")]
+)._update_translations(["id_ID"])
+
+
 # wkhtmltopdf fetches report assets over HTTP. This script runs only after the
 # CI job has started the disposable Odoo web server and confirmed /web/login.
 env["ir.config_parameter"].sudo().set_param(
