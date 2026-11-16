@@ -2199,6 +2199,14 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         # Must have 3 invoice lines (Line 2 BBG lot 17, Line 3 CND, Line 4 KPK)
         self.assertEqual(len(inv.invoice_line_ids), 3)
 
+        # Beng-Beng line must be linked to mock_sol_2 (72.0 units), NOT mock_sol_1 (312.0 units, rejected)
+        bbg_line = next(
+            line for line in inv.invoice_line_ids
+            if getattr(line, "product_id", None) in (mock_prod_bbg, mock_prod_bbg.id)
+        )
+        self.assertEqual(bbg_line.quantity, 72.0)
+        self.assertEqual(bbg_line.sale_line_ids, [(6, 0, [602])])
+
         # Check total credit (product lines + tax line) vs total debit (receivable line)
         product_credits = sum(ml.credit for ml in inv.line_ids if ml.display_type == "product")
         tax_credits = sum(ml.credit for ml in inv.line_ids if ml.display_type == "tax")

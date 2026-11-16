@@ -1,3 +1,21 @@
+## 2026-11-16T09:05:00+07:00 — antigravity — F4: Resolusi Presisi Relasi SOL Faktur terhadap Split-Lot Rejection & Guard Pengiriman id_base (Branch: agen/seed-f4-period-pack-loader)
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Pada `_apply_invoices`, memindahkan resolusi `matched_sol` dan pencatatan ke dalam `used_sol_ids` agar dilakukan SEBELUM melewati baris rejeksi penuh (`if net_cartons <= 0.0: continue`). Dengan demikian, SOL yang barangnya ditolak saat pengiriman (seperti `sol_1` pada `SO-202608-0083` sebanyak 312 unit) tetap ditandai telah terpakai dan tidak terserap secara keliru oleh baris faktur non-rejeksi berikutnya.
+  - Mengimplementasikan algoritma pencocokan 2-pass: Pass 1 memprioritaskan pencocokan kuantitas asli eksak (`abs(sol.product_uom_qty - line_units) < 0.001`), dan Pass 2 melakukan fallback jika kuantitas tidak eksak.
+  - Mengeliminasi kegagalan `odoo.exceptions.UserError: [id_base] Total kuantitas pengiriman (312.0 - retur 0 = 312.0) tidak cocok dengan kuantitas baris faktur 'Benn-Beng Share It Pouch 100g' (72.0)!` pada CI Step 10, sehingga relasi persisten antara baris faktur dan pergerakan outbound stock move valid 100%.
+- `tests/test_period_pack_loader.py`:
+  - Memperketat tes regresi `test_split_lot_rejection_invoice_balance_and_contract` dengan asersi eksak `bbg_line.sale_line_ids == [(6, 0, [602])]` (menolak tautan ke SOL 601 yang memiliki 312 unit). Tes terbukti gagal pada kode lama dan lulus pada kode baru.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 tests PASS (0 fail, 0 error).
+- [F] `python -m unittest tests/test_seed_invariants.py tests/test_seed_v2_gates.py tests/test_canonical_loader_adapter.py`: 145/145 tests PASS (0 fail, 0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-16T09:05:00+07:00
+
 ## 2026-11-15T23:05:00+07:00 — antigravity — WMS: Imunisasi Cohort Date Clocks Warehouse Depth terhadap Midnight Boundary WITA (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `addons/id_dashboard_wms/tests/test_warehouse_depth.py`:

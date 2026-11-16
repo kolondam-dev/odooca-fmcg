@@ -2707,15 +2707,15 @@ class GenericPeriodPackLoader:
                 else:
                     rej_cartons = 0.0
 
-                net_cartons = qty_cartons - rej_cartons
-                if net_cartons <= 0.0:
-                    continue
+                carton_qty = float(lrow.get("carton_qty", 1.0) or 1.0)
+                line_units = qty_cartons * carton_qty
 
                 matched_sol = None
                 prod = None
 
-                # 1. Resolve directly from SO order lines for this SO
+                # 1. Resolve directly from SO order lines for this SO (prioritizing exact qty match)
                 if hasattr(so, "order_line"):
+                    # Pass 1: exact SKU and exact original line quantity match
                     for sol in so.order_line:
                         sol_id = getattr(sol, "id", None)
                         if sol_id in used_sol_ids:
@@ -2723,10 +2723,25 @@ class GenericPeriodPackLoader:
                         sol_p = getattr(sol, "product_id", None)
                         sol_code = getattr(sol_p, "default_code", None)
                         if sol_code == sku:
-                            matched_sol = sol
-                            prod = sol_p
-                            used_sol_ids.add(sol_id)
-                            break
+                            sol_qty = float(getattr(sol, "product_uom_qty", line_units) or 0.0)
+                            if abs(sol_qty - line_units) < 0.001:
+                                matched_sol = sol
+                                prod = sol_p
+                                used_sol_ids.add(sol_id)
+                                break
+                    # Pass 2: fallback to any available SOL for this SKU if exact qty did not match
+                    if matched_sol is None:
+                        for sol in so.order_line:
+                            sol_id = getattr(sol, "id", None)
+                            if sol_id in used_sol_ids:
+                                continue
+                            sol_p = getattr(sol, "product_id", None)
+                            sol_code = getattr(sol_p, "default_code", None)
+                            if sol_code == sku:
+                                matched_sol = sol
+                                prod = sol_p
+                                used_sol_ids.add(sol_id)
+                                break
 
                 # 2. If not matched by default_code in sol, search Product model
                 if not prod and Product is not None:
@@ -2734,19 +2749,39 @@ class GenericPeriodPackLoader:
 
                 # 3. If prod resolved via model search, match sol by product id
                 if matched_sol is None and prod and hasattr(so, "order_line"):
+                    # Pass 1: exact product id and exact original line quantity match
                     for sol in so.order_line:
                         sol_id = getattr(sol, "id", None)
+                        if sol_id in used_sol_ids:
+                            continue
                         sol_p = getattr(sol, "product_id", None)
                         sol_pid = getattr(sol_p, "id", sol_p)
-                        if sol_id not in used_sol_ids and sol_pid == getattr(prod, "id", None):
-                            matched_sol = sol
-                            used_sol_ids.add(sol_id)
-                            break
+                        if sol_pid == getattr(prod, "id", None):
+                            sol_qty = float(getattr(sol, "product_uom_qty", line_units) or 0.0)
+                            if abs(sol_qty - line_units) < 0.001:
+                                matched_sol = sol
+                                used_sol_ids.add(sol_id)
+                                break
+                    # Pass 2: fallback to any available SOL for this product id
+                    if matched_sol is None:
+                        for sol in so.order_line:
+                            sol_id = getattr(sol, "id", None)
+                            if sol_id in used_sol_ids:
+                                continue
+                            sol_p = getattr(sol, "product_id", None)
+                            sol_pid = getattr(sol_p, "id", sol_p)
+                            if sol_pid == getattr(prod, "id", None):
+                                matched_sol = sol
+                                used_sol_ids.add(sol_id)
+                                break
 
                 if not prod:
                     raise StateInconsistencyError(f"Fatal: Unresolved SKU '{sku}' for invoice {inv_num}")
 
-                carton_qty = float(lrow.get("carton_qty", 1.0) or 1.0)
+                net_cartons = qty_cartons - rej_cartons
+                if net_cartons <= 0.0:
+                    continue
+
                 net_units = net_cartons * carton_qty
 
                 inv_line_vals = {
