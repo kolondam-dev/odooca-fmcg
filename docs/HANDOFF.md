@@ -1,3 +1,9 @@
+## 2026-11-16T14:53:05+07:00 — codex — Harness Playwright live lokal untuk Odoo dan PWA
+**Konteks:** [F] Playwright existing hanya menjalankan fixture/CI; agen belum memiliki konfigurasi reusable non-CI untuk membuktikan UI Odoo backend, dashboard, dan PWA pada target yang dipilih operator.
+**Berubah:** [F] `pwa/playwright.live.config.ts` menyediakan Chromium desktop/phone, autentikasi reusable, smoke Odoo/PWA, route-driven screenshot/assertion, dan spec lokal ignored. URL/kredensial dibaca dari `pwa/.env.live-ui.local`; artifact/session juga ignored. Default satu worker, tanpa retry/video/trace, dan skenario tulis memerlukan helper opt-in `LIVE_UI_ALLOW_WRITE=YES`. Panduan operasional dan batas evidence ada di `docs/LIVE_UI_HARNESS.md`.
+**Diverifikasi:** [F] TypeScript dan targeted Prettier PASS; 496 test PWA PASS; Ruff dan 14 manifest PASS. Fixture HTTP lokal: public-only desktop/phone 4 PASS (2 route skip), authenticated desktop 3 PASS (1 route skip), termasuk storage state reusable dan smoke dua target. `git diff --check` bersih.
+**Batas:** [BU] Belum dijalankan ke production demo karena kredensial tidak tersedia di sesi ini. [F] Installer Chromium Playwright mengunduh 100% tetapi dua kali melewati timeout host; validasi browser berhasil dengan Chrome sistem melalui `LIVE_UI_CHROMIUM_EXECUTABLE`. Full `npm run format:check` tetap gagal pada 206 file existing di luar diff; semua file baru/berubah yang ditargetkan lulus. Tidak ada workflow CI, deployment, atau mutasi data.
+
 ## 2026-11-16T10:57:02+07:00 — Agent-Opencode — Sinkronisasi main 14caec6 pada PR #140
 **Konteks:** [F] `main` maju ke `14caec6` (PR #143, guard akurasi check-in PWA) dan PR berstatus `BEHIND` meski mergeable. Regresi P1 I3 sudah terbukti pada `6813020`/`09964da`.
 **Berubah:** [F] Merge `origin/main` tanpa konflik; tidak ada perubahan pada skrip diagnosa atau regresi I3.
