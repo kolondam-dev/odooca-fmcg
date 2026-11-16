@@ -9,7 +9,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
 import { assessVisitFix } from "../domain/visit-validation";
 import { useRunningMode } from "../domain/running-mode";
-import { captureVisitLocation, type SalesVisits } from "../domain/visits";
+import {
+    captureVisitLocation,
+    LocationDeniedError,
+    type SalesVisits,
+} from "../domain/visits";
+import { LocationNoticeSheet, type LocationNotice } from "./LocationNotice";
+import {
+    accuracyExceeded,
+    GPS_ACCURACY_LIMIT_M,
+} from "../domain/location-accuracy";
 import type { VisitFix } from "../domain/visit-contracts";
 import type { QueueItem } from "../storage/store";
 import {
@@ -107,6 +116,7 @@ export function VisitPanel({
     const [pinpointSetAt, setPinpointSetAt] = useState(0);
     const [now, setNow] = useState(Date.now());
     const [error, setError] = useState("");
+    const [notice, setNotice] = useState<LocationNotice>();
     const [busy, setBusy] = useState(false);
     const [notes, setNotes] = useState("");
     const running = useRef(false),
@@ -152,6 +162,13 @@ export function VisitPanel({
               now,
           )
         : undefined;
+    // Akurasi di atas batas mengunci check-in (kecuali demo), selaras DS Status_gps.
+    const overLimit = (accuracy: number) =>
+        accuracyExceeded(accuracy, {
+            demo: isDemo,
+            unrestricted: outlet.demo_unrestricted,
+        });
+    const lowAccuracy = !!fix && overLimit(fix.accuracy);
     // Saving the photo after the pinpoint used to disable "Mulai kunjungan"
     // forever. start() refreshes the fix instead so the documented order holds.
     const active = info?.active?.context.outlet_id === outlet.id;
@@ -171,12 +188,15 @@ export function VisitPanel({
                 setFix(position);
                 setPinpointSetAt(Date.now());
                 setNow(Date.now());
+                if (overLimit(position.accuracy)) setNotice("accuracy");
             }
         } catch (e) {
-            if (ticket === generation.current)
+            if (ticket === generation.current) {
+                if (e instanceof LocationDeniedError) setNotice("denied");
                 setError(
                     e instanceof Error ? e.message : "Lokasi belum tersedia.",
                 );
+            }
         } finally {
             if (ticket === generation.current) {
                 running.current = false;
@@ -207,6 +227,12 @@ export function VisitPanel({
             setFix(position);
             setPinpointSetAt(Date.now());
             setNow(Date.now());
+            if (overLimit(position.accuracy)) {
+                setNotice("accuracy");
+                throw new Error(
+                    `Akurasi lokasi ±${Math.round(position.accuracy)} m melebihi batas ±${GPS_ACCURACY_LIMIT_M} m.`,
+                );
+            }
             await service.checkIn(outlet.id, position, inPhoto);
             if (ticket !== generation.current) return;
             const restored = await service.restore(outlet.id);
@@ -214,12 +240,14 @@ export function VisitPanel({
             setInfo(restored);
             changed();
         } catch (e) {
-            if (ticket === generation.current)
+            if (ticket === generation.current) {
+                if (e instanceof LocationDeniedError) setNotice("denied");
                 setError(
                     e instanceof Error
                         ? e.message
                         : "Check-in belum tersimpan.",
                 );
+            }
         } finally {
             if (ticket === generation.current) {
                 running.current = false;
@@ -304,6 +332,7 @@ export function VisitPanel({
         !info ||
         !!info.active ||
         busy ||
+        lowAccuracy ||
         (!isDemo &&
             !outlet.demo_unrestricted &&
             !!fix &&
@@ -315,9 +344,11 @@ export function VisitPanel({
             ? "Foto toko wajib sebelum check-in."
             : staleIn
               ? "Foto check-in sudah kedaluwarsa. Ambil foto dan lokasi baru."
-              : assessment && assessment.status !== "inside"
-                ? "Check-in hanya sah di dalam area toko."
-                : ""
+              : lowAccuracy
+                ? `Akurasi lokasi melebihi batas ±${GPS_ACCURACY_LIMIT_M} m.`
+                : assessment && assessment.status !== "inside"
+                  ? "Check-in hanya sah di dalam area toko."
+                  : ""
         : "";
     const errorNote = error ? (
         <p role="alert" class="form-error">
@@ -373,6 +404,13 @@ export function VisitPanel({
                         </span>
                     </div>
                 ) : null}
+                {lowAccuracy ? (
+                    <Callout tone="warn" icon="warning">
+                        Akurasi saat ini ±{Math.round(fix!.accuracy)} m. Batas
+                        untuk absen dan check-in adalah ±{GPS_ACCURACY_LIMIT_M}{" "}
+                        m.
+                    </Callout>
+                ) : null}
                 <CheckinMap
                     key={`${sessionId}:${outlet.id}`}
                     compact
@@ -420,6 +458,16 @@ export function VisitPanel({
                     disabled={busy}
                 />
                 {errorNote}
+                <LocationNoticeSheet
+                    notice={notice}
+                    accuracy={fix?.accuracy}
+                    action="Check-in"
+                    onRetry={() => {
+                        setNotice(undefined);
+                        void locate();
+                    }}
+                    onClose={() => setNotice(undefined)}
+                />
             </Screen>
         );
     return (

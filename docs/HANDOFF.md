@@ -1,3 +1,10 @@
+## 2026-11-16T10:57:02+07:00 — Agent-Opencode — Sinkronisasi main 14caec6 pada PR #140
+**Konteks:** [F] `main` maju ke `14caec6` (PR #143, guard akurasi check-in PWA) dan PR berstatus `BEHIND` meski mergeable. Regresi P1 I3 sudah terbukti pada `6813020`/`09964da`.
+**Berubah:** [F] Merge `origin/main` tanpa konflik; tidak ada perubahan pada skrip diagnosa atau regresi I3.
+**Diverifikasi:** [F] Tidak ada konflik, `git diff --check` bersih; kode finance tidak berubah sejak `6813020`.
+**Belum diuji:** [BU] Workflow pada commit merge ini belum berjalan. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T10:57:02+07:00
+
 ## 2026-11-16T10:33:27+07:00 — Agent-Opencode — Regresi dua perusahaan I3 terbukti native pada 6813020
 **Konteks:** [F] Setelah fixture memakai warehouse native per perusahaan, CI `6813020` membuktikan sisa stok native nonnol dan terpisah, menutup HOLD P1 pemilik.
 **Diverifikasi:** [F] `init-test` run `43796734869`: A (`company_id=2`) `env_companies=[2]`, `qty_available=2`, 1 pergerakan, `value_total=100`, `remaining_qty_total=2`, `remaining_value_total=100`, `fifo`; B (`company_id=3`) `env_companies=[3]`, `qty_available=4`, 1 pergerakan, `value_total=250`, `remaining_qty_total=4`, `remaining_value_total=28`, `average`. [F] `unscoped_control` = 2 pergerakan / 350, sehingga regresi gagal bila isolasi dihapus. [F] `FINANCE_I3_COSTING_RUN=PASS` dan `FINANCE_I3_COMPANY_SCOPE=PASS` dari satu sesi shell. [F] Seluruh 23 check PR #140 lulus pada `6813020`, termasuk `finance-gate`, `upgrade-gate`, dan `full-dataset-gate`.
@@ -31,6 +38,10 @@
 **Berubah:** [F] `AGENTS.md`, protokol agen, metode supervisor, panduan pemilihan CI, dan template PR sekarang mewajibkan bagian `Dampak test` berstatus `CUKUP`/`SESUAIKAN`/`TAMBAH`. Rekomendasi perubahan test harus mengikat risiko/invariant, level, counterexample, acceptance, bukti, serta path trigger/suite; gap impact map juga memerlukan counterexample planner.
 **Batas:** [F] Test baru tidak dipaksakan bila bukti existing memadai. Supervisor dilarang melemahkan oracle/minimum planner atau otomatis mengubah branch implementer hanya agar CI hijau; kontribusi supervisor pada implementasi material memerlukan review independen.
 **Diverifikasi:** [F] `python -m pytest tests/test_ci_impact.py -q` PASS (11 test), `python scripts/check_manifests.py` PASS (14 addon), `python -m ruff check .` PASS, dan `git diff --check` bersih. [BU] CI PR belum berjalan.
+## 2026-11-16T09:46:00+07:00 — claude-design — PWA 3B-12: bukti browser guard akurasi check-in
+
+- Menjawab P2 review PR #143: skenario browser dengan outlet aturan lokasi aktif (saklar QA `fmcg:qa-strict-outlets` + fixture `useStrictOutlets`). Fix valid → foto → 31 m saat "Mulai kunjungan" → lembar "Akurasi lokasi rendah", tanpa `sales.visit.check_in` di outbox.
+- Cabang disinkronkan dengan `main`; K26 diperbarui. Flag backend tetap OFF.
 
 ## 2026-11-16T09:12:04+07:00 — Agent-Opencode — Sinkronisasi main 4cb81ce dan CI selektif pada PR #140
 **Konteks:** [F] Seluruh 12 check lulus pada `c084424` (termasuk `init-test` dengan `FINANCE_I3_COMPANY_SCOPE=PASS` dan `Module Upgrade from Persisted Baseline + Replay Zero Drift`). Setelah itu `main` maju ke `4cb81ce` (PR #145, CI berbasis dampak) sehingga PR kembali konflik.
@@ -96,6 +107,12 @@
 **Diverifikasi:** [F] ORM pada snapshot production terisolasi merekonsiliasi Net Sales Juli tanpa filter dan dengan SKU 128, termasuk per kota. [BU] Playwright pada HEAD PR menunggu CI.
 
 **Signature:** Task Managed by Agent Codex-Dashboard
+## 2026-11-15T21:26:26+07:00 — Agent-Claude-Dev1 — Fase 3B-12: status lokasi Check-in toko + tab Delivery Canvasser
+**Berubah:** `pwa/src/components/LocationNotice.tsx` (baru), `domain/location-accuracy.ts` (baru), `VisitPanel.tsx`, `AttendanceScreen.tsx`, `domain/visits.ts` (`LocationDeniedError`), `App.tsx` (tab Delivery Canvasser), `tests/browser/status-sheets.spec.ts`, `beranda-roles.spec.ts`, `field.spec.ts`, `tests/location-accuracy.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K26), `docs/HANDOFF.md`.
+**Diverifikasi:** [F] tes browser (izin ditolak check-in, tab per peran) dan unit akurasi lulus; gate penuh dijalankan sebelum PR.
+**Belum diuji:** [BU] akurasi >30 m di browser untuk check-in toko (e2e memakai outlet demo_unrestricted).
+**Perhatian reviewer:** `field.spec.ts` sebelumnya menegaskan Canvasser tanpa tab Delivery; diubah mengikuti mockup Beranda_canvasser.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-15T21:26:26+07:00
 
 ## 2026-11-15T17:27:07+07:00 — Agent-Claude-Dev1 — Fase 3B-11: Beranda per peran (Sales/Delivery/Canvasser)
 **Berubah:** `pwa/src/components/Home.tsx`, `App.tsx`, `DeliveryWorkspace.tsx` (memakai `deliveryDoneChecker`), `domain/delivery-progress.ts` (baru), `ui/ui.css`, `tests/browser/beranda-roles.spec.ts` (baru), `tests/delivery-progress.test.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K25), `docs/HANDOFF.md`.

@@ -23,6 +23,8 @@ import {
 import type { FieldStore } from "../storage/store";
 import type { Outbox } from "./outbox";
 import { getStoredRunningMode, isDemoMode } from "./running-mode";
+/** Izin lokasi ditolak pengguna (GeolocationPositionError.code 1). */
+export class LocationDeniedError extends Error {}
 export function captureVisitLocation(
     source?: (value: "device" | "demo") => void,
 ): Promise<VisitFix> {
@@ -66,13 +68,15 @@ export function captureVisitLocation(
                         return;
                     }
                     reject(
-                        new Error(
-                            e.code === 1
-                                ? "Izin lokasi ditolak. Aktifkan izin lokasi untuk kunjungan."
-                                : e.code === 3
-                                  ? "Pengambilan lokasi timeout. Coba lagi di tempat aman."
-                                  : "Lokasi belum tersedia. Coba lagi.",
-                        ),
+                        e.code === 1
+                            ? new LocationDeniedError(
+                                  "Izin lokasi ditolak. Aktifkan izin lokasi untuk kunjungan.",
+                              )
+                            : new Error(
+                                  e.code === 3
+                                      ? "Pengambilan lokasi timeout. Coba lagi di tempat aman."
+                                      : "Lokasi belum tersedia. Coba lagi.",
+                              ),
                     );
                 },
                 { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 },
