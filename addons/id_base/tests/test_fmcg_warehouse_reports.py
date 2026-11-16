@@ -7,6 +7,16 @@ class TestFMCGWarehouseReports(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # A fresh CI database may not have an active Indonesian language record.
+        language = (
+            cls.env["res.lang"]._activate_lang("id_ID")
+            or cls.env["res.lang"]._create_lang("id_ID")
+        )
+        if not language.active:
+            language.action_unarchive()
+        cls.env["ir.module.module"].search(
+            [("name", "=", "id_base")]
+        )._update_translations(["id_ID"])
         # Install Indonesian in this disposable test database before rendering.
         # Loading the language activates it; refreshing this module then imports
         # id_base/i18n/id.po for the QWeb templates under test.
