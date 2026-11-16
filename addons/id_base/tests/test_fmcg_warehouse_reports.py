@@ -1,6 +1,9 @@
+import csv
+from io import StringIO
+
 from odoo import Command
 from odoo.tests.common import TransactionCase
-from odoo.tools.translate import load_language
+from odoo.tools.translate import load_language, trans_export
 
 
 class TestFMCGWarehouseReports(TransactionCase):
@@ -197,6 +200,41 @@ class TestFMCGWarehouseReports(TransactionCase):
         self.assertRegex(html, r">\s*3(?:[.,]0+)?\s*<")
         self.assertNotRegex(html, r">\s*5(?:[.,]0+)?\s*<")
 
+
+
+    def test_qweb_indonesian_title_terms_match_odoo_export(self):
+        # Export the installed view translations through Odoo 19 itself. This
+        # checks the database's extracted QWeb terms, not just PO file text.
+        exported_csv = StringIO()
+        self.assertTrue(
+            trans_export("id_ID", ["id_base"], exported_csv, "csv", self.env)
+        )
+        rows = list(csv.DictReader(StringIO(exported_csv.getvalue())))
+        expected = {
+            "id_base.report_fmcg_picklist": (
+                "Picklist", "Daftar Pengambilan",
+            ),
+            "id_base.report_fmcg_packlist": (
+                "Packlist", "Daftar Pengepakan",
+            ),
+            "id_base.report_fmcg_delivery_order": (
+                "Delivery Order", "Surat Jalan",
+            ),
+        }
+        for xmlid, (msgid, msgstr) in expected.items():
+            with self.subTest(xmlid=xmlid):
+                matches = [
+                    row for row in rows
+                    if row["type"] == "model_terms"
+                    and row["name"] == "ir.ui.view,arch_db"
+                    and row["res_id"] == xmlid
+                ]
+                self.assertEqual(
+                    len(matches), 1,
+                    f"Expected one exported QWeb term for {xmlid}",
+                )
+                self.assertEqual(matches[0]["src"], msgid)
+                self.assertEqual(matches[0]["value"], msgstr)
 
     def test_all_warehouse_reports_render_indonesian_labels(self):
         picking, _lot = self._create_lot_picking("SO-FMCG-ID-REPORT", demand=2)
