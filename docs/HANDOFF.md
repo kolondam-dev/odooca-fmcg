@@ -1,3 +1,21 @@
+## 2026-11-16T09:48:00+07:00 — antigravity — CI: Penyesuaian Timeout install-test Menjadi 75 Menit untuk Akomodasi Proof Dua Database Disposable (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan `install-test` pada Run 43790290995 membuktikan bahwa perbaikan relasi faktur `c17a5bf` berhasil 100% (tidak ada error `id_base` kuantitas pengiriman maupun traceback Odoo).
+- [F] Pada menit 30:00 (02:38:40 UTC), GitHub Actions membatalkan job `install-test` dengan status `The operation was canceled` karena batas `timeout-minutes: 30` yang baru ditambahkan pada PR #145.
+- [F] Saat pembatalan terjadi, tahap verifikasi F4 sedang memproses SO ke ~1.150 dari 1.240 pada apply recovery pasca-fault injection. Total runtime untuk kedua bulan (Juli ~18.5m + Agustus ~5m + Replay ~4m + Scenario B ~23.5m) membutuhkan waktu ~45-55 menit pada runner GitHub Actions.
+**Berubah:**
+- `.github/workflows/ci.yml`:
+  - Mengubah `timeout-minutes: 30` menjadi `timeout-minutes: 75` pada job `install-test`.
+**Diverifikasi:**
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `pytest tests/test_period_pack_loader.py`: 58/58 PASS (0 error).
+- [F] `python scripts/ci/plan.py --base origin/main --head HEAD`: PASS (full regression fail-closed).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-16T09:48:00+07:00
+
 ## 2026-11-16T09:05:00+07:00 — antigravity — F4: Resolusi Presisi Relasi SOL Faktur terhadap Split-Lot Rejection & Guard Pengiriman id_base (Branch: agen/seed-f4-period-pack-loader)
 **Berubah:**
 - `scripts/ops/load_period_pack.py`:

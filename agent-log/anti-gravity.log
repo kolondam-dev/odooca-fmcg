@@ -3010,3 +3010,24 @@
   * python -m ruff check .: PASS clean (0 error).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-16T09:05:00+07:00
+
+2026-11-16T09:48:00+07:00 [INFO] CI: Penyesuaian Timeout install-test Menjadi 75 Menit untuk Akomodasi Proof Dua Database Disposable
+- Konteks: Analisis eksekusi CI commit 05248cf pada PR #110 (Run 43790290995).
+- Diagnosa Kegagalan:
+  * Job `install-test` dibatalkan oleh GitHub Actions pada tepat 30 menit (`##[error]The operation was canceled`).
+  * Penyebab: PR #145 dari main menambahkan batas `timeout-minutes: 30` pada job `install-test`.
+  * Beban kerja tahap F4 runtime proof mencakup eksekusi penuh dua bulan transaksi kanonikal FMCG Odoo 19 pada dua database disposable terpisah:
+    - Baseline Juli: 1.324 SO/DO/INV/AR/AP via CanonicalPerpetualAdapter (membutuhkan ~18.5 menit).
+    - Fault-injection probes dan pemulihan real loader apply Agustus: 1.240 SO/DO/INV/AR/AP (membutuhkan ~5 menit, pada pembatalan menit ke-30 telah memproses ~1.150 SO tanpa error).
+    - Replay zero drift Agustus: 1.240 transaksi (~4 menit).
+    - Scenario B (empty disposable DB -> Juli -> Agustus): ~23.5 menit.
+    - Total waktu yang dibutuhkan job `install-test` adalah ~45-55 menit.
+- Perbaikan:
+  * Mengubah `timeout-minutes: 30` menjadi `timeout-minutes: 75` pada job `install-test` di `.github/workflows/ci.yml`.
+- Verifikasi:
+  * python -m ruff check .: PASS (0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * pytest tests/test_period_pack_loader.py: 58/58 PASS (0 error).
+  * python scripts/ci/plan.py --base origin/main --head HEAD: PASS (full regression fail-closed).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-16T09:48:00+07:00
