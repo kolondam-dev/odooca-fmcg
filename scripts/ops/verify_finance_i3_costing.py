@@ -311,13 +311,35 @@ def _require(condition, message):
         raise AssertionError(message)
 
 
-def _company_scope_fixture(env):
-    """Build two readable companies with one shared category and one valued move each.
+def _unscoped_valuation(env):
+    """Mirror collect()'s move aggregation without the company domain.
 
-    The fixture is deliberately created inside a savepoint and rolled back. Both
-    companies start empty, so every aggregate below has an exact expected value;
-    the point is to catch a diagnostic that mixes A and B. Move values are set
-    explicitly to isolate company scoping from native valuation computation.
+    Negative control only: this is the number collect() would report if its
+    company isolation were removed. It deliberately repeats the production
+    query instead of adding a bypass flag to collect().
+    """
+    move_model = env["stock.move"]
+    domain = [("state", "=", "done"), ("value", "!=", 0)]
+    rows = move_model._read_group(domain, [], ["value:sum"])
+    return {
+        "done_valued_moves": move_model.search_count(domain),
+        "value_total": (rows[0][0] if rows else 0) or 0,
+    }
+
+
+def _company_scope_fixture(env):
+    """Build both companies' valued moves before reading any aggregate.
+
+    Two readable companies share one category. Each gets its own internal
+    location, one done incoming move with a distinct quantity and value, and the
+    matching quant, so both ``value_total`` and the remaining stock differ and
+    are non-zero. The companies are added to the current user's company list so
+    native valuation reads (``env.companies``) see their locations.
+
+    ``collect`` is then called from a context that allows *both* companies, and
+    must narrow to each one by itself. A negative control repeats the aggregate
+    without the company domain and asserts it would mix 100 + 250, which is what
+    fails when the isolation is removed.
     """
     company_a = env["res.company"].sudo().create({
         "name": "I3 scope regression A",
@@ -327,6 +349,9 @@ def _company_scope_fixture(env):
         "name": "I3 scope regression B",
         "currency_id": env.company.currency_id.id,
     })
+    # Native valuation reads filter locations through env.companies, which is
+    # intersected with the user's companies. Without this, qty_available is 0.
+    env.user.sudo().write({"company_ids": [(4, company_a.id), (4, company_b.id)]})
     env = env(context={**env.context, "allowed_company_ids": [company_a.id, company_b.id]})
 
     category = env["product.category"].sudo().create({"name": "I3 scope shared category"})
@@ -347,8 +372,10 @@ def _company_scope_fixture(env):
     product.with_company(company_b).standard_price = 7
 
     supplier = env.ref("stock.stock_location_suppliers")
-    evidence = {}
-    for company, move_value in ((company_a, 100.0), (company_b, 250.0)):
+    for company, quantity, move_value in (
+        (company_a, 2, 100.0),
+        (company_b, 4, 250.0),
+    ):
         stock_location = env["stock.location"].sudo().with_company(company).create({
             "name": "I3 scope stock %s" % company.id,
             "usage": "internal",
@@ -356,7 +383,7 @@ def _company_scope_fixture(env):
         })
         move = env["stock.move"].sudo().with_company(company).create({
             "product_id": product.id,
-            "product_uom_qty": 1,
+            "product_uom_qty": quantity,
             "product_uom": product.uom_id.id,
             "location_id": supplier.id,
             "location_dest_id": stock_location.id,
@@ -366,19 +393,37 @@ def _company_scope_fixture(env):
             "move_id": move.id,
             "product_id": product.id,
             "product_uom_id": product.uom_id.id,
-            "quantity": 1,
+            "quantity": quantity,
             "location_id": supplier.id,
             "location_dest_id": stock_location.id,
             "company_id": company.id,
             "picked": True,
         })
-        move.write({"state": "done", "quantity": 1, "value": move_value})
+        move.write({"state": "done", "quantity": quantity, "value": move_value})
         env["stock.quant"].sudo().with_company(company)._update_available_quantity(
-            product, stock_location, 1,
+            product, stock_location, quantity,
         )
 
-        company_env = env(context={**env.context, "allowed_company_ids": [company.id]})
-        report = collect(company_env, company=company)
+    # Both fixtures exist now; only then read, from a two-company context.
+    expected = {
+        company_a.id: {
+            "value_total": 100.0,
+            "remaining_qty_total": 2,
+            "remaining_value_total": 100.0,  # fifo: remaining_qty / quantity * value
+            "cost_method": "fifo",
+            "standard_price": 0,
+        },
+        company_b.id: {
+            "value_total": 250.0,
+            "remaining_qty_total": 4,
+            "remaining_value_total": 28.0,  # average: remaining_qty * standard_price
+            "cost_method": "average",
+            "standard_price": 7,
+        },
+    }
+    evidence = {}
+    for company in (company_a, company_b):
+        report = collect(env, company=company)
         row = next(item for item in report["categories"] if item["id"] == category.id)
         evidence[str(company.id)] = {
             "company": report["company"],
@@ -386,6 +431,7 @@ def _company_scope_fixture(env):
             "done_valued_moves": report["valuation"]["done_valued_moves"],
             "value_total": report["valuation"]["value_total"],
             "remaining_moves": report["valuation"]["remaining_moves"],
+            "remaining_qty_total": report["valuation"]["remaining_qty_total"],
             "remaining_value_total": report["valuation"]["remaining_value_total"],
             "category_cost_method": row["cost_method"],
             "category_valued_move_count": row["valued_move_count"],
@@ -393,30 +439,35 @@ def _company_scope_fixture(env):
             "zero_cost_products": report["zero_cost_products"],
         }
 
-    for company, expected_value, expected_method in (
-        (company_a, 100.0, "fifo"),
-        (company_b, 250.0, "average"),
-    ):
-        result = evidence[str(company.id)]
-        _require(result["company_id"] == company.id, result)
+    for company, want in expected.items():
+        result = evidence[str(company)]
+        _require(result["company_id"] == company, result)
         _require(result["done_valued_moves"] == 1, result)
-        _require(result["value_total"] == expected_value, result)
-        # The disposable fixture has no FIFO stack after the direct native
-        # move fixture is finalized; the important assertion here is that the
-        # empty/remaining aggregate is also company-local rather than a value
-        # imported from the other company.
-        _require(result["remaining_moves"] == 0, result)
-        _require(result["remaining_value_total"] == 0, result)
-        _require(result["category_cost_method"] == expected_method, result)
+        _require(result["value_total"] == want["value_total"], result)
+        _require(result["remaining_moves"] == 1, result)
+        _require(result["remaining_qty_total"] == want["remaining_qty_total"], result)
+        _require(result["remaining_value_total"] == want["remaining_value_total"], result)
+        _require(result["category_cost_method"] == want["cost_method"], result)
         _require(result["category_valued_move_count"] == 1, result)
-    _require(evidence[str(company_a.id)]["standard_price"] == 0, evidence)
-    _require(evidence[str(company_b.id)]["standard_price"] == 7, evidence)
+        _require(result["standard_price"] == want["standard_price"], result)
+
     # Only the shared product differs: zero-cost in A, priced in B.
     _require(
         evidence[str(company_a.id)]["zero_cost_products"]
         == evidence[str(company_b.id)]["zero_cost_products"] + 1,
         evidence,
     )
+
+    # Negative control: the same aggregation without the company domain must
+    # mix both companies, so a missing isolation would fail the assertions above.
+    mixed = _unscoped_valuation(env)
+    _require(mixed["done_valued_moves"] == 2, mixed)
+    _require(mixed["value_total"] == 350.0, mixed)
+    _require(
+        all(row["value_total"] != mixed["value_total"] for row in evidence.values()),
+        evidence,
+    )
+    evidence["unscoped_control"] = mixed
     return evidence
 
 
@@ -456,9 +507,10 @@ def main():
 
 
 if "env" in globals():
+    # One shell session, two markers: the read-only diagnostic always runs, and
+    # the company-scope regression is added when its disposable DB is named.
+    run(globals()["env"])
     if os.environ.get("FINANCE_I3_COMPANY_SCOPE_DB"):
         company_scope_regression(globals()["env"])
-    else:
-        run(globals()["env"])
 elif __name__ == "__main__":
     sys.exit(main())

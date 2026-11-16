@@ -114,8 +114,8 @@ mencampur nilai keduanya ke dalam total yang diberi label satu perusahaan.
 
 Yang di-scope:
 
-- context `allowed_company_ids=[company.id]` dan `with_company(company)` untuk
-  seluruh pembacaan;
+- context `allowed_company_ids=[company.id]` untuk seluruh pembacaan, sehingga
+  `env.company` dan properti company-dependent mengikuti perusahaan itu;
 - domain `company_id = company.id` pada `stock.move` dan fallback
   `stock.valuation.layer`, termasuk hitungan per kategori dan sisa stok;
 - properti kategori (`property_cost_method`, `property_valuation`) dan
@@ -124,13 +124,30 @@ Yang di-scope:
 
 ### Regresi dua perusahaan (native Odoo)
 
-`FINANCE_I3_COMPANY_SCOPE_DB=<nama-db>` menjalankan regresi yang membuat dua
-perusahaan yang sama-sama dapat dibaca, satu kategori bersama dengan metode
-berbeda per perusahaan (`fifo` vs `average`), satu produk bersama dengan
-`standard_price` 0 dan 7, serta satu pergerakan bernilai 100 dan 250 dengan sisa
-stok masing-masing satu. Diagnostik untuk A harus menghasilkan 1 pergerakan,
-nominal 100, sisa 1/100, dan metode `fifo`; untuk B 1 pergerakan, nominal 250,
-sisa 1/250, dan metode `average`. Semua fixture dibuat di dalam savepoint lalu
+`FINANCE_I3_COMPANY_SCOPE_DB=<nama-db>` menambahkan regresi pada sesi shell yang
+sama dengan diagnostik read-only. Fixture membuat dua perusahaan yang
+sama-sama dapat dibaca dan menambahkan keduanya ke `company_ids` user (tanpa itu
+`env.companies` kosong dan `qty_available` native bernilai 0). Satu kategori
+bersama memakai metode berbeda per perusahaan (`fifo` vs `average`); satu produk
+bersama berharga 0 (A) dan 7 (B). **Kedua** pergerakan dibuat lebih dulu: A
+kuantitas 2 bernilai 100, B kuantitas 4 bernilai 250, masing-masing dengan quant
+internal.
+
+Setelah kedua fixture ada, `collect()` dipanggil dari konteks yang memuat **kedua**
+perusahaan, sehingga penyempitan harus dilakukan oleh `collect()` sendiri:
+
+| | A | B |
+|---|---|---|
+| pergerakan bernilai | 1 | 1 |
+| `value_total` | 100 | 250 |
+| `remaining_moves` | 1 | 1 |
+| `remaining_qty_total` | 2 | 4 |
+| `remaining_value_total` | 100 (`fifo`) | 28 (`average`: 4 × 7) |
+| metode kategori | `fifo` | `average` |
+
+Kontrol negatif menjalankan agregat yang sama **tanpa** domain perusahaan dan
+menuntut hasil campuran 2 pergerakan / 350. Jadi jika isolasi pada jalur produksi
+dihapus, assertion regresi gagal. Semua fixture dibuat di dalam savepoint lalu
 di-rollback; variabel DB wajib disebut agar regresi tidak pernah berjalan tanpa
 sengaja pada database demo.
 
@@ -140,8 +157,8 @@ docker exec -e FINANCE_I3_COMPANY_SCOPE_DB=fmcg -i odoo \
   < scripts/ops/verify_finance_i3_costing.py
 ```
 
-Job `init-test` menjalankan perintah ini dan menuntut
-`FINANCE_I3_COMPANY_SCOPE=PASS`.
+Job `init-test` menjalankan satu perintah ini dan menuntut dua penanda:
+`FINANCE_I3_COSTING_RUN=PASS` dan `FINANCE_I3_COMPANY_SCOPE=PASS`.
 
 ## Yang sudah dibuktikan
 

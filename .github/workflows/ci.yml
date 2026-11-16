@@ -445,20 +445,16 @@ jobs:
           docker exec -i odoo /opt/deploy/init.sh shell --no-http \
             < scripts/ops/verify_finance_activation_demo.py | tee finance_activation.log
           grep -q 'INIT_FINANCE_ACTIVATION=PASS' finance_activation.log
-      - name: Diagnostik costing I3 read-only
+      - name: Diagnostik costing I3 read-only dan regresi lingkup perusahaan
         run: |
           set -euo pipefail
-          docker exec -i odoo /opt/deploy/init.sh shell --no-http \
+          # Satu sesi shell, dua penanda. Fixture dua perusahaan dibuat lalu
+          # di-rollback; hanya di DB disposable CI.
+          docker exec -e FINANCE_I3_COMPANY_SCOPE_DB=fmcg -i odoo /opt/deploy/init.sh shell --no-http \
             < scripts/ops/verify_finance_i3_costing.py | tee finance_i3_costing.log
           grep -q 'FINANCE_I3_COSTING_RUN=PASS' finance_i3_costing.log
           grep -q '"categories_total"' finance_i3_costing.log
-      - name: Regresi lingkup perusahaan diagnostik I3
-        run: |
-          set -euo pipefail
-          # Fixture dua perusahaan dibuat lalu di-rollback; hanya di DB disposable CI.
-          docker exec -e FINANCE_I3_COMPANY_SCOPE_DB=fmcg -i odoo /opt/deploy/init.sh shell --no-http \
-            < scripts/ops/verify_finance_i3_costing.py | tee finance_i3_company_scope.log
-          grep -q 'FINANCE_I3_COMPANY_SCOPE=PASS' finance_i3_company_scope.log
+          grep -q 'FINANCE_I3_COMPANY_SCOPE=PASS' finance_i3_costing.log
       - name: Siapkan database terisolasi untuk eksperimen
         if: needs.changes.outputs.seed == 'true'
         run: |

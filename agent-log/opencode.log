@@ -186,3 +186,10 @@
 - [F] YAML valid, diff check bersih, self-test dan ruff PASS.
 - [BU] CI ulang pada commit merge belum berjalan; perubahan workflow memicu full regression.
 - Task managed by Agent-Opencode at 2026-11-16T09:12:04+07:00
+
+[2026-11-16T09:39:40+07:00] [INFO] P1 regresi lingkup perusahaan: dua fixture sebelum baca, sisa nonnol, kontrol negatif
+- [F] Regresi diperketat: kedua fixture sebelum baca, collect() dipanggil dari konteks dua perusahaan, sisa stok 2/100 dan 4/28, kontrol negatif campuran 2/350.
+- [F] Satu sesi shell menghasilkan FINANCE_I3_COSTING_RUN=PASS dan FINANCE_I3_COMPANY_SCOPE=PASS; init-test memakai satu langkah.
+- [F] Lokal self-test, ruff, manifest, YAML, compileall PASS.
+- [BU] Perilaku native sisa stok dan kontrol negatif menunggu CI.
+- Task managed by Agent-Opencode at 2026-11-16T09:39:40+07:00
