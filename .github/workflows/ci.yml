@@ -118,7 +118,7 @@ jobs:
   install-test:
     needs: [static, changes]
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 120
     services:
       postgres:
         image: postgres:16

@@ -1,3 +1,24 @@
+## 2026-11-16T13:00:00+07:00 — antigravity — GenericPeriodPackLoader: Optimasi Konteks ORM Odoo untuk Batch Seed Massal & Penyesuaian Timeout CI 120 Menit (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan `install-test` pada Run 43803811562 (Step 12) mengungkap bahwa seluruh 1.240 SO dan 1.240 DO berhasil diproses dalam 21m37s, dan guard HPP split-lot berjalan 100% mulus tanpa error.
+- [F] Namun, pemrosesan 1.240 faktur komersial dan 1.202 pembayaran AR secara serial dengan kalkulasi mail chatter dan tracking status Odoo native memakan waktu tambahan ~45 menit, sehingga pembuktian dua database disposable (Scenario A + Scenario B) melampaui timeout 75 menit dan dibatalkan pada menit ke-75:00.
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menginisialisasi `self.env` pada `GenericPeriodPackLoader` dengan context flags performa Odoo ORM standar (`tracking_disable=True`, `mail_create_nolog=True`, `mail_create_nosubscribe=True`, `mail_notrack=True`, `no_reset_password=True`) selaras dengan `CanonicalPerpetualAdapter`.
+  - Mengeliminasi beban pembuatan rekaman mail chatter, notifications, dan tracking pada ribuan mutasi serial tanpa mengurangi validitas transaksi, perpajakan, atau integritas jurnal.
+- `.github/workflows/ci.yml`:
+  - Menaikkan `timeout-minutes` job `install-test` dari 75 menjadi 120 menit sebagai jaring pengaman terhadap variabilitas runner GitHub Actions.
+**Diverifikasi:**
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python -c "import glob,yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+['docker-compose.yml']]"`: PASS.
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 PASS (6.527s).
+- [F] `python -m unittest tests/test_canonical_loader_adapter.py`: PASS (20 mutasi negatif ditolak, seluruh siklus lulus).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-16T13:00:00+07:00
+
 ## 2026-11-16T11:20:00+07:00 — antigravity — id_base: Preservasi Integritas Guard Valuasi HPP pada Picking Split-Lot Multi-Move dengan Penagihan Sebagian (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43794306875 (F4 CI Step 10) mengungkap kegagalan pada `SO-202608-0083` (SKU `MYR-BBG-03`):

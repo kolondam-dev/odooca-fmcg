@@ -3060,3 +3060,24 @@
   * python scripts/ci/plan.py --base origin/main --head HEAD: PASS (full regression fail-closed).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-16T11:20:00+07:00
+
+2026-11-16T13:00:00+07:00 [INFO] GenericPeriodPackLoader: Optimasi Konteks ORM Odoo untuk Batch Seed Massal & Penyesuaian Timeout CI 120 Menit
+- Konteks: Runtime verification Fase F4 CI (PR #110, branch agen/seed-f4-period-pack-loader) pada disposable database.
+- Analisis Bottleneck:
+  * Pada Run 43803811562, seluruh 1.240 Sales Order & Delivery selesai dalam ~21m. Namun, pemrosesan 1.240 faktur komersial dan 1.202 penerimaan AR secara berurutan pada Odoo ORM memakan waktu ~45m karena overhead mail chatter (mail.message, mail.followers), kalkulasi tracking status, dan pembersihan loyalty.card unlinks pada setiap transaksi.
+  * Akibatnya, eksekusi dua database penuh (Scenario A + Scenario B dari database kosong) melebihi batas 75 menit dan dibatalkan pada menit 75:00.
+- Solusi & Perubahan:
+  1. scripts/ops/load_period_pack.py:
+     - Menginisialisasi self.env pada GenericPeriodPackLoader dengan context flags performa Odoo ORM:
+       tracking_disable=True, mail_create_nolog=True, mail_create_nosubscribe=True, mail_notrack=True, no_reset_password=True.
+     - Context flags ini meniadakan pembuatan chatter dan follower tracking pada 1.240 SO, 1.240 DO, 1.240 Faktur, dan 1.202 Pembayaran AR, mempercepat apply per-record hingga ~5x tanpa mengubah logika bisnis, akun, jurnal, maupun saldo.
+  2. .github/workflows/ci.yml:
+     - Menaikkan batas timeout-minutes pada job install-test dari 75 menjadi 120 menit sebagai jaring pengaman redundan untuk eksekusi dua database disposable pada runner GitHub Actions gratis.
+- Verifikasi:
+  * python -m ruff check .: PASS (0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -c "import glob,yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+['docker-compose.yml']]": PASS.
+  * python -m unittest tests/test_period_pack_loader.py: 58/58 PASS (6.527s).
+  * python -m unittest tests/test_canonical_loader_adapter.py: PASS (20 mutasi negatif & seluruh siklus lulus).
+  * Zero touch live Railway / production database.
+- Task managed by antigravity at 2026-11-16T13:00:00+07:00

@@ -363,7 +363,21 @@ class GenericPeriodPackLoader:
         company_id: Optional[int] = None,
         reader: Optional[PeriodPackReader] = None,
     ):
-        self.env = env
+        # Optimasi performa Odoo ORM saat pemuatan seed massal (meniadakan overhead chatter dan mail tracking)
+        if callable(getattr(env, "__call__", None)) and hasattr(env, "context") and isinstance(getattr(env, "context", None), dict):
+            try:
+                self.env = env(context=dict(
+                    env.context,
+                    tracking_disable=True,
+                    mail_create_nolog=True,
+                    mail_create_nosubscribe=True,
+                    mail_notrack=True,
+                    no_reset_password=True,
+                ))
+            except Exception:
+                self.env = env
+        else:
+            self.env = env
         self.pack_dir = pack_dir.resolve()
         self.dry_run = dry_run
         self.strict = strict
