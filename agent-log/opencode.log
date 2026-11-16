@@ -206,3 +206,10 @@
 - [F] Tidak ada penanda konflik; self-test dan ruff PASS.
 - [BU] Workflow commit merge dan hasil regresi native belum berjalan.
 - Task managed by Agent-Opencode at 2026-11-16T10:11:54+07:00
+
+[2026-11-16T10:33:27+07:00] [INFO] Regresi dua perusahaan I3 terbukti native pada 6813020
+- [F] init-test 43796734869: A 100/sisa 2/100 fifo; B 250/sisa 4/28 average; kontrol negatif 2/350.
+- [F] 23/23 check lulus pada 6813020, termasuk finance-gate, upgrade-gate, full-dataset-gate.
+- [F] I3_COSTING.md mencatat angka aktual dan kontrol negatif; body PR diperbarui.
+- [BU] Diagnostik demo production dan UAT finance masih terbuka.
+- Task managed by Agent-Opencode at 2026-11-16T10:33:27+07:00

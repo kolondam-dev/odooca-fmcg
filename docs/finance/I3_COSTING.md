@@ -174,6 +174,16 @@ Job `init-test` menjalankan satu perintah ini dan menuntut dua penanda:
   `stock.move.value` dan tetap punya jalur baca layer untuk database pra-19.
 - [F] `install-test` dan `init-test` hijau pada commit integrasi `e0b5602`
   setelah PR #138 (jam uji deterministik `id_mobile_api`) masuk `main`.
+- [F] Regresi native dua perusahaan lulus di `init-test` run `43796734869`
+  (commit `6813020`, 2026-11-16): A (`company_id=2`) 1 pergerakan, `value_total`
+  100, `remaining_qty_total` 2, `remaining_value_total` 100, metode `fifo`;
+  B (`company_id=3`) 1 pergerakan, `value_total` 250, `remaining_qty_total` 4,
+  `remaining_value_total` 28, metode `average`. Kontrol negatif tanpa domain
+  perusahaan menghasilkan 2 pergerakan / 350, jadi isolasi yang hilang akan
+  menggagalkan regresi.
+- [F] Diagnostik `FINANCE_I3_COSTING_RUN=PASS` dan regresi
+  `FINANCE_I3_COMPANY_SCOPE=PASS` dijalankan dalam satu sesi shell pada
+  `init-test`, dan seluruh 23 check PR lulus pada commit `6813020`.
 
 ## Yang belum dibuktikan
 

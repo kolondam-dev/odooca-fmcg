@@ -1,3 +1,10 @@
+## 2026-11-16T10:33:27+07:00 — Agent-Opencode — Regresi dua perusahaan I3 terbukti native pada 6813020
+**Konteks:** [F] Setelah fixture memakai warehouse native per perusahaan, CI `6813020` membuktikan sisa stok native nonnol dan terpisah, menutup HOLD P1 pemilik.
+**Diverifikasi:** [F] `init-test` run `43796734869`: A (`company_id=2`) `env_companies=[2]`, `qty_available=2`, 1 pergerakan, `value_total=100`, `remaining_qty_total=2`, `remaining_value_total=100`, `fifo`; B (`company_id=3`) `env_companies=[3]`, `qty_available=4`, 1 pergerakan, `value_total=250`, `remaining_qty_total=4`, `remaining_value_total=28`, `average`. [F] `unscoped_control` = 2 pergerakan / 350, sehingga regresi gagal bila isolasi dihapus. [F] `FINANCE_I3_COSTING_RUN=PASS` dan `FINANCE_I3_COMPANY_SCOPE=PASS` dari satu sesi shell. [F] Seluruh 23 check PR #140 lulus pada `6813020`, termasuk `finance-gate`, `upgrade-gate`, dan `full-dataset-gate`.
+**Berubah:** [F] `docs/finance/I3_COSTING.md` mencatat angka aktual dan kontrol negatif; body PR diperbarui dengan bukti dan catatan CI berlebih.
+**Belum diuji:** [BU] Diagnostik pada database demo production dan checklist `PRODUCTION_FINANCE_UAT.md` masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T10:33:27+07:00
+
 ## 2026-11-16T10:11:54+07:00 — Agent-Opencode — Sinkronisasi main 6306df8 dan kontrak dampak test pada PR #140
 **Konteks:** [F] Push `a30e613` tidak memicu workflow dan `main` sudah maju ke `6306df8` (PR #146, kontrak dampak test), sehingga PR kembali konflik.
 **Berubah:** [F] Merge `origin/main`; `docs/HANDOFF.md` diselesaikan dengan mempertahankan kedua sisi dan menempatkan entri codex 09:34 sesuai urutan terbaru. Tidak ada konflik pada `ci.yml` atau skrip.
