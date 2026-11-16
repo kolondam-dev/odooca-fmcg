@@ -296,3 +296,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-15T21:26:26+07:00] [INFO] Fase 3B-12 status lokasi check-in toko + tab Delivery
 - - LocationNoticeSheet bersama, K26
 - Task managed by claude-design agent at 2026-11-15T21:26:26+07:00
+
+[2026-11-16T09:45:39+07:00] [INFO] PWA 3B-12: skenario browser guard akurasi check-in (outlet ketat)
+- Saklar QA fmcg:qa-strict-outlets + fixture useStrictOutlets
+- Fix valid lalu 31 m saat Mulai kunjungan: lembar Akurasi lokasi rendah, tanpa sales.visit.check_in di outbox
+- K26 diperbarui
+- Task managed by claude-design agent at 2026-11-16T09:45:39+07:00
