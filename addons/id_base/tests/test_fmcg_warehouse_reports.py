@@ -200,8 +200,6 @@ class TestFMCGWarehouseReports(TransactionCase):
         self.assertRegex(html, r">\s*3(?:[.,]0+)?\s*<")
         self.assertNotRegex(html, r">\s*5(?:[.,]0+)?\s*<")
 
-
-
     def test_qweb_indonesian_title_terms_match_odoo_export(self):
         # Export the installed view translations through Odoo 19 itself. This
         # checks the database's extracted QWeb terms, not just PO file text.
