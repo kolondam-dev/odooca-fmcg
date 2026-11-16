@@ -1,11 +1,20 @@
 from odoo import Command
 from odoo.tests.common import TransactionCase
+from odoo.tools.translate import load_language
 
 
 class TestFMCGWarehouseReports(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Install Indonesian in this disposable test database before rendering.
+        # Loading the language activates it; refreshing this module then imports
+        # id_base/i18n/id.po for the QWeb templates under test.
+        load_language(cls.env.cr, "id_ID")
+        cls.env["ir.module.module"].search([
+            ("name", "=", "id_base"),
+        ])._update_translations(overwrite=False)
+        cls.env.invalidate_all()
         cls.warehouse = cls.env.ref("stock.warehouse0")
         cls.picking_type = cls.warehouse.out_type_id
         cls.source = cls.picking_type.default_location_src_id
