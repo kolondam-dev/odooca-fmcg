@@ -58,7 +58,7 @@ for xmlid in (
     report = env.ref(xmlid)
     assert report.report_type == "qweb-pdf", (xmlid, report.report_type)
     pdf, content_type = report.with_context(
-        force_report_rendering=True
+        lang="id_ID", force_report_rendering=True
     )._render_qweb_pdf(report.report_name, picking.ids)
     assert content_type == "pdf", (xmlid, content_type)
     assert isinstance(pdf, bytes) and pdf.startswith(b"%PDF-"), xmlid
