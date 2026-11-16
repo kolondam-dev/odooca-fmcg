@@ -1,0 +1,538 @@
+#!/usr/bin/env python3
+"""Read-only stock costing and valuation diagnostic for the I3 (HPP) spike.
+
+Run inside an Odoo shell on the demo database:
+
+    docker exec -i odoo /opt/deploy/init.sh shell --no-http \
+        < scripts/ops/verify_finance_i3_costing.py
+
+The diagnostic only reads. It reports, per product category, the costing method
+and valuation mode, plus the valuation carried by stock moves, so the method
+decision for HPP can be made on observed state instead of assumption. A category
+that keeps FIFO + real_time while Odoo 19 defaults new categories to periodic
+looks identical in the UI until someone reads these fields.
+
+Odoo 19 removed the pre-19 ``stock.valuation.layer`` model: a stock move now
+carries its own ``value``, ``remaining_qty`` and ``remaining_value``. The CI
+run on 2026-11-15 confirmed the layer model is absent on 19, so this script
+reads moves. ``stock.valuation.layer`` is still read when a database has it.
+
+``--self-test`` exercises ``analyze`` against fixtures with no Odoo registry, so
+CI can prove the aggregation logic without a database.
+
+Company scoping is covered by a native two-company regression, opt-in through
+``FINANCE_I3_COMPANY_SCOPE_DB=<database>``: it creates two readable companies,
+one shared category with a different cost method per company, and one valued
+move per company, then rolls everything back inside a savepoint. It never runs
+unless the database name matches, so it cannot touch the demo database by
+accident.
+"""
+
+import argparse
+import json
+import os
+import sys
+
+# What the seeded demo was expected to use. This is an assumption, not a fact
+# read from the database: the diagnostic reports every deviation instead of
+# silently accepting it. The CI disposable database reports every category as
+# Odoo 19's default (standard + periodic), so this profile must be re-checked
+# against the demo database, not trusted.
+DEMO_PROFILE = {"cost_method": "fifo", "valuation": "real_time"}
+
+
+def analyze(data, profile=DEMO_PROFILE):
+    """Turn collected rows into the diagnostic report.
+
+    ``data`` uses plain Python values only, so the same logic runs against a
+    live registry and against the self-test fixtures.
+    """
+    categories = data.get("categories") or []
+    by_cost_method = {}
+    by_valuation = {}
+    deviations = []
+    real_time_without_valuation = []
+
+    for category in categories:
+        cost_method = category.get("cost_method") or "unset"
+        valuation = category.get("valuation") or "unset"
+        by_cost_method[cost_method] = by_cost_method.get(cost_method, 0) + 1
+        by_valuation[valuation] = by_valuation.get(valuation, 0) + 1
+        if cost_method != profile["cost_method"] or valuation != profile["valuation"]:
+            deviations.append({
+                "category": category.get("name"),
+                "cost_method": cost_method,
+                "valuation": valuation,
+            })
+        if valuation == "real_time" and not category.get("valued_move_count"):
+            real_time_without_valuation.append(category.get("name"))
+
+    valuation_data = data.get("valuation") or {}
+    findings = []
+    if not categories:
+        findings.append("No product categories were found; costing cannot be assessed.")
+    if deviations:
+        findings.append(
+            f"{len(deviations)} of {len(categories)} categories differ from the demo profile "
+            f"({profile['cost_method']} + {profile['valuation']})."
+        )
+    if real_time_without_valuation:
+        findings.append(
+            f"{len(real_time_without_valuation)} real_time categories have no valued stock move; "
+            "their stock value is not evidenced yet."
+        )
+    if categories and not valuation_data.get("available"):
+        findings.append(
+            "The stock move value fields are unavailable; stock value cannot be read from this database."
+        )
+    if valuation_data.get("available") and valuation_data.get("negative_remaining_qty"):
+        findings.append(
+            f"{valuation_data['negative_remaining_qty']} stock moves end with negative remaining quantity."
+        )
+    if valuation_data.get("available") and valuation_data.get("zero_value_with_stock"):
+        findings.append(
+            f"{valuation_data['zero_value_with_stock']} stock moves keep stock at zero remaining value."
+        )
+    if data.get("zero_cost_products"):
+        findings.append(
+            f"{data['zero_cost_products']} storable products still carry a zero standard cost."
+        )
+    if not findings:
+        findings.append("Every category matches the demo profile and the valued moves look consistent.")
+
+    return {
+        "scope": "I3 costing diagnostic only: read-only state, not FIN01-58 acceptance",
+        "company": data.get("company"),
+        "company_id": data.get("company_id"),
+        "currency": data.get("currency"),
+        "profile_is_assumption": True,
+        "demo_profile": dict(profile),
+        "stock_account_installed": bool(data.get("stock_account_installed")),
+        "categories_total": len(categories),
+        "by_cost_method": by_cost_method,
+        "by_valuation": by_valuation,
+        "deviations": deviations,
+        "real_time_without_valuation": real_time_without_valuation,
+        "valuation": valuation_data,
+        "zero_cost_products": data.get("zero_cost_products", 0),
+        "findings": findings,
+    }
+
+
+def collect(env, company=None):
+    """Read the registry without writing anything, for one company only.
+
+    Every read is scoped to a single company. Product category costing fields
+    and ``standard_price`` are company-dependent, and stock moves/layers carry
+    ``company_id``; without that scope a session that can read two companies
+    would add both companies' stock value into a total labelled as one company.
+    """
+    company = company or env.company
+    scoped_env = env(context={**env.context, "allowed_company_ids": [company.id]})
+    product_model = scoped_env["product.product"]
+    category_model = scoped_env["product.category"]
+    move_model = scoped_env["stock.move"] if "stock.move" in scoped_env else None
+    storable_domain = [("is_storable", "=", True)] if "is_storable" in product_model._fields else []
+    company_domain = [("company_id", "=", company.id)]
+    installed = scoped_env["ir.module.module"].search(
+        [("name", "=", "stock_account"), ("state", "=", "installed")],
+        limit=1,
+    )
+
+    def value(category, field, default="unset"):
+        return category[field] if field in category._fields else default
+
+    valued_domain = company_domain + [("state", "=", "done"), ("value", "!=", 0)]
+    # An empty recordset is falsy, so test for None explicitly.
+    has_move_value = move_model is not None and "value" in move_model._fields
+
+    categories = []
+    for category in category_model.search([]):
+        valued_move_count = 0
+        if has_move_value:
+            valued_move_count = move_model.search_count(
+                valued_domain + [("product_id.categ_id", "=", category.id)]
+            )
+        categories.append({
+            "id": category.id,
+            "name": category.display_name,
+            "cost_method": value(category, "property_cost_method"),
+            "valuation": value(category, "property_valuation"),
+            "product_count": product_model.search_count([("categ_id", "=", category.id)]),
+            "valued_move_count": valued_move_count,
+        })
+
+    valuation = {"available": False, "source": None}
+    if has_move_value:
+        rows = move_model._read_group(valued_domain, [], ["value:sum"])
+        remaining = move_model.search(company_domain + [("remaining_qty", "=", True)])
+        negative = 0
+        zero_value_with_stock = 0
+        for move in remaining:
+            if move.remaining_qty < 0:
+                negative += 1
+            elif move.remaining_value == 0:
+                zero_value_with_stock += 1
+        valuation = {
+            "available": True,
+            "source": "stock.move (Odoo 19)",
+            "done_valued_moves": move_model.search_count(valued_domain),
+            "value_total": (rows[0][0] if rows else 0) or 0,
+            "remaining_moves": len(remaining),
+            "remaining_qty_total": sum(remaining.mapped("remaining_qty")) or 0,
+            "remaining_value_total": sum(remaining.mapped("remaining_value")) or 0,
+            "negative_remaining_qty": negative,
+            "zero_value_with_stock": zero_value_with_stock,
+        }
+    elif "stock.valuation.layer" in scoped_env:
+        layer_model = scoped_env["stock.valuation.layer"]
+        rows = layer_model._read_group(company_domain, [], ["value:sum", "remaining_value:sum"])
+        valuation = {
+            "available": True,
+            "source": "stock.valuation.layer (pre-19)",
+            "done_valued_moves": layer_model.search_count(company_domain),
+            "value_total": (rows[0][0] if rows else 0) or 0,
+            "remaining_moves": layer_model.search_count(company_domain),
+            "remaining_qty_total": 0,
+            "remaining_value_total": (rows[0][1] if rows else 0) or 0,
+            "negative_remaining_qty": layer_model.search_count(
+                company_domain + [("remaining_qty", "<", 0)]
+            ),
+            "zero_value_with_stock": layer_model.search_count(company_domain + [
+                ("remaining_qty", ">", 0),
+                ("remaining_value", "=", 0),
+            ]),
+        }
+
+    zero_cost_products = 0
+    if "standard_price" in product_model._fields:
+        zero_cost_products = product_model.search_count(storable_domain + [("standard_price", "=", 0)])
+
+    return {
+        "company": company.display_name,
+        "company_id": company.id,
+        "currency": company.currency_id.name if "currency_id" in company._fields else None,
+        "stock_account_installed": bool(installed),
+        "categories": categories,
+        "valuation": valuation,
+        "zero_cost_products": zero_cost_products,
+    }
+
+
+def _fixture():
+    return {
+        "company": "PT Manado Distribusi Utama",
+        "currency": "IDR",
+        "stock_account_installed": True,
+        "categories": [
+            {"name": "All / FIFO real time", "cost_method": "fifo", "valuation": "real_time",
+             "product_count": 12, "valued_move_count": 40},
+            {"name": "All / Average periodic", "cost_method": "average", "valuation": "periodic",
+             "product_count": 3, "valued_move_count": 0},
+            {"name": "All / FIFO periodic", "cost_method": "fifo", "valuation": "periodic",
+             "product_count": 1, "valued_move_count": 0},
+            {"name": "Empty real time", "cost_method": "fifo", "valuation": "real_time",
+             "product_count": 0, "valued_move_count": 0},
+        ],
+        "valuation": {
+            "available": True,
+            "source": "stock.move (Odoo 19)",
+            "done_valued_moves": 40,
+            "value_total": 1000.0,
+            "remaining_moves": 25,
+            "remaining_qty_total": 60.0,
+            "remaining_value_total": 250.0,
+            "negative_remaining_qty": 1,
+            "zero_value_with_stock": 2,
+        },
+        "zero_cost_products": 4,
+    }
+
+
+def self_test():
+    report = analyze(_fixture())
+    assert report["categories_total"] == 4, report
+    assert report["by_cost_method"] == {"fifo": 3, "average": 1}, report
+    assert report["by_valuation"] == {"real_time": 2, "periodic": 2}, report
+    assert report["company"] == "PT Manado Distribusi Utama", report
+    assert {row["category"] for row in report["deviations"]} == {
+        "All / Average periodic", "All / FIFO periodic"}, report
+    assert report["real_time_without_valuation"] == ["Empty real time"], report
+    assert report["zero_cost_products"] == 4, report
+    assert any("negative remaining quantity" in line for line in report["findings"]), report
+    assert any("zero remaining value" in line for line in report["findings"]), report
+    assert any("zero standard cost" in line for line in report["findings"]), report
+
+    empty = analyze({})
+    assert empty["categories_total"] == 0, empty
+    assert empty["findings"] == [
+        "No product categories were found; costing cannot be assessed."
+    ], empty
+
+    matching = analyze({
+        "categories": [{"name": "A", "cost_method": "fifo", "valuation": "real_time",
+                        "valued_move_count": 2}],
+        "valuation": {"available": True, "negative_remaining_qty": 0, "zero_value_with_stock": 0},
+        "zero_cost_products": 0,
+    })
+    assert matching["deviations"] == [], matching
+    assert matching["findings"] == [
+        "Every category matches the demo profile and the valued moves look consistent."
+    ], matching
+
+    unavailable = analyze({
+        "categories": [{"name": "A", "cost_method": "fifo", "valuation": "real_time",
+                        "valued_move_count": 2}],
+        "valuation": {"available": False},
+        "zero_cost_products": 0,
+    })
+    assert unavailable["findings"] == [
+        "The stock move value fields are unavailable; stock value cannot be read from this database."
+    ], unavailable
+
+    print("FINANCE_I3_COSTING_SELFTEST=PASS")
+    return 0
+
+
+def run(env):
+    report = analyze(collect(env))
+    print("FINANCE_I3_COSTING=" + json.dumps(report, sort_keys=True, default=str))
+    # A completed read-only diagnostic, not an accounting acceptance verdict.
+    print("FINANCE_I3_COSTING_RUN=PASS")
+    return report
+
+
+class _RollbackFixture(Exception):
+    """Unwind the regression fixtures so nothing is left behind."""
+
+
+def _require(condition, message):
+    if not condition:
+        raise AssertionError(message)
+
+
+def _unscoped_valuation(env):
+    """Mirror collect()'s move aggregation without the company domain.
+
+    Negative control only: this is the number collect() would report if its
+    company isolation were removed. It deliberately repeats the production
+    query instead of adding a bypass flag to collect().
+    """
+    move_model = env["stock.move"]
+    domain = [("state", "=", "done"), ("value", "!=", 0)]
+    rows = move_model._read_group(domain, [], ["value:sum"])
+    return {
+        "done_valued_moves": move_model.search_count(domain),
+        "value_total": (rows[0][0] if rows else 0) or 0,
+    }
+
+
+def _company_scope_fixture(env):
+    """Build both companies' valued moves before reading any aggregate.
+
+    Two readable companies share one category. Each gets its own internal
+    location, one done incoming move with a distinct quantity and value, and the
+    matching quant, so both ``value_total`` and the remaining stock differ and
+    are non-zero. The companies are added to the current user's company list so
+    native valuation reads (``env.companies``) see their locations.
+
+    ``collect`` is then called from a context that allows *both* companies, and
+    must narrow to each one by itself. A negative control repeats the aggregate
+    without the company domain and asserts it would mix 100 + 250, which is what
+    fails when the isolation is removed.
+    """
+    company_a = env["res.company"].sudo().create({
+        "name": "I3 scope regression A",
+        "currency_id": env.company.currency_id.id,
+    })
+    company_b = env["res.company"].sudo().create({
+        "name": "I3 scope regression B",
+        "currency_id": env.company.currency_id.id,
+    })
+    # Native valuation reads filter locations through env.companies, which is
+    # intersected with the user's companies. Without this, qty_available is 0.
+    env.user.sudo().write({"company_ids": [(4, company_a.id), (4, company_b.id)]})
+    env = env(context={**env.context, "allowed_company_ids": [company_a.id, company_b.id]})
+
+    category = env["product.category"].sudo().create({"name": "I3 scope shared category"})
+    category.with_company(company_a).write({
+        "property_cost_method": "fifo", "property_valuation": "periodic",
+    })
+    category.with_company(company_b).write({
+        "property_cost_method": "average", "property_valuation": "periodic",
+    })
+
+    product = env["product.product"].sudo().create({
+        "name": "I3 scope shared product",
+        "categ_id": category.id,
+        "is_storable": True,
+        "uom_id": env.ref("uom.product_uom_unit").id,
+    })
+    product.with_company(company_a).standard_price = 0
+    product.with_company(company_b).standard_price = 7
+
+    supplier = env.ref("stock.stock_location_suppliers")
+    destinations = {}
+    for company, quantity, move_value in (
+        (company_a, 2, 100.0),
+        (company_b, 4, 250.0),
+    ):
+        # A stock company needs a warehouse: qty_available falls back to the
+        # warehouse view location when no valuation location is supplied.
+        warehouse = env["stock.warehouse"].sudo().with_company(company).create({
+            "name": "I3 scope warehouse %s" % company.id,
+            "code": "I3%s" % company.id,
+            "company_id": company.id,
+        })
+        stock_location = warehouse.lot_stock_id
+        destinations[company.id] = stock_location
+        move = env["stock.move"].sudo().with_company(company).create({
+            "product_id": product.id,
+            "product_uom_qty": quantity,
+            "product_uom": product.uom_id.id,
+            "location_id": supplier.id,
+            "location_dest_id": stock_location.id,
+            "company_id": company.id,
+        })
+        env["stock.move.line"].sudo().with_company(company).create({
+            "move_id": move.id,
+            "product_id": product.id,
+            "product_uom_id": product.uom_id.id,
+            "quantity": quantity,
+            "location_id": supplier.id,
+            "location_dest_id": stock_location.id,
+            "company_id": company.id,
+            "picked": True,
+        })
+        move.write({"state": "done", "quantity": quantity, "value": move_value})
+        env["stock.quant"].sudo().with_company(company)._update_available_quantity(
+            product, stock_location, quantity,
+        )
+
+    # Both fixtures exist now; only then read, from a two-company context.
+    expected = {
+        company_a.id: {
+            "value_total": 100.0,
+            "remaining_qty_total": 2,
+            "remaining_value_total": 100.0,  # fifo: remaining_qty / quantity * value
+            "cost_method": "fifo",
+            "standard_price": 0,
+        },
+        company_b.id: {
+            "value_total": 250.0,
+            "remaining_qty_total": 4,
+            "remaining_value_total": 28.0,  # average: remaining_qty * standard_price
+            "cost_method": "average",
+            "standard_price": 7,
+        },
+    }
+    evidence = {}
+    for company in (company_a, company_b):
+        report = collect(env, company=company)
+        row = next(item for item in report["categories"] if item["id"] == category.id)
+        company_env = env(context={**env.context, "allowed_company_ids": [company.id]})
+        product_in_company = company_env["product.product"].browse(product.id)
+        valued_locations = company_env["stock.location"].with_context(active_test=False).search(
+            [("is_valued_internal", "=", True)]
+        )
+        evidence[str(company.id)] = {
+            "company": report["company"],
+            "company_id": report["company_id"],
+            "diagnostics": {
+                "env_companies": company_env.companies.ids,
+                "valued_location_count": len(valued_locations),
+                "stock_location_valued": destinations[company.id].with_env(company_env).is_valued_internal,
+                "qty_available": product_in_company.qty_available,
+                "quant_quantity": sum(
+                    company_env["stock.quant"].search([
+                        ("product_id", "=", product.id),
+                        ("location_id", "=", destinations[company.id].id),
+                    ]).mapped("quantity")
+                ),
+            },
+            "done_valued_moves": report["valuation"]["done_valued_moves"],
+            "value_total": report["valuation"]["value_total"],
+            "remaining_moves": report["valuation"]["remaining_moves"],
+            "remaining_qty_total": report["valuation"]["remaining_qty_total"],
+            "remaining_value_total": report["valuation"]["remaining_value_total"],
+            "category_cost_method": row["cost_method"],
+            "category_valued_move_count": row["valued_move_count"],
+            "standard_price": product.with_company(company).standard_price,
+            "zero_cost_products": report["zero_cost_products"],
+        }
+
+    for company, want in expected.items():
+        result = evidence[str(company)]
+        _require(result["company_id"] == company, result)
+        _require(result["done_valued_moves"] == 1, result)
+        _require(result["value_total"] == want["value_total"], result)
+        _require(result["remaining_moves"] == 1, result)
+        _require(result["remaining_qty_total"] == want["remaining_qty_total"], result)
+        _require(result["remaining_value_total"] == want["remaining_value_total"], result)
+        _require(result["category_cost_method"] == want["cost_method"], result)
+        _require(result["category_valued_move_count"] == 1, result)
+        _require(result["standard_price"] == want["standard_price"], result)
+
+    # Only the shared product differs: zero-cost in A, priced in B.
+    _require(
+        evidence[str(company_a.id)]["zero_cost_products"]
+        == evidence[str(company_b.id)]["zero_cost_products"] + 1,
+        evidence,
+    )
+
+    # Negative control: the same aggregation without the company domain must
+    # mix both companies, so a missing isolation would fail the assertions above.
+    mixed = _unscoped_valuation(env)
+    _require(mixed["done_valued_moves"] == 2, mixed)
+    _require(mixed["value_total"] == 350.0, mixed)
+    _require(
+        all(row["value_total"] != mixed["value_total"] for row in evidence.values()),
+        evidence,
+    )
+    evidence["unscoped_control"] = mixed
+    return evidence
+
+
+def company_scope_regression(env):
+    """Run the company-scope regression on a disposable database only.
+
+    It creates companies, a category, a product, locations, moves and quants,
+    then rolls everything back. ``FINANCE_I3_COMPANY_SCOPE_DB`` must name the
+    current database so this never runs by accident against the demo database.
+    """
+    expected_db = os.environ.get("FINANCE_I3_COMPANY_SCOPE_DB")
+    _require(
+        bool(expected_db) and env.cr.dbname == expected_db,
+        "Company-scope regression writes and rolls back fixtures; "
+        "set FINANCE_I3_COMPANY_SCOPE_DB to this database name to run it.",
+    )
+    try:
+        with env.cr.savepoint():
+            evidence = _company_scope_fixture(env)
+            raise _RollbackFixture()
+    except _RollbackFixture:
+        pass
+    print("FINANCE_I3_COMPANY_SCOPE=" + json.dumps(evidence, sort_keys=True, default=str))
+    print("FINANCE_I3_COMPANY_SCOPE=PASS")
+    return evidence
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--self-test", action="store_true",
+                        help="Run the aggregation logic against fixtures, without Odoo.")
+    args = parser.parse_args()
+    if args.self_test:
+        return self_test()
+    print("Run this file inside an Odoo shell; see the module docstring.", file=sys.stderr)
+    return 2
+
+
+if "env" in globals():
+    # One shell session, two markers: the read-only diagnostic always runs, and
+    # the company-scope regression is added when its disposable DB is named.
+    run(globals()["env"])
+    if os.environ.get("FINANCE_I3_COMPANY_SCOPE_DB"):
+        company_scope_regression(globals()["env"])
+elif __name__ == "__main__":
+    sys.exit(main())

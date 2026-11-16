@@ -19,7 +19,9 @@ XLSX belum terpenuhi dan pengguna tidak bisa membawa angka keluar dari Odoo.
 | `scripts/ops/verify_finance_i2_exposure.py` | `check_xlsx_export`: helper guard, guard level workbook, 8 jenis laporan, pembersihan workbook basi, izin baca/tolak |
 | `addons/id_finance_reporting/i18n/id.po` | 27 entri baru (20 paket awal + 7 koreksi P2) |
 
-Versi modul: `19.0.1.5.1`.
+Versi modul: `19.0.1.5.2`. Patch ini tidak mengubah format workbook; ia
+memindahkan label modul/kelas dari `_()` ke `_lt()` supaya import tidak lagi
+memicu peringatan terjemahan pada setiap boot.
 
 ## Bentuk workbook
 
