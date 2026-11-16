@@ -96,6 +96,26 @@ Perubahan `.ci/test-impact.yml` harus disertai counterexample di
 `tests/test_ci_impact.py`. Path baru default full bukan alasan untuk membiarkan
 map tidak terawat; tambahkan aturan setelah dampaknya dipahami.
 
+### Guard langkah runtime
+
+Job seperti `init-test` dan `install-test` selalu dijalankan agar nama check tetap
+hadir, lalu setiap langkahnya sendiri yang dilewati ketika planner tidak memilih
+suite runtime. Karena itu setiap langkah `run` baru wajib merujuk flag impact
+plan (`if: needs.changes.outputs.<flag> ...`). Tanpa guard, langkah akan
+mengeksekusi `docker exec` pada container yang tidak pernah dibuat: PR docs-only
+#147 gagal di `init-test` (28 detik) karena langkah diagnostik I3 ditambahkan
+tanpa guard.
+
+Kontrak ini diuji `tests/test_ci_workflow_guards.py` pada job `static`:
+
+| Kontrak | Isi |
+|---|---|
+| Cakupan | seluruh `.github/workflows/*.yml` |
+| Aturan | pada job yang butuh `changes` dan menggerbangi sebagian langkahnya sendiri, setiap langkah `run` merujuk `needs.changes.outputs` |
+| Penerimaan | rujukan di `if:` (bentuk utama) atau `env:` (gate agregasi seperti `seed-invariants`) |
+| Pengecualian | job ber-guard tingkat job, dan job agregasi `*-gate` yang tidak punya langkah ber-guard |
+| Counterexample | satu langkah `docker exec` tanpa `if` di `init-test` menggagalkan test |
+
 ### Review supervisor atas dampak test
 
 Setiap review dan re-review harus memilih `CUKUP`, `SESUAIKAN`, atau `TAMBAH`.

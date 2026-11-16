@@ -226,3 +226,11 @@
 - [F] Traceback log = WARNING terjemahan dari id_dashboard_monetary/id_dashboard_wms, bukan finance.
 - [BU] Diagnostik DB demo production dan UAT finance belum dijalankan; katalog 58/58 BELUM_DITERIMA.
 - Task managed by Agent-Opencode at 2026-11-16T14:04:35+07:00
+
+[2026-11-16T14:13:07+07:00] [INFO] init-test PR #147: guard langkah I3 dan kontrak guard langkah workflow
+- [F] init-test PR #147 gagal karena langkah diagnostik I3 tanpa guard odoo_init; guard ditambahkan.
+- [F] tests/test_ci_workflow_guards.py: 6 kasus, memeriksa semua workflow; dijalankan di job static.
+- [F] Kontrol negatif: guard dihapus pada salinan ci.yml -> test gagal; dipulihkan -> OK.
+- [F] always_full mencakup test baru; counterexample di tests/test_ci_impact.py; docs/CI_SELECTION.md diperbarui.
+- [BU] Hasil init-test pada PR #147 menunggu CI; diagnostik demo production dan UAT finance masih terbuka.
+- Task managed by Agent-Opencode at 2026-11-16T14:13:07+07:00
