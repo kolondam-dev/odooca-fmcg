@@ -68,3 +68,28 @@ alasan di PR/HANDOFF. `.ci/test-impact.yml` adalah sumber kebenaran mesin;
 - Dilarang menumpuk eksperimen area tertentu ke job umum `install-test`, membuat
   `skip-ci`, atau melemahkan oracle/log guard supaya PR hijau.
 - PASS nightly/release adalah bukti verifikasi, bukan izin merge/deploy.
+
+## 11. Kontrak dampak test pada review supervisor
+
+Setiap review supervisor—termasuk re-review setelah perubahan—wajib memuat
+bagian **Dampak test** dengan tepat satu status berikut:
+
+- `CUKUP`: test dan bukti existing menutup risiko/invariant yang disentuh.
+  Supervisor menyebut test/bukti yang relevan dan alasan tidak perlu perubahan.
+- `SESUAIKAN`: test existing relevan tetapi fixture, assertion, oracle, cakupan,
+  atau trigger CI perlu diperbaiki agar dapat menangkap counterexample review.
+- `TAMBAH`: belum ada test pada level yang tepat untuk risiko/invariant baru.
+
+Untuk `SESUAIKAN` atau `TAMBAH`, rekomendasi minimum menyebut: risiko/invariant,
+level test (unit/integrasi Odoo/browser/runtime/dataset), counterexample yang
+harus gagal sebelum perbaikan, acceptance yang dapat dieksekusi, bukti yang
+diharapkan, serta path trigger dan suite dari `.ci/test-impact.yml`. Jika path
+atau suite belum terpetakan, rekomendasi juga mencakup perubahan impact map dan
+counterexample di `tests/test_ci_impact.py`.
+
+Test baru tidak wajib bila bukti existing memadai; keputusan harus dapat
+ditelusuri, bukan sekadar "CI hijau". Supervisor tidak boleh melemahkan
+assertion/oracle, mengurangi suite minimum planner, atau otomatis mengubah
+branch implementer hanya untuk membuat review lulus. Perubahan implementasi
+oleh supervisor harus dinyatakan sebagai kontribusi, lalu area materialnya
+memerlukan review independen.

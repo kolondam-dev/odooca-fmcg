@@ -1,3 +1,10 @@
+## 2026-11-16T10:11:54+07:00 — Agent-Opencode — Sinkronisasi main 6306df8 dan kontrak dampak test pada PR #140
+**Konteks:** [F] Push `a30e613` tidak memicu workflow dan `main` sudah maju ke `6306df8` (PR #146, kontrak dampak test), sehingga PR kembali konflik.
+**Berubah:** [F] Merge `origin/main`; `docs/HANDOFF.md` diselesaikan dengan mempertahankan kedua sisi dan menempatkan entri codex 09:34 sesuai urutan terbaru. Tidak ada konflik pada `ci.yml` atau skrip.
+**Diverifikasi:** [F] Tidak ada penanda konflik; entri HANDOFF terurut; self-test dan ruff PASS.
+**Belum diuji:** [BU] Workflow pada commit merge ini belum berjalan; regresi native sisa stok masih menunggu hasil. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T10:11:54+07:00
+
 ## 2026-11-16T10:08:33+07:00 — Agent-Opencode — Regresi I3: warehouse native per perusahaan dan diagnostik pembacaan sisa
 **Konteks:** [F] CI `8da9894` masih mencatat `remaining_moves: 0` untuk A meskipun kedua fixture sudah dibuat lebih dulu dan user diberi akses perusahaan. Nilai `value_total` (100 vs 250) dan metode kategori (fifo vs average) sudah terpisah benar.
 **Berubah:** [F] Fixture kini membuat warehouse native per perusahaan (`stock.warehouse`) dan memakai `lot_stock_id` sebagai tujuan, karena `qty_available` jatuh ke view location warehouse bila tidak ada lokasi valuasi. [F] Keluaran regresi menambahkan `diagnostics` per perusahaan: `env_companies`, jumlah lokasi tervaluasi, status `is_valued_internal` lokasi tujuan, `qty_available`, dan jumlah quant — agar penyebab sisa nol terlihat di log CI.
@@ -12,13 +19,18 @@
 **Belum diuji:** [BU] Perilaku native `remaining_qty`/`remaining_value` pada dua perusahaan (2/100 dan 4/28) dan kontrol 350 baru terbukti setelah CI. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-16T09:39:40+07:00
 
+## 2026-11-16T09:34:18+07:00 — codex — Kontrak dampak test wajib pada setiap review supervisor
+**Konteks:** [F] Review supervisor sebelumnya belum diwajibkan menyatakan secara eksplisit apakah test existing cukup, perlu disesuaikan, atau perlu ditambah.
+**Berubah:** [F] `AGENTS.md`, protokol agen, metode supervisor, panduan pemilihan CI, dan template PR sekarang mewajibkan bagian `Dampak test` berstatus `CUKUP`/`SESUAIKAN`/`TAMBAH`. Rekomendasi perubahan test harus mengikat risiko/invariant, level, counterexample, acceptance, bukti, serta path trigger/suite; gap impact map juga memerlukan counterexample planner.
+**Batas:** [F] Test baru tidak dipaksakan bila bukti existing memadai. Supervisor dilarang melemahkan oracle/minimum planner atau otomatis mengubah branch implementer hanya agar CI hijau; kontribusi supervisor pada implementasi material memerlukan review independen.
+**Diverifikasi:** [F] `python -m pytest tests/test_ci_impact.py -q` PASS (11 test), `python scripts/check_manifests.py` PASS (14 addon), `python -m ruff check .` PASS, dan `git diff --check` bersih. [BU] CI PR belum berjalan.
+
 ## 2026-11-16T09:12:04+07:00 — Agent-Opencode — Sinkronisasi main 4cb81ce dan CI selektif pada PR #140
 **Konteks:** [F] Seluruh 12 check lulus pada `c084424` (termasuk `init-test` dengan `FINANCE_I3_COMPANY_SCOPE=PASS` dan `Module Upgrade from Persisted Baseline + Replay Zero Drift`). Setelah itu `main` maju ke `4cb81ce` (PR #145, CI berbasis dampak) sehingga PR kembali konflik.
 **Berubah:** [F] Merge `origin/main` ke cabang; konflik `docs/HANDOFF.md` diselesaikan dengan mempertahankan kedua sisi (entri claude-dev 23:52/23:13 dan entri Opencode 22:27 dst.). Konflik `.github/workflows/ci.yml` diselesaikan dengan mempertahankan langkah `Diagnostik costing I3 (self-test)` sekaligus menambahkan kontrak pemilihan suite CI dan kontrak occurrence terjemahan. Langkah `Regresi lingkup perusahaan diagnostik I3` di `init-test` tetap utuh.
 **Diverifikasi:** [F] YAML `ci.yml` valid; `git diff --check` bersih; tidak ada penanda konflik tersisa; `FINANCE_I3_COSTING_SELFTEST=PASS`; ruff PASS.
 **Belum diuji:** [BU] CI ulang pada commit merge belum dijalankan; perubahan `.github/workflows/**` memicu `always_full` sesuai `.ci/test-impact.yml`. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
 **Signature:** Task managed by Agent-Opencode at 2026-11-16T09:12:04+07:00
-
 ## 2026-11-15T23:52:35+07:00 — claude-dev — Perbaikan bootstrap seed gate PR #145
 **Konteks:** [F] Pada SHA `3c9ba1e`, semua planner, static, Odoo install/init, PWA, finance, full dataset, dan persisted upgrade lulus. `invariant-tests` gagal setelah 464 test existing lulus karena test planner baru mengimpor `yaml` yang belum dipasang pada environment unit seed; `seed-invariants` gagal sebagai konsekuensi wajib dari unit gate tersebut, sementara acceptance independen tetap PASS.
 **Berubah:** `.github/workflows/seed-invariants.yml` memasang `pyyaml` bersama dependency invariant existing, tanpa mengecualikan test atau melemahkan gate. Ekspor cache BuildKit pada CI/finance/upgrade/full-dataset memakai `ignore-error=true` agar kegagalan menulis cache pada fork/read-only token tidak mengubah verdict test.
