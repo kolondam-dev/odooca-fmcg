@@ -1,0 +1,121 @@
+name: Full Regression Gate
+
+on:
+  schedule:
+    # 01:00 WITA. Scheduled runs audit the latest main integration state.
+    - cron: "0 17 * * *"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag, or SHA to pin and verify
+        required: true
+        default: main
+        type: string
+      purpose:
+        description: Evidence purpose
+        required: true
+        default: release
+        type: choice
+        options: [release, audit, incident]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-regression-${{ inputs.ref || 'main-nightly' }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Pin candidate SHA
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || 'main' }}
+      - id: pin
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Publish exact candidate
+        run: |
+          echo "## Full regression candidate" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Purpose: ${{ inputs.purpose || 'nightly audit' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Requested ref: ${{ inputs.ref || 'main' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Exact SHA: ${{ steps.pin.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
+
+  core:
+    name: Core Odoo gates
+    needs: resolve
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+      force_all: true
+
+  pwa:
+    name: PWA gates
+    needs: resolve
+    uses: ./.github/workflows/pwa.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+      force_all: true
+
+  seed:
+    name: Seed gates
+    needs: resolve
+    uses: ./.github/workflows/seed-invariants.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+      force_all: true
+
+  finance:
+    name: Finance profiles
+    needs: resolve
+    uses: ./.github/workflows/finance-i0-spike.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+
+  upgrade:
+    name: Persisted upgrade proof
+    needs: resolve
+    uses: ./.github/workflows/upgrade-runtime.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+
+  full-dataset:
+    name: Full dataset proof
+    needs: resolve
+    uses: ./.github/workflows/full-dataset-runtime.yml
+    with:
+      ref: ${{ needs.resolve.outputs.sha }}
+
+  full-regression-gate:
+    name: Exact-SHA full regression verdict
+    if: always()
+    needs: [resolve, core, pwa, seed, finance, upgrade, full-dataset]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every full-regression component
+        env:
+          RESOLVE: ${{ needs.resolve.result }}
+          CORE: ${{ needs.core.result }}
+          PWA: ${{ needs.pwa.result }}
+          SEED: ${{ needs.seed.result }}
+          FINANCE: ${{ needs.finance.result }}
+          UPGRADE: ${{ needs.upgrade.result }}
+          FULL_DATASET: ${{ needs.full-dataset.result }}
+          CANDIDATE_SHA: ${{ needs.resolve.outputs.sha }}
+        run: |
+          printf '%s\n' \
+            "resolve=$RESOLVE" "core=$CORE" "pwa=$PWA" "seed=$SEED" \
+            "finance=$FINANCE" "upgrade=$UPGRADE" "full_dataset=$FULL_DATASET"
+          test "$RESOLVE" = success
+          test "$CORE" = success
+          test "$PWA" = success
+          test "$SEED" = success
+          test "$FINANCE" = success
+          test "$UPGRADE" = success
+          test "$FULL_DATASET" = success
+          echo "FULL_REGRESSION_GATE=PASS exact_sha=$CANDIDATE_SHA"
+          echo "PASS is verification evidence only; deployment still requires owner authorization." >> "$GITHUB_STEP_SUMMARY"

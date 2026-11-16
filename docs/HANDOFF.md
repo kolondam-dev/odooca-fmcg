@@ -1,3 +1,26 @@
+## 2026-11-16T09:12:04+07:00 — Agent-Opencode — Sinkronisasi main 4cb81ce dan CI selektif pada PR #140
+**Konteks:** [F] Seluruh 12 check lulus pada `c084424` (termasuk `init-test` dengan `FINANCE_I3_COMPANY_SCOPE=PASS` dan `Module Upgrade from Persisted Baseline + Replay Zero Drift`). Setelah itu `main` maju ke `4cb81ce` (PR #145, CI berbasis dampak) sehingga PR kembali konflik.
+**Berubah:** [F] Merge `origin/main` ke cabang; konflik `docs/HANDOFF.md` diselesaikan dengan mempertahankan kedua sisi (entri claude-dev 23:52/23:13 dan entri Opencode 22:27 dst.). Konflik `.github/workflows/ci.yml` diselesaikan dengan mempertahankan langkah `Diagnostik costing I3 (self-test)` sekaligus menambahkan kontrak pemilihan suite CI dan kontrak occurrence terjemahan. Langkah `Regresi lingkup perusahaan diagnostik I3` di `init-test` tetap utuh.
+**Diverifikasi:** [F] YAML `ci.yml` valid; `git diff --check` bersih; tidak ada penanda konflik tersisa; `FINANCE_I3_COSTING_SELFTEST=PASS`; ruff PASS.
+**Belum diuji:** [BU] CI ulang pada commit merge belum dijalankan; perubahan `.github/workflows/**` memicu `always_full` sesuai `.ci/test-impact.yml`. Diagnostik production dan UAT finance masih terbuka. [F] Katalog 58/58 `BELUM_DITERIMA`; tanpa merge/deploy.
+**Signature:** Task managed by Agent-Opencode at 2026-11-16T09:12:04+07:00
+
+## 2026-11-15T23:52:35+07:00 — claude-dev — Perbaikan bootstrap seed gate PR #145
+**Konteks:** [F] Pada SHA `3c9ba1e`, semua planner, static, Odoo install/init, PWA, finance, full dataset, dan persisted upgrade lulus. `invariant-tests` gagal setelah 464 test existing lulus karena test planner baru mengimpor `yaml` yang belum dipasang pada environment unit seed; `seed-invariants` gagal sebagai konsekuensi wajib dari unit gate tersebut, sementara acceptance independen tetap PASS.
+**Berubah:** `.github/workflows/seed-invariants.yml` memasang `pyyaml` bersama dependency invariant existing, tanpa mengecualikan test atau melemahkan gate. Ekspor cache BuildKit pada CI/finance/upgrade/full-dataset memakai `ignore-error=true` agar kegagalan menulis cache pada fork/read-only token tidak mengubah verdict test.
+**Diverifikasi:** [F] 14 test planner/PO PASS; import planner dengan PyYAML PASS; `ruff`, 14 manifest, scan 12 PO, actionlint 1.7.12, dan `git diff --check` PASS. [BU] Full unittest lokal dihentikan timeout harness 15 menit saat test existing berat; rerun GitHub Actions exact-SHA menjadi bukti otoritatif.
+**Butir terbuka:** pantau seluruh check PR #145 pada SHA baru. Setelah semuanya hijau, pemilik dapat merge; pembaruan ruleset dan Full Regression Gate manual tetap dilakukan setelah workflow tersedia di `main`.
+**Signature:** task managed by claude-dev agent at 2026-11-15T23:52:35+07:00
+
+## 2026-11-15T23:13:56+07:00 — claude-dev — Restrukturisasi CI berbasis dampak, nightly, dan release exact-SHA
+**Konteks:** [F] Ruleset `main-quality-gate` mewajibkan enam context lama, sementara CI/PWA/seed sebelumnya berjalan pukul rata dan push feature branch menggandakan beberapa suite. [F] `install-test` telah menampung instalasi, mobile, browser, dan D1 sekaligus; branch seed F4 pernah menambah runtime ±80 menit ke job ini.
+**Berubah:** `.ci/test-impact.yml` + `scripts/ci/plan.py` (planner fail-closed, override aditif); kontrak planner dan occurrence PO Odoo 19; workflow CI/PWA/seed/finance/upgrade/full-dataset menjadi targeted dengan gate stabil, timeout, cache BuildKit/Playwright, dan tanpa trigger push feature branch; `Full Regression Gate` nightly 01:00 WITA/manual exact-SHA; PR template; panduan di `AGENTS.md`, `docs/AGENT_PROTOCOL.md`, `docs/DEVELOPMENT.md`, dan `docs/CI_SELECTION.md`.
+**Diverifikasi:** [F] Lokal PASS: 14 unittest selector/PO, scan occurrence 12 PO, `ruff check .`, `check_manifests.py` (14 addon), parse YAML, actionlint 1.7.12, dan `git diff --check`. [F] Hotfix PO #144 (`dd0cf4d`) sudah menjadi basis dan `--load-language=id_ID` pada D1 upgrade tetap dipertahankan.
+**Belum diuji:** [BU] Seluruh runtime workflow menunggu CI pada PR exact-SHA. [BU] Cache hit/miss dan penghematan durasi baru dapat diukur setelah dua run. [BU] Ruleset belum boleh ditambah tiga context baru sebelum workflow tersedia di default branch.
+**Butir terbuka:** setelah merge, pemilik menambah `finance-gate`, `upgrade-gate`, dan `full-dataset-gate` ke ruleset; lalu jalankan `Full Regression Gate` manual pada SHA merge sebelum deployment berikutnya.
+**Menunggu:** pemilik untuk commit/push/PR sesuai protokol, review impact map, dan pembaruan ruleset pasca-merge.
+**Signature:** task managed by claude-dev agent at 2026-11-15T23:13:56+07:00
+
 ## 2026-11-15T22:27:27+07:00 — Agent-Opencode — P1 fix: scope diagnostik HPP dan regresi dua perusahaan
 **Konteks:** [F] Review pemilik menahan PR #140 pada HEAD `7fc3853`: `collect(env)` dapat mencampur nilai antarperusahaan. Main bergerak hingga `a03b944`; branch disinkronkan lewat merge `3eeac2a` dan `a0e7901`, dengan riwayat HANDOFF kedua sisi dipertahankan.
 **Berubah:** [F] `collect(env, company=None)` memakai `allowed_company_ids=[company.id]`; seluruh kategori/properti company-dependent, hitungan per kategori, stock.move, fallback stock.valuation.layer, sisa stok, standard_price, dan agregat dibaca dalam konteks/domain perusahaan tunggal. [F] Regresi native opt-in membuat dua perusahaan, satu kategori bersama, metode fifo/average, produk standard_price 0/7, dan pergerakan bernilai 100/250; hasil A/B diuji terpisah lalu fixture di-rollback. Job init-test menjalankan regresi melalui `FINANCE_I3_COMPANY_SCOPE_DB=fmcg`.
@@ -32,6 +55,7 @@
 **Diverifikasi:** [F] Railway project `pleasant-caring` / production / service `odooca-fmcg`: deploy `50866b8` `SUCCESS`; log `2026-11-14T12:03:09Z` `activate_finance_reports_v1: memasang id_finance_reporting dan id_finance_foundation`, `12:03:25Z` `demo_finance_reader_v1: memberikan peran Finance Reader kepada admin demo`, `12:03:27Z` `admin memiliki grup Finance Reader`; `Loading module id_finance_foundation (126/126)` `12:03:20Z`. [F] Deploy `16f686a` `SUCCESS` tanpa baris aktivasi ulang (mark bekerja); registry loaded `12:50:51Z`. [F] `/web/login` HTTP 200 pada 2026-11-15; cron rutin berjalan. [A] Versi terpasang `19.0.1.5.1` mengikuti manifest image `50866b8`; `latest_version` DB belum dibaca langsung.
 **Belum diuji:** [BU] Login admin demo → Finance Reports → jalankan laporan → unduh XLSX di production; pemeriksaan DB langsung; tie-out; sign-off. [F] Katalog 58/58 `BELUM_DITERIMA`; tidak ada deploy/merge dari asisten.
 **Signature:** Task managed by Agent-Opencode at 2026-11-15T11:51:27+07:00
+
 ## 2026-11-15 — Codex-Dashboard — Drill-down D1 ke D7
 
 **Berubah:** Dialog D1 membuka dashboard rincian D7 dengan cakupan baris sumber, periode, dan filter terpilih. Tombol kembali memakai stack aksi Odoo. Jalur dokumen sumber tetap tersedia.
