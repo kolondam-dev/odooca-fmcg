@@ -257,7 +257,7 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 
 **Perbedaan yang disengaja / utang:**
 - **Tanpa "Buka pengaturan"** (web tidak punya API), sama seperti K23.
-- **Akurasi check-in tidak bisa diuji di browser:** e2e memakai outlet `demo_unrestricted` (geofence longgar), jadi aturan akurasi check-in diuji sebagai fungsi murni (`location-accuracy.test.ts`); izin ditolak diuji di browser dengan mode live eksplisit. Uji browser akurasi menunggu fixture outlet ketat.
+- **Akurasi check-in diuji di browser dengan outlet ketat:** build QA punya saklar `fmcg:qa-strict-outlets` (App.tsx, dibuang di build produksi) dan fixture `useStrictOutlets` sehingga outlet tanpa `demo_unrestricted`; skenario `status-sheets.spec.ts` mulai dengan fix valid, mengembalikan fix 31 m saat "Mulai kunjungan" ditekan, lalu memastikan lembar "Akurasi lokasi rendah" muncul dan tidak ada `sales.visit.check_in` di antrean.
 - **Backend tidak memeriksa akurasi** untuk check-in/absen; batas ±30 m hanya di klien (DS).
 - **`aria-label` navigasi** tetap "Navigasi utama" (mockup memakai "Menu utama"); tes dan pembaca layar mengandalkan nama yang ada.
 

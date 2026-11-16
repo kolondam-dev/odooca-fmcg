@@ -127,7 +127,20 @@ export function App() {
                     identity.roles.includes("sales")
                   ? "canvass"
                   : "sales";
-        const provider = new MockProvider(actor, true, source);
+        // Hanya build QA: outlet ketat (tanpa demo_unrestricted) agar guard
+        // lokasi bisa diuji di browser. Build produksi membuang cabang ini.
+        const strictOutlets =
+            __QA_TOOLS__ &&
+            (() => {
+                try {
+                    return (
+                        localStorage.getItem("fmcg:qa-strict-outlets") === "1"
+                    );
+                } catch {
+                    return false;
+                }
+            })();
+        const provider = new MockProvider(actor, !strictOutlets, source);
         const snapshot = await provider.snapshot();
         if (ticket === generation.current)
             setBoot({ identity, snapshot, provider });

@@ -1,4 +1,4 @@
-import { checkIn, test, expect } from "./session-fixture";
+import { checkIn, test, expect, useStrictOutlets } from "./session-fixture";
 
 test("Absen: akurasi GPS di atas batas ±30 m membuka lembar dan mengunci selfie sampai akurasi cukup", async ({
     page,
@@ -137,4 +137,81 @@ test("Check-in toko: izin lokasi ditolak membuka lembar Akses lokasi ditolak dan
             exact: true,
         }),
     ).toContainText("Di dalam radius");
+});
+
+test("Check-in toko (outlet dengan aturan lokasi aktif): fix 31 m saat tombol ditekan memblokir dan tidak mengantre check-in", async ({
+    page,
+    context,
+}) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({
+        latitude: 1.465,
+        longitude: 124.833,
+        accuracy: 3,
+    });
+    await page.addInitScript(() => {
+        localStorage.setItem("fmcg:running-mode", "live");
+        // Build QA saja: outlet dengan aturan lokasi aktif (tanpa demo_unrestricted).
+        localStorage.setItem("fmcg:qa-strict-outlets", "1");
+    });
+    useStrictOutlets(page);
+    await page.goto("./");
+    await checkIn(page);
+    await expect(page.getByText("Sesi aktif", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Sales", exact: true }).click();
+    await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
+    // Foto disimpan sesudah titik outlet → pinpoint basi, jadi fix baru diambil
+    // tepat saat "Mulai kunjungan" ditekan (tanpa "Perbarui lokasi outlet").
+    const group = page.getByRole("group", {
+        name: "Foto check-in kunjungan",
+        exact: true,
+    });
+    await group.scrollIntoViewIfNeeded();
+    await group.getByLabel("Foto bukti").setInputFiles("public/icon-192.png");
+    await expect(group.getByAltText("Pratinjau foto bukti lokal")).toBeVisible({
+        timeout: 15000,
+    });
+    await group
+        .getByRole("button", { name: "Ambil lokasi sekarang", exact: true })
+        .click();
+    await group
+        .getByRole("button", { name: "Simpan bukti lokal", exact: true })
+        .click();
+    await expect(
+        group.getByText("Paket foto tersimpan untuk check-in outlet ini.", {
+            exact: true,
+        }),
+    ).toBeVisible();
+    const start = page.getByRole("button", {
+        name: "Mulai kunjungan",
+        exact: true,
+    });
+    await expect(start).toBeEnabled();
+    // Fix valid tadi; saat tombol ditekan GPS memburuk jadi 31 m.
+    await context.setGeolocation({
+        latitude: 1.465,
+        longitude: 124.833,
+        accuracy: 31,
+    });
+    await start.click();
+    const sheet = page.getByRole("dialog", { name: "Akurasi lokasi rendah" });
+    await expect(sheet).toContainText("Akurasi saat ini ±31 m");
+    const checkInCommands = await page.evaluate(async () => {
+        const db = await new Promise<IDBDatabase>((resolve) => {
+            const r = indexedDB.open("fmcg-field-demo-v1");
+            r.onsuccess = () => resolve(r.result);
+        });
+        const all = await new Promise<unknown[]>((resolve) => {
+            const g = db
+                .transaction("outbox", "readonly")
+                .objectStore("outbox")
+                .getAll();
+            g.onsuccess = () => resolve(g.result);
+        });
+        db.close();
+        return all.filter((i) =>
+            JSON.stringify(i).includes("sales.visit.check_in"),
+        ).length;
+    });
+    expect(checkInCommands).toBe(0);
 });
