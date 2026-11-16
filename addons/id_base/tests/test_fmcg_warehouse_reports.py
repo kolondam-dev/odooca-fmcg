@@ -1,5 +1,5 @@
 import csv
-from io import StringIO
+from io import BytesIO, StringIO
 
 from odoo import Command
 from odoo.tests.common import TransactionCase
@@ -205,11 +205,11 @@ class TestFMCGWarehouseReports(TransactionCase):
     def test_qweb_indonesian_title_terms_match_odoo_export(self):
         # Export the installed view translations through Odoo 19 itself. This
         # checks the database's extracted QWeb terms, not just PO file text.
-        exported_csv = StringIO()
+        exported_csv = BytesIO()
         self.assertTrue(
             trans_export("id_ID", ["id_base"], exported_csv, "csv", self.env)
         )
-        rows = list(csv.DictReader(StringIO(exported_csv.getvalue())))
+        rows = list(csv.DictReader(StringIO(exported_csv.getvalue().decode("utf-8"))))
         expected = {
             "id_base.report_fmcg_picklist": (
                 "Picklist", "Daftar Pengambilan",
