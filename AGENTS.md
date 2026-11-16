@@ -14,3 +14,4 @@
 9. Gate seed wajib mengikuti `docs/reviews/SEED_INVARIANT_CONTRACT.md`; CI hijau
    dasar bukan penerimaan seed. Supervisor `codex` memakai `agent-log/codex.log`.
 10. **Pemilihan CI:** sebelum PR jalankan `python scripts/ci/plan.py --base origin/main --head HEAD`; ikuti suite minimum `.ci/test-impact.yml` dan `docs/CI_SELECTION.md`. Label hanya menambah cakupan. Path tak dikenal/perubahan workflow atau selector = full regression; dilarang melemahkan selector agar cepat hijau.
+11. **Dampak test dalam review:** setiap review supervisor wajib memberi status `CUKUP`, `SESUAIKAN`, atau `TAMBAH` beserta alasan berbasis risiko/invariant. Jika perlu perubahan test, sebut level, counterexample, acceptance, bukti, serta path trigger/suite CI; jika existing test cukup, tunjukkan bukti yang menutup risiko. Jangan melemahkan oracle atau mengubah branch implementer hanya agar CI hijau.

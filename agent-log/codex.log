@@ -344,3 +344,14 @@
 - Perbaiki overflow action D1 dan klik poligon.
 - Gunakan batas Sulut di repo untuk kabupaten/kota → kecamatan → kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
 - Task managed by codex agent at 2026-11-11T19:04:48+07:00
+
+[2026-11-16T09:35:05+07:00] [INFO] Kontrak dampak test review supervisor
+- Setiap review dan re-review wajib memilih CUKUP, SESUAIKAN, atau TAMBAH dengan alasan berbasis risiko/invariant.
+- Rekomendasi perubahan mengikat level, counterexample, acceptance, bukti, path trigger, dan suite CI; gap map memerlukan test planner.
+- 11 test planner dan 14 manifest PASS; ruff belum diuji karena executable tidak tersedia pada host.
+- Task managed by codex agent at 2026-11-16T09:35:05+07:00
+
+[2026-11-16T09:37:44+07:00] [INFO] Koreksi verifikasi Ruff kontrak review
+- Koreksi entri 09:35:05: python -m ruff check . tersedia dan PASS; hanya executable langsung ruff yang tidak ada di PATH.
+- CI PR tetap belum diuji.
+- Task managed by codex agent at 2026-11-16T09:37:44+07:00

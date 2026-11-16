@@ -185,6 +185,50 @@ Tidak harus Antigravity: codex-pwa atau operator lain boleh mengeksekusi bila be
 7. Untuk UI: native compiler/model/resolved view, attached focus fixture, actual scrollport/containingblock, sticky interval, last-row visibility, zoom metrics dan overflow diagnostics.
 8. Tutup finding lama secara eksplisit. Bug dalam scope terkonfirmasi→HOLD; bukti penting taktersedia→HOLD/BLOCKED dengan alasan, bukan tuduhan. PASS scope terbatas boleh dengan gap di luar scope yang jelas.
 9. Posting verdict konkret dan acceptance pada PR bila alur review telah diotorisasi. Jangan melonggarkan assertion demi hijau atau menambah temuan tanpa bukti.
+10. Pada setiap review dan re-review, isi bagian **Dampak test** dengan status `CUKUP`, `SESUAIKAN`, atau `TAMBAH`. Jangan menganggap CI hijau sebagai jawaban implisit.
+
+### Kontrak Dampak test
+
+Pilih satu status dan berikan alasan:
+
+- **`CUKUP`** — tunjuk test/bukti existing yang menutup risiko dan invariant
+  delta; jelaskan mengapa counterexample relevan sudah ditolak. Tidak perlu
+  memaksakan test baru bila bukti ini memadai.
+- **`SESUAIKAN`** — sebut test existing yang perlu perubahan pada fixture,
+  assertion, oracle, cakupan, atau pemilihan CI.
+- **`TAMBAH`** — sebut gap yang tidak dapat ditutup pada test existing dan level
+  test baru yang paling rendah tetapi representatif.
+
+Untuk status selain `CUKUP`, review wajib mencantumkan seluruh konteks berikut:
+
+| Konteks | Isi minimum |
+|---|---|
+| Risiko/invariant | Kegagalan yang dicegah dan kontrak yang harus dipertahankan |
+| Level test | Unit, integrasi Odoo, browser, runtime, atau dataset penuh |
+| Counterexample | Baseline/mutasi terkecil yang harus ditolak sebelum fix |
+| Acceptance | Perintah/skenario dan hasil yang dapat dieksekusi |
+| CI | Path trigger, suite, budget/jadwal, dan alasan pemilihannya |
+| Bukti | Log, report, artifact, screenshot, atau oracle independen yang diharapkan |
+
+Jika review menemukan path/suite yang belum tercakup, minta penyesuaian
+`.ci/test-impact.yml` beserta counterexample di `tests/test_ci_impact.py`.
+Label hanya boleh menambah cakupan planner. Supervisor tidak boleh melemahkan
+assertion/oracle atau langsung mengubah branch implementer agar CI hijau;
+berikan finding dan acceptance kepada implementer. Jika supervisor diminta
+mengimplementasikan perubahan, pisahkan peran itu dan minta review independen
+untuk area material.
+
+Template ringkas verdict:
+
+```text
+Verdict: PASS | HOLD | BLOCKED
+Dampak test: CUKUP | SESUAIKAN | TAMBAH
+Alasan/bukti existing: ...
+Risiko/invariant: ...
+Level + counterexample: ...
+Path trigger + suite CI: ...
+Acceptance + bukti yang diharapkan: ...
+```
 
 Saat membantu implementasi sendiri (contohPR46), jangan menyebut review sendiri independen. Mintakan reviewer lain untuk area material.
 
