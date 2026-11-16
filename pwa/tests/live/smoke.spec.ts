@@ -7,7 +7,7 @@ import {
     pwaBase,
 } from "./helpers";
 
-test("Odoo web is reachable and the configured session is usable", async ({
+test("@smoke @odoo-live Odoo web is reachable and session is usable", async ({
     page,
 }, testInfo) => {
     const base = odooBase;
@@ -34,7 +34,7 @@ test("Odoo web is reachable and the configured session is usable", async ({
     });
 });
 
-test("PWA is reachable and accepts the configured test session", async ({
+test("@smoke @pwa-live PWA is reachable and accepts the test session", async ({
     page,
 }, testInfo) => {
     const base = pwaBase;

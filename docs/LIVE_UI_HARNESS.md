@@ -1,9 +1,10 @@
-# Harness UI live lokal untuk Odoo dan PWA
+# Harness UI live remote/lokal untuk Odoo dan PWA
 
-Harness ini menjalankan Chromium/Playwright **secara lokal atau on-demand oleh
-agen**, bukan sebagai GitHub Actions workflow. Tujuannya adalah menyediakan
-browser session dan bukti UI yang dapat dipakai ulang untuk Odoo backend/web,
-dashboard, dan PWA pada environment yang secara eksplisit dipilih operator.
+Harness ini menjalankan Chromium/Playwright secara remote melalui manual GitHub
+Actions atau secara lokal. Workflow `Remote Live UI Proof` hanya memiliki
+`workflow_dispatch`: bukan required CI dan tidak berjalan pada push, PR, atau
+schedule. Tujuannya menyediakan browser session dan bukti UI reusable untuk
+Odoo backend/web, dashboard, dan PWA pada target yang dipilih operator.
 
 ## Batas keamanan
 
@@ -12,15 +13,87 @@ dashboard, dan PWA pada environment yang secara eksplisit dipilih operator.
   screenshot. Skenario yang menulis data wajib memanggil `requireWriteOptIn()`
   dan hanya berjalan bila `LIVE_UI_ALLOW_WRITE=YES` diberikan secara eksplisit.
 - File `pwa/.env.live-ui.local`, cookie storage state, screenshot, HTML report,
-  dan trace diabaikan Git. Jangan unggah artifact mentah karena screenshot,
-  cookie, request, atau data bisnis dapat bersifat sensitif.
+  dan trace lokal diabaikan Git. Workflow remote selalu menghapus auth state
+  sebelum artifact diunggah dan tidak mengaktifkan trace.
 - `LIVE_UI_TRACE` default `NO`; aktifkan hanya untuk diagnosis lokal dan hapus
   trace setelah selesai. Jangan mencetak password/token pada log atau source.
-- Harness tidak memberikan akses dengan sendirinya. Setiap mesin/agen tetap
-  memerlukan URL dan kredensial yang disediakan melalui environment lokal.
+- Harness tidak memberikan izin GitHub dengan sendirinya. Agen memerlukan akses
+  menjalankan Actions; kredensial target tetap hanya tersedia di Environment.
 - Bukti browser tidak mengotorisasi merge, deployment, atau mutasi data.
 
-## Instalasi satu kali
+## Runner remote lintas agen
+
+### Konfigurasi repository satu kali
+
+Buat GitHub Environment bernama `demo-ui`, lalu isi:
+
+| Jenis           | Nama                 | Isi                                    |
+| --------------- | -------------------- | -------------------------------------- |
+| Variable        | `LIVE_UI_ODOO_URL`   | URL gateway/Odoo demo                  |
+| Variable        | `LIVE_UI_PWA_URL`    | URL PWA, biasanya gateway `/field/`    |
+| Secret          | `ODOO_DEMO_LOGIN`    | akun TEST demo                         |
+| Secret          | `ODOO_DEMO_PASSWORD` | password akun TEST                     |
+| Secret opsional | `ODOO_DEMO_DB`       | nama database bila login memerlukannya |
+
+Aktifkan required reviewer pada Environment. Workflow dispatch sendiri harus
+dijalankan dari `main`; input `source_ref` menentukan branch/tag/SHA test yang
+di-checkout. Job `resolve` memublikasikan exact SHA sebelum job `demo-ui`
+meminta approval. Karena source branch akan mengeksekusi Playwright dengan
+secret Environment, reviewer wajib memeriksa ref/purpose dan hanya menyetujui
+branch agen yang dipercaya.
+
+Secret dapat diisi melalui GitHub UI (**Settings → Environments → demo-ui**) atau
+CLI interaktif berikut. Jangan memberikan nilainya sebagai argumen command,
+chat, atau log:
+
+```bash
+gh secret set ODOO_DEMO_LOGIN --env demo-ui
+gh secret set ODOO_DEMO_PASSWORD --env demo-ui
+# Opsional:
+gh secret set ODOO_DEMO_DB --env demo-ui
+```
+
+Workflow memakai satu worker, tidak mengizinkan write opt-in, tidak mencetak
+nilai URL/password, menghapus `.auth`, dan menyimpan screenshot/HTML report
+selama tiga hari. Repo dan datanya merupakan showcase public sesuai keputusan
+pemilik; tetap dilarang menaruh credential/cookie dalam source, log, atau
+artifact.
+
+### Menjalankan dari GitHub
+
+UI: **Actions → Remote Live UI Proof → Run workflow**. Pilih workflow ref
+`main`, lalu isi `source_ref`, suite, viewport, dan purpose.
+
+CLI/API untuk agen yang memiliki izin Actions:
+
+```bash
+gh workflow run live-ui-proof.yml --ref main \
+  -f source_ref=agen/d1-d7-proof \
+  -f suite=odoo \
+  -f project=desktop \
+  -f purpose="D1 ke D7 production demo"
+```
+
+Suite tersedia: `smoke` (Odoo+PWA), `odoo`, `pwa`, `routes`, dan
+`all-readonly`. `project` menerima `desktop`, `phone`, atau `all`. Exact source
+SHA, target tanpa nilainya, suite, dan batas evidence dicatat pada run summary.
+
+Untuk suite `routes`, commit profil JSON pada branch sumber di bawah
+`pwa/tests/live-profiles/`, lalu isi input, misalnya:
+
+```text
+route_file=tests/live-profiles/d1-d7.json
+```
+
+Workflow menolak absolute path, traversal `..`, dan route file di luar folder
+tersebut. Spec interaksi khusus dapat ditambahkan ke `pwa/tests/live/` pada
+branch agen dan diberi tag suite yang sesuai, lalu dijalankan melalui
+`source_ref` tanpa merge atau deployment. Perubahan workflow tetap hanya
+berasal dari workflow ref `main`.
+
+## Runner lokal opsional
+
+### Instalasi satu kali
 
 Node 24 dibutuhkan sesuai `pwa/package.json`.
 
@@ -52,7 +125,7 @@ dirancang satu origin. `ODOO_DEMO_DB` bersifat opsional. Chromium bawaan
 Playwright dipakai secara default; `LIVE_UI_CHROMIUM_EXECUTABLE` dapat menunjuk
 Chrome/Chromium yang sudah terpasang.
 
-## Menjalankan
+### Menjalankan
 
 ```bash
 cd pwa
@@ -75,8 +148,8 @@ dan tanpa trace agar beban serta paparan data production tetap minimum.
 
 ## Bukti route dashboard atau halaman tertentu
 
-Salin `live-ui.routes.example.json` ke lokasi ignored lalu isi URL relatif dan
-teks oracle yang nyata:
+Untuk lokal, salin `live-ui.routes.example.json` ke lokasi ignored lalu isi URL
+relatif dan teks oracle yang nyata:
 
 ```bash
 mkdir -p tests/live-local
@@ -93,9 +166,10 @@ tidak membuktikan angka, ACL, drilldown, atau invariant bisnis.
 
 ## Skenario khusus agen
 
-Simpan spec sementara di `pwa/tests/live-local/*.spec.ts`; direktori ini ignored
-dan otomatis ditemukan oleh `playwright.live.config.ts`. Import helper dari
-`../live/helpers`. Contoh read-only:
+Untuk eksekusi lokal, simpan spec sementara di
+`pwa/tests/live-local/*.spec.ts`; direktori ini ignored dan otomatis ditemukan
+oleh `playwright.live.config.ts`. Untuk remote, commit spec ke `pwa/tests/live/`
+pada branch sumber. Import helper dari `../live/helpers`. Contoh read-only:
 
 ```ts
 import { expect, test } from "@playwright/test";

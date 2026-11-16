@@ -11,13 +11,14 @@ type EvidenceRoute = {
 
 const routeFile = process.env.LIVE_UI_ROUTE_FILE;
 
-test("capture configured read-only evidence routes", async ({
+test("@routes capture configured read-only evidence routes", async ({
     page,
 }, testInfo) => {
     test.skip(publicOnly, "Evidence routes require an authenticated session");
     test.skip(!routeFile, "LIVE_UI_ROUTE_FILE is not configured");
+    const contents = await readFile(routeFile!, "utf8");
     const routes = JSON.parse(
-        await readFile(routeFile!, "utf8"),
+        contents.replace(/^\uFEFF/, ""),
     ) as EvidenceRoute[];
     expect(routes.length).toBeGreaterThan(0);
 
