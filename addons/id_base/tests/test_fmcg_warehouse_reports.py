@@ -209,7 +209,8 @@ class TestFMCGWarehouseReports(TransactionCase):
         self.assertTrue(
             trans_export("id_ID", ["id_base"], exported_csv, "csv", self.env)
         )
-        rows = list(csv.DictReader(StringIO(exported_csv.getvalue().decode("utf-8"))))
+        exported_text = exported_csv.getvalue().decode("utf-8")
+        rows = list(csv.DictReader(StringIO(exported_text)))
         expected = {
             "id_base.report_fmcg_picklist": (
                 "Picklist", "Daftar Pengambilan",
