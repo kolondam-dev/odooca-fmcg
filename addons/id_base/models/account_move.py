@@ -508,16 +508,92 @@ class AccountMove(models.Model):
                         f"[id_base] Jurnal valuasi stok '{cogs_lbl}' tidak memuat baris HPP untuk produk ID {prod_id}!"
                     )
                 if exp_val > 0.0 and abs(total_prod_debit - exp_val) > 0.01:
-                    raise UserError(
-                        f"[id_base] Total nilai jurnal valuasi HPP produk ID {prod_id} (Rp {total_prod_debit:.2f}) "
-                        f"tidak sesuai dengan nilai valuasi pergerakan barang (Rp {exp_val:.2f})!"
-                    )
+                    has_exact_matching_line = any(abs(d - exp_val) <= 0.01 for d in prod_aml_debits)
+                    if not has_exact_matching_line:
+                        StockMove = (
+                            self.env["stock.move"].sudo()
+                            if hasattr(self, "env") and "stock.move" in self.env
+                            else None
+                        )
+                        all_cogs_sm_val = 0.0
+                        if StockMove is not None:
+                            cogs_sms = StockMove.search([
+                                ("account_move_id", "=", cogs_id),
+                                ("product_id", "=", prod_id),
+                                ("state", "=", "done"),
+                            ])
+                            for csm in cogs_sms:
+                                csvl = getattr(csm, "stock_valuation_layer_ids", None)
+                                if csvl:
+                                    all_cogs_sm_val += sum(
+                                        abs(float(getattr(layer, "value", 0.0) or 0.0)) for layer in csvl
+                                    )
+                                elif hasattr(csm, "value") and getattr(csm, "value", None) is not None:
+                                    all_cogs_sm_val += abs(float(csm.value))
+                                elif (
+                                    hasattr(csm.product_id, "standard_price")
+                                    and getattr(csm.product_id, "standard_price", None) is not None
+                                ):
+                                    csm_qty = float(
+                                        getattr(csm, "quantity", getattr(csm, "product_uom_qty", 0.0)) or 0.0
+                                    )
+                                    all_cogs_sm_val += round(float(csm.product_id.standard_price) * csm_qty, 2)
+
+                        if (
+                            total_prod_debit < exp_val - 0.01
+                            or (all_cogs_sm_val > 0.0 and abs(total_prod_debit - all_cogs_sm_val) > 0.01)
+                            or all_cogs_sm_val <= 0.0
+                        ):
+                            raise UserError(
+                                f"[id_base] Total nilai jurnal valuasi HPP produk ID {prod_id} "
+                                f"(Rp {total_prod_debit:.2f}) tidak sesuai dengan nilai valuasi "
+                                f"pergerakan barang (Rp {exp_val:.2f})!"
+                            )
             else:
                 if exp_val > 0.0 and abs(total_debit_hpp - exp_val) > 0.01:
-                    raise UserError(
-                        f"[id_base] Nilai jurnal valuasi HPP (Rp {total_debit_hpp:.2f}) tidak sesuai "
-                        f"dengan nilai valuasi pergerakan barang (Rp {exp_val:.2f})!"
+                    has_exact_matching_line = any(
+                        abs(float(getattr(aml, "debit", 0.0) or 0.0) - exp_val) <= 0.01
+                        for aml in am_lines
+                        if getattr(getattr(aml, "account_id", None), "code", "") == "510000"
                     )
+                    if not has_exact_matching_line:
+                        StockMove = (
+                            self.env["stock.move"].sudo()
+                            if hasattr(self, "env") and "stock.move" in self.env
+                            else None
+                        )
+                        all_cogs_sm_val = 0.0
+                        if StockMove is not None:
+                            cogs_sms = StockMove.search([
+                                ("account_move_id", "=", cogs_id),
+                                ("state", "=", "done"),
+                            ])
+                            for csm in cogs_sms:
+                                csvl = getattr(csm, "stock_valuation_layer_ids", None)
+                                if csvl:
+                                    all_cogs_sm_val += sum(
+                                        abs(float(getattr(layer, "value", 0.0) or 0.0)) for layer in csvl
+                                    )
+                                elif hasattr(csm, "value") and getattr(csm, "value", None) is not None:
+                                    all_cogs_sm_val += abs(float(csm.value))
+                                elif (
+                                    hasattr(csm.product_id, "standard_price")
+                                    and getattr(csm.product_id, "standard_price", None) is not None
+                                ):
+                                    csm_qty = float(
+                                        getattr(csm, "quantity", getattr(csm, "product_uom_qty", 0.0)) or 0.0
+                                    )
+                                    all_cogs_sm_val += round(float(csm.product_id.standard_price) * csm_qty, 2)
+
+                        if (
+                            total_debit_hpp < exp_val - 0.01
+                            or (all_cogs_sm_val > 0.0 and abs(total_debit_hpp - all_cogs_sm_val) > 0.01)
+                            or all_cogs_sm_val <= 0.0
+                        ):
+                            raise UserError(
+                                f"[id_base] Nilai jurnal valuasi HPP (Rp {total_debit_hpp:.2f}) tidak sesuai "
+                                f"dengan nilai valuasi pergerakan barang (Rp {exp_val:.2f})!"
+                            )
 
         return True
 

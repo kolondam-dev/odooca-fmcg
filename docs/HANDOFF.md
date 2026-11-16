@@ -1,3 +1,26 @@
+## 2026-11-16T11:20:00+07:00 — antigravity — id_base: Preservasi Integritas Guard Valuasi HPP pada Picking Split-Lot Multi-Move dengan Penagihan Sebagian (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan `install-test` pada Run 43794306875 (F4 CI Step 10) mengungkap kegagalan pada `SO-202608-0083` (SKU `MYR-BBG-03`):
+  `UserError: [id_base] Total nilai jurnal valuasi HPP produk ID 121 (Rp 4224000.00) tidak sesuai dengan nilai valuasi pergerakan barang (Rp 792000.00)!`
+- [F] Akar Masalah: Pengiriman DO untuk pesanan split-lot mengeksekusi 2 stock move (Move 1: 312 unit / Rp 3.432.000, Move 2: 72 unit / Rp 792.000). Jurnal valuasi stok STJ mencatat total debit HPP Rp 4.224.000. Karena Move 1 direjeksi & diretur ke karantina, faktur hanya menagih Move 2 (`exp_val` = Rp 792.000). Guard `_is_seed_commercial_invoice_with_posted_delivery_cogs` di `addons/id_base/models/account_move.py` sebelumnya membandingkan total seluruh debit STJ (`total_prod_debit` = Rp 4.224.000) terhadap `exp_val` faktur (Rp 792.000), memicu penolakan keliru.
+**Berubah:**
+- `addons/id_base/models/account_move.py`:
+  - Memperluas verifikasi valuasi HPP: jika `exp_val > 0.0` dan `abs(total_prod_debit - exp_val) > 0.01`, guard memeriksa apakah terdapat baris debit eksak yang sesuai dengan `exp_val` (`has_exact_matching_line = any(abs(d - exp_val) <= 0.01 for d in prod_aml_debits)`).
+  - Jika tidak ada baris eksak (misalnya jurnal valuasi di-lump), guard memverifikasi bahwa total debit STJ tidak lebih kecil dari `exp_val` dan terekonsiliasi penuh dengan total valuasi seluruh stock move berstatus `done` yang merujuk ke STJ tersebut (`all_cogs_sm_val`).
+  - Menjaga integritas fail-closed: jika total debit STJ < `exp_val - 0.01` atau total debit STJ != `all_cogs_sm_val`, `UserError` tetap dimunculkan.
+- `tests/test_canonical_loader_adapter.py`:
+  - Menambahkan sub-tes 11, 12, dan 13 pada `test_seed_invoice_cogs_exception_narrow_scope` untuk memvalidasi kasus penagihan sebagian split-lot multi-line, STJ lumped debit, dan penolakan manipulasi valuasi (fail-closed).
+**Diverifikasi:**
+- [F] `python -m unittest tests.test_canonical_loader_adapter.TestCanonicalLoaderAdapter.test_seed_invoice_cogs_exception_narrow_scope`: PASS (0.402s).
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 58/58 PASS (8.878s).
+- [F] `python -m ruff check addons/id_base/models/account_move.py tests/test_canonical_loader_adapter.py`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] `python scripts/ci/plan.py --base origin/main --head HEAD`: PASS (full regression fail-closed).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-16T11:20:00+07:00
+
 ## 2026-11-16T09:48:00+07:00 — antigravity — CI: Penyesuaian Timeout install-test Menjadi 75 Menit untuk Akomodasi Proof Dua Database Disposable (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43790290995 membuktikan bahwa perbaikan relasi faktur `c17a5bf` berhasil 100% (tidak ada error `id_base` kuantitas pengiriman maupun traceback Odoo).

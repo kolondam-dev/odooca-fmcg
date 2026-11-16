@@ -3031,3 +3031,32 @@
   * python scripts/ci/plan.py --base origin/main --head HEAD: PASS (full regression fail-closed).
   * Zero touch live Railway / production database.
 - Task managed by antigravity at 2026-11-16T09:48:00+07:00
+
+2026-11-16T11:20:00+07:00 [INFO] id_base: Preservasi Integritas Guard Valuasi HPP pada Picking Split-Lot Multi-Move dengan Penagihan Sebagian
+- Konteks: Runtime verification Fase F4 CI (PR #110, branch agen/seed-f4-period-pack-loader) pada disposable database.
+- Root Cause Analisis:
+  * Error runtime: UserError: [id_base] Total nilai jurnal valuasi HPP produk ID 121 (Rp 4224000.00) tidak sesuai dengan nilai valuasi pergerakan barang (Rp 792000.00)!
+  * Pada SO-202608-0083 dengan SKU split-lot MYR-BBG-03:
+    - Pengiriman outbound (DO) memproses 2 stock move: Move 1 (312 unit / Rp 3.432.000) dan Move 2 (72 unit / Rp 792.000), menghasilkan jurnal STJ cogs_am dengan total debit HPP Rp 4.224.000.
+    - Move 1 kemudian direjeksi dan diretur ke karantina, sehingga faktur komersial hanya menagih Move 2 (72 unit / Rp 792.000).
+    - Guard _is_seed_commercial_invoice_with_posted_delivery_cogs() di addons/id_base/models/account_move.py membandingkan exp_val (Rp 792.000 yang ditagih pada faktur ini) dengan total_prod_debit (Rp 4.224.000 dari seluruh picking di jurnal STJ). Karena exp_val < total_prod_debit, guard memicu UserError sekalipun jurnal STJ sah dan memiliki baris debit spesifik Rp 792.000.
+- Solusi & Implementasi:
+  1. addons/id_base/models/account_move.py:
+     - Memperluas verifikasi valuasi HPP: jika exp_val > 0.0 dan abs(total_prod_debit - exp_val) > 0.01:
+       * Periksa apakah prod_aml_debits memuat baris debit eksak yang cocok dengan exp_val (has_exact_matching_line = any(abs(d - exp_val) <= 0.01 for d in prod_aml_debits)).
+       * Jika tidak ada baris eksak, verifikasi bahwa total_prod_debit tidak lebih kecil dari exp_val dan terekonsiliasi penuh dengan total valuasi seluruh pergerakan barang berstatus 'done' yang merujuk ke STJ tersebut (all_cogs_sm_val).
+       * Pertahankan prinsip fail-closed: jika total_prod_debit < exp_val - 0.01 atau total_prod_debit != all_cogs_sm_val, segera raise UserError.
+     - Menerapkan perlindungan yang sama pada cabang tanpa product_id pada AML.
+  2. tests/test_canonical_loader_adapter.py:
+     - Menambahkan sub-tes regresi komprehensif pada TestCanonicalLoaderAdapter.test_seed_invoice_cogs_exception_narrow_scope:
+       * Sub-tes 11: Faktur split-lot dengan penagihan sebagian pada STJ multi-line lulus verifikasi (has_exact_matching_line).
+       * Sub-tes 12: Faktur split-lot dengan penagihan sebagian pada STJ lumped debit lulus verifikasi karena terekonsiliasi penuh dengan seluruh pergerakan barang (all_cogs_sm_val).
+       * Sub-tes 13: Mismatch total debit STJ terhadap valuasi barang memicu fail-closed UserError.
+- Verifikasi:
+  * python -m unittest tests.test_canonical_loader_adapter.TestCanonicalLoaderAdapter.test_seed_invoice_cogs_exception_narrow_scope: PASS (0.402s).
+  * python -m unittest tests/test_period_pack_loader.py: 58/58 PASS (8.878s).
+  * python -m ruff check addons/id_base/models/account_move.py tests/test_canonical_loader_adapter.py: PASS clean (0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python scripts/ci/plan.py --base origin/main --head HEAD: PASS (full regression fail-closed).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-16T11:20:00+07:00

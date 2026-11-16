@@ -3676,6 +3676,190 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         }, env)
         self.assertFalse(bill._is_seed_commercial_invoice_with_posted_delivery_cogs())
 
+        # 11. Split-lot picking with partial invoicing (e.g. SO-202608-0083):
+        # STJ has multiple debit lines for the same product (e.g. 3,432,000 for line 1 and 792,000 for line 2).
+        # Invoice only bills line 2 (exp_val = 792,000). Total STJ debit = 4,224,000.
+        # Guard must PASS because prod_aml_debits has exact matching line (792,000).
+        aml_debit_split_1 = MockRecord({
+            "account_id": MockRecord({"code": "510000"}, "account.account", 1, env),
+            "debit": 3432000.0,
+            "credit": 0.0,
+        }, "account.move.line", 921, env)
+        aml_debit_split_2 = MockRecord({
+            "account_id": MockRecord({"code": "510000"}, "account.account", 1, env),
+            "debit": 792000.0,
+            "credit": 0.0,
+        }, "account.move.line", 922, env)
+        aml_credit_split_tot = MockRecord({
+            "account_id": MockRecord({"code": "113000"}, "account.account", 2, env),
+            "debit": 0.0,
+            "credit": 4224000.0,
+        }, "account.move.line", 923, env)
+        cogs_split_am = MockRecord({
+            "name": "STJ/2026/08/0083",
+            "state": "posted",
+            "date": "2026-08-04",
+            "company_id": env.company,
+            "journal_id": stj_journal,
+            "line_ids": MockRecordList([aml_debit_split_1, aml_debit_split_2, aml_credit_split_tot]),
+        }, "account.move", 820, env)
+        sm_split_accepted = MockRecord({
+            "name": "WH/OUT/0083-2",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 72.0,
+            "date": "2026-08-04",
+            "value": 792000.0,
+            "account_move_id": cogs_split_am,
+        }, "stock.move", 121, env)
+        sol_split_accepted = MockRecord(
+            {"name": "SOL-083-2", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_split_accepted])}, "sale.order.line", 221, env
+        )
+        inv_line_split_accepted = MockRecord({
+            "product_id": prod,
+            "quantity": 72.0,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_split_accepted]),
+        }, "account.move.line", 321, env)
+        split_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_split_accepted]),
+        }, env)
+        self.assertTrue(split_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+        # 12. Split-lot picking with lumped STJ debit matching all stock moves:
+        # STJ has single lumped debit line (4,224,000) for two moves (3,432,000 + 792,000).
+        # Invoice bills 792,000. All moves registered in env["stock.move"] match 4,224,000.
+        aml_debit_lumped = MockRecord({
+            "account_id": MockRecord({"code": "510000"}, "account.account", 1, env),
+            "debit": 4224000.0,
+            "credit": 0.0,
+        }, "account.move.line", 931, env)
+        cogs_lumped_am = MockRecord({
+            "name": "STJ/2026/08/0084",
+            "state": "posted",
+            "date": "2026-08-04",
+            "company_id": env.company,
+            "journal_id": stj_journal,
+            "line_ids": MockRecordList([aml_debit_lumped, aml_credit_split_tot]),
+        }, "account.move", 821, env)
+        env["stock.move"].create({
+            "name": "WH/OUT/0084-1",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 312.0,
+            "date": "2026-08-04",
+            "value": 3432000.0,
+            "account_move_id": cogs_lumped_am,
+        })
+        sm_lumped_2 = env["stock.move"].create({
+            "name": "WH/OUT/0084-2",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 72.0,
+            "date": "2026-08-04",
+            "value": 792000.0,
+            "account_move_id": cogs_lumped_am,
+        })
+        sol_lumped_2 = MockRecord(
+            {"name": "SOL-084-2", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_lumped_2])}, "sale.order.line", 222, env
+        )
+        inv_line_lumped_2 = MockRecord({
+            "product_id": prod,
+            "quantity": 72.0,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_lumped_2]),
+        }, "account.move.line", 322, env)
+        lumped_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_lumped_2]),
+        }, env)
+        self.assertTrue(lumped_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+
+        # 13. Mismatch on both exact line and total stock moves -> Fail-closed UserError
+        aml_debit_fraud = MockRecord({
+            "account_id": MockRecord({"code": "510000"}, "account.account", 1, env),
+            "debit": 5000000.0,  # 5,000,000 does not match 4,224,000 and has no 792,000 line
+            "credit": 0.0,
+        }, "account.move.line", 941, env)
+        aml_credit_fraud = MockRecord({
+            "account_id": MockRecord({"code": "113000"}, "account.account", 2, env),
+            "debit": 0.0,
+            "credit": 5000000.0,
+        }, "account.move.line", 942, env)
+        cogs_fraud_am = MockRecord({
+            "name": "STJ/2026/08/0085",
+            "state": "posted",
+            "date": "2026-08-04",
+            "company_id": env.company,
+            "journal_id": stj_journal,
+            "line_ids": MockRecordList([aml_debit_fraud, aml_credit_fraud]),
+        }, "account.move", 822, env)
+        env["stock.move"].create({
+            "name": "WH/OUT/0085-1",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 312.0,
+            "date": "2026-08-04",
+            "value": 3432000.0,
+            "account_move_id": cogs_fraud_am,
+        })
+        sm_fraud_2 = env["stock.move"].create({
+            "name": "WH/OUT/0085-2",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 72.0,
+            "date": "2026-08-04",
+            "value": 792000.0,
+            "account_move_id": cogs_fraud_am,
+        })
+        sol_fraud_2 = MockRecord(
+            {"name": "SOL-085-2", "order_id": so_seed,
+             "move_ids": MockRecordList([sm_fraud_2])}, "sale.order.line", 223, env
+        )
+        inv_line_fraud_2 = MockRecord({
+            "product_id": prod,
+            "quantity": 72.0,
+            "display_type": "product",
+            "sale_line_ids": MockRecordList([sol_fraud_2]),
+        }, "account.move.line", 323, env)
+        fraud_inv = MockAccountMoveModel({
+            "move_type": "out_invoice",
+            "is_fmcg_seed_invoice": True,
+            "fmcg_seed_batch": "CANONICAL_JULY_2026_PERPETUAL",
+            "invoice_origin": "SO-202607-0001",
+            "company_id": env.company,
+            "invoice_line_ids": MockRecordList([inv_line_fraud_2]),
+        }, env)
+        with self.assertRaises(UserError) as ctx:
+            fraud_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        self.assertIn("tidak sesuai dengan nilai valuasi pergerakan barang", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
