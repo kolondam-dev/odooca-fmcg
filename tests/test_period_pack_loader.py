@@ -493,6 +493,38 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         acc_sewa = loader._resolve_account("610400", "expense")
         self.assertEqual(acc_sewa.code, "610400")
 
+    def test_opex_and_cash_account_auto_provisioning_in_disposable_db(self):
+        """Account 111100 and OPEX expense accounts (610100..610700) must auto-provision if absent."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        # Empty account.account model (disposable baseline before provisioning)
+        acc_model = MockModel(records=[])
+        mock_models = {
+            "res.company": MockModel(records=[mock_company]),
+            "account.account": acc_model,
+        }
+        env = MockEnv(mock_models)
+        loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
+        loader.company = mock_company
+
+        # 1. Resolve 111100 with no pre-existing account and no explicit fallback_type passed
+        acc_111100 = loader._resolve_account("111100")
+        self.assertIsNotNone(acc_111100)
+        self.assertEqual(acc_111100.code, "111100")
+        self.assertEqual(acc_111100.account_type, "asset_cash")
+
+        # 2. Resolve OPEX account with no pre-existing account and no explicit fallback_type passed
+        acc_610100 = loader._resolve_account("610100")
+        self.assertIsNotNone(acc_610100)
+        self.assertEqual(acc_610100.code, "610100")
+        self.assertEqual(acc_610100.account_type, "expense")
+
+        # 3. Bootstrap configuration creates all accounts
+        loader._ensure_accounting_and_stock_configuration()
+        created_codes = {a.code for a in acc_model._records}
+        self.assertIn("111100", created_codes)
+        for expected_opex_code in ["610100", "610200", "610300", "610400", "610500", "610600", "610700"]:
+            self.assertIn(expected_opex_code, created_codes)
+
     def test_invoice_idempotency_drift_fails_closed(self):
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
         # Existing invoice with drifted total

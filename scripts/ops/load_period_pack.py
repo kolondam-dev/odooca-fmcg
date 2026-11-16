@@ -435,22 +435,50 @@ class GenericPeriodPackLoader:
             comp_domain = [("company_id", "in", [False, self.company.id])]
             comp_vals = {"company_id": self.company.id}
         acc = Account.search([("code", "=", code)] + comp_domain, limit=1)
-        if not acc and fallback_type and callable(getattr(Account, "create", None)):
-            name_map = {
-                "211200": "PPN Keluaran FMCG",
-                "114100": "PPN Masukan FMCG",
-                "112000": "Piutang Usaha FMCG",
-                "211000": "Utang Usaha FMCG",
-                "113000": "Persediaan Barang Dagang FMCG",
-                "510000": "Harga Pokok Penjualan (HPP) FMCG",
-            }
-            acc_name = name_map.get(code, f"Akun {code} FMCG")
-            vals = {"code": code, "name": acc_name, "account_type": fallback_type}
-            vals.update(comp_vals)
-            try:
-                acc = Account.create(vals)
-            except Exception:
-                pass
+        if not acc:
+            if not fallback_type:
+                if code == "111100":
+                    fallback_type = "asset_cash"
+                elif code.startswith("6"):
+                    fallback_type = "expense"
+                elif code.startswith("113"):
+                    fallback_type = "asset_current"
+                elif code.startswith("5"):
+                    fallback_type = "expense_direct_cost"
+            if fallback_type and callable(getattr(Account, "create", None)):
+                name_map = {
+                    "111100": "Kas Operasional FMCG",
+                    "211200": "PPN Keluaran FMCG",
+                    "114100": "PPN Masukan FMCG",
+                    "112000": "Piutang Usaha FMCG",
+                    "211000": "Utang Usaha FMCG",
+                    "113000": "Persediaan Barang Dagang FMCG",
+                    "510000": "Harga Pokok Penjualan (HPP) FMCG",
+                    "610100": "Beban Logistik & Transportasi FMCG",
+                    "610200": "Beban Gaji & Komisi Sales FMCG",
+                    "610300": "Beban Lembur Gudang & Logistik FMCG",
+                    "610400": "Beban Sewa & Utilitas Gudang FMCG",
+                    "610500": "Beban Pemeliharaan Armada FMCG",
+                    "610600": "Beban Perizinan & Regulasi FMCG",
+                    "610700": "Beban Administrasi Bank FMCG",
+                }
+                acc_name = name_map.get(code, f"Akun {code} FMCG")
+                vals = {"code": code, "name": acc_name, "account_type": fallback_type}
+                vals.update(comp_vals)
+                try:
+                    acc = Account.create(vals)
+                except Exception:
+                    alt_types = {
+                        "asset_cash": "asset_current",
+                        "expense_direct_cost": "expense",
+                        "expense": "expense_other",
+                    }
+                    if fallback_type in alt_types:
+                        vals["account_type"] = alt_types[fallback_type]
+                        try:
+                            acc = Account.create(vals)
+                        except Exception:
+                            pass
         if not acc and self.strict:
             c_name = getattr(self.company, "name", "unknown")
             raise PreflightContinuityError(
@@ -558,6 +586,19 @@ class GenericPeriodPackLoader:
         _resolve_or_create_acc("114100", "PPN Masukan FMCG", "asset_current")
         _resolve_or_create_acc("112000", "Piutang Usaha FMCG", "asset_receivable")
         _resolve_or_create_acc("211000", "Utang Usaha FMCG", "liability_payable")
+        _resolve_or_create_acc("111100", "Kas Operasional FMCG", "asset_cash", "asset_current")
+
+        opex_name_map = {
+            "610100": "Beban Logistik & Transportasi FMCG",
+            "610200": "Beban Gaji & Komisi Sales FMCG",
+            "610300": "Beban Lembur Gudang & Logistik FMCG",
+            "610400": "Beban Sewa & Utilitas Gudang FMCG",
+            "610500": "Beban Pemeliharaan Armada FMCG",
+            "610600": "Beban Perizinan & Regulasi FMCG",
+            "610700": "Beban Administrasi Bank FMCG",
+        }
+        for o_code, o_name in opex_name_map.items():
+            _resolve_or_create_acc(o_code, o_name, "expense", "expense_other")
 
         self.stock_valuation_acc = stock_val_acc
         self.stock_input_acc = stock_in_acc
@@ -1506,7 +1547,7 @@ class GenericPeriodPackLoader:
                 self.plan["ap"]["to_reconcile"] += 1
 
         # 6. Evaluate OPEX
-        credit_account = self._resolve_account("111100")
+        credit_account = self._resolve_account("111100", fallback_type="asset_cash")
         if not credit_account and self.strict:
             raise PreflightContinuityError("Cannot resolve explicit credit cash account (111100) for OPEX")
         credit_code = getattr(credit_account, "code", "111100")
@@ -1524,7 +1565,7 @@ class GenericPeriodPackLoader:
                     f"Unknown OPEX category '{cat}' (no explicit mapping configured in OPEX_CATEGORY_ACCOUNT_MAP)"
                 )
             target_code = OPEX_CATEGORY_ACCOUNT_MAP[cat]
-            acc = self._resolve_account(target_code)
+            acc = self._resolve_account(target_code, fallback_type="expense")
             if not acc and self.strict:
                 self.plan["opex"]["conflicts"] += 1
                 raise PreflightContinuityError(
@@ -3259,7 +3300,7 @@ class GenericPeriodPackLoader:
             raise PreflightContinuityError("Explicit general journal not found for OPEX entries")
         exp_journal_code = getattr(misc_journal, "code", "MISC") if misc_journal else "MISC"
 
-        credit_account = self._resolve_account("111100")
+        credit_account = self._resolve_account("111100", fallback_type="asset_cash")
         if not credit_account and self.strict:
             raise PreflightContinuityError("Cannot resolve explicit credit cash account (111100) for OPEX")
         credit_code = getattr(credit_account, "code", "111100")
@@ -3276,7 +3317,7 @@ class GenericPeriodPackLoader:
                     f"Unknown OPEX category '{cat}' (no explicit mapping configured in OPEX_CATEGORY_ACCOUNT_MAP)"
                 )
             target_code = OPEX_CATEGORY_ACCOUNT_MAP[cat]
-            debit_account = self._resolve_account(target_code)
+            debit_account = self._resolve_account(target_code, fallback_type="expense")
             if not debit_account and self.strict:
                 raise PreflightContinuityError(
                     f"Cannot resolve debit expense account for OPEX category '{cat}' (target {target_code})"

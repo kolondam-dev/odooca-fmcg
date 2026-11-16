@@ -3094,3 +3094,23 @@
   * python -m unittest tests/test_period_pack_loader.py: 58/58 PASS (12.446s).
   * YAML workflows: valid.
 - Task managed by antigravity at 2026-11-16T14:30:00+07:00
+
+2026-11-16T15:50:00+07:00 [INFO] GenericPeriodPackLoader: Auto-provisioning Akun Kas Operasional (111100) & Akun OPEX pada Database Disposable Odoo 19
+- Konteks:
+  * Analisis kegagalan install-test pada Run 43824401939 (Step 12 menit 1h8m42s):
+    PreflightContinuityError: Account for code '111100' not found in account.account for company 'My Company'
+    saat memproses transaksi OPEX pada database disposable.
+  * origin/main (commit 2fb6172) sudah terintegrasi penuh pada commit 2f1b20c (0 behind). Kegagalan murni substantif karena database disposable tidak memiliki akun 111100 dan akun 610100..610700 secara default.
+- Solusi & Perubahan:
+  1. scripts/ops/load_period_pack.py:
+     - Memperbarui _resolve_account() agar secara otomatis memetakan fallback_type standar (111100 -> asset_cash, 610xxx -> expense) dan auto-create jika belum ada di database disposable.
+     - Menambahkan akun 111100 dan seluruh akun beban operasional FMCG (610100..610700) pada _ensure_accounting_and_stock_configuration().
+     - Menyediakan fallback_type eksplisit saat memanggil _resolve_account pada evaluate_plan() dan _apply_opex().
+  2. tests/test_period_pack_loader.py:
+     - Menambahkan unit test test_opex_and_cash_account_auto_provisioning_in_disposable_db untuk memvalidasi auto-provisioning akun 111100 dan 610100..610700 pada model account.account yang kosong.
+- Verifikasi:
+  * python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py: PASS clean (0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m unittest tests/test_period_pack_loader.py: 59/59 PASS (19.574s).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-16T15:50:00+07:00

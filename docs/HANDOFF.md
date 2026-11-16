@@ -1,3 +1,25 @@
+## 2026-11-16T15:50:00+07:00 — antigravity — GenericPeriodPackLoader: Auto-provisioning Akun Kas Operasional (111100) & OPEX pada Database Disposable Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan `install-test` pada Run 43824401939 (Step 12 menit 1h8m42s) mengungkap kegagalan:
+  `PreflightContinuityError: Account for code '111100' not found in account.account for company 'My Company'`
+  saat eksekusi entri OPEX Agustus.
+- [F] `origin/main` (commit `2fb6172`, PR #140) sudah terintegrasi penuh di branch PR #110 sejak commit `2f1b20c` (Behind: 0, Mergeable: true). Kegagalan murni substantif karena Chart of Accounts pada database disposable Odoo 19 belum memiliki akun Kas Operasional FMCG (`111100`) dan akun beban OPEX (`610100`..`610700`), sementara `_ensure_accounting_and_stock_configuration()` dan `_resolve_account()` belum mem-bootstrap akun-akun tersebut.
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - `_resolve_account()`: Menambahkan default `fallback_type` otomatis untuk kode kas (`111100` -> `asset_cash`) dan OPEX (`610xxx` -> `expense`), serta mendaftarkan nama akun FMCG lengkap (`111100`, `610100`..`610700`) dengan graceful retry account_type (`asset_current`, `expense_other`).
+  - `_ensure_accounting_and_stock_configuration()`: Mem-bootstrap akun `111100` (Kas Operasional FMCG) dan seluruh akun kategori OPEX `OPEX_CATEGORY_ACCOUNT_MAP` (`610100` hingga `610700`).
+  - `evaluate_plan()` & `_apply_opex()`: Menyalurkan `fallback_type` eksplisit pada resolusi akun `111100` dan beban OPEX.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit test `test_opex_and_cash_account_auto_provisioning_in_disposable_db` yang menguji resolusi dan bootstrapping akun kas 111100 dan akun beban 610100..610700 pada model akun kosong.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 59/59 PASS (19.574s).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-16T15:50:00+07:00
+
 ## 2026-11-16T13:00:00+07:00 — antigravity — GenericPeriodPackLoader: Optimasi Konteks ORM Odoo untuk Batch Seed Massal & Penyesuaian Timeout CI 120 Menit (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43803811562 (Step 12) mengungkap bahwa seluruh 1.240 SO dan 1.240 DO berhasil diproses dalam 21m37s, dan guard HPP split-lot berjalan 100% mulus tanpa error.
