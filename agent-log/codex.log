@@ -355,3 +355,8 @@
 - Koreksi entri 09:35:05: python -m ruff check . tersedia dan PASS; hanya executable langsung ruff yang tidak ada di PATH.
 - CI PR tetap belum diuji.
 - Task managed by codex agent at 2026-11-16T09:37:44+07:00
+
+[2026-11-16T00:25:00+07:00] [INFO] PR #135 sync main 4cb81ce + PO/model_terms id_ID
+- Main CI impact planner/targeted workflows retained; WMS report files overlaid without reverting newer main changes.
+- Added model_terms occurrences per QWeb report template and id_ID HTML assertions; exact-SHA CI pending, no merge/deploy.
+- Task managed by Codex supervisor.

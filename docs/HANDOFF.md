@@ -1,3 +1,10 @@
+
+## 2026-11-16 — Codex — Sinkronisasi main + integrasi PR #135 WMS
+**Basis:** [F] main `4cb81ceff1ffbc25bba901ad27e0f2f107e6b275`; PR branch sebelumnya `014420d7aa798528f723d920c80601bb2391a2bd`. Merge dilakukan sebagai descendant main dengan branch lama sebagai parent kedua; tidak reset/rebase dan tidak mengubah main.
+**Integrasi:** pertahankan CI impact planner/PO validator dan workflow berbasis impact dari main; menambahkan report Picklist/Packlist/Delivery Order, test runtime, script PDF smoke, manifest report, occurrence `model_terms` untuk seluruh string statis QWeb, dan test render HTML dengan context `id_ID` serta assertion label Indonesia.
+**Verifikasi:** [BU] belum dijalankan pada kandidat merge; seluruh suite dari planner control-plane harus dilaksanakan pada exact SHA. PDF smoke tetap butuh server HTTP hidup. Review tetap HOLD sampai CI exact-SHA dan inspeksi PDF/terjemahan selesai.
+**Batas:** tidak ada merge PR #135 ke main, deploy, atau mutasi DB live.
+
 ## 2026-11-16T10:57:02+07:00 — Agent-Opencode — Sinkronisasi main 14caec6 pada PR #140
 **Konteks:** [F] `main` maju ke `14caec6` (PR #143, guard akurasi check-in PWA) dan PR berstatus `BEHIND` meski mergeable. Regresi P1 I3 sudah terbukti pada `6813020`/`09964da`.
 **Berubah:** [F] Merge `origin/main` tanpa konflik; tidak ada perubahan pada skrip diagnosa atau regresi I3.
