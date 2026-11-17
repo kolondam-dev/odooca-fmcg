@@ -57,6 +57,12 @@ class TestCiImpactPlanner(unittest.TestCase):
         self.assertEqual(result.unknown, ())
         self.assertEqual(set(result.suites), set(self.config["all_suites"]))
 
+    def test_workflow_guard_contract_change_forces_every_suite(self):
+        result = PLAN.select(["tests/test_ci_workflow_guards.py"], self.config)
+        self.assertTrue(result.full)
+        self.assertEqual(result.unknown, ())
+        self.assertEqual(set(result.suites), set(self.config["all_suites"]))
+
     def test_unmapped_path_fails_closed(self):
         result = PLAN.select(["new-platform/runtime.xyz"], self.config)
         self.assertTrue(result.full)

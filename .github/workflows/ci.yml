@@ -104,6 +104,8 @@ jobs:
         run: python scripts/ops/verify_finance_i3_costing.py --self-test
       - name: Kontrak pemilihan suite CI
         run: python -m unittest tests.test_ci_impact -v
+      - name: Kontrak guard langkah workflow
+        run: python -m unittest tests.test_ci_workflow_guards -v
       - name: Kontrak occurrence terjemahan Odoo 19
         run: |
           python scripts/ci/check_po_occurrences.py
@@ -204,6 +206,7 @@ jobs:
           grep -q 'EXISTING_DEMO_PROVISION=PASS' existing-demo.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' existing-demo.log; then exit 1; fi
       - name: F4 Generic period pack loader runtime proof (two disposable databases)
+        if: needs.changes.outputs.seed == 'true'
         run: |
           set -o pipefail
           docker run --rm -v ui-filestore:/var/lib/odoo --network host -v "$PWD":/workspace -w /workspace --entrypoint bash fmcg-odoo:ci -c '
@@ -504,6 +507,7 @@ jobs:
             < scripts/ops/verify_finance_activation_demo.py | tee finance_activation.log
           grep -q 'INIT_FINANCE_ACTIVATION=PASS' finance_activation.log
       - name: Diagnostik costing I3 read-only dan regresi lingkup perusahaan
+        if: needs.changes.outputs.odoo_init == 'true'
         run: |
           set -euo pipefail
           # Satu sesi shell, dua penanda. Fixture dua perusahaan dibuat lalu

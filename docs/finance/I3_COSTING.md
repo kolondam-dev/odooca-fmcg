@@ -1,10 +1,12 @@
 # I3 — Diagnostik HPP dan valuasi stok
 
 Status: **alat diagnostik read-only; sudah dibaca pada database disposable CI,
-belum pada database demo.** Hasil pertama pada database demo akan dicatat di
-dokumen ini setelah dijalankan pemilik/agen deploy. Katalog
-`REPORT_CATALOG.csv` tidak berubah oleh paket ini; seluruh 58 ID tetap
-`BELUM_DITERIMA`.
+belum pada database demo.** Paket ini sudah di-merge ke `main` (`2fb6172`,
+PR #140) dan production sudah men-deploy commit itu (`bab86712`, SUCCESS,
+registry loaded), tetapi diagnostik pada database demo belum dijalankan. Hasil
+pertama pada database demo akan dicatat di dokumen ini setelah dijalankan
+pemilik/agen deploy. Katalog `REPORT_CATALOG.csv` tidak berubah oleh paket ini;
+seluruh 58 ID tetap `BELUM_DITERIMA`.
 
 ## Masalah yang diselesaikan
 
