@@ -375,3 +375,9 @@
 - [F] Audit run 44024272491: exact SHA 882e0fc, seluruh 3 test PASS, auth state dibersihkan, artifact 14302392913 diunggah; status waiting berasal dari approval Environment.
 - [BU] Dispatch tanpa approval pada workflow hasil patch menunggu merge ke main; izin Actions agent tetap merupakan kontrol GitHub terpisah.
 - Task managed by codex agent at 2026-11-17T13:07:47+07:00
+
+[2026-11-17T13:11:33+07:00] [INFO] Remote Live UI otomatis terverifikasi
+- [F] Run 44029146062 pada main selesai success tanpa approval pemilik; job live-ui berpindah otomatis dari waiting 06:09:56Z ke queued 06:09:57Z lalu in_progress 06:09:59Z.
+- [F] Smoke desktop menjalankan tiga test, cleanup auth state, dan upload artifact 14303849484; total live job 59 detik.
+- [F] Bukti ini memisahkan setup workflow yang sudah otomatis dari izin Actions agent Codex Dashboard yang tetap belum diverifikasi.
+- Task managed by codex agent at 2026-11-17T13:11:33+07:00
