@@ -300,6 +300,10 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
         fullPage: true,
     });
 
+    // Known blocker (2026-11-17): the eight actions use target="current", but the
+    // Run/Export buttons live in <footer>, and Odoo 19 renders footers only when
+    // env.inDialog is true (target="new"). Until that is fixed this click cannot
+    // find the button; the failure is the acceptance oracle for the defect.
     await page.locator('button[name="action_run"]').click();
     await expect(
         page.locator('.o_field_widget[name="result_summary"]'),

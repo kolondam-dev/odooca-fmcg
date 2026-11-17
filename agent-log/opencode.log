@@ -264,3 +264,11 @@
 - [F] origin/main di-merge tanpa konflik; hanya pwa/.env.live-ui.example berubah, spec/profil/docs finance tetap.
 - [F] Sebelum sinkronisasi PR #151 pada 52e1f59: 18 pass, 4 skip, 0 fail; pwa-quality format+typecheck lulus.
 - Task managed by Agent-Opencode at 2026-11-17T12:13:23+07:00
+
+[2026-11-17T12:24:59+07:00] [WARN] Temuan: tombol wizard finance tidak dirender pada target current
+- [F] Tombol Run Report/Export XLSX hanya ada di <footer>, tetapi 8 action memakai target: current; Odoo 19 merender footer hanya saat env.inDialog (target: new).
+- [F] Bukti sumber: form_controller.xml (slot layout-buttons t-if env.inDialog), form_controller.js (footer ke arsip dialog), action_service.js (new -> inDialog).
+- [F] Dua wizard lain di repo (coretax_export_wizard, promo_sku_wizard) memakai footer + target: new; verifier I2 tidak memeriksa target.
+- [F] Dampak: langkah 3-4 UAT finance tidak bisa diklik; spec gagal di button[name=action_run] sebagai oracle acceptance.
+- [F] Opsi: target: new untuk 8 action (disarankan; action_run sudah target current) atau tombol ke <header>. Belum diubah, menunggu keputusan pemilik.
+- Task managed by Agent-Opencode at 2026-11-17T12:24:59+07:00

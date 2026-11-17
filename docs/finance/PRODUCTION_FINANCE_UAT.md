@@ -97,6 +97,32 @@ Sisa yang tetap manual:
 - penolakan peran user Sales (langkah 5);
 - nilai **Costing Method** dan **Inventory Valuation** dua kategori (langkah 6).
 
+### Temuan pemblokir (2026-11-17)
+
+[F] Kedelapan action memakai `target: current`, sedangkan tombol **Run Report**
+dan **Export XLSX** hanya ada di `<footer>`. Pada Odoo 19 footer dirender hanya
+ketika form berada di dialog: `form_controller.xml` menggerbangi slot
+`layout-buttons` dengan `t-if="env.inDialog"`, `form_controller.js` memindahkan
+footer ke arsip dialog ("if we are in a dialog"), dan `action_service.js`
+memetakan `target: "new"` ke mode `inDialog`. Akibatnya tombol tidak muncul pada
+form halaman penuh, sehingga langkah 3–4 tidak bisa diklik dan spec otomatis
+gagal di `button[name="action_run"]` sampai ini diperbaiki.
+
+[F] Dua wizard lain di repo memakai pola footer + dialog: `id_base`
+(`coretax_export_wizard`, `target: new`) dan `id_promo_governance`
+(`promo_sku_wizard`, `target: new`).
+
+Pilihan perbaikan:
+
+1. ubah kedelapan action ke `target: new` — `action_run` sudah mengembalikan
+   `target: current`, jadi dialog menyegar di tempat dan footer tetap ada;
+2. pindahkan tombol Run/Export ke `<header>` bila form halaman penuh memang
+   disengaja.
+
+Belum diubah di PR ini karena mengubah UX produksi butuh keputusan pemilik.
+[BU] Belum direproduksi di browser live: kredensial/approval belum tersedia;
+bukti di atas berasal dari sumber Odoo 19 dan XML modul pada commit yang live.
+
 ## Bukti yang diminta
 
 Kirim ke catatan PR/HANDOFF:

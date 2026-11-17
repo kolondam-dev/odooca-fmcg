@@ -1,3 +1,13 @@
+## 2026-11-17T12:24:59+07:00 — Agent-Opencode — Temuan: tombol wizard finance tidak dirender pada target current
+**Konteks:** [F] Saat menyiapkan langkah Run/Export pada spec UAT finance, tombol tidak dapat dipastikan muncul karena kedelapan action membuka form halaman penuh.
+**Temuan:** [F] `addons/id_finance_reporting/views/finance_report_wizard_views.xml` menaruh **Run Report** dan **Export XLSX** hanya di `<footer>`, sementara kedelapan `ir.actions.act_window` memakai `target: current`. Pada Odoo 19 footer dirender hanya di dialog: `form_controller.xml` menggerbangi slot `layout-buttons` dengan `t-if="env.inDialog"`, `form_controller.js` memindahkan footer ke arsip dialog, dan `action_service.js` memetakan `target: "new"` ke mode `inDialog`. Jadi tombol tidak tampil di form halaman penuh.
+**Bukti pendukung:** [F] Dua wizard lain di repo memakai pola footer + dialog: `id_base/coretax_export_wizard_views.xml` dan `id_promo_governance/promo_sku_wizard_views.xml` (`target: new`). Verifier I2 hanya memeriksa `view_mode == "form"`, tidak `target`, sehingga celah ini lolos.
+**Dampak:** [F] Langkah 3–4 `PRODUCTION_FINANCE_UAT.md` tidak dapat diklik hari ini; spec otomatis akan gagal di `button[name="action_run"]`. Kegagalan itu adalah oracle acceptance, bukan masalah mapper. [F] `PRODUCTION_FINANCE_UAT.md` kini memuat subbagian "Temuan pemblokir" dengan dua opsi perbaikan.
+**Disarankan:** [BU] Opsi 1 (disarankan): ubah kedelapan action ke `target: new`; `action_run` sudah mengembalikan `target: current` sehingga dialog menyegar di tempat. Opsi 2: pindahkan tombol ke `<header>` bila form halaman penuh disengaja. Keputusan pemilik; belum diubah di PR #151.
+**Diverifikasi:** [F] Sumber Odoo 19 dipin dan dicek langsung (tiga penanda di atas cocok); XML modul dibaca pada commit yang live. [BU] Belum direproduksi di browser live karena kredensial/approval `demo-ui` belum tersedia.
+**Batas:** [F] Tidak mengubah `addons/**`; tanpa merge/deploy; `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA`.
+**Signature:** Task managed by Agent-Opencode at 2026-11-17T12:24:59+07:00
+
 ## 2026-11-17T12:13:23+07:00 — Agent-Opencode — Sinkronisasi main 882e0fc: kredensial demo plaintext di file contoh
 **Konteks:** [F] `main` bergerak ke `882e0fc` (#150) saat PR #151 menunggu review, sehingga PR menampilkan `BEHIND`.
 **Berubah:** [F] `origin/main` di-merge ke `Opencode-finance-uat-live`; konflik nihil karena #150 hanya mengubah `pwa/.env.live-ui.example`. Spec, profil route, dan docs finance tidak tersentuh.
