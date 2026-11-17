@@ -1,0 +1,13 @@
+[
+  {
+    "name": "odoo-home",
+    "target": "odoo",
+    "path": "/odoo",
+    "expectText": "Odoo"
+  },
+  {
+    "name": "field-home",
+    "target": "pwa",
+    "path": "/field/"
+  }
+]

@@ -66,6 +66,7 @@ bash -n deploy/init.sh deploy/addons_path.sh scripts/*.sh scripts/sandbox/*.sh s
 ```
 Diagnosis instance yang sedang berjalan (read-only, mis. Railway): `python3 scripts/ops/odoo_snapshot.py --url https://<host> --db <db> --user admin --out snapshot.md` (sandi diminta lewat prompt tersembunyi; tidak disimpan/dicetak). Memuat modul terinstal vs diharapkan, bahasa, menu, jumlah data, kelengkapan field outlet/produk, user, transaksi. Hanya baca; bisa dipakai di proyek lain (`--expect-modules`, `--extra-models`, `--menu-root`).
 Uji runtime di sandbox agen: `scripts/sandbox/sandbox_up.sh`, lalu `odoo ... -i <modul> --test-tags /<modul> --stop-after-init` dan `scripts/sandbox/test_init.sh` (lihat `docs/SANDBOX.md`).
+Uji UI live remote/on-demand atau lokal untuk Odoo web, dashboard, dan PWA menggunakan harness manual yang bukan required CI di `docs/LIVE_UI_HARNESS.md`. Remote memakai GitHub Environment `demo-ui`; lokal memakai `pwa/.env.live-ui.local` yang ignored. Gunakan akun TEST berhak minimum dan default read-only.
 
 ## 6. Invarian data
 Lihat `docs/SCOPE.md` §10. Menjadi uji audit dan snapshot di M2.

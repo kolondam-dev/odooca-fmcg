@@ -355,3 +355,15 @@
 - Koreksi entri 09:35:05: python -m ruff check . tersedia dan PASS; hanya executable langsung ruff yang tidak ada di PATH.
 - CI PR tetap belum diuji.
 - Task managed by codex agent at 2026-11-16T09:37:44+07:00
+
+[2026-11-16T14:53:42+07:00] [INFO] Harness Playwright live lokal Odoo dan PWA
+- Konfigurasi non-CI desktop/phone memakai env lokal ignored, reusable auth state, smoke dua target, route evidence, dan spec lokal agen.
+- Default satu worker/read-only; mutasi perlu helper opt-in dan akun TEST berhak minimum; artifact, cookie, trace, serta credential tidak boleh dipublikasi mentah.
+- TypeScript, targeted Prettier, 496 test PWA, Ruff, 14 manifest, public smoke 4 PASS, dan authenticated smoke 3 PASS; production belum diuji tanpa credential.
+- Task managed by codex agent at 2026-11-16T14:53:42+07:00
+
+[2026-11-16T15:54:27+07:00] [INFO] Runner GitHub manual lintas agen untuk UI demo
+- Workflow dispatch-only mem-pin source_ref, memakai Environment demo-ui, menjalankan suite read-oriented desktop/phone, menghapus auth state, dan menyimpan artifact tiga hari.
+- Environment demo-ui dibuat dengan reviewer pemilik, branch policy main, dan dua URL gateway; secret login/password masih harus diisi pemilik secara interaktif.
+- actionlint/YAML/TypeScript/Prettier/Ruff/manifest PASS; fixture @odoo-live 2 PASS dan @routes 2 PASS setelah dukungan JSON UTF-8 BOM.
+- Task managed by codex agent at 2026-11-16T15:54:27+07:00

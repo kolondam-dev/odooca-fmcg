@@ -240,3 +240,11 @@
 - [F] static menjalankan 'Kontrak guard langkah workflow' -> Ran 6 tests OK; 'Kontrak pemilihan suite CI' 12 test.
 - [BU] Jalur skip pada PR docs-only murni akan terbukti pada PR berikutnya; diagnostik demo production dan UAT finance terbuka.
 - Task managed by Agent-Opencode at 2026-11-16T14:43:48+07:00
+
+[2026-11-17T08:22:36+07:00] [INFO] P1 guard: rujukan env bukan guard, pengecualian gate eksplisit
+- [F] Guard hanya menerima if: impact plan; rujukan env: tidak mencegah eksekusi dan tidak lagi dihitung.
+- [F] SHELL_GATE_EXCEPTIONS eksplisit (file::job::langkah + alasan); hanya gate seed-invariants, tanpa docker.
+- [F] Counterexample env + docker exec tanpa syarat ditolak; gate tak terdaftar ditolak; entry pengecualian divalidasi.
+- [F] Kontrol negatif 1 (hapus if:) dan 2 (ganti if: dengan env:) keduanya gagal sesuai harapan; 20 test OK, ruff, manifest, YAML PASS.
+- [F] main 2f3e23b di-merge; konflik HANDOFF diselesaikan urut waktu, kedua sisi dipertahankan.
+- Task managed by Agent-Opencode at 2026-11-17T08:22:36+07:00
