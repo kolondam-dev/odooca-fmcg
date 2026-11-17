@@ -1546,7 +1546,11 @@ def run_scenario_b_from_empty_database(
     _logger.info("Database confirmed 100% empty. Bootstrapping canonical July baseline...")
     try:
         from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter
-        adapter = CanonicalPerpetualAdapter(env)
+        adapter = CanonicalPerpetualAdapter(
+            env,
+            cutoff_date="2026-07-31",
+            enforce_invoice_cutoff=True,
+        )
         adapter.run_all()
         res["july_status"] = "LOADED_SUCCESSFULLY"
     except Exception as e:

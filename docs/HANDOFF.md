@@ -1,3 +1,26 @@
+## 2026-11-17T09:28:00+07:00 — antigravity — Scenario B: Penegakan Invoice Cutoff pada Pemuatan Baseline Juli di Database Kosong (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan `install-test` pada Run 43994814804 (Step 12 menit 54m05s) mengungkap bahwa Scenario A (fault injection, recovery, dan zero-drift replay) telah berhasil 100% PASS pasca perbaikan state pembayaran AR/AP (`'paid'`).
+- [F] Namun, verifikasi runtime gagal pada eksekusi Scenario B (pemuatan baseline Juli pada database kosong `fmcg_period_disposable_b`):
+  `UserError: [id_base] Pergerakan stok '3086' untuk faktur seed belum selesai (state: 'assigned')!`
+- [F] Akar Masalah: Pada `run_scenario_b_from_empty_database()`, `CanonicalPerpetualAdapter` diinstansiasi tanpa parameter `enforce_invoice_cutoff=True`. Akibatnya, pengiriman DO setelah 31 Juli 2026 tidak divalidasi (tetap `assigned`), tetapi faktur komersial per 1 Agustus tetap dibuat dan di-posting, memicu penolakan guard COGS `_is_seed_commercial_invoice_with_posted_delivery_cogs` di `addons/id_base/models/account_move.py`. Di seluruh skrip produksi (`verify_disposable_full.py`, `verify_upgrade_baseline.py`), pemuatan baseline Juli selalu mewajibkan `cutoff_date="2026-07-31", enforce_invoice_cutoff=True`.
+**Berubah:**
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - Pada `run_scenario_b_from_empty_database()`, menginisialisasi `CanonicalPerpetualAdapter` dengan `cutoff_date="2026-07-31"` dan `enforce_invoice_cutoff=True` agar baseline Juli konsisten dengan skrip produksi dan transaksi Agustus diproses secara inkremental oleh `GenericPeriodPackLoader`.
+- `scripts/load_canonical_perpetual.py`:
+  - Mengubah default parameter `enforce_invoice_cutoff` pada `CanonicalPerpetualAdapter.__init__` dari `False` menjadi `True` saat `cutoff_date` aktif, mencegah anomali penagihan pengiriman yang belum selesai secara fail-closed.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit test `test_scenario_b_bootstraps_july_with_enforced_invoice_cutoff` yang memverifikasi bahwa `run_scenario_b_from_empty_database` menyalurkan `cutoff_date="2026-07-31"` dan `enforce_invoice_cutoff=True`.
+**Diverifikasi:**
+- [F] `python -m unittest tests.test_period_pack_loader.TestPeriodPackDisposableRuntimeVerification.test_scenario_b_bootstraps_july_with_enforced_invoice_cutoff`: PASS (0.572s).
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 61/61 PASS (6.395s).
+- [F] `python -m ruff check scripts/ops/verify_disposable_period_pack.py scripts/load_canonical_perpetual.py tests/test_period_pack_loader.py`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-17T09:28:00+07:00
+
 ## 2026-11-17T08:16:00+07:00 — antigravity — GenericPeriodPackLoader: Preservasi Validasi Replay State Pembayaran AR/AP Native Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43834637579 (Step 12 menit 39m03s) mengungkap kegagalan pada Scenario A replay:

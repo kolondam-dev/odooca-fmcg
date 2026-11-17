@@ -3143,3 +3143,24 @@
   * python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py: PASS.
   * python scripts/check_manifests.py: PASS (14 addon OK).
 - Task managed by antigravity at 2026-11-17T08:20:00+07:00
+
+2026-11-17T09:28:00+07:00 [INFO] Scenario B: Penegakan Invoice Cutoff pada Pemuatan Baseline Juli di Database Kosong
+- Konteks:
+  * Analisis kegagalan install-test pada Run 43994814804 (Step 12 menit 54m05s):
+    UserError: [id_base] Pergerakan stok '3086' untuk faktur seed belum selesai (state: 'assigned')!
+    saat mengeksekusi Scenario B di database disposable kedua fmcg_period_disposable_b.
+  * Akar Masalah: CanonicalPerpetualAdapter di run_scenario_b_from_empty_database diinstansiasi tanpa enforce_invoice_cutoff=True. Akibatnya, pengiriman setelah 31 Juli 2026 tidak divalidasi, tetapi faktur per 1 Agustus tetap dibuat dan di-posting, melanggar guard COGS _is_seed_commercial_invoice_with_posted_delivery_cogs pada id_base.
+- Solusi & Perubahan:
+  1. scripts/ops/verify_disposable_period_pack.py:
+     - Menginisialisasi CanonicalPerpetualAdapter dengan cutoff_date='2026-07-31' dan enforce_invoice_cutoff=True pada run_scenario_b_from_empty_database.
+  2. scripts/load_canonical_perpetual.py:
+     - Mengubah default parameter enforce_invoice_cutoff pada CanonicalPerpetualAdapter.__init__ menjadi True saat cutoff_date aktif.
+  3. tests/test_period_pack_loader.py:
+     - Menambahkan unit test test_scenario_b_bootstraps_july_with_enforced_invoice_cutoff.
+- Verifikasi:
+  * python -m unittest tests.test_period_pack_loader.TestPeriodPackDisposableRuntimeVerification.test_scenario_b_bootstraps_july_with_enforced_invoice_cutoff: PASS.
+  * python -m unittest tests/test_period_pack_loader.py: 61/61 PASS (6.395s).
+  * python -m ruff check scripts/ops/verify_disposable_period_pack.py scripts/load_canonical_perpetual.py tests/test_period_pack_loader.py: PASS clean (0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-17T09:28:00+07:00

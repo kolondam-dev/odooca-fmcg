@@ -599,6 +599,41 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             run_scenario_b_from_empty_database(env=env, pack_dir=AUG_PACK_DIR)
         self.assertIn("requires an empty disposable database", str(ctx.exception))
 
+    def test_scenario_b_bootstraps_july_with_enforced_invoice_cutoff(self):
+        """Scenario B July baseline loader must strictly enforce invoice cutoff to prevent uncompleted delivery moves.
+        """
+        mock_cr = MockRecord(dbname="test_disposable_b")
+        mock_models = {
+            "res.company": MockModel(records=[MockRecord(id=1, name="PT Salva Inti Mandiri")]),
+            "sale.order": MockModel(count_val=0),
+            "account.move": MockModel(count_val=0),
+        }
+        env = MockEnv(mock_models)
+        env.cr = mock_cr
+        from unittest.mock import patch
+        from scripts.ops.verify_disposable_period_pack import run_scenario_b_from_empty_database
+
+        captured_kwargs = {}
+
+        class DummyAdapter:
+            def __init__(self, *args, **kwargs):
+                captured_kwargs.update(kwargs)
+
+            def run_all(self):
+                pass
+
+        mock_audit = {"status": "PASS", "violations": []}
+        mock_snap = {"digest": "abc"}
+        with patch("scripts.load_canonical_perpetual.CanonicalPerpetualAdapter", DummyAdapter), \
+             patch.object(GenericPeriodPackLoader, "execute_apply", return_value={}), \
+             patch("scripts.ops.verify_disposable_period_pack.audit_period_database", return_value=mock_audit), \
+             patch("scripts.ops.verify_disposable_period_pack.capture_period_state_snapshot", return_value=mock_snap):
+            res = run_scenario_b_from_empty_database(env=env, pack_dir=AUG_PACK_DIR)
+
+        self.assertEqual(captured_kwargs.get("cutoff_date"), "2026-07-31")
+        self.assertTrue(captured_kwargs.get("enforce_invoice_cutoff"))
+        self.assertEqual(res.get("july_status"), "LOADED_SUCCESSFULLY")
+
     def test_deep_idempotency_opex_drift_detected(self):
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
         mock_acc_610100 = MockRecord(id=11, code="610100", name="Beban Logistik")

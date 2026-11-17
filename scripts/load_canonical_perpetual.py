@@ -320,7 +320,7 @@ def _iter_records(res) -> list:
 class CanonicalPerpetualAdapter:
     """Adapter yang memetakan register kanonikal ke model Odoo aktual dengan jaminan idempotensi."""
 
-    def __init__(self, env, reg_path=None, cutoff_date="2026-07-31", enforce_invoice_cutoff=False):
+    def __init__(self, env, reg_path=None, cutoff_date="2026-07-31", enforce_invoice_cutoff=True):
         # Optimasi performa Odoo ORM saat pemuatan seed massal (meniadakan overhead chatter dan mail tracking)
         if callable(getattr(env, "__call__", None)) and hasattr(env, "context"):
             self.env = env(context=dict(
