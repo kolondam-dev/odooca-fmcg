@@ -367,3 +367,11 @@
 - Environment demo-ui dibuat dengan reviewer pemilik, branch policy main, dan dua URL gateway; secret login/password masih harus diisi pemilik secara interaktif.
 - actionlint/YAML/TypeScript/Prettier/Ruff/manifest PASS; fixture @odoo-live 2 PASS dan @routes 2 PASS setelah dukungan JSON UTF-8 BOM.
 - Task managed by codex agent at 2026-11-16T15:54:27+07:00
+
+[2026-11-17T13:07:47+07:00] [INFO] Live UI template aman dan dispatch otomatis
+- [F] pwa/.env.live-ui.example mengosongkan URL/login/password; remote tetap memakai demo-ui Variables dan Secrets.
+- [F] Guard tests/test_live_ui_config.py dijalankan static CI dan menolak nilai non-empty pada empat key terlindungi.
+- [F] Required reviewer demo-ui dihapus; custom deployment branch policy main tetap aktif.
+- [F] Audit run 44024272491: exact SHA 882e0fc, seluruh 3 test PASS, auth state dibersihkan, artifact 14302392913 diunggah; status waiting berasal dari approval Environment.
+- [BU] Dispatch tanpa approval pada workflow hasil patch menunggu merge ke main; izin Actions agent tetap merupakan kontrol GitHub terpisah.
+- Task managed by codex agent at 2026-11-17T13:07:47+07:00
