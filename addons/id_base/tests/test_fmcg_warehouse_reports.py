@@ -99,7 +99,9 @@ class TestFMCGWarehouseReports(TransactionCase):
     def _render_html(self, xmlid, picking, lang=None):
         report = self.env.ref(xmlid)
         self.assertEqual(report.model, "stock.picking")
-        report = report.with_context(lang=lang) if lang else report
+        if lang:
+            report = report.with_context(lang=lang)
+            picking = picking.with_context(lang=lang)
         html, _content_type = report._render_qweb_html(
             report.report_name, picking.ids
         )
@@ -227,6 +229,7 @@ class TestFMCGWarehouseReports(TransactionCase):
                     if row["type"] == "model_terms"
                     and row["name"] == "ir.ui.view,arch_db"
                     and row["res_id"] == xmlid
+                    and row["src"] == msgid
                 ]
                 self.assertEqual(
                     len(matches), 1,
@@ -253,6 +256,7 @@ class TestFMCGWarehouseReports(TransactionCase):
         for xmlid, title, labels in cases:
             with self.subTest(report=xmlid):
                 html = self._render_html(xmlid, picking, lang="id_ID")
+                self.assertIn('data-oe-lang="id_ID"', html)
                 for label in (title, *labels):
                     self.assertIn(label, html)
                 self.assertNotIn("<h2>Picklist", html)
