@@ -21,6 +21,7 @@ always_full:
   - ".github/workflows/**"
   - "scripts/ci/**"
   - "tests/test_ci_impact.py"
+  - "tests/test_ci_workflow_guards.py"
 
 ignore_runtime:
   # Static validation still runs for these paths.

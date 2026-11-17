@@ -219,3 +219,32 @@
 - [F] Tujuan: menghilangkan status BEHIND; regresi P1 sudah terbukti sebelumnya.
 - [BU] Workflow pada commit merge belum berjalan.
 - Task managed by Agent-Opencode at 2026-11-16T10:57:02+07:00
+
+[2026-11-16T14:04:35+07:00] [INFO] Pasca-merge #140: production deploy 2fb6172 sehat, diagnostik demo tetap terbuka
+- [F] main 2fb6172 tree identik dengan 75e81e7; PR #140 merged.
+- [F] Production deploy bab86712 SUCCESS pada commit 2fb6172; registry loaded 1.084s, cron berjalan, 0 issue.
+- [F] Traceback log = WARNING terjemahan dari id_dashboard_monetary/id_dashboard_wms, bukan finance.
+- [BU] Diagnostik DB demo production dan UAT finance belum dijalankan; katalog 58/58 BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-16T14:04:35+07:00
+
+[2026-11-16T14:13:07+07:00] [INFO] init-test PR #147: guard langkah I3 dan kontrak guard langkah workflow
+- [F] init-test PR #147 gagal karena langkah diagnostik I3 tanpa guard odoo_init; guard ditambahkan.
+- [F] tests/test_ci_workflow_guards.py: 6 kasus, memeriksa semua workflow; dijalankan di job static.
+- [F] Kontrol negatif: guard dihapus pada salinan ci.yml -> test gagal; dipulihkan -> OK.
+- [F] always_full mencakup test baru; counterexample di tests/test_ci_impact.py; docs/CI_SELECTION.md diperbarui.
+- [BU] Hasil init-test pada PR #147 menunggu CI; diagnostik demo production dan UAT finance masih terbuka.
+- Task managed by Agent-Opencode at 2026-11-16T14:13:07+07:00
+
+[2026-11-16T14:43:48+07:00] [INFO] PR #147 hijau 22/22 pada e3f9255 setelah guard langkah I3
+- [F] 22/22 check lulus pada e3f9255 (init-test 4m41s, static, install-test, semua gate); PR CLEAN/MERGEABLE.
+- [F] static menjalankan 'Kontrak guard langkah workflow' -> Ran 6 tests OK; 'Kontrak pemilihan suite CI' 12 test.
+- [BU] Jalur skip pada PR docs-only murni akan terbukti pada PR berikutnya; diagnostik demo production dan UAT finance terbuka.
+- Task managed by Agent-Opencode at 2026-11-16T14:43:48+07:00
+
+[2026-11-17T08:22:36+07:00] [INFO] P1 guard: rujukan env bukan guard, pengecualian gate eksplisit
+- [F] Guard hanya menerima if: impact plan; rujukan env: tidak mencegah eksekusi dan tidak lagi dihitung.
+- [F] SHELL_GATE_EXCEPTIONS eksplisit (file::job::langkah + alasan); hanya gate seed-invariants, tanpa docker.
+- [F] Counterexample env + docker exec tanpa syarat ditolak; gate tak terdaftar ditolak; entry pengecualian divalidasi.
+- [F] Kontrol negatif 1 (hapus if:) dan 2 (ganti if: dengan env:) keduanya gagal sesuai harapan; 20 test OK, ruff, manifest, YAML PASS.
+- [F] main 2f3e23b di-merge; konflik HANDOFF diselesaikan urut waktu, kedua sisi dipertahankan.
+- Task managed by Agent-Opencode at 2026-11-17T08:22:36+07:00
