@@ -1,3 +1,34 @@
+## 2026-11-17T11:46:00+07:00 — antigravity — Verifier & Adapter Odoo 19 Native: Penyelarasan Field Pembayaran (memo) & Signature Default Adapter (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan `CI` (Run 44004136256) dan `Seed supervision` (Run 44004135984) mengungkap dua akar penyebab kegagalan:
+  1. `install-test` (Run 44004136256, Step 12 menit 1h20m):
+     `ValueError: Invalid field account.payment.ref in condition ('ref', '=like', 'PAY-AR-%')`
+     Akar Masalah: Pada Odoo 19 native, model `account.payment` menggunakan field `memo` (bukan `ref`). Skrip `verify_disposable_period_pack.py` memanggil `AccountPayment.search` dengan field `'ref'` hardcoded, yang ditolak fail-closed oleh ORM domain parser Odoo 19. Selain itu, hashing snapshot pembayaran (`pay_hashes`) mengabaikan pembayaran ber-`memo`.
+  2. `Seed supervision` (Run 44004135984):
+     `AssertionError: 1276 != 1324` pada `test_canonical_loader_adapter.py`.
+     Akar Masalah: Pengubahan default parameter `enforce_invoice_cutoff` di `CanonicalPerpetualAdapter.__init__` menjadi `True` pada commit `044d3b6` menyebabkan pengujian isolasi kanonikal Juli yang memverifikasi 1.324 faktur penuh terpotong menjadi 1.276.
+**Berubah:**
+- `scripts/ops/verify_disposable_period_pack.py`:
+  - `audit_period_database()`: Menambahkan helper `_search_payments()` yang secara dinamis memeriksa ketersediaan field `memo` (Odoo 19 native) vs `ref` (legacy/mock) dengan fallback aman bila terjadi exception, meniadakan error domain `account.payment.ref`.
+  - `capture_period_state_snapshot()`: Menyelaraskan pembacaan identitas pembayaran menjadi `getattr(p, 'memo', None) or getattr(p, 'ref', None)` sehingga snapshot digest menangkap seluruh pembayaran di database native Odoo 19.
+  - Memperbaiki pelaporan referensi pembayaran AP agar membaca `memo` / `ref` secara graceful.
+- `scripts/load_canonical_perpetual.py`:
+  - Mengembalikan nilai default `enforce_invoice_cutoff=False` pada `CanonicalPerpetualAdapter.__init__` untuk menjaga kompatibilitas mundur dengan unit test kanonikal (1.324 faktur).
+  - Penegakan cutoff invoice tetap diaktifkan secara eksplisit pada `run_scenario_b_from_empty_database()` di `verify_disposable_period_pack.py` dan pada eksekusi CLI melalui environment variable `CANONICAL_ENFORCE_INVOICE_CUTOFF`.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan pengujian deterministic snapshot dengan record pembayaran native Odoo 19 (`memo`).
+  - Menambahkan unit test `test_audit_period_database_resolves_native_odoo19_payment_memo` untuk membuktikan bahwa audit oracle berhasil memetakan pembayaran AR/AP ber-`memo` tanpa error domain.
+**Diverifikasi:**
+- [F] `python -m unittest tests.test_canonical_loader_adapter.TestCanonicalLoaderAdapter.test_invoices_net_of_rejections_reconciliation`: PASS (46.287s).
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 62/62 PASS (8.211s).
+- [F] `python -m unittest tests/test_ci_impact.py tests/test_ci_workflow_guards.py`: 20/20 PASS (0.932s).
+- [F] `python -m ruff check .`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada seluruh workflow PR #110 (`CI`, `Seed supervision`).
+**Signature:** Task managed by antigravity at 2026-11-17T11:46:00+07:00
+
 ## 2026-11-17T09:28:00+07:00 — antigravity — Scenario B: Penegakan Invoice Cutoff pada Pemuatan Baseline Juli di Database Kosong (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43994814804 (Step 12 menit 54m05s) mengungkap bahwa Scenario A (fault injection, recovery, dan zero-drift replay) telah berhasil 100% PASS pasca perbaikan state pembayaran AR/AP (`'paid'`).

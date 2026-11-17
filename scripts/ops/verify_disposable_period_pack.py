@@ -673,24 +673,42 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         if not matching_ap_pay:
             report["violations"].append("Reconciled AP payment (PAY-AP-05 / AP-202608-0001) for July Unilever bill not found")
         else:
+            pay_ref = getattr(matching_ap_pay, "memo", None) or getattr(matching_ap_pay, "ref", None) or str(matching_ap_pay.id)
             if hasattr(matching_ap_pay, "reconciled_bill_ids") and matching_ap_pay.reconciled_bill_ids:
                 if unilever_bill.id not in [b.id for b in matching_ap_pay.reconciled_bill_ids]:
                     report["violations"].append(
-                        f"AP payment {matching_ap_pay.ref} is not reconciled to target July Unilever bill {unilever_bill.name}"
+                        f"AP payment {pay_ref} is not reconciled to target July Unilever bill {unilever_bill.name}"
                     )
             elif hasattr(matching_ap_pay, "is_reconciled") and not matching_ap_pay.is_reconciled:
-                report["violations"].append(f"AP payment {matching_ap_pay.ref} is not reconciled")
+                report["violations"].append(f"AP payment {pay_ref} is not reconciled")
+
+    # Helper to search payments across Odoo 19 ('memo') and legacy/mock ('ref') models
+    def _search_payments(payment_type: str, prefix: str):
+        col = "memo" if (hasattr(AccountPayment, "_fields") and "memo" in getattr(AccountPayment, "_fields", {})) else "ref"
+        try:
+            return AccountPayment.search(
+                [
+                    ("company_id", "=", company.id),
+                    ("payment_type", "=", payment_type),
+                    (col, "=like", f"{prefix}%"),
+                    ("date", ">=", oracle.manifest.pack_start),
+                    ("date", "<=", oracle.manifest.pack_end),
+                ]
+            )
+        except Exception:
+            alt_col = "ref" if col == "memo" else "memo"
+            return AccountPayment.search(
+                [
+                    ("company_id", "=", company.id),
+                    ("payment_type", "=", payment_type),
+                    (alt_col, "=like", f"{prefix}%"),
+                    ("date", ">=", oracle.manifest.pack_start),
+                    ("date", "<=", oracle.manifest.pack_end),
+                ]
+            )
 
     # 6. AR Collections Count & Collected Total
-    ar_payments = AccountPayment.search(
-        [
-            ("company_id", "=", company.id),
-            ("payment_type", "=", "inbound"),
-            ("ref", "=like", "PAY-AR-%"),
-            ("date", ">=", oracle.manifest.pack_start),
-            ("date", "<=", oracle.manifest.pack_end),
-        ]
-    )
+    ar_payments = _search_payments("inbound", "PAY-AR-")
     ar_count = len(ar_payments)
     act_ar_collected = sum(_dec(p.amount) for p in ar_payments)
     report["checks"]["ar_collections_count"] = {"expected": oracle.expected_ar_count, "actual": ar_count}
@@ -703,15 +721,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         )
 
     # 7. AP Payments Count & Paid Total
-    ap_payments = AccountPayment.search(
-        [
-            ("company_id", "=", company.id),
-            ("payment_type", "=", "outbound"),
-            ("ref", "=like", "PAY-AP-%"),
-            ("date", ">=", oracle.manifest.pack_start),
-            ("date", "<=", oracle.manifest.pack_end),
-        ]
-    )
+    ap_payments = _search_payments("outbound", "PAY-AP-")
     ap_count = len(ap_payments)
     act_ap_paid = sum(_dec(p.amount) for p in ap_payments)
     report["checks"]["ap_payments_count"] = {"expected": oracle.expected_ap_count, "actual": ap_count}
@@ -1102,9 +1112,9 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
     # 4. Payments
     pay_hashes = []
     for p in AccountPayment.search([]):
-        if not getattr(p, "ref", None):
+        p_ref = getattr(p, "memo", None) or getattr(p, "ref", None)
+        if not p_ref:
             continue
-        p_ref = p.ref
         p_partner = getattr(getattr(p, "partner_id", None), "ref", "") or getattr(getattr(p, "partner_id", None), "name", "")
         p_journal = getattr(getattr(p, "journal_id", None), "code", "")
         p_date = getattr(p, "date", "")

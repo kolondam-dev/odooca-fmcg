@@ -1218,11 +1218,21 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             credit_move_id=ml2_db1,
             amount=100000.00,
         )
+        pay_db1 = MockRecord(
+            id=1,
+            memo="PAY-AR-202608-0001",
+            partner_id=MockRecord(ref="CUST-001"),
+            journal_id=MockRecord(code="BNK1"),
+            date="2026-08-05",
+            amount=100000.00,
+            payment_type="inbound",
+            state="paid",
+        )
         env1 = MockEnv({
             "purchase.order": MockModel(),
             "sale.order": MockModel(),
             "account.move": MockModel(),
-            "account.payment": MockModel(),
+            "account.payment": MockModel(records=[pay_db1]),
             "stock.move": MockModel(),
             "stock.move.line": MockModel(),
             "stock.quant": MockModel(),
@@ -1259,11 +1269,21 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             credit_move_id=ml2_db2,
             amount=100000.00,
         )
+        pay_db2 = MockRecord(
+            id=999,
+            memo="PAY-AR-202608-0001",
+            partner_id=MockRecord(ref="CUST-001"),
+            journal_id=MockRecord(code="BNK1"),
+            date="2026-08-05",
+            amount=100000.00,
+            payment_type="inbound",
+            state="paid",
+        )
         env2 = MockEnv({
             "purchase.order": MockModel(),
             "sale.order": MockModel(),
             "account.move": MockModel(),
-            "account.payment": MockModel(),
+            "account.payment": MockModel(records=[pay_db2]),
             "stock.move": MockModel(),
             "stock.move.line": MockModel(),
             "stock.quant": MockModel(),
@@ -1275,6 +1295,58 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         snap2 = capture_period_state_snapshot(env2)
         # Digests must be 100% identical because local database surrogate integer IDs were normalized to business keys!
         self.assertEqual(snap1["digest"], snap2["digest"])
+
+    def test_audit_period_database_resolves_native_odoo19_payment_memo(self):
+        """Audit oracle resolves AR/AP payments via native Odoo 19 'memo' field without rejecting as invalid field."""
+        from scripts.ops.verify_disposable_period_pack import audit_period_database, PeriodPackOracle
+
+        class NativeOdoo19PaymentModel(MockModel):
+            _fields = {"memo": True, "amount": True, "date": True, "payment_type": True, "company_id": True}
+
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri Manado")
+        mock_cr = MockRecord(dbname="test_disposable")
+
+        pay_ar = MockRecord(
+            id=10,
+            company_id=1,
+            memo="PAY-AR-202608-0001",
+            payment_type="inbound",
+            date="2026-08-10",
+            amount=50000.00,
+        )
+        pay_ap = MockRecord(
+            id=20,
+            company_id=1,
+            memo="PAY-AP-202608-0001",
+            payment_type="outbound",
+            date="2026-08-10",
+            amount=100000.00,
+        )
+
+        env = MockEnv({
+            "account.payment": NativeOdoo19PaymentModel(records=[pay_ar, pay_ap]),
+            "account.move": MockModel(records=[]),
+            "purchase.order": MockModel(records=[]),
+            "sale.order": MockModel(records=[]),
+            "stock.picking": MockModel(records=[]),
+            "stock.move": MockModel(records=[]),
+            "stock.quant": MockModel(records=[]),
+            "account.move.line": MockModel(records=[]),
+            "account.account": MockModel(records=[
+                MockRecord(id=10, code="211200", company_id=1),
+                MockRecord(id=11, code="114100", company_id=1),
+                MockRecord(id=12, code="113000", company_id=1),
+                MockRecord(id=13, code="112000", company_id=1),
+                MockRecord(id=14, code="211000", company_id=1),
+            ]),
+        })
+        env.company = mock_company
+        env.cr = mock_cr
+
+        report = audit_period_database(env, oracle)
+        self.assertEqual(report["checks"]["ar_collections_count"]["actual"], 1)
+        self.assertEqual(report["checks"]["ap_payments_count"]["actual"], 1)
 
     def test_audit_fails_when_tax_base_matches_commercial_dpp_legacy(self):
         """Supervisor Counterexample 7: Tax Code 04 invoice has tax_base_amount equal to commercial DPP
