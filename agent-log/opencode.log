@@ -257,3 +257,10 @@
 - [F] Lokal: tsc 0 error, prettier PASS, --list memilih 3 test finance/project, JSON 2 route, ruff + 14 manifest PASS.
 - [BU] Remote run belum dijalankan (butuh secret demo-ui + approval); isi XLSX, role Sales, costing kategori tetap manual.
 - Task managed by Agent-Opencode at 2026-11-17T12:02:45+07:00
+
+[2026-11-17T12:13:23+07:00] [WARN] Sinkronisasi main 882e0fc: kredensial demo plaintext di file contoh
+- [F] main 882e0fc (#150) mengisi pwa/.env.live-ui.example dengan login dan kata sandi demo nyata; tidak sesuai AGENTS.md butir 5. Nilai tidak ditulis di log.
+- [F] Disarankan: rotasi kata sandi, kembalikan placeholder, isi hanya lewat Environment demo-ui atau .env.live-ui.local yang di-ignore.
+- [F] origin/main di-merge tanpa konflik; hanya pwa/.env.live-ui.example berubah, spec/profil/docs finance tetap.
+- [F] Sebelum sinkronisasi PR #151 pada 52e1f59: 18 pass, 4 skip, 0 fail; pwa-quality format+typecheck lulus.
+- Task managed by Agent-Opencode at 2026-11-17T12:13:23+07:00
