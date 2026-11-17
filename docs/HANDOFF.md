@@ -1,3 +1,24 @@
+## 2026-11-17T08:16:00+07:00 — antigravity — GenericPeriodPackLoader: Preservasi Validasi Replay State Pembayaran AR/AP Native Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan `install-test` pada Run 43834637579 (Step 12 menit 39m03s) mengungkap kegagalan pada Scenario A replay:
+  `StateInconsistencyError: Drift detected on AR payment PAY-AR-01025: state is 'paid' (expected posted)`
+- [F] Akar Masalah: Pada Odoo 19 native, model `account.payment` bertransisi ke state `'paid'` (atau `'in_process'`) setelah diposting dan direkonsiliasi dengan faktur/tagihan. Validator `_validate_existing_ar_payment()` dan `_validate_existing_ap_payment()` sebelumnya secara kaku menuntut `state == "posted"` (nilai legacy/mock), sehingga pada saat zero-drift replay (Scenario A), pembayaran yang sah ditolak sebagai drift palsu.
+- [F] Probes fault-injection dan pemulihan recovery sebelum tahap replay berhasil 100% PASS (`"recovery_status": "PASS"`, seluruh 48 OPEX berhasil diproses tanpa error akun `111100`).
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - `_validate_existing_ar_payment()` & `_validate_existing_ap_payment()`: Memperluas verifikasi state pembayaran yang valid mencakup `("posted", "paid", "in_process")`. Nilai invalid seperti `'draft'`, `'canceled'`, `'rejected'` tetap ditolak tegas (fail-closed).
+  - Menambahkan pengecekan compute field Odoo native `reconciled_invoices` dan `reconciled_bills` di samping `reconciled_invoice_ids` / `reconciled_bill_ids`.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit test `test_ar_payment_validator_accepts_paid_state_in_native_odoo19` untuk memverifikasi bahwa pembayaran berstatus `'paid'` diterima saat replay, dan status `'draft'` tetap ditolak fail-closed.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 60/60 PASS (6.339s).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 error).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
+**Signature:** Task managed by antigravity at 2026-11-17T08:16:00+07:00
+
 ## 2026-11-16T15:50:00+07:00 — antigravity — GenericPeriodPackLoader: Auto-provisioning Akun Kas Operasional (111100) & OPEX pada Database Disposable Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43824401939 (Step 12 menit 1h8m42s) mengungkap kegagalan:

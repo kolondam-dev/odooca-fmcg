@@ -1207,9 +1207,9 @@ class GenericPeriodPackLoader:
                 f"Drift detected on AR payment {pay_ref}: expected amount {exp_amt}, found {act_amt}"
             )
         act_state = getattr(existing, "state", None)
-        if act_state and act_state != "posted":
+        if act_state and act_state not in ("posted", "paid", "in_process"):
             raise StateInconsistencyError(
-                f"Drift detected on AR payment {pay_ref}: state is '{act_state}' (expected posted)"
+                f"Drift detected on AR payment {pay_ref}: state is '{act_state}' (expected posted/paid/in_process)"
             )
         p_type = getattr(existing, "payment_type", None)
         if p_type and p_type != "inbound":
@@ -1232,6 +1232,9 @@ class GenericPeriodPackLoader:
             is_matched = False
             if hasattr(existing, "reconciled_invoice_ids") and existing.reconciled_invoice_ids:
                 if target_invoice.id in [i.id for i in existing.reconciled_invoice_ids]:
+                    is_matched = True
+            if not is_matched and hasattr(existing, "reconciled_invoices") and existing.reconciled_invoices:
+                if target_invoice.id in [i.id for i in existing.reconciled_invoices]:
                     is_matched = True
             if not is_matched and hasattr(existing, "move_id") and getattr(existing.move_id, "line_ids", None):
                 for line in existing.move_id.line_ids:
@@ -1284,9 +1287,9 @@ class GenericPeriodPackLoader:
                 f"Drift detected on AP payment {pay_ref}: expected amount {exp_amt}, found {act_amt}"
             )
         act_state = getattr(existing, "state", None)
-        if act_state and act_state != "posted":
+        if act_state and act_state not in ("posted", "paid", "in_process"):
             raise StateInconsistencyError(
-                f"Drift detected on AP payment {pay_ref}: state is '{act_state}' (expected posted)"
+                f"Drift detected on AP payment {pay_ref}: state is '{act_state}' (expected posted/paid/in_process)"
             )
         p_type = getattr(existing, "payment_type", None)
         if p_type and p_type != "outbound":
@@ -1303,6 +1306,9 @@ class GenericPeriodPackLoader:
         is_matched = False
         if hasattr(existing, "reconciled_bill_ids") and existing.reconciled_bill_ids:
             if unilever_bill.id in [b.id for b in existing.reconciled_bill_ids]:
+                is_matched = True
+        if not is_matched and hasattr(existing, "reconciled_bills") and existing.reconciled_bills:
+            if unilever_bill.id in [b.id for b in existing.reconciled_bills]:
                 is_matched = True
         if not is_matched and hasattr(unilever_bill, "matched_payment_ids") and unilever_bill.matched_payment_ids:
             if existing.id in [p.id for p in unilever_bill.matched_payment_ids]:

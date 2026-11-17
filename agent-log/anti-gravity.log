@@ -3114,3 +3114,22 @@
   * python -m unittest tests/test_period_pack_loader.py: 59/59 PASS (19.574s).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-16T15:50:00+07:00
+
+2026-11-17T08:16:00+07:00 [INFO] GenericPeriodPackLoader: Preservasi Validasi Replay State Pembayaran AR/AP Native Odoo 19
+- Konteks:
+  * Analisis kegagalan install-test pada Run 43834637579 (Step 12 menit 39m03s):
+    StateInconsistencyError: Drift detected on AR payment PAY-AR-01025: state is 'paid' (expected posted)
+  * Pada Odoo 19 native, model account.payment bertransisi ke state 'paid' setelah diposting dan direkonsiliasi dengan faktur pelanggan.
+  * Validator _validate_existing_ar_payment dan _validate_existing_ap_payment sebelumnya secara kaku menuntut state == 'posted', memicu penolakan false-positive pada replay Scenario A.
+- Solusi & Perubahan:
+  1. scripts/ops/load_period_pack.py:
+     - Memperluas verifikasi state pembayaran yang valid mencakup ('posted', 'paid', 'in_process').
+     - Menambahkan pengecekan compute field Odoo native reconciled_invoices dan reconciled_bills di samping reconciled_invoice_ids / reconciled_bill_ids.
+  2. tests/test_period_pack_loader.py:
+     - Menambahkan unit test test_ar_payment_validator_accepts_paid_state_in_native_odoo19 (status 'paid' diterima, status 'draft' ditolak fail-closed).
+- Verifikasi:
+  * python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py: PASS clean (0 error).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * python -m unittest tests/test_period_pack_loader.py: 60/60 PASS (6.339s).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-17T08:16:00+07:00

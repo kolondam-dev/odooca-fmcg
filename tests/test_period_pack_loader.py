@@ -1079,6 +1079,53 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             loader._validate_existing_ar_payment(fake_reconciled_ar_pay, ar_row)
         self.assertIn("not reconciled to target invoice", str(ctx.exception))
 
+    def test_ar_payment_validator_accepts_paid_state_in_native_odoo19(self):
+        """Native Odoo 19 transitions reconciled account.payment to 'paid' (or 'in_process'). Replay must accept it."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        cust = MockRecord(id=60, ref="CUST-001", name="Toko X")
+        target_inv = MockRecord(
+            id=501,
+            company_id=1,
+            payment_reference="INV-202608-0001",
+            partner_id=cust,
+            state="posted",
+        )
+        valid_reconciled_ar_pay = MockRecord(
+            id=601,
+            company_id=1,
+            ref="PAY-AR-202608-0001",
+            partner_id=cust,
+            journal_id=MockRecord(type="bank"),
+            date="2026-08-05",
+            payment_type="inbound",
+            state="paid",  # Native Odoo 19 reconciled payment state
+            amount=500000.00,
+            is_reconciled=True,
+            reconciled_invoice_ids=[target_inv],
+            move_id=MockRecord(line_ids=[]),
+        )
+        mock_models = {
+            "account.move": MockModel(records=[target_inv]),
+            "res.partner": MockModel(records=[cust]),
+        }
+        loader = GenericPeriodPackLoader(env=MockEnv(mock_models), pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = mock_company
+        ar_row = {
+            "payment_id": "PAY-AR-202608-0001",
+            "invoice_number": "INV-202608-0001",
+            "customer": "CUST-001",
+            "payment_date": "2026-08-05",
+            "net_cash_collected_total": "500000.00",
+        }
+        # Must validate without error
+        loader._validate_existing_ar_payment(valid_reconciled_ar_pay, ar_row)
+
+        # Draft payment must fail closed
+        valid_reconciled_ar_pay.state = "draft"
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._validate_existing_ar_payment(valid_reconciled_ar_pay, ar_row)
+        self.assertIn("state is 'draft'", str(ctx.exception))
+
     def test_opex_validator_rejects_journal_mismatch(self):
         """Supervisor Counterexample 5: OPEX move posted in wrong journal (BNK1 vs MISC)."""
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
