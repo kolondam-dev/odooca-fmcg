@@ -248,3 +248,12 @@
 - [F] Kontrol negatif 1 (hapus if:) dan 2 (ganti if: dengan env:) keduanya gagal sesuai harapan; 20 test OK, ruff, manifest, YAML PASS.
 - [F] main 2f3e23b di-merge; konflik HANDOFF diselesaikan urut waktu, kedua sisi dipertahankan.
 - Task managed by Agent-Opencode at 2026-11-17T08:22:36+07:00
+
+[2026-11-17T12:02:45+07:00] [INFO] UAT finance read-only lewat harness UI live PR #148
+- [F] Spec pwa/tests/live/finance-uat.spec.ts (@finance-uat @odoo-live): menu 8 entri, 8 action + report_type + company 1, FIN04 Juli 2026 run, Export XLSX nama + header PK.
+- [F] Profil pwa/tests/live-profiles/finance-uat.json (FIN04 + FIN51) untuk suite routes.
+- [F] PRODUCTION_FINANCE_UAT.md: bagian Jalur otomatis + perintah dispatch + sisa manual + batas tulis (hanya record transient wizard).
+- [F] Koreksi entri 08:22: CI eb5b34f 22/22 dan merge main 43e00cf jadi [F]; jalur skip docs-only tetap [BU].
+- [F] Lokal: tsc 0 error, prettier PASS, --list memilih 3 test finance/project, JSON 2 route, ruff + 14 manifest PASS.
+- [BU] Remote run belum dijalankan (butuh secret demo-ui + approval); isi XLSX, role Sales, costing kategori tetap manual.
+- Task managed by Agent-Opencode at 2026-11-17T12:02:45+07:00
