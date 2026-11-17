@@ -1,0 +1,176 @@
+name: Remote Live UI Proof
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Branch, tag, or exact SHA containing the reviewed UI test
+        required: true
+        default: main
+        type: string
+      suite:
+        description: Read-oriented scenario group
+        required: true
+        default: smoke
+        type: choice
+        options: [smoke, odoo, pwa, routes, all-readonly]
+      project:
+        description: Chromium viewport
+        required: true
+        default: desktop
+        type: choice
+        options: [desktop, phone, all]
+      route_file:
+        description: Optional path below pwa/tests/live-profiles for routes suite
+        required: false
+        type: string
+      purpose:
+        description: Short evidence purpose shown in the run summary
+        required: true
+        default: demo UI verification
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: remote-live-ui-demo
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve requested source
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.source_ref }}
+      - id: pin
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Record immutable source
+        env:
+          PURPOSE: ${{ inputs.purpose }}
+          REQUESTED_REF: ${{ inputs.source_ref }}
+          EXACT_SHA: ${{ steps.pin.outputs.sha }}
+        run: |
+          {
+            echo "## Remote live UI candidate"
+            echo "- Purpose: $PURPOSE"
+            echo "- Requested ref: $REQUESTED_REF"
+            echo "- Exact source SHA: $EXACT_SHA"
+            echo "- Suite: ${{ inputs.suite }}"
+            echo "- Browser project: ${{ inputs.project }}"
+            echo
+            echo "The live job requires approval from the demo-ui environment."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  live-ui:
+    name: Chromium proof against demo
+    needs: resolve
+    environment: demo-ui
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: pwa
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+      - run: npm ci --no-fund
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: live-ui-playwright-${{ runner.os }}-${{ hashFiles('pwa/package-lock.json') }}
+      - run: npx playwright install --with-deps chromium
+      - name: Validate protected configuration and select tests
+        id: select
+        env:
+          ODOO_URL: ${{ vars.LIVE_UI_ODOO_URL }}
+          PWA_URL: ${{ vars.LIVE_UI_PWA_URL }}
+          DEMO_LOGIN: ${{ secrets.ODOO_DEMO_LOGIN }}
+          DEMO_PASSWORD: ${{ secrets.ODOO_DEMO_PASSWORD }}
+          SELECTED_PROJECT: ${{ inputs.project }}
+          SELECTED_SUITE: ${{ inputs.suite }}
+          REQUESTED_ROUTE_FILE: ${{ inputs.route_file }}
+        run: |
+          test -n "$ODOO_URL"
+          test -n "$PWA_URL"
+          test -n "$DEMO_LOGIN"
+          test -n "$DEMO_PASSWORD"
+
+          case "$SELECTED_PROJECT" in
+            desktop) echo "project=--project=live-desktop" >> "$GITHUB_OUTPUT" ;;
+            phone) echo "project=--project=live-phone" >> "$GITHUB_OUTPUT" ;;
+            all) echo "project=" >> "$GITHUB_OUTPUT" ;;
+            *) echo "Unsupported browser project" >&2; exit 2 ;;
+          esac
+
+          case "$SELECTED_SUITE" in
+            smoke) echo "grep=--grep=@smoke" >> "$GITHUB_OUTPUT" ;;
+            odoo) echo "grep=--grep=@odoo-live" >> "$GITHUB_OUTPUT" ;;
+            pwa) echo "grep=--grep=@pwa-live" >> "$GITHUB_OUTPUT" ;;
+            routes)
+              echo "grep=--grep=@routes" >> "$GITHUB_OUTPUT"
+              test -n "$REQUESTED_ROUTE_FILE"
+              case "$REQUESTED_ROUTE_FILE" in *..*) echo "route_file cannot contain '..'" >&2; exit 2 ;; esac
+              case "$REQUESTED_ROUTE_FILE" in
+                tests/live-profiles/*.json) ;;
+                *) echo "route_file must be below pwa/tests/live-profiles" >&2; exit 2 ;;
+              esac
+              test -f "$REQUESTED_ROUTE_FILE"
+              echo "LIVE_UI_ROUTE_FILE=$REQUESTED_ROUTE_FILE" >> "$GITHUB_ENV"
+              ;;
+            all-readonly) echo "grep=" >> "$GITHUB_OUTPUT" ;;
+            *) echo "Unsupported live UI suite" >&2; exit 2 ;;
+          esac
+      - name: Run remote Chromium proof
+        env:
+          LIVE_UI_ODOO_URL: ${{ vars.LIVE_UI_ODOO_URL }}
+          LIVE_UI_PWA_URL: ${{ vars.LIVE_UI_PWA_URL }}
+          ODOO_DEMO_LOGIN: ${{ secrets.ODOO_DEMO_LOGIN }}
+          ODOO_DEMO_PASSWORD: ${{ secrets.ODOO_DEMO_PASSWORD }}
+          ODOO_DEMO_DB: ${{ secrets.ODOO_DEMO_DB }}
+          LIVE_UI_ALLOW_WRITE: "NO"
+          LIVE_UI_TRACE: "NO"
+          LIVE_UI_WORKERS: "1"
+        run: >-
+          npm run live:ui --
+          ${{ steps.select.outputs.project }}
+          ${{ steps.select.outputs.grep }}
+      - name: Remove reusable browser credentials
+        if: always()
+        run: rm -rf test-results/live-ui/.auth
+      - name: Publish evidence summary
+        if: always()
+        env:
+          EXACT_SHA: ${{ needs.resolve.outputs.sha }}
+          PURPOSE: ${{ inputs.purpose }}
+        run: |
+          {
+            echo "## Remote live UI evidence"
+            echo "- Purpose: $PURPOSE"
+            echo "- Source SHA: $EXACT_SHA"
+            echo "- Suite/project: ${{ inputs.suite }} / ${{ inputs.project }}"
+            echo "- Target variables: demo-ui environment (values not printed)"
+            echo "- Credentials removed before artifact upload"
+            echo "- This run is evidence only; it does not authorize deployment or data mutation."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-ui-${{ inputs.suite }}-${{ inputs.project }}-${{ needs.resolve.outputs.sha }}
+          path: |
+            pwa/test-results/live-ui/
+            pwa/playwright-report/live-ui/
+          if-no-files-found: warn
+          retention-days: 3

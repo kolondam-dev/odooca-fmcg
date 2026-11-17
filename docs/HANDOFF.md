@@ -19,6 +19,13 @@
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-17T08:16:00+07:00
 
+## 2026-11-16T15:54:04+07:00 — codex — Runner GitHub manual lintas agen untuk bukti UI demo
+**Konteks:** [F] Pemilik mengklarifikasi harness harus dapat dieksekusi remote oleh agen lintas platform; repo/data/deployment adalah showcase public berisiko rendah, sehingga artifact bukti demo boleh tetap pada repo ini.
+**Berubah:** [F] Workflow `Remote Live UI Proof` hanya `workflow_dispatch`, bukan required CI/push/PR/schedule. Workflow mem-pin `source_ref` ke exact SHA, menunggu approval Environment `demo-ui`, menjalankan Chromium desktop/phone satu worker untuk suite smoke/Odoo/PWA/routes/all-readonly, menghapus auth state, lalu menyimpan report tiga hari. Branch agen dapat membawa spec tanpa merge/deploy; workflow definition tetap dipanggil dari `main`. Tag suite dan route profile tervalidasi ditambahkan pada harness.
+**GitHub:** [F] Environment `demo-ui` dibuat dengan reviewer `kolondam-dev`, hanya workflow ref `main`, dan Variables gateway production terisi; `/web/login` serta `/field/` merespons. [BU] Secrets `ODOO_DEMO_LOGIN`/`ODOO_DEMO_PASSWORD` belum diisi dan wajib dimasukkan pemilik melalui UI/CLI interaktif tanpa chat/log.
+**Diverifikasi:** [F] actionlint 1.7.12 dan parse YAML PASS; TypeScript, targeted Prettier, Ruff, 14 manifest, serta `git diff --check` PASS. Fixture authenticated `@odoo-live` 2 PASS. Route profile PowerShell dengan UTF-8 BOM awalnya menolak JSON lalu parser disesuaikan; kontrol ulang `@routes` 2 PASS dan screenshot dibuat setelah reusable auth.
+**Batas:** [F] Workflow remote belum dapat dipicu sebelum file tersedia di `main`; perubahan workflow memilih full regression sesuai impact planner. Tidak ada login production, deployment, atau mutasi data.
+
 ## 2026-11-16T15:50:00+07:00 — antigravity — GenericPeriodPackLoader: Auto-provisioning Akun Kas Operasional (111100) & OPEX pada Database Disposable Odoo 19 (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `install-test` pada Run 43824401939 (Step 12 menit 1h8m42s) mengungkap kegagalan:
@@ -40,6 +47,12 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-16T15:50:00+07:00
+
+## 2026-11-16T14:53:05+07:00 — codex — Harness Playwright live lokal untuk Odoo dan PWA
+**Konteks:** [F] Playwright existing hanya menjalankan fixture/CI; agen belum memiliki konfigurasi reusable non-CI untuk membuktikan UI Odoo backend, dashboard, dan PWA pada target yang dipilih operator.
+**Berubah:** [F] `pwa/playwright.live.config.ts` menyediakan Chromium desktop/phone, autentikasi reusable, smoke Odoo/PWA, route-driven screenshot/assertion, dan spec lokal ignored. URL/kredensial dibaca dari `pwa/.env.live-ui.local`; artifact/session juga ignored. Default satu worker, tanpa retry/video/trace, dan skenario tulis memerlukan helper opt-in `LIVE_UI_ALLOW_WRITE=YES`. Panduan operasional dan batas evidence ada di `docs/LIVE_UI_HARNESS.md`.
+**Diverifikasi:** [F] TypeScript dan targeted Prettier PASS; 496 test PWA PASS; Ruff dan 14 manifest PASS. Fixture HTTP lokal: public-only desktop/phone 4 PASS (2 route skip), authenticated desktop 3 PASS (1 route skip), termasuk storage state reusable dan smoke dua target. `git diff --check` bersih.
+**Batas:** [BU] Belum dijalankan ke production demo karena kredensial tidak tersedia di sesi ini. [F] Installer Chromium Playwright mengunduh 100% tetapi dua kali melewati timeout host; validasi browser berhasil dengan Chrome sistem melalui `LIVE_UI_CHROMIUM_EXECUTABLE`. Full `npm run format:check` tetap gagal pada 206 file existing di luar diff; semua file baru/berubah yang ditargetkan lulus. Tidak ada workflow CI, deployment, atau mutasi data.
 
 ## 2026-11-16T13:00:00+07:00 — antigravity — GenericPeriodPackLoader: Optimasi Konteks ORM Odoo untuk Batch Seed Massal & Penyesuaian Timeout CI 120 Menit (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
