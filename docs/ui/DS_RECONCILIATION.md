@@ -246,7 +246,7 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Jarak:** hanya `outlet.distance` dari backend bila ada; kartu Delivery tanpa jarak (Beranda tidak membaca GPS). Muatan tanpa konversi "(1.760 pcs)" karena butuh konversi UoM dari backend.
 - **Navigasi:** tautan Google Maps eksternal (tab baru) ke koordinat outlet/DO; tanpa lokasi pengguna.
 - **"Mulai kirim/pengiriman" membuka tab Delivery** (daftar trip), bukan langsung DO pertama.
-- **Belum:** tab bawah "Delivery" khusus Canvasser (selesai di K26) dan layar Navigasi (DS `Navigasi`, selesai di K27); Outlet*/Kunjungan_hub tetap fase berikutnya.
+- **Belum:** tab bawah "Delivery" khusus Canvasser (selesai di K26) dan layar Navigasi (DS `Navigasi`, selesai di K27); Outlet*/Kunjungan_hub selesai sebagian di K28 (sisanya utang backend).
 
 ### K26. Fase 3B-12 — Status lokasi di check-in toko, tab Delivery Canvasser
 
@@ -277,6 +277,17 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Jarak Delivery dari manifest** tetap tidak ada (utang K19/K25); layar Navigasi Delivery hanya menampilkan jarak bila lokasi perangkat tersedia.
 - **Header memakai tombol "Kembali"** komponen DS; tidak ada tombol "Buka di Google Maps" ganda di Beranda.
 - **Tes lama diubah:** `beranda-roles.spec.ts` sebelumnya menegaskan tautan eksternal pada Beranda; kini menegaskan tombol, dan atribut tautan dipindah ke `navigasi.spec.ts`. Ditandai untuk reviewer.
+
+### K28. Fase 3B-14 — Outlet, Outlet_kosong, Kunjungan_hub
+
+Yang dikerjakan: kartu outlet memuat jam rencana dan jarak dari snapshot (`domain/outlet-card.ts`, nilai kosong/placeholder tidak ditampilkan); keadaan kosong DS pada daftar outlet; kartu "Tagihan jatuh tempo" di hub menampilkan "Piutang berjalan" (`ar_outstanding`) dan peringatan "Melebihi limit kredit Rp … (TOP …)" hanya bila piutang melebihi limit. Tidak ada angka atau faktur karangan; gerbang Order (K3) tidak diubah.
+
+Utang:
+- **PJP kosong tidak membuka sesi kerja:** `validMorningSnapshot` menolak `outlets.length === 0` (sengaja, diuji `morning.test.ts` "empty outlets"), sehingga layar Outlet_kosong belum terjangkau. UI sudah ada dan diverifikasi manual; tes e2e ditandai `test.fixme` sampai pemilik memutuskan aturan PJP kosong (butuh penanda backend).
+- **Header Outlet** tetap AppHeader bersama + toolbar di badan (bukan ikon Cari + "Extra call" di header DS).
+- **Chip "Tagihan N" dan "pada HH.MM" (outlet selesai)** belum ada datanya (jumlah faktur/`ar` per outlet, waktu check-out).
+- **Daftar faktur berkotak centang, total tagihan jatuh tempo, chip "Wajib ditagih hari ini", CTA "Mulai penagihan", stepper 4 tahap, gerbang Order "Terkunci"** menunggu snapshot `ar` dan alur penagihan Sales (backend, flag `collection_v2`).
+- **Label "Piutang berjalan"** menggantikan "Total tagihan" DS karena `ar_outstanding` bukan total faktur jatuh tempo.
 
 ## 3. Urutan integrasi yang disarankan
 

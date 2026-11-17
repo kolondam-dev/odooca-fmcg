@@ -1,6 +1,7 @@
 import { useRememberedState, useRememberedScroll } from "../ui/viewMemory";
 import { useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
+import { outletMeta } from "../domain/outlet-card";
 import { Button, OutletCard, Segmented } from "../ui";
 import { FullDrawer } from "./FullDrawer";
 import { Icon } from "./Icon";
@@ -34,6 +35,7 @@ export function OutletDirectory({
     const rows = (values: typeof outlets) =>
         values.map((outlet) => {
             const done = closed(outlet.id);
+            const meta = outletMeta(outlet);
             return (
                 <OutletCard
                     key={outlet.id}
@@ -41,6 +43,24 @@ export function OutletDirectory({
                     name={outlet.name}
                     address={outlet.address}
                     highlight={outlet.id === nextId}
+                    meta={
+                        meta.time || meta.distance ? (
+                            <>
+                                {meta.time ? (
+                                    <span class="ui-ocard__m">
+                                        <Icon name="clock" size={18} />
+                                        {meta.time}
+                                    </span>
+                                ) : null}
+                                {meta.distance ? (
+                                    <span class="ui-ocard__m">
+                                        <Icon name="pin" size={18} />
+                                        {meta.distance}
+                                    </span>
+                                ) : null}
+                            </>
+                        ) : undefined
+                    }
                     status={
                         done
                             ? { tone: "ok", label: "Selesai" }
@@ -98,9 +118,37 @@ export function OutletDirectory({
                 />
             </div>
             <div class="outlet-list ui-list" ref={listScroll}>
-                {rows(shown)}
-                {!shown.length && (
-                    <p class="empty">Tidak ada outlet pada filter ini.</p>
+                {outlets.length ? (
+                    <>
+                        {rows(shown)}
+                        {!shown.length && (
+                            <p class="empty">
+                                Tidak ada outlet pada filter ini.
+                            </p>
+                        )}
+                    </>
+                ) : (
+                    <div class="ui-empty">
+                        <span class="ui-empty__icon" aria-hidden="true">
+                            <Icon name="store" size={36} />
+                        </span>
+                        <h2 class="ui-empty__title">
+                            Belum ada outlet hari ini
+                        </h2>
+                        <p class="ui-empty__text">
+                            PJP hari ini kosong atau belum disinkron. Tambahkan
+                            kunjungan di luar rencana lewat Extra call.
+                        </p>
+                        <Button
+                            variant="sec"
+                            size="md"
+                            auto
+                            icon="plus"
+                            onClick={extra}
+                        >
+                            Tambah Extra call
+                        </Button>
+                    </div>
                 )}
             </div>
             {search && (

@@ -309,3 +309,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - vitest 507 lulus; e2e penuh 241/242, satu kegagalan route-workflow juga terjadi di main bersih (flake switchPersona di bawah beban)
 - K27 ditambahkan; flag backend tetap OFF
 - Task managed by claude-design agent at 2026-11-17T08:31:51+07:00
+
+[2026-11-17T23:29:19+07:00] [INFO] Fase 3B-14: Outlet, Outlet_kosong, Kunjungan_hub
+- vitest 516 lulus; e2e penuh 250 lulus, 2 skip (fixme K28)
+- K28 ditambahkan: PJP kosong belum bisa membuka sesi; utang faktur/penagihan menunggu backend
+- flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-17T23:29:19+07:00
