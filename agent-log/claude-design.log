@@ -302,3 +302,10 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Fix valid lalu 31 m saat Mulai kunjungan: lembar Akurasi lokasi rendah, tanpa sales.visit.check_in di outbox
 - K26 diperbarui
 - Task managed by claude-design agent at 2026-11-16T09:45:39+07:00
+
+[2026-11-17T08:31:51+07:00] [INFO] PWA 3B-13: layar Navigasi DS
+- Layar Navigasi in-app (skema garis lurus, jarak, Buka di Google Maps, Saya sudah tiba · Check-in) untuk Beranda Sales/Delivery/Canvasser dan daftar toko Delivery
+- Router: dialog navigate/navigate_do hanya ID; tanpa koordinat di riwayat
+- vitest 507 lulus; e2e penuh 241/242, satu kegagalan route-workflow juga terjadi di main bersih (flake switchPersona di bawah beban)
+- K27 ditambahkan; flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-17T08:31:51+07:00

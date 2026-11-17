@@ -24,6 +24,7 @@ import { useCollectionTasks } from "./useCollectionTasks";
 import type { Snapshot } from "../domain/contracts";
 import { deliveryDoneChecker } from "../domain/delivery-progress";
 import { useBackLayer } from "../ui/navigation";
+import { NavigationScreen } from "./NavigationScreen";
 import {
     Button,
     Callout,
@@ -43,7 +44,12 @@ export function DeliveryWorkspace({
     snapshot,
     submit,
     provider,
+    startTask,
+    onStarted,
 }: {
+    /** Buka hub toko ini begitu manifest siap (dari "Saya sudah tiba" di Navigasi). */
+    startTask?: string;
+    onStarted?: () => void;
     store: FieldStore;
     identity: Identity;
     provider: FieldProvider;
@@ -66,7 +72,17 @@ export function DeliveryWorkspace({
     const [tasks, setTasks] = useState<DeliveryTask[]>(),
         [error, setError] = useState(""),
         [tripOpen, setTripOpen] = useState<string>(),
-        [taskOpen, setTaskOpen] = useState<string>();
+        [taskOpen, setTaskOpen] = useState<string>(),
+        [navOpen, setNavOpen] = useState<string>();
+    useEffect(() => {
+        if (!startTask || !tasks) return;
+        const target = tasks.find((t) => podKey(t) === startTask);
+        if (target) {
+            setTripOpen(target.trip);
+            setTaskOpen(startTask);
+        }
+        onStarted?.();
+    }, [startTask, tasks]);
     useEffect(() => {
         let active = true;
         void (async () => {
@@ -122,6 +138,7 @@ export function DeliveryWorkspace({
         : undefined;
     const openTask = tasks?.find((t) => podKey(t) === taskOpen);
     const collectTask = tasks?.find((t) => podKey(t) === collectOpen);
+    const navTask = tasks?.find((t) => podKey(t) === navOpen);
     const receivablesOf = (t: DeliveryTask) =>
         (collectionV2Enabled(snapshot) ? (collection ?? []) : []).filter(
             (c) => podKey(c.delivery) === podKey(t),
@@ -178,9 +195,21 @@ export function DeliveryWorkspace({
                     isDone={isDone}
                     next={next}
                     open={(t) => setTaskOpen(podKey(t))}
+                    navigate={(t) => setNavOpen(podKey(t))}
                     collect={(t) => setCollectOpen(podKey(t))}
                     hasReceivables={(t) => receivablesOf(t).length > 0}
                     close={() => setTripOpen(undefined)}
+                />
+            ) : null}
+            {navTask ? (
+                <DeliveryNavigation
+                    key={podKey(navTask)}
+                    task={navTask}
+                    close={() => setNavOpen(undefined)}
+                    arrive={() => {
+                        setNavOpen(undefined);
+                        setTaskOpen(podKey(navTask));
+                    }}
                 />
             ) : null}
             {openTask ? (
@@ -228,10 +257,12 @@ function TripStores({
     isDone,
     next,
     open,
+    navigate,
     collect,
     hasReceivables,
     close,
 }: {
+    navigate: (t: DeliveryTask) => void;
     trip: string;
     rows: DeliveryTask[];
     isDone: (t: DeliveryTask) => boolean;
@@ -276,13 +307,7 @@ function TripStores({
                                 variant="sec"
                                 size="md"
                                 icon="arrow"
-                                onClick={() =>
-                                    window.open(
-                                        `https://www.google.com/maps/dir/?api=1&destination=${t.site.latitude},${t.site.longitude}`,
-                                        "_blank",
-                                        "noopener",
-                                    )
-                                }
+                                onClick={() => navigate(t)}
                             >
                                 Navigasi
                             </Button>
@@ -310,5 +335,29 @@ function TripStores({
                 );
             })}
         </Screen>
+    );
+}
+/** Layar Navigasi DS untuk satu toko Delivery; tersusun di atas daftar toko. */
+function DeliveryNavigation({
+    task,
+    close,
+    arrive,
+}: {
+    task: DeliveryTask;
+    close: () => void;
+    arrive: () => void;
+}) {
+    useBackLayer(true, close);
+    return (
+        <NavigationScreen
+            target={{
+                name: task.outlet,
+                address: task.address,
+                latitude: task.site.latitude,
+                longitude: task.site.longitude,
+            }}
+            onBack={close}
+            onArrive={arrive}
+        />
     );
 }
