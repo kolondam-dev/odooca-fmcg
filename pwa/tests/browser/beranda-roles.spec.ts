@@ -7,16 +7,14 @@ test("Beranda Sales: outlet berikutnya, jarak, Navigasi ke outlet dan Mulai kunj
     await page.goto("./");
     await ensureDaily(page);
     await expect(page.getByText(/Outlet berikutnya · 1 dari/)).toBeVisible();
-    const nav = page.getByRole("link", {
-        name: "Navigasi ke outlet",
-        exact: true,
-    });
-    await expect(nav).toHaveAttribute(
-        "href",
-        /google\.com\/maps\/dir.*destination=/,
-    );
-    await expect(nav).toHaveAttribute("target", "_blank");
-    await expect(nav).toHaveAttribute("rel", /noopener/);
+    // Navigasi membuka layar DS in-app; tautan Google Maps ada di dalamnya
+    // (lihat navigasi.spec.ts).
+    await expect(
+        page.getByRole("button", { name: "Navigasi ke outlet", exact: true }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole("link", { name: "Navigasi ke outlet" }),
+    ).toHaveCount(0);
     await expect(
         page.getByRole("button", { name: /^Mulai kunjungan · / }),
     ).toBeVisible();
@@ -38,8 +36,8 @@ test("Beranda Delivery: statistik DO, Pengiriman berikutnya dan Mulai pengiriman
     await expect(page.getByText("Selesai", { exact: true })).toBeVisible();
     await expect(page.getByText("Pengiriman berikutnya")).toBeVisible();
     await expect(
-        page.getByRole("link", { name: "Navigasi", exact: true }),
-    ).toHaveAttribute("href", /destination=/);
+        page.getByRole("button", { name: "Navigasi", exact: true }),
+    ).toBeVisible();
     await page
         .getByRole("button", { name: "Mulai pengiriman", exact: true })
         .click();
