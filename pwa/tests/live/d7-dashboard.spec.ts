@@ -95,7 +95,10 @@ test("@odoo-live D1 → D7 reconciles and restores July sales scope", async ({ p
     await back.click();
     await expect(active).toBeVisible();
     await expect(coverage.getByText("Manado › Wenang", { exact: true })).toBeVisible();
-    expect(JSON.parse((await controls.getAttribute("data-query"))!)).toEqual(applied);
+    await expect.poll(() => controls.evaluate(root => {
+        const controller = (root as Element & { __controls?: { getState(): unknown } }).__controls;
+        return controller?.getState() ?? null;
+    }), { message: "D1 restores the exact period and SKU in the active controls" }).toEqual(applied);
     await testInfo.attach("reconciliation", {
         contentType: "application/json",
         body: JSON.stringify({ period: applied.period, sku, territory: "Manado / Wenang / Calaca",
