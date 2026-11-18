@@ -1857,3 +1857,44 @@ a.ui-btn {
 .ui-navinfo .ui-meta {
     margin: 6px 0 4px;
 }
+
+/* Outlet: meta kartu dan keadaan kosong (DS Outlet, Outlet_kosong) */
+.ui-ocard__m {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--c-ink);
+}
+.ui-ocard__m .icon {
+    color: var(--c-mute);
+}
+.ui-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 32px 24px;
+    text-align: center;
+}
+.ui-empty__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-neu-bg);
+    color: var(--c-mute);
+}
+.ui-empty__title {
+    margin: 0;
+    font: 700 18px/24px var(--font);
+    color: var(--c-ink);
+}
+.ui-empty__text {
+    margin: 0;
+    font: 400 14px/20px var(--font);
+    color: var(--c-mute);
+}
