@@ -22,7 +22,7 @@ type FinanceAction = {
     fin: string;
     xmlid: string;
     label: string;
-    reportType: string;
+    selection: string;
 };
 
 const FINANCE_ACTIONS: FinanceAction[] = [
@@ -30,49 +30,49 @@ const FINANCE_ACTIONS: FinanceAction[] = [
         fin: "FIN04",
         xmlid: "id_finance_reporting.action_finance_report_audit_trail",
         label: "Journal Items Audit Trail (FIN04)",
-        reportType: "audit_trail",
+        selection: "FIN04 - Journal Items Audit Trail",
     },
     {
         fin: "FIN05",
         xmlid: "id_finance_reporting.action_finance_report_partner_ledger",
         label: "Partner Ledger AR/AP (FIN05/FIN06)",
-        reportType: "partner_ledger",
+        selection: "FIN05/FIN06 - Partner Ledger AR/AP",
     },
     {
         fin: "FIN07",
         xmlid: "id_finance_reporting.action_finance_report_open_items",
         label: "Open Items AR/AP (FIN07)",
-        reportType: "open_items",
+        selection: "FIN07 - Open Items AR/AP",
     },
     {
         fin: "FIN08",
         xmlid: "id_finance_reporting.action_finance_report_aged_partner_balance",
         label: "Aged Partner Balance (FIN08/FIN09)",
-        reportType: "aged_partner_balance",
+        selection: "FIN08/FIN09 - Aged Partner Balance",
     },
     {
         fin: "FIN51",
         xmlid: "id_finance_reporting.action_finance_report_combined_trial_balance",
         label: "Combined Trial Balance (FIN51)",
-        reportType: "combined_trial_balance",
+        selection: "FIN51 - Combined Trial Balance",
     },
     {
         fin: "FIN57",
         xmlid: "id_finance_reporting.action_finance_report_sales_purchase_register",
         label: "Sales and Purchase Register (FIN57)",
-        reportType: "sales_purchase_register",
+        selection: "FIN57 - Sales and Purchase Register",
     },
     {
         fin: "FIN37",
         xmlid: "id_finance_reporting.action_finance_report_accrual_schedule",
         label: "Accrual Schedules (FIN37)",
-        reportType: "accrual_schedule",
+        selection: "FIN37 - Accrual / Prepayment Schedules",
     },
     {
         fin: "FIN38",
         xmlid: "id_finance_reporting.action_finance_report_fx_revaluation",
         label: "FX Revaluation (FIN38)",
-        reportType: "fx_revaluation",
+        selection: "FIN38 - FX Revaluation",
     },
 ];
 
@@ -261,13 +261,13 @@ test("@finance-uat @odoo-live every Finance Reports action opens its wizard in c
         });
         await expect(page.locator(".o_form_view"), action.label).toBeVisible();
         await expect(
-            page.locator('.o_field_widget[name="report_type"] select'),
+            page.locator('.o_field_widget[name="report_type"] input'),
             action.label,
-        ).toHaveValue(action.reportType);
+        ).toHaveValue(action.selection);
         await expect(
-            page.locator('.o_field_widget[name="company_id"]'),
+            page.locator('.o_field_widget[name="company_id"] input'),
             action.label,
-        ).toContainText(COMPANY);
+        ).toHaveValue(COMPANY);
         // The action opens a full page (target="current"), and Odoo 19 only
         // renders <footer> inside a dialog, so both buttons must be in the
         // form header to be reachable.
@@ -307,8 +307,8 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
     );
     await expect(page.locator(".o_form_view")).toBeVisible();
     await expect(
-        page.locator('.o_field_widget[name="company_id"]'),
-    ).toContainText(COMPANY);
+        page.locator('.o_field_widget[name="company_id"] input'),
+    ).toHaveValue(COMPANY);
     const header = page.locator(".o_form_statusbar");
     await expect(header.locator('button[name="action_run"]')).toBeVisible();
     await expect(
