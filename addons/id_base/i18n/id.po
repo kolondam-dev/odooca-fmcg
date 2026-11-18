@@ -1,0 +1,162 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_account_move__l10n_id_tax_transaction_code
+msgid "Legacy Tax Transaction Code (Unverified)"
+msgstr "Kode Transaksi Pajak Lama (Belum Diverifikasi)"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_account_move__l10n_id_tax_invoice_number
+msgid "Legacy Tax Reference (Unverified)"
+msgstr "Referensi Pajak Lama (Belum Diverifikasi)"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_account_move__l10n_id_tax_invoice_date
+msgid "Legacy Tax Reference Date"
+msgstr "Tanggal Referensi Pajak Lama"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_account_move__l10n_id_coretax_exported
+msgid "Legacy CSV Exported (Unverified)"
+msgstr "CSV Lama Pernah Diekspor (Belum Diverifikasi)"
+
+#. module: id_base
+#: model:ir.model.fields,help:id_base.field_account_move__l10n_id_tax_transaction_code
+msgid "Legacy custom value; not the native Coretax transaction code."
+msgstr "Nilai kustom lama; bukan kode transaksi Coretax native."
+
+#. module: id_base
+#: model:ir.model.fields,help:id_base.field_account_move__l10n_id_tax_invoice_number
+msgid "Preserved legacy value; not proof of an official tax invoice number."
+msgstr "Nilai lama dipertahankan; bukan bukti nomor faktur pajak resmi."
+
+#. module: id_base
+#: model:ir.model.fields,help:id_base.field_account_move__l10n_id_tax_invoice_date
+msgid "Date recorded by the legacy custom tax workflow."
+msgstr "Tanggal yang dicatat oleh alur pajak kustom lama."
+
+#. module: id_base
+#: model:ir.model.fields,help:id_base.field_account_move__l10n_id_coretax_exported
+msgid "Historical CSV generation flag; does not indicate official acceptance."
+msgstr "Penanda pembuatan CSV historis; tidak menandakan penerimaan resmi."
+
+#. module: id_base
+#. odoo-python
+#: code:addons/id_base/models/account_move.py:0
+msgid "Legacy tax number generation is disabled. Use the native Indonesian Coretax workflow and verified issuer evidence."
+msgstr "Pembuatan nomor pajak lama dinonaktifkan. Gunakan alur Coretax Indonesia native dan bukti penerbit yang terverifikasi."
+
+#. module: id_base
+#. odoo-python
+#: code:addons/id_base/wizard/coretax_export_wizard.py:0
+msgid "Legacy tax CSV generation is disabled. Use the native Indonesian Coretax workflow; an export is not proof of official acceptance."
+msgstr "Pembuatan CSV pajak lama dinonaktifkan. Gunakan alur Coretax Indonesia native; ekspor bukan bukti penerimaan resmi."
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.view_move_form_fmcg_tax_inherit
+msgid "Legacy Tax Data (Unverified)"
+msgstr "Data Pajak Lama (Belum Diverifikasi)"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.view_move_form_fmcg_tax_inherit
+msgid "Preserved Legacy Values"
+msgstr "Nilai Lama yang Dipertahankan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.view_move_form_fmcg_tax_inherit
+msgid "Workflow Status"
+msgstr "Status Alur Kerja"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.view_move_form_fmcg_tax_inherit
+msgid "Legacy custom values are unverified. Use the native Indonesian Coretax workflow.\n                                An exported file is not proof of official acceptance."
+msgstr "Nilai kustom lama belum diverifikasi. Gunakan alur Coretax Indonesia native.\n                                Berkas ekspor bukan bukti penerimaan resmi."
+
+#. module: id_base
+#: model:ir.model,name:id_base.model_coretax_export_wizard
+#: model_terms:ir.ui.view,arch_db:id_base.view_coretax_export_wizard_form
+msgid "Legacy Tax CSV (Unverified)"
+msgstr "CSV Pajak Lama (Belum Diverifikasi)"
+
+#. module: id_base
+#: model:ir.actions.act_window,name:id_base.action_coretax_export_wizard
+#: model:ir.ui.menu,name:id_base.menu_action_coretax_export_sales
+msgid "Legacy Tax CSV (Disabled)"
+msgstr "CSV Pajak Lama (Dinonaktifkan)"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.view_coretax_export_wizard_form
+msgid "Legacy CSV generation is disabled. Use the native Indonesian Coretax workflow.\n                    Historical exports are unverified and do not prove official acceptance."
+msgstr "Pembuatan CSV lama dinonaktifkan. Gunakan alur Coretax Indonesia native.\n                    Ekspor historis belum diverifikasi dan bukan bukti penerimaan resmi."
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.view_coretax_export_wizard_form
+msgid "Close"
+msgstr "Tutup"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__date_from
+msgid "From Date"
+msgstr "Dari Tanggal"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__date_to
+msgid "To Date"
+msgstr "Sampai Tanggal"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__company_id
+msgid "Company"
+msgstr "Perusahaan"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__partner_ids
+msgid "Customers"
+msgstr "Pelanggan"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__export_file
+msgid "Legacy CSV (Unverified)"
+msgstr "CSV Lama (Belum Diverifikasi)"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__export_filename
+msgid "Filename"
+msgstr "Nama Berkas"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__total_invoices
+msgid "Invoice Count"
+msgstr "Jumlah Faktur"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__total_dpp
+msgid "Tax Base"
+msgstr "Dasar Pengenaan Pajak"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__total_ppn
+msgid "Tax Amount"
+msgstr "Nilai Pajak"
+
+#. module: id_base
+#: model:ir.model.fields,field_description:id_base.field_coretax_export_wizard__state
+msgid "Status"
+msgstr "Status"
+
+#. module: id_base
+#: model:ir.model.fields.selection,name:id_base.selection__coretax_export_wizard__state__draft
+msgid "Draft"
+msgstr "Draf"
+
+#. module: id_base
+#: model:ir.model.fields.selection,name:id_base.selection__coretax_export_wizard__state__done
+msgid "Done"
+msgstr "Selesai"

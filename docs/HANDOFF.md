@@ -1,3 +1,12 @@
+## 2026-11-18T16:06:01+07:00 — Agent-Claude-Dev1 — Fase 3B-17: panel peta (CheckinMap) memakai atom DS (K8)
+**Berubah:** `pwa/src/components/CheckinMap.tsx`, `components/OfficialMaps.tsx`, `ui/ui.css` (`.ui-map*`), `style.css` (selector lama peta dihapus), `tests/browser/checkin-map.spec.ts` (tes baru), `tests/browser/visits.spec.ts` (1 asersi diubah), `docs/ui/DS_RECONCILIATION.md` (K31, K8 diperbarui), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
+**Hasil:** [F] Status peta jadi `Chip` bernada (teks tetap penanda), tombol jadi `Button` DS, pesan jadi `Callout`, warna SVG pakai token. [F] Logika peta, teks, dan paket evidence tidak berubah; peta tetap hanya tampilan. [F] Audit: `EvidenceCapture` dan `VisitPhotoField` ternyata sudah DS.
+**Diverifikasi:** [F] `format:check`, `tsc`, `contracts:check` hijau; vitest 521 lulus. [F] Tiga dist dibuild ulang; e2e penuh phone+tablet: semua lulus kecuali `visits.spec` yang gagal karena locator `getByText("Akurasi belum pasti")` kini ganda (chip peta); setelah asersi diperbaiki, `visits.spec` 6 lulus. [F] Screenshot panel peta phone dan tablet diperiksa.
+**Belum diuji:** [BU] Peta jalan sungguhan (ubin OSM diblokir di CI; hanya jalur gagal/diagram titik). [BU] e2e penuh tidak diulang setelah perbaikan `visits.spec` (hanya spec itu). [BU] CI GitHub pada HEAD akhir PR.
+**Perhatian reviewer:** Satu tes lama diubah (`visits.spec.ts` baris ~45): asersi tunggal jadi tepat dua elemen. `CameraViewfinder` (gelap khusus, K12) tidak disentuh. Tombol `class="secondary"/"primary"` di layar lain tetap utang (K31).
+**Butir terbuka:** 0. Keputusan pemilik soal PJP kosong (K28) dan format jam watermark (K12). 1. Berikutnya: bersihkan tombol gaya lama (DiscountApproval, CollectionWorkspace, OrderCorrections, DisplayPhoto, DeliveryApproval) dan `text-decoration` "Keluar" (K30). 2. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-18T16:06:01+07:00
+
 ## 2026-11-18T15:59:40+07:00 — Agent-Opencode — PR #151 disinkronkan ke main #155
 **Konteks:** [F] PR #151 pada `207b41b` memiliki 6/6 workflow sukses, tetapi `main` maju dua commit ke `005e8cf` (#155); GitHub melaporkan `mergeable=false`. Pemilik menegaskan UAT production pascadeploy bukan syarat merge untuk perbaikan tombol header.
 **Berubah:** [F] `origin/main` `005e8cf` digabungkan ke branch PR #151. Satu konflik hanya `docs/HANDOFF.md`; entri kedua pihak (termasuk 3B-16 milik Claude-Dev1) dipertahankan, tanpa mengubah implementasi header, oracle live, atau entri log agen lain.
@@ -48,6 +57,7 @@
 **Belum diuji:** [BU] Run remote nyata belum dijalankan: butuh Variables `demo-ui`, Secrets `ODOO_DEMO_LOGIN`/`ODOO_DEMO_PASSWORD`, dan approval pemilik; selector navbar/date widget belum diverifikasi terhadap production. [BU] Isi XLSX (sheet Summary, `__nested`, batas), penolakan role Sales, dan nilai costing kategori tetap manual. [BU] Diagnostik DB demo production tetap butuh shell container.
 **Batas:** [F] `REPORT_CATALOG.csv` tidak disentuh (58/58 `BELUM_DITERIMA`); tanpa merge/deploy dari asisten.
 **Signature:** Task managed by Agent-Opencode at 2026-11-17T12:02:45+07:00
+
 ## 2026-11-18T13:50:57+07:00 — Agent-Claude-Dev1 — Fase 3B-16: pemangkasan CSS lama (K11)
 **Berubah:** `pwa/src/style.css` (2.683 -> 1.525 baris), `docs/ui/DS_RECONCILIATION.md` (K30), `docs/HANDOFF.md`, `agent-log/claude-design.log`. Tidak ada perubahan TSX/TS.
 **Hasil:** [F] 212 selector (208 aturan) berkelas mati dihapus lewat skrip PostCSS sekali pakai; kelas `is-*` dan keyframes tidak disentuh.
