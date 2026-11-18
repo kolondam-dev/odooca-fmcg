@@ -133,12 +133,25 @@ class TestFMCGWarehouseReports(TransactionCase):
                 if entry.msgid == "Picklist"
             ]
             parsed_rows = list(reader)
+        expected_terms = {
+            "Picklist": ("Daftar Pengambilan", "report_fmcg_picklist"),
+            "Customer / Destination": ("Pelanggan / Tujuan", "report_fmcg_picklist"),
+            "Source Document": ("Dokumen Asal", "report_fmcg_picklist"),
+            "Scheduled": ("Dijadwalkan", "report_fmcg_picklist"),
+            "Ship To": ("Dikirim Kepada", "report_fmcg_delivery_order"),
+        }
+        raw_entries = [
+            entry for entry in reader.pofile
+            if entry.msgid in expected_terms
+        ]
+        parsed_rows = list(reader)
         source_rows = [
-            row for row in parsed_rows if row.get("src") == "Picklist"
+            row for row in parsed_rows if row.get("src") in expected_terms
         ]
         matches = [
             row for row in source_rows
-            if row.get("type") == "model_terms"
+            if row.get("src") == "Picklist"
+            and row.get("type") == "model_terms"
             and row.get("value") == "Daftar Pengambilan"
         ]
         raw_diagnostics = [
@@ -153,6 +166,39 @@ class TestFMCGWarehouseReports(TransactionCase):
             }
             for entry in raw_entries
         ]
+        parsed_term_diagnostics = {
+            term: [
+                {
+                    "type": row.get("type"),
+                    "value": row.get("value"),
+                    "module": row.get("module"),
+                    "imd_model": row.get("imd_model"),
+                    "name": row.get("name"),
+                    "imd_name": row.get("imd_name"),
+                }
+                for row in source_rows if row.get("src") == term
+            ]
+            for term in expected_terms
+        }
+        self.assertEqual(
+            parsed_term_diagnostics,
+            {
+                term: [{
+                    "type": "model_terms",
+                    "value": value,
+                    "module": "id_base",
+                    "imd_model": "ir.ui.view",
+                    "name": "ir.ui.view,arch_db",
+                    "imd_name": xmlid,
+                }]
+                for term, (value, xmlid) in expected_terms.items()
+            },
+            "PO parser term matrix mismatch: " + json.dumps({
+                "raw_po_entries": raw_diagnostics,
+                "parsed_rows": parsed_term_diagnostics,
+                "po_path": po_path,
+            }, ensure_ascii=False, default=str),
+        )
         self.assertEqual(
             len(matches), 1,
             "Picklist parser trace mismatch: "
@@ -192,10 +238,22 @@ class TestFMCGWarehouseReports(TransactionCase):
 
         importer = TranslationImporter(self.env.cr, verbose=False)
         importer.load_file(po_path, "id_ID")
-        imported = (
-            importer.model_terms_translations["ir.ui.view"]["arch_db"]
-            ["id_base.report_fmcg_picklist"]["Picklist"].get("id_ID")
+        imported_values = {
+            term: importer.model_terms_translations
+            .get("ir.ui.view", {}).get("arch_db", {})
+            .get(f"id_base.{xmlid}", {}).get(term, {}).get("id_ID")
+            for term, (_value, xmlid) in expected_terms.items()
+        }
+        self.assertEqual(
+            imported_values,
+            {term: value for term, (value, _xmlid) in expected_terms.items()},
+            "TranslationImporter term matrix mismatch: " + json.dumps({
+                "imported_values": imported_values,
+                "imported_langs": sorted(importer.imported_langs),
+                "parsed_terms": parsed_term_diagnostics,
+            }, ensure_ascii=False, default=str),
         )
+        imported = imported_values["Picklist"]
         if "id_ID" not in importer.imported_langs or imported != "Daftar Pengambilan":
             rejection_checks = {
                 "value_present": bool(row.get("value")),
@@ -241,6 +299,14 @@ class TestFMCGWarehouseReports(TransactionCase):
             lang="id_ID",
         )
         self.assertIn("Daftar Pengambilan", html)
+        self.assertIn("Pelanggan / Tujuan", html)
+
+        delivery_html = self._render_html(
+            "id_base.action_report_fmcg_delivery_order",
+            self.empty_picking,
+            lang="id_ID",
+        )
+        self.assertIn("Dikirim Kepada", delivery_html)
 
     def test_empty_packlist_states_empty_without_fabricated_rows(self):
         html = self._render_html(

@@ -187,7 +187,7 @@ class TestCreditLimitApproval(TransactionCase):
 
         before = inv.line_ids.read(["balance", "account_id", "date", "parent_state"])
         with self.assertRaisesRegex(UserError, "Legacy tax number generation is disabled"):
-            inv.action_generate_nsfp()
+            inv.with_context(lang="en_US").action_generate_nsfp()
         self.assertFalse(inv.l10n_id_tax_invoice_number)
         self.assertFalse(inv.l10n_id_tax_invoice_date)
 
@@ -197,7 +197,7 @@ class TestCreditLimitApproval(TransactionCase):
             "date_to": fields.Date.today() + timedelta(days=1),
         })
         with self.assertRaisesRegex(UserError, "Legacy tax CSV generation is disabled"):
-            wizard.action_generate_coretax_csv()
+            wizard.with_context(lang="en_US").action_generate_coretax_csv()
         self.assertEqual(wizard.state, "draft")
         self.assertFalse(wizard.export_file)
         self.assertFalse(inv.l10n_id_coretax_exported)
