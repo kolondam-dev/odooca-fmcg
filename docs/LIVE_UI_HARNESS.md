@@ -35,12 +35,13 @@ Buat GitHub Environment bernama `demo-ui`, lalu isi:
 | Secret          | `ODOO_DEMO_PASSWORD` | password akun TEST                     |
 | Secret opsional | `ODOO_DEMO_DB`       | nama database bila login memerlukannya |
 
-Aktifkan required reviewer pada Environment. Workflow dispatch sendiri harus
-dijalankan dari `main`; input `source_ref` menentukan branch/tag/SHA test yang
-di-checkout. Job `resolve` memublikasikan exact SHA sebelum job `demo-ui`
-meminta approval. Karena source branch akan mengeksekusi Playwright dengan
-secret Environment, reviewer wajib memeriksa ref/purpose dan hanya menyetujui
-branch agen yang dipercaya.
+Batasi deployment branch Environment ke `main`, tetapi jangan aktifkan required
+reviewer agar job mulai otomatis setelah dispatch. Workflow dispatch sendiri
+harus dijalankan dari `main`; input `source_ref` menentukan branch/tag/SHA test
+yang di-checkout dan job `resolve` memublikasikan exact SHA. Karena source branch
+akan mengeksekusi Playwright dengan secret Environment, hak push dan Actions
+wajib dibatasi ke pemilik/agen yang dipercaya. Otomatisasi ini tidak memberikan
+izin Actions kepada agen yang sebelumnya tidak memilikinya.
 
 Secret dapat diisi melalui GitHub UI (**Settings → Environments → demo-ui**) atau
 CLI interaktif berikut. Jangan memberikan nilainya sebagai argumen command,

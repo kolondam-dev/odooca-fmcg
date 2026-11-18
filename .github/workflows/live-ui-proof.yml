@@ -65,7 +65,7 @@ jobs:
             echo "- Suite: ${{ inputs.suite }}"
             echo "- Browser project: ${{ inputs.project }}"
             echo
-            echo "The live job requires approval from the demo-ui environment."
+            echo "The live job starts automatically with protected demo-ui configuration."
           } >> "$GITHUB_STEP_SUMMARY"
 
   live-ui:
