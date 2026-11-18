@@ -1,0 +1,14 @@
+[
+  {
+    "name": "finance-fin04-wizard",
+    "target": "odoo",
+    "path": "/odoo/action-id_finance_reporting.action_finance_report_audit_trail",
+    "expectText": "Payload (JSON)"
+  },
+  {
+    "name": "finance-fin51-wizard",
+    "target": "odoo",
+    "path": "/odoo/action-id_finance_reporting.action_finance_report_combined_trial_balance",
+    "expectText": "Payload (JSON)"
+  }
+]
