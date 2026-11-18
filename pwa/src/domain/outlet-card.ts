@@ -35,7 +35,11 @@ export type CreditCommercial = {
     payment_terms?: string | null;
 };
 
-/** Ada hanya bila limit dan piutang sama-sama diketahui dan piutang melebihi limit. */
+/**
+ * Ada hanya bila limit (> 0) dan piutang sama-sama diketahui dan piutang melebihi limit.
+ * Limit 0 berarti tanpa pemeriksaan nominal (sama dengan `_compute_credit_limit_exceeded`
+ * di backend, yang memeriksa nominal hanya bila limit > 0).
+ */
 export function creditExceeded(commercial?: CreditCommercial | null):
     | {
           limit: number;
@@ -48,6 +52,7 @@ export function creditExceeded(commercial?: CreditCommercial | null):
     if (limit == null || outstanding == null) return undefined;
     if (!Number.isFinite(limit) || !Number.isFinite(outstanding))
         return undefined;
+    if (limit <= 0) return undefined;
     if (outstanding <= limit) return undefined;
     return { limit, outstanding, terms: text(commercial.payment_terms) };
 }

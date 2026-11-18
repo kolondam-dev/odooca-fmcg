@@ -112,6 +112,7 @@ test("Outlet berisi: tidak ada keadaan kosong", async ({ page }) => {
 for (const [name, limit, owed, expectNotice] of [
     ["melebihi limit kredit", 25_000_000, 41_484_793, true],
     ["di bawah limit kredit", 25_000_000, 1_000_000, false],
+    ["dengan limit nol (tanpa pemeriksaan nominal)", 0, 5_000_000, false],
 ] as const) {
     test(`Hub kunjungan: piutang ${name} ${expectNotice ? "menampilkan" : "tidak menampilkan"} peringatan limit`, async ({
         page,

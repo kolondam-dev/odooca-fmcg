@@ -315,3 +315,8 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - K28 ditambahkan: PJP kosong belum bisa membuka sesi; utang faktur/penagihan menunggu backend
 - flag backend tetap OFF
 - Task managed by claude-design agent at 2026-11-17T23:29:19+07:00
+
+[2026-11-18T08:01:02+07:00] [INFO] 3B-14: perbaikan review P2 limit kredit nol
+- creditExceeded menolak limit <= 0 (selaras backend); regresi vitest+e2e
+- cakupan K28: Outlet_kosong belum diterima
+- Task managed by claude-design agent at 2026-11-18T08:01:02+07:00

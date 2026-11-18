@@ -282,6 +282,8 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 
 Yang dikerjakan: kartu outlet memuat jam rencana dan jarak dari snapshot (`domain/outlet-card.ts`, nilai kosong/placeholder tidak ditampilkan); keadaan kosong DS pada daftar outlet; kartu "Tagihan jatuh tempo" di hub menampilkan "Piutang berjalan" (`ar_outstanding`) dan peringatan "Melebihi limit kredit Rp … (TOP …)" hanya bila piutang melebihi limit. Tidak ada angka atau faktur karangan; gerbang Order (K3) tidak diubah.
 
+Cakupan fase: **kartu outlet dan hub kunjungan diterima; Outlet_kosong belum diterima** (UI ada, tidak terjangkau di aplikasi sampai keputusan PJP kosong dibuat). Peringatan limit mengikuti backend: hanya bila limit > 0 dan piutang melebihi limit (limit 0 = tanpa pemeriksaan nominal).
+
 Utang:
 - **PJP kosong tidak membuka sesi kerja:** `validMorningSnapshot` menolak `outlets.length === 0` (sengaja, diuji `morning.test.ts` "empty outlets"), sehingga layar Outlet_kosong belum terjangkau. UI sudah ada dan diverifikasi manual; tes e2e ditandai `test.fixme` sampai pemilik memutuskan aturan PJP kosong (butuh penanda backend).
 - **Header Outlet** tetap AppHeader bersama + toolbar di badan (bukan ikon Cari + "Extra call" di header DS).

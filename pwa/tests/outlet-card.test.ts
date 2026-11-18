@@ -60,6 +60,14 @@ describe("creditExceeded", () => {
             creditExceeded({ credit_limit: 100, ar_outstanding: 99 }),
         ).toBeUndefined();
     });
+    it("limit nol atau negatif berarti tanpa pemeriksaan nominal (seperti backend)", () => {
+        expect(
+            creditExceeded({ credit_limit: 0, ar_outstanding: 5_000_000 }),
+        ).toBeUndefined();
+        expect(
+            creditExceeded({ credit_limit: -1, ar_outstanding: 5 }),
+        ).toBeUndefined();
+    });
     it("tidak menebak bila limit atau piutang tidak diketahui", () => {
         expect(creditExceeded(undefined)).toBeUndefined();
         expect(creditExceeded(null)).toBeUndefined();

@@ -1,3 +1,9 @@
+## 2026-11-18T08:00:58+07:00 — Agent-Claude-Dev1 — Fase 3B-14: perbaikan review P2 (limit kredit nol)
+**Konteks:** [F] Review PR #153 menahan HEAD `c17f8df`: `creditExceeded()` menampilkan "Melebihi limit kredit Rp0" untuk `credit_limit = 0` dengan piutang positif, padahal backend (`_compute_credit_limit_exceeded`) memeriksa nominal hanya bila `limit > 0`.
+**Berubah:** [F] `pwa/src/domain/outlet-card.ts` menolak `limit <= 0`; regresi vitest (limit 0 dan negatif) dan e2e hub (limit 0 + piutang Rp5.000.000 tanpa peringatan); `docs/ui/DS_RECONCILIATION.md` K28 menyebut cakupan: kartu outlet dan hub diterima, Outlet_kosong belum diterima.
+**Diverifikasi:** [F] `tsc --noEmit` hijau, vitest 517 lulus, `outlet-daftar.spec.ts` phone+tablet 10 lulus + 2 skip (fixme K28). [BU] e2e penuh dan CI pada HEAD baru.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-18T08:00:58+07:00
+
 ## 2026-11-17T23:29:19+07:00 — Agent-Claude-Dev1 — Fase 3B-14: Outlet, Outlet_kosong, Kunjungan_hub
 **Berubah:** `pwa/src/domain/outlet-card.ts` (baru), `components/OutletDirectory.tsx`, `components/VisitPanel.tsx`, `ui/ui.css`, `tests/outlet-card.test.ts` (baru), `tests/browser/outlet-daftar.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K28), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
 **Hasil:** [F] Kartu outlet menampilkan jam rencana dan jarak dari snapshot (nilai kosong/placeholder tidak tampil). [F] Keadaan kosong DS pada daftar outlet. [F] Kartu "Tagihan jatuh tempo" di hub menampilkan "Piutang berjalan" dan peringatan "Melebihi limit kredit Rp … (TOP …)" hanya bila piutang melebihi limit; tidak ada faktur/angka karangan, gerbang Order (K3) tidak diubah.
