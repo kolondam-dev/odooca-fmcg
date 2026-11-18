@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "preact/hooks";
-import { money } from "../domain/format";
+import { clockHM, money } from "../domain/format";
 import type { QueueItem } from "../storage/store";
 import { Button, Card, Screen } from "../ui";
 import { Icon } from "./Icon";
@@ -39,15 +39,7 @@ function Step({
     );
 }
 
-const wita = (date = new Date()) =>
-    new Intl.DateTimeFormat("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "Asia/Makassar",
-        hourCycle: "h23",
-    })
-        .format(date)
-        .replace(":", ".") + " WITA";
+const wita = (date = new Date()) => `${clockHM(date)} WITA`;
 
 /** Layar "Order tersimpan" (DS: Hasil_kirim); status mengikuti item antrean. */
 export function OrderResult({

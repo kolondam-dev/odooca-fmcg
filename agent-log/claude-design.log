@@ -320,3 +320,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - creditExceeded menolak limit <= 0 (selaras backend); regresi vitest+e2e
 - cakupan K28: Outlet_kosong belum diterima
 - Task managed by claude-design agent at 2026-11-18T08:01:02+07:00
+
+[2026-11-18T09:45:53+07:00] [INFO] Fase 3B-15: Profil layar penuh, TaskForm dihapus, util jam
+- vitest 521 lulus; e2e penuh 256 lulus, 2 skip (fixme K28)
+- K29 ditambahkan; K9 selesai; CSS lama (K11) menyusul di 3B-16
+- flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-18T09:45:53+07:00
