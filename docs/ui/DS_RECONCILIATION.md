@@ -298,6 +298,13 @@ Utang:
 - **Jam gaya DS (K12 sebagian):** `clockHM()` di `domain/format.ts` (24 jam, titik, WITA, tidak bergantung locale peramban) dipakai `time()`, Riwayat/Antrean (`ActivityScreens`), dan `OrderResult`. Jam dengan titik dua di `MorningSession` (jam absen "HH:mm:ss") dan `CameraViewfinder` (watermark kamera) sengaja belum diubah: butuh keputusan format watermark/detik; tetap utang K12.
 - **Belum:** selector CSS lama yang dulu dipakai TaskForm (`.sheet*`, `.modal-backdrop`, `.full-page-form`, `.sheet-body/-footer`, dst.) belum dihapus; dikerjakan di 3B-16 (K11) setelah dipastikan tidak ada pemakai lain.
 
+### K30. Fase 3B-16 — Pemangkasan CSS lama (K11)
+
+- `pwa/src/style.css` turun dari 2.683 ke 1.525 baris: 212 selector (208 aturan) berkelas yang tidak lagi muncul di `src/`, `tests/`, `index.html`, maupun `ui/ui.css` dihapus (mis. `.sheet-body/-footer`, `.modal-backdrop`, `.full-page-form`, `.quick-*`, `.morning-card`, `.login-*`, `.product-*`, `.queue-*`). Pemangkasan dibuat dengan skrip PostCSS satu kali (bukan alat tetap): selector dibuang hanya bila memuat kelas mati di luar `:not()`; kelas `is-*` (dibangun dinamis, `is-${state}`) dan `@keyframes` tidak disentuh.
+- Pembuktian: vitest 521 lulus, e2e penuh phone+tablet 256 lulus (2 skip K28), screenshot Beranda, Sales, HRIS, Lainnya diperiksa.
+- **Belum:** kelas yang masih dipakai tetapi bergaya lama (mis. `.workflow-*` pada delivery, `.header-fixed`, `.bottom-nav`) tetap di `style.css` dan bermigrasi bersama layarnya (K8 dan sesudahnya). Kelas yang dibangun dengan penyambungan string (`"a-" + x`) tidak terdeteksi skrip; belum ada yang ditemukan, tetapi belum diperiksa perangkat nyata.
+- **Temuan terpisah:** tautan "Keluar" di Lainnya tampil bergaris bawah polos (dari `ui-row--danger` pada anchor; bukan dari pemangkasan). Cukup `text-decoration: none` pada `.ui-row`; belum diubah di fase ini.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).
