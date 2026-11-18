@@ -127,17 +127,42 @@ class TestFMCGWarehouseReports(TransactionCase):
             f"id_ID PO not discovered by Odoo get_po_paths(): {po_paths}",
         )
         with file_open(po_path, mode="rb", env=self.env) as po_file:
-            parsed_rows = list(translation_file_reader(po_file, fileformat="po"))
+            reader = translation_file_reader(po_file, fileformat="po")
+            raw_entries = [
+                entry for entry in reader.pofile
+                if entry.msgid == "Picklist"
+            ]
+            parsed_rows = list(reader)
+        source_rows = [
+            row for row in parsed_rows if row.get("src") == "Picklist"
+        ]
         matches = [
-            row for row in parsed_rows
+            row for row in source_rows
             if row.get("type") == "model_terms"
-            and row.get("src") == "Picklist"
             and row.get("value") == "Daftar Pengambilan"
+        ]
+        raw_diagnostics = [
+            {
+                "msgid": entry.msgid,
+                "msgstr": entry.msgstr,
+                "comment": entry.comment,
+                "tcomment": entry.tcomment,
+                "occurrences": entry.occurrences,
+                "flags": entry.flags,
+                "obsolete": entry.obsolete,
+            }
+            for entry in raw_entries
         ]
         self.assertEqual(
             len(matches), 1,
-            "PO parser must yield exactly one Picklist translation; "
-            f"candidate rows={json.dumps(matches, ensure_ascii=False, default=str)}",
+            "Picklist parser trace mismatch: "
+            + json.dumps({
+                "raw_po_entries": raw_diagnostics,
+                "parsed_rows_with_src_picklist": source_rows,
+                "parsed_row_count": len(parsed_rows),
+                "po_entry_count": len(reader.pofile),
+                "po_path": po_path,
+            }, ensure_ascii=False, default=str),
         )
         row = matches[0]
         expected_metadata = {
