@@ -1,9 +1,18 @@
 import csv
 from io import BytesIO, StringIO
+import json
 
 from odoo import Command
 from odoo.tests.common import TransactionCase
-from odoo.tools.translate import load_language, trans_export
+from odoo.tools import file_open
+from odoo.tools.translate import (
+    TranslationImporter,
+    get_base_langs,
+    get_po_paths,
+    load_language,
+    trans_export,
+    translation_file_reader,
+)
 
 
 class TestFMCGWarehouseReports(TransactionCase):
@@ -108,6 +117,105 @@ class TestFMCGWarehouseReports(TransactionCase):
         if isinstance(html, bytes):
             html = html.decode()
         return html
+
+    def test_00_picklist_translation_importer_chain(self):
+        # Prove one term end-to-end before investigating the three report labels.
+        po_paths = list(get_po_paths("id_base", "id_ID"))
+        po_path = next((path for path in po_paths if path.endswith("/id_ID.po")), None)
+        self.assertTrue(
+            po_path,
+            f"id_ID PO not discovered by Odoo get_po_paths(): {po_paths}",
+        )
+        with file_open(po_path, mode="rb", env=self.env) as po_file:
+            parsed_rows = list(translation_file_reader(po_file, fileformat="po"))
+        matches = [
+            row for row in parsed_rows
+            if row.get("type") == "model_terms"
+            and row.get("src") == "Picklist"
+            and row.get("value") == "Daftar Pengambilan"
+        ]
+        self.assertEqual(
+            len(matches), 1,
+            "PO parser must yield exactly one Picklist translation; "
+            f"candidate rows={json.dumps(matches, ensure_ascii=False, default=str)}",
+        )
+        row = matches[0]
+        expected_metadata = {
+            "module": "id_base",
+            "imd_model": "ir.ui.view",
+            "name": "ir.ui.view,arch_db",
+            "imd_name": "report_fmcg_picklist",
+        }
+        actual_metadata = {key: row.get(key) for key in expected_metadata}
+        self.assertEqual(actual_metadata, expected_metadata, actual_metadata)
+        self.assertIn(row.get("lang", "id_ID"), get_base_langs("id_ID"))
+
+        view = self.env.ref(
+            "id_base.report_fmcg_picklist", raise_if_not_found=False
+        )
+        imd = self.env["ir.model.data"].search([
+            ("module", "=", "id_base"),
+            ("name", "=", "report_fmcg_picklist"),
+            ("model", "=", "ir.ui.view"),
+        ])
+        field = self.env["ir.ui.view"]._fields.get("arch_db")
+        self.assertTrue(view, "XML ID id_base.report_fmcg_picklist did not resolve")
+        self.assertEqual(len(imd), 1, f"XML ID rows={imd.ids}")
+        self.assertEqual(imd.res_id, view.id)
+        self.assertTrue(field and callable(field.translate), "arch_db is not callable-translated")
+        self.assertTrue(field.store, "arch_db is not stored")
+
+        importer = TranslationImporter(self.env.cr, verbose=False)
+        importer._load([row], "id_ID")
+        imported = (
+            importer.model_terms_translations["ir.ui.view"]["arch_db"]
+            ["id_base.report_fmcg_picklist"]["Picklist"].get("id_ID")
+        )
+        if "id_ID" not in importer.imported_langs or imported != "Daftar Pengambilan":
+            rejection_checks = {
+                "value_present": bool(row.get("value")),
+                "source_present": bool(row.get("src")),
+                "type": row.get("type"),
+                "language": row.get("lang", "id_ID"),
+                "valid_languages": get_base_langs("id_ID"),
+                "model_registered": row.get("imd_model") in self.env,
+                "field_exists": bool(field),
+                "field_translate_callable": bool(field and callable(field.translate)),
+                "field_stored": bool(field and field.store),
+                "xmlid_resolves": bool(view),
+                "imported_langs": sorted(importer.imported_langs),
+                "imported_value": imported,
+            }
+            self.fail(
+                "TranslationImporter rejected Picklist or stored no value: "
+                + json.dumps(rejection_checks, ensure_ascii=False, default=str)
+            )
+
+        importer.save(overwrite=True)
+        self.env.invalidate_all()
+        exported_csv = BytesIO()
+        self.assertTrue(
+            trans_export("id_ID", ["id_base"], exported_csv, "csv", self.env)
+        )
+        exported_rows = list(csv.DictReader(
+            StringIO(exported_csv.getvalue().decode("utf-8"))
+        ))
+        exported = [
+            item for item in exported_rows
+            if item["type"] == "model_terms"
+            and item["name"] == "ir.ui.view,arch_db"
+            and item["res_id"] == "id_base.report_fmcg_picklist"
+            and item["src"] == "Picklist"
+        ]
+        self.assertEqual(len(exported), 1, f"Picklist export rows={exported}")
+        self.assertEqual(exported[0]["value"], "Daftar Pengambilan")
+
+        html = self._render_html(
+            "id_base.action_report_fmcg_picklist",
+            self.empty_picking,
+            lang="id_ID",
+        )
+        self.assertIn("Daftar Pengambilan", html)
 
     def test_empty_packlist_states_empty_without_fabricated_rows(self):
         html = self._render_html(
