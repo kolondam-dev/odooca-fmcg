@@ -395,3 +395,8 @@
 - [F] Verifikasi pasca-resolusi: 21 test impact/workflow/template PASS, Ruff PASS, 14 manifest PASS, diff check bersih.
 - [BU] Full regression harus lulus kembali pada merge SHA terbaru; hindari merge PR lain ke main sampai PR 152 selesai agar strict gate tidak kembali stale.
 - Task managed by codex agent at 2026-11-18T08:39:33+07:00
+
+[2026-11-16T00:25:00+07:00] [INFO] PR #135 sync main 4cb81ce + PO/model_terms id_ID
+- Main CI impact planner/targeted workflows retained; WMS report files overlaid without reverting newer main changes.
+- Added model_terms occurrences per QWeb report template and id_ID HTML assertions; exact-SHA CI pending, no merge/deploy.
+- Task managed by Codex supervisor.
