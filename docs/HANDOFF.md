@@ -1,3 +1,12 @@
+## 2026-11-18T09:45:53+07:00 — Agent-Claude-Dev1 — Fase 3B-15: Profil layar penuh, TaskForm dihapus, util jam
+**Berubah:** `pwa/src/components/ProfileScreen.tsx` (baru), `components/TaskForm.tsx` (dihapus), `App.tsx`, `ui/navigation.ts` (rute `proof` dihapus), `domain/format.ts` (`clockHM`, `WORK_TZ`), `components/ActivityScreens.tsx`, `components/OrderResult.tsx`, `ui/ui.css`, `tests/format-clock.test.ts` (baru), `tests/browser/profil.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K29), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
+**Hasil:** [F] Profil & Sesi Akun jadi layar penuh DS dengan isi dan tautan sama. [F] `TaskForm` dihapus: cabang `proof` tidak punya pemicu dan selalu galat; POD ada di layar Pod_* (K19). [F] `clockHM()` satu pemformat jam "HH.mm" WITA untuk `time()`, Riwayat/Antrean, dan Hasil kirim.
+**Diverifikasi:** [F] `format:check`, `tsc --noEmit`, `contracts:check` hijau; vitest 521 lulus (5 baru). [F] Screenshot Profil phone dan tablet diperiksa. [F] e2e penuh phone+tablet (tiga dist dibuild ulang): 256 lulus, 2 skip (fixme K28), 0 gagal.
+**Belum diuji:** [BU] CI GitHub pada HEAD akhir PR. [BU] Selector CSS lama bekas TaskForm belum dihapus (3B-16, K11). [BU] Jam `HH:mm:ss` di `MorningSession` dan watermark `CameraViewfinder` belum diseragamkan (K12).
+**Perhatian reviewer:** Tidak ada perubahan perilaku bisnis; rute `proof` dihapus karena tidak ada pemanggil (grep src/tests). Tautan Ganti akun/Logout kini anchor bergaya `ui-btn`.
+**Butir terbuka:** 0. Lanjut 3B-16 (K11: hapus CSS lama), lalu 3B-17 (K8: peta dan foto bukti). 1. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-18T09:45:53+07:00
+
 ## 2026-11-18T08:39:33+07:00 — Codex — PR #152 sinkron ulang setelah PR #153
 **Konteks:** [F] Seluruh sembilan required context pada `ec53d4b` sudah SUCCESS, tetapi `main` maju ke `53cd5fe` ketika gate terakhir selesai karena PR #153 di-merge. Strict up-to-date policy dengan benar membuat bukti `ec53d4b` stale.
 **Berubah:** [F] `origin/main` `53cd5fe` di-merge ke branch PR #152. Satu konflik hanya pada `docs/HANDOFF.md`; seluruh entri Codex dan Claude-Dev1 dipertahankan dalam urutan waktu. Template kosong dan guard live UI tidak berubah.

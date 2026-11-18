@@ -4,12 +4,27 @@ export const money = (n: number) =>
         currency: "IDR",
         maximumFractionDigits: 0,
     }).format(n);
-export const time = (value: string) =>
-    new Date(value).toLocaleTimeString("id-ID", {
+/** Zona kerja DS: WITA. */
+export const WORK_TZ = "Asia/Makassar";
+/**
+ * Jam gaya DS "HH.mm" (24 jam, titik, WITA). Nilai kosong atau tidak valid -> "".
+ * Satu-satunya pemformat jam hari; jangan mengandalkan locale peramban.
+ */
+export function clockHM(value?: string | number | Date | null): string {
+    if (value === undefined || value === null || value === "") return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const parts = new Intl.DateTimeFormat("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: "Asia/Makassar",
-    });
+        hourCycle: "h23",
+        timeZone: WORK_TZ,
+    }).formatToParts(date);
+    const get = (type: string) =>
+        parts.find((part) => part.type === type)?.value ?? "";
+    return `${get("hour")}.${get("minute")}`;
+}
+export const time = (value: string) => clockHM(value);
 export const queueLabels = {
     queued: "Menunggu koneksi",
     sending: "Mengirim",
