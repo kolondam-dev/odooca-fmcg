@@ -7,7 +7,6 @@ export type Dialog =
     | { type: "navigate"; outlet: string }
     | { type: "navigate_do"; delivery: string }
     | { type: "extra" }
-    | { type: "proof"; delivery: string }
     | { type: "expense"; trip?: string }
     | { type: "attendance"; event?: "check_in" | "check_out" }
     | { type: "leave" }
@@ -26,9 +25,6 @@ const DialogSchema = z.discriminatedUnion("type", [
             type: z.literal("navigate_do"),
             delivery: z.string().min(1),
         })
-        .strict(),
-    z
-        .object({ type: z.literal("proof"), delivery: z.string().min(1) })
         .strict(),
     z
         .object({

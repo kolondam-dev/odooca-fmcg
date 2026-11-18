@@ -291,6 +291,13 @@ Utang:
 - **Daftar faktur berkotak centang, total tagihan jatuh tempo, chip "Wajib ditagih hari ini", CTA "Mulai penagihan", stepper 4 tahap, gerbang Order "Terkunci"** menunggu snapshot `ar` dan alur penagihan Sales (backend, flag `collection_v2`).
 - **Label "Piutang berjalan"** menggantikan "Total tagihan" DS karena `ar_outstanding` bukan total faktur jatuh tempo.
 
+### K29. Fase 3B-15 — Profil layar penuh, TaskForm dihapus, util jam `HH.mm`
+
+- **Profil & Sesi Akun** kini layar penuh DS (`ProfileScreen`: kartu identitas, KV Perusahaan/Gudang & Hub/Rute & Sesi, tombol Ganti akun dan Keluar). Isi dan tautan tidak berubah (`/web/login?redirect=/field/`, `/web/session/logout?redirect=/field/`); tombol avatar header tetap "Profil dan Sesi Akun". Back peramban menutupnya lewat `useBackLayer`.
+- **`TaskForm` dihapus (K9 selesai).** Cabang `proof` (Bukti pengiriman lama) tidak punya pemicu di mana pun dan selalu berakhir dengan galat "Bukti tersimpan lokal"; POD sebenarnya sudah di layar Pod_* (K19). Rute `proof` dihapus dari `ui/navigation.ts` dan guard peran di `App.tsx`.
+- **Jam gaya DS (K12 sebagian):** `clockHM()` di `domain/format.ts` (24 jam, titik, WITA, tidak bergantung locale peramban) dipakai `time()`, Riwayat/Antrean (`ActivityScreens`), dan `OrderResult`. Jam dengan titik dua di `MorningSession` (jam absen "HH:mm:ss") dan `CameraViewfinder` (watermark kamera) sengaja belum diubah: butuh keputusan format watermark/detik; tetap utang K12.
+- **Belum:** selector CSS lama yang dulu dipakai TaskForm (`.sheet*`, `.modal-backdrop`, `.full-page-form`, `.sheet-body/-footer`, dst.) belum dihapus; dikerjakan di 3B-16 (K11) setelah dipastikan tidak ada pemakai lain.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).

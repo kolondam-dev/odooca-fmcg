@@ -1,6 +1,6 @@
 import { EvidenceIdentityContext } from "./ui/evidenceIdentity";
 import { ViewMemoryContext, useRememberedScroll } from "./ui/viewMemory";
-import { TaskForm } from "./components/TaskForm";
+import { ProfileScreen } from "./components/ProfileScreen";
 import { ExtraCallScreen } from "./components/ExtraCallScreen";
 import { AjukanUangScreen } from "./components/AjukanUangScreen";
 import { LiveClock } from "./components/LiveClock";
@@ -321,8 +321,6 @@ function Workspace({
                 (!route.outlet || route.page === "sales") &&
                 (route.dialog?.type !== "extra" ||
                     identity.roles.includes("sales")) &&
-                (route.dialog?.type !== "proof" ||
-                    identity.roles.includes("delivery")) &&
                 (!route.outlet ||
                     assignedOutlets.current.some(
                         (o) => o.id === route.outlet,
@@ -1155,33 +1153,20 @@ function Workspace({
                             close={() => setDialog(undefined)}
                         />
                     )}
-                    {dialog &&
-                        dialog.type !== "attendance" &&
-                        dialog.type !== "leave" &&
-                        dialog.type !== "extra" &&
-                        dialog.type !== "expense" &&
-                        dialog.type !== "order" &&
-                        dialog.type !== "navigate" &&
-                        dialog.type !== "navigate_do" &&
-                        dialog.type !== "display" && (
-                            <TaskForm
-                                key={JSON.stringify(dialog)}
-                                dialog={dialog}
-                                store={store}
-                                identity={identity}
-                                snapshot={snapshot}
-                                owner={owner}
-                                workStatus={
-                                    checkedOut
-                                        ? "Sesi kerja selesai"
-                                        : dailyReady
-                                          ? "Sesi kerja aktif"
-                                          : "Sesi kerja belum dibuka"
-                                }
-                                submit={submit}
-                                close={() => setDialog(undefined)}
-                            />
-                        )}
+                    {dialog?.type === "profile" && (
+                        <ProfileScreen
+                            identity={identity}
+                            snapshot={snapshot}
+                            workStatus={
+                                checkedOut
+                                    ? "Sesi kerja selesai"
+                                    : dailyReady
+                                      ? "Sesi kerja aktif"
+                                      : "Sesi kerja belum dibuka"
+                            }
+                            close={() => setDialog(undefined)}
+                        />
+                    )}
                 </div>
             </ViewMemoryContext.Provider>
         </EvidenceIdentityContext.Provider>

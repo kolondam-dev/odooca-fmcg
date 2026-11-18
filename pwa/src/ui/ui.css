@@ -12,6 +12,31 @@
     font: 600 16px/24px var(--font);
     flex: none;
 }
+a.ui-btn {
+    text-decoration: none;
+}
+.ui-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.ui-profile__avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ui-profile__name {
+    margin: 0;
+    font: 700 18px/24px var(--font);
+}
+.ui-profile__title {
+    margin: 2px 0 0;
+    color: var(--c-mute);
+    font: 400 14px/20px var(--font);
+}
 .ui-btn--lg {
     height: var(--btn-lg);
 }
