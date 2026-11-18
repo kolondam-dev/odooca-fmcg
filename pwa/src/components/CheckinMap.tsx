@@ -2,6 +2,8 @@ import { InteractiveMap } from "./InteractiveMap";
 import { useEffect, useState } from "preact/hooks";
 import { checkinMap, type MapFix, type MapSite } from "../domain/checkin-map";
 import { distanceMeters } from "../domain/format";
+import { Button, Callout, Chip } from "../ui";
+import { cx } from "../ui/cx";
 
 // Display-only: this component never authorizes a check-in or changes evidence.
 export function CheckinMap({
@@ -39,10 +41,10 @@ export function CheckinMap({
     }, [enabled, tileKey, ready]);
     if (!map)
         return (
-            <p role="status">
+            <Callout tone="warn">
                 Preview peta tidak tersedia: koordinat tujuan/perangkat tidak
                 valid.
-            </p>
+            </Callout>
         );
     const distance = fix
         ? distanceMeters(
@@ -59,14 +61,23 @@ export function CheckinMap({
           : distance! - fix.accuracy > site.radius
             ? "Di luar radius"
             : "Akurasi belum pasti";
+    const outside = status === "Di luar radius";
+    const tone = !fix
+        ? "neu"
+        : status === "Di dalam radius"
+          ? "ok"
+          : outside
+            ? "bad"
+            : "warn";
+    const mark = outside ? "var(--c-bad)" : "var(--c-ok)";
     return (
         <section
-            class={`checkin-map${compact ? " compact-map" : ""}`}
+            class={cx("ui-map", compact && "ui-map--compact")}
             aria-label={`Preview peta ${site.name}`}
         >
-            <strong>Preview peta · {site.name}</strong>
+            <strong class="ui-map__title">Preview peta · {site.name}</strong>
             {(site.simulated || fix?.simulated) && (
-                <p class="map-simulation-label">
+                <p class="ui-map__sim">
                     {site.simulated
                         ? "Titik tujuan simulasi"
                         : "Titik tujuan paket"}
@@ -74,17 +85,20 @@ export function CheckinMap({
                     validasi kehadiran resmi.
                 </p>
             )}
-            <p>
-                {status} · Radius {site.radius} m
-                {distance !== undefined && (
-                    <>
-                        {" "}
-                        · Jarak {Math.round(distance)} m · Akurasi ±
-                        {Math.round(fix!.accuracy)} m
-                    </>
-                )}
+            <p class="ui-map__status">
+                <Chip tone={tone}>{status}</Chip>
+                <span>
+                    Radius {site.radius} m
+                    {distance !== undefined && (
+                        <>
+                            {" "}
+                            · Jarak {Math.round(distance)} m · Akurasi ±
+                            {Math.round(fix!.accuracy)} m
+                        </>
+                    )}
+                </span>
             </p>
-            <div class="checkin-map-canvas">
+            <div class="ui-map__canvas">
                 {enabled && (
                     <InteractiveMap
                         key={scope}
@@ -108,14 +122,9 @@ export function CheckinMap({
                         cx={map.site.x}
                         cy={map.site.y}
                         r={map.site.radius}
-                        fill={
-                            status === "Di luar radius"
-                                ? "#dc262622"
-                                : "#15803d22"
-                        }
-                        stroke={
-                            status === "Di luar radius" ? "#dc2626" : "#15803d"
-                        }
+                        fill={mark}
+                        fill-opacity="0.14"
+                        stroke={mark}
                         stroke-width="2"
                     />
                     {fix && (
@@ -125,15 +134,16 @@ export function CheckinMap({
                                 y1={map.site.y}
                                 x2={map.fix.x}
                                 y2={map.fix.y}
-                                stroke="#334155"
+                                stroke="var(--c-neu)"
                                 stroke-dasharray="5 4"
                             />
                             <circle
                                 cx={map.fix.x}
                                 cy={map.fix.y}
                                 r={map.fix.radius}
-                                fill="#2563eb22"
-                                stroke="#2563eb"
+                                fill="var(--c-pri)"
+                                fill-opacity="0.14"
+                                stroke="var(--c-pri)"
                                 stroke-dasharray="4 3"
                             />
                         </>
@@ -142,10 +152,8 @@ export function CheckinMap({
                         cx={map.site.x}
                         cy={map.site.y}
                         r="7"
-                        fill={
-                            status === "Di luar radius" ? "#dc2626" : "#15803d"
-                        }
-                        stroke="white"
+                        fill={mark}
+                        stroke="var(--c-surface)"
                         stroke-width="2"
                     />
                     {fix && (
@@ -153,14 +161,14 @@ export function CheckinMap({
                             cx={map.fix.x}
                             cy={map.fix.y}
                             r="5"
-                            fill="#2563eb"
-                            stroke="white"
+                            fill="var(--c-pri)"
+                            stroke="var(--c-surface)"
                             stroke-width="2"
                         />
                     )}
                 </svg>
             </div>
-            <small>
+            <small class="ui-map__coords">
                 Hijau: tujuan · Biru: perangkat. {site.latitude.toFixed(6)},{" "}
                 {site.longitude.toFixed(6)}
                 {fix && (
@@ -173,14 +181,14 @@ export function CheckinMap({
             </small>
             {!enabled ? (
                 <>
-                    <p class="footnote">
+                    <p class="ui-map__note">
                         {compact
                             ? "Memuat OpenStreetMap membagikan IP dan area peta."
                             : "Muat peta jalan menghubungi OpenStreetMap dan membagikan area peta serta alamat IP. Foto dan identitas tidak dikirim. Diagram titik tetap tersedia tanpa jaringan."}
                     </p>
-                    <button
-                        type="button"
-                        class="secondary"
+                    <Button
+                        variant="sec"
+                        size="md"
                         onClick={() => {
                             setFailed(false);
                             setReady(false);
@@ -188,14 +196,15 @@ export function CheckinMap({
                         }}
                     >
                         Muat peta jalan
-                    </button>
+                    </Button>
                 </>
             ) : (
                 <>
-                    <div class="map-controls">
-                        <button
-                            type="button"
-                            class="secondary"
+                    <div class="ui-map__controls">
+                        <Button
+                            variant="sec"
+                            size="sm"
+                            auto
                             aria-label="Perbesar peta"
                             disabled={map.zoom >= 19}
                             onClick={() => {
@@ -204,10 +213,11 @@ export function CheckinMap({
                             }}
                         >
                             +
-                        </button>
-                        <button
-                            type="button"
-                            class="secondary"
+                        </Button>
+                        <Button
+                            variant="sec"
+                            size="sm"
+                            auto
                             aria-label="Perkecil peta"
                             disabled={map.zoom <= 0}
                             onClick={() => {
@@ -216,10 +226,11 @@ export function CheckinMap({
                             }}
                         >
                             −
-                        </button>
-                        <button
-                            type="button"
-                            class="secondary"
+                        </Button>
+                        <Button
+                            variant="sec"
+                            size="sm"
+                            auto
                             onClick={() => {
                                 setFailed(false);
                                 setRecenter((value) => value + 1);
@@ -227,27 +238,30 @@ export function CheckinMap({
                             }}
                         >
                             Tampilkan kedua titik
-                        </button>
-                        <button
-                            type="button"
-                            class="secondary"
+                        </Button>
+                        <Button
+                            variant="sec"
+                            size="sm"
+                            auto
                             onClick={() => setEnabled(false)}
                         >
                             Tutup peta jalan
-                        </button>
+                        </Button>
                     </div>
                     {failed ? (
-                        <p role="status">
+                        <Callout tone="warn">
                             Peta jalan gagal atau belum lengkap. Diagram titik
                             tetap tersedia; ini bukan bukti keberhasilan
                             check-in.
-                        </p>
+                        </Callout>
                     ) : (
-                        !ready && <p role="status">Memuat peta jalan…</p>
+                        !ready && (
+                            <Callout tone="neu">Memuat peta jalan…</Callout>
+                        )
                     )}
                 </>
             )}
-            <small>
+            <small class="ui-map__credit">
                 ©{" "}
                 <a
                     href="https://www.openstreetmap.org/copyright"

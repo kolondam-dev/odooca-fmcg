@@ -42,8 +42,15 @@ test("visit location guards, offline restore and checkout sync", async ({
         accuracy: 30,
     });
     await locate.click();
+    // Status yang sama kini tampil di panel kunjungan dan di chip panel peta
+    // (K31); keduanya harus menyatakan akurasi belum pasti.
     await expect(
         page.getByText("Akurasi belum pasti", { exact: true }),
+    ).toHaveCount(2);
+    await expect(
+        page
+            .getByRole("region", { name: /^Preview peta / })
+            .getByText("Akurasi belum pasti", { exact: true }),
     ).toBeVisible();
     await expect(start).toBeDisabled();
     await context.setGeolocation({
