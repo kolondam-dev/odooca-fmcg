@@ -381,3 +381,10 @@
 - [F] Smoke desktop menjalankan tiga test, cleanup auth state, dan upload artifact 14303849484; total live job 59 detik.
 - [F] Bukti ini memisahkan setup workflow yang sudah otomatis dari izin Actions agent Codex Dashboard yang tetap belum diverifikasi.
 - Task managed by codex agent at 2026-11-17T13:11:33+07:00
+
+[2026-11-18T08:14:26+07:00] [INFO] PR 152 disinkronkan untuk strict required checks
+- [F] Ruleset main-quality-gate mewajibkan 9 context dan strict_required_status_checks_policy=true; seluruh 9 context pada d4f26e1 sebenarnya SUCCESS.
+- [F] Merge origin/main b57d12c ke branch PR 152 membawa dua commit PR 149 tanpa konflik dan mempertahankan template live UI kosong serta guard statis.
+- [F] Verifikasi pra-commit: 21 test impact/workflow/template PASS, Ruff PASS, dan 14 manifest PASS.
+- [BU] Sembilan required context harus dijalankan ulang pada merge SHA baru sebelum merge PR 152.
+- Task managed by codex agent at 2026-11-18T08:14:26+07:00
