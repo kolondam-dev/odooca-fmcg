@@ -268,9 +268,19 @@ test("@finance-uat @odoo-live every Finance Reports action opens its wizard in c
             page.locator('.o_field_widget[name="company_id"] input'),
             action.label,
         ).toHaveValue(COMPANY);
-        // The action opens a full page (target="current"), and Odoo 19 only
-        // renders <footer> inside a dialog, so both buttons must be in the
-        // form header to be reachable.
+        await page.screenshot({
+            path: evidenceName(testInfo, `${action.fin}-wizard`),
+            fullPage: true,
+        });
+    }
+
+    // Separate pass: the deployed server must render both buttons in the form
+    // header. Keeping it after the screenshots means a stale server build still
+    // leaves evidence that all eight actions open the right wizard.
+    for (const action of FINANCE_ACTIONS) {
+        await page.goto(targetUrl("odoo", `/odoo/action-${action.xmlid}`), {
+            waitUntil: "domcontentloaded",
+        });
         const header = page.locator(".o_form_statusbar");
         for (const button of ["action_run", "action_export_xlsx"]) {
             await expect(
@@ -284,10 +294,6 @@ test("@finance-uat @odoo-live every Finance Reports action opens its wizard in c
             ),
             action.label,
         ).toHaveCount(0);
-        await page.screenshot({
-            path: evidenceName(testInfo, `${action.fin}-wizard`),
-            fullPage: true,
-        });
     }
 });
 
@@ -309,11 +315,6 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
     await expect(
         page.locator('.o_field_widget[name="company_id"] input'),
     ).toHaveValue(COMPANY);
-    const header = page.locator(".o_form_statusbar");
-    await expect(header.locator('button[name="action_run"]')).toBeVisible();
-    await expect(
-        header.locator('button[name="action_export_xlsx"]'),
-    ).toBeVisible();
     await page.screenshot({
         path: evidenceName(testInfo, "fin04-wizard-company"),
         fullPage: true,
@@ -325,6 +326,14 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
         path: evidenceName(testInfo, "fin04-period-july-2026"),
         fullPage: true,
     });
+
+    // Run and Export must be reachable on the full-page wizard. This assertion
+    // fails until the server-side view with the header buttons is deployed.
+    const header = page.locator(".o_form_statusbar");
+    await expect(header.locator('button[name="action_run"]')).toBeVisible();
+    await expect(
+        header.locator('button[name="action_export_xlsx"]'),
+    ).toBeVisible();
 
     await header.locator('button[name="action_run"]').click();
     await expect(
