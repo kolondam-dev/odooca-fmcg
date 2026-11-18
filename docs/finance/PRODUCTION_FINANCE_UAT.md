@@ -123,10 +123,32 @@ dan kedelapan action harus `res_model = id.finance.report.wizard`,
 `view_mode` memuat `form`, serta `target = current`. Ringkasan tombol dan target
 dicetak di JSON `INIT_FINANCE_ACTIVATION`.
 
-[BU] Jalur UI live (menu, Run, download XLSX) belum dijalankan ulang pada commit
-perbaikan ini; dispatch butuh Secrets `ODOO_DEMO_LOGIN`/`ODOO_DEMO_PASSWORD` di
-Environment `demo-ui` dan approval pemilik. Spec kini gagal bila tombol kembali
-ke footer atau berkas unduhan bukan workbook XLSX.
+[F] Bukti UI live 2026-11-18 terhadap demo production (Environment `demo-ui`),
+berturut-turut pada commit `6ba03b4`, `47f1086`, `7e8a7d0`, `3f6a13a`, `6c5a2b2`,
+`dcd0456`:
+
+| Run | Hasil | Temuan |
+|---|---|---|
+| [44213971426](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44213971426) (`odoo`) | gagal | demo memakai sidebar `id_ui_shell`, jadi `.o_navbar_apps_menu` tidak ada; label action tidak dirender di record; `widget="selection"` berupa input, bukan `<select>`; company juga input |
+| [44216443729](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44216443729) (`odoo`) | gagal | menu 8 entri PASS, 8 screenshot wizard terkumpul; test wizard gagal pada oracle header dan test periode masih gagal pada picker tanggal |
+| [44216457966](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44216457966) (`routes`) | **sukses** | screenshot route FIN04 dan FIN51 dengan profil `tests/live-profiles/finance-uat.json` (`expectText` = `Payload (JSON)`) |
+| [44218051458](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44218051458) (`odoo`) | gagal | `date_from` Juli terpasang; verifikasi `date_to` gagal karena input date picker hanya ada selama widget memegang fokus |
+| [44218732579](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44218732579) (`odoo`) | gagal | menu PASS; assertion label dan company pada 8 wizard berhasil (8 screenshot); periode FIN04 2026-07-01..2026-07-31 terpasang (`fin04-period-july-2026.png`); kedua test gagal pada oracle `action_run` di header sebelum Run/Export |
+
+[F] Screenshot `fin04-period-july-2026.png` dari run terakhir menunjukkan
+`Report Type = FIN04 - Journal Items Audit Trail`, `Company = PT Manado
+Distribusi Utama`, `Date From = Jul 1`, `Date To = Jul 31`, sidebar Finance
+Reports dengan 8 entri, dan **tidak ada** tombol Run/Export di header formulir.
+Artinya company, delapan entri menu, delapan wizard, dan pengisian periode
+terbukti di UI demo; langkah Run/Export belum terbukti. [A] View server-side
+branch ini belum di-deploy.
+
+[BU] Run Report, Export XLSX, dan pemeriksaan isi workbook belum bisa lulus
+sampai server production menjalankan view dari branch ini; deploy adalah
+keputusan pemilik dan belum dilakukan. Oracle header sengaja tidak dilonggarkan.
+Spec kini gagal bila tombol kembali ke `<footer>`, bila tombol tidak ada di
+`.o_form_statusbar`, atau bila berkas unduhan bukan workbook XLSX
+(`[Content_Types].xml` + sheet `Summary`).
 
 ## Bukti yang diminta
 

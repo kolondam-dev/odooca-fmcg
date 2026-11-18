@@ -284,3 +284,12 @@
 - [F] Dampak test CUKUP: guard runtime di init-test (dipilih addons/id_finance*/**) + spec live; suite plan pwa + odoo_install/odoo_init/finance/upgrade.
 - [BU] Dispatch live (8 wizard, Run FIN04 Juli 2026, download XLSX) menunggu secret demo-ui + approval; rekonsiliasi isi, role Sales, costing/valuation tetap manual.
 - Task managed by Agent-Opencode at 2026-11-18T08:09:00+07:00
+
+[2026-11-18T09:00:00+07:00] [WARN] Bukti UI live: menu + 8 wizard + FIN04 Juli 2026 lulus; Run/Export menunggu deploy
+- [F] Run 44218732579 (commit dcd0456): test menu PASS; 8 action lolos assertion report_type label FIN + company PT Manado Distribusi Utama dan menghasilkan screenshot, tetapi test wizard gagal pada oracle header. FIN04 Jul 1-Jul 31 tampak pada fin04-period-july-2026.png; test Run/Export gagal sebelum klik.
+- [F] Run 44216457966 (routes) SUCCESS: screenshot FIN04 + FIN51 via profil finance-uat.json (expectText "Payload (JSON)").
+- [F] Temuan demo: sidebar id_ui_shell tanpa data-menu-xmlid di leaf; breadcrumb "New id.finance.report.wizard"; widget selection = input teks; company = input; date widget hanya punya input saat fokus (klik bisa tertelan overlay, pakai focus() + data-tooltip).
+- [F] Dua test gagal pada pemeriksaan header action_run; pemeriksaan Export/XLSX belum tercapai. [A] Server production belum memuat view branch ini; oracle sengaja tidak dilonggarkan.
+- [BU] Run Report, Export XLSX, isi workbook belum terbukti sampai deploy view branch ini; artifact 3 hari.
+- [F] Dampak test CUKUP: guard init-test + spec live; tidak ada selector/oracle yang dilemahkan.
+- Task managed by Agent-Opencode at 2026-11-18T09:00:00+07:00
