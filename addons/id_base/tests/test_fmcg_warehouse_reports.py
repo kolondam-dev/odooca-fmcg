@@ -166,7 +166,7 @@ class TestFMCGWarehouseReports(TransactionCase):
         self.assertTrue(field.store, "arch_db is not stored")
 
         importer = TranslationImporter(self.env.cr, verbose=False)
-        importer._load([row], "id_ID")
+        importer.load_file(po_path, "id_ID")
         imported = (
             importer.model_terms_translations["ir.ui.view"]["arch_db"]
             ["id_base.report_fmcg_picklist"]["Picklist"].get("id_ID")
