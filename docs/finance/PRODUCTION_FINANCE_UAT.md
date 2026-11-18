@@ -57,8 +57,8 @@ Sebagian langkah di atas dapat dijalankan tanpa klik manual memakai harness
 |---|---|
 | 1. Company | setiap action Finance menampilkan `company_id` **PT Manado Distribusi Utama** |
 | 2. Menu | app **Finance** → section **Finance Reports** memuat 8 entri berlabel FIN04…FIN38 |
-| 3. Jalankan laporan | kedelapan action membuka wizard dengan `report_type` yang sesuai; FIN04 dijalankan untuk 2026-07-01..2026-07-31 dan ringkasan memuat `FIN04` |
-| 4. Unduh XLSX | **Export XLSX** menghasilkan `FIN04-audit-trail-2026-07-01_2026-07-31.xlsx` dengan header ZIP `PK`, bukan halaman error |
+| 3. Jalankan laporan | kedelapan action membuka wizard dengan `report_type` yang sesuai dan tombol **Run Report**/**Export XLSX** terlihat di header; FIN04 dijalankan untuk 2026-07-01..2026-07-31 dan ringkasan memuat `FIN04` |
+| 4. Unduh XLSX | **Export XLSX** menghasilkan `FIN04-audit-trail-2026-07-01_2026-07-31.xlsx`; spec memeriksa header ZIP `PK`, `[Content_Types].xml` memuat `spreadsheetml.sheet.main+xml`, dan `xl/workbook.xml` memuat sheet `Summary`, bukan halaman error |
 
 Prasyarat remote: Environment `demo-ui` berisi Variables `LIVE_UI_ODOO_URL` dan
 `LIVE_UI_PWA_URL`, serta Secrets `ODOO_DEMO_LOGIN`/`ODOO_DEMO_PASSWORD`; setiap
@@ -81,9 +81,10 @@ gh workflow run live-ui-proof.yml --ref main \
 ```
 
 Ambil artifact `live-ui-<suite>-<project>-<sha>` (retensi 3 hari). Bukti yang
-dipakai: screenshot per langkah, nama berkas XLSX, dan ringkasan `FIN04`.
-Jalankan dengan `project=desktop`; test menu sengaja dilewati pada viewport
-telepon karena navbar-nya memakai sidebar.
+dipakai: screenshot per langkah, nama berkas XLSX, struktur `[Content_Types].xml`
+dan `xl/workbook.xml`, serta ringkasan `FIN04`. Jalankan dengan
+`project=desktop`; test menu sengaja dilewati pada viewport telepon karena
+navbar-nya memakai sidebar.
 
 Batas otomatis: spec tidak menulis data bisnis. Satu-satunya penulisan adalah
 record transient `id.finance.report.wizard` yang dibuat oleh klik itu sendiri
@@ -92,36 +93,40 @@ record transient `id.finance.report.wizard` yang dibuat oleh klik itu sendiri
 
 Sisa yang tetap manual:
 
-- isi XLSX: sheet **Summary**, kolom `__nested`, dan catatan batas 20.000 baris /
-  32.000 karakter / 200.000 karakter payload;
+- rekonsiliasi isi XLSX terhadap payload: nilai sel, kolom `__nested`, dan catatan
+  batas 20.000 baris / 32.000 karakter / 200.000 karakter payload (struktur
+  workbook sudah diperiksa otomatis oleh spec);
 - penolakan peran user Sales (langkah 5);
 - nilai **Costing Method** dan **Inventory Valuation** dua kategori (langkah 6).
 
-### Temuan pemblokir (2026-11-17)
+### Perbaikan tombol wizard (2026-11-18)
 
-[F] Kedelapan action memakai `target: current`, sedangkan tombol **Run Report**
-dan **Export XLSX** hanya ada di `<footer>`. Pada Odoo 19 footer dirender hanya
-ketika form berada di dialog: `form_controller.xml` menggerbangi slot
-`layout-buttons` dengan `t-if="env.inDialog"`, `form_controller.js` memindahkan
-footer ke arsip dialog ("if we are in a dialog"), dan `action_service.js`
-memetakan `target: "new"` ke mode `inDialog`. Akibatnya tombol tidak muncul pada
-form halaman penuh, sehingga langkah 3–4 tidak bisa diklik dan spec otomatis
-gagal di `button[name="action_run"]` sampai ini diperbaiki.
+[F] Temuan 2026-11-17: kedelapan action memakai `target: current`, sedangkan
+tombol **Run Report** dan **Export XLSX** hanya ada di `<footer>`. Pada Odoo 19
+footer dirender hanya ketika form berada di dialog: `form_controller.xml`
+menggerbangi slot `layout-buttons` dengan `t-if="env.inDialog"`,
+`form_controller.js` memindahkan footer ke arsip dialog ("if we are in a
+dialog"), dan `action_service.js` memetakan `target: "new"` ke mode `inDialog`.
+Akibatnya tombol tidak muncul pada form halaman penuh.
 
-[F] Dua wizard lain di repo memakai pola footer + dialog: `id_base`
-(`coretax_export_wizard`, `target: new`) dan `id_promo_governance`
-(`promo_sku_wizard`, `target: new`).
+[F] Keputusan pemilik: laporan tetap halaman penuh, tombol dipindahkan ke
+`<header>`, dan kedelapan action tetap `target: current`. `<footer>` wizard
+dihapus, termasuk tombol **Close** `special="cancel"` yang tidak berarti pada
+halaman penuh. Dua wizard lain di repo (`id_base/coretax_export_wizard`,
+`id_promo_governance/promo_sku_wizard`) tetap memakai pola footer + dialog
+karena memang `target: new`; keduanya tidak diubah.
 
-Pilihan perbaikan:
+[F] Guard regresi ada di `scripts/ops/verify_finance_activation_demo.py`, yang
+dijalankan job `init-test`: view ter-resolve harus punya `action_run` dan
+`action_export_xlsx` di `<header>`, tidak boleh menduplikasinya di `<footer>`,
+dan kedelapan action harus `res_model = id.finance.report.wizard`,
+`view_mode` memuat `form`, serta `target = current`. Ringkasan tombol dan target
+dicetak di JSON `INIT_FINANCE_ACTIVATION`.
 
-1. ubah kedelapan action ke `target: new` — `action_run` sudah mengembalikan
-   `target: current`, jadi dialog menyegar di tempat dan footer tetap ada;
-2. pindahkan tombol Run/Export ke `<header>` bila form halaman penuh memang
-   disengaja.
-
-Belum diubah di PR ini karena mengubah UX produksi butuh keputusan pemilik.
-[BU] Belum direproduksi di browser live: kredensial/approval belum tersedia;
-bukti di atas berasal dari sumber Odoo 19 dan XML modul pada commit yang live.
+[BU] Jalur UI live (menu, Run, download XLSX) belum dijalankan ulang pada commit
+perbaikan ini; dispatch butuh Secrets `ODOO_DEMO_LOGIN`/`ODOO_DEMO_PASSWORD` di
+Environment `demo-ui` dan approval pemilik. Spec kini gagal bila tombol kembali
+ke footer atau berkas unduhan bukan workbook XLSX.
 
 ## Bukti yang diminta
 

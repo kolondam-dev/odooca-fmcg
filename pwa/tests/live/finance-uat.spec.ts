@@ -1,6 +1,7 @@
-import { open, stat } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { evidenceName, odooBase, publicOnly, targetUrl } from "./helpers";
+import { readZipEntry } from "./zip";
 
 /**
  * Half of docs/finance/PRODUCTION_FINANCE_UAT.md that a browser session can
@@ -257,10 +258,22 @@ test("@finance-uat @odoo-live every Finance Reports action opens its wizard in c
             page.locator('.o_field_widget[name="company_id"]'),
             action.label,
         ).toContainText(COMPANY);
+        // The action opens a full page (target="current"), and Odoo 19 only
+        // renders <footer> inside a dialog, so both buttons must be in the
+        // form header to be reachable.
+        const header = page.locator(".o_form_statusbar");
+        for (const button of ["action_run", "action_export_xlsx"]) {
+            await expect(
+                header.locator(`button[name="${button}"]`),
+                `${action.label}: ${button} in header`,
+            ).toBeVisible();
+        }
         await expect(
-            page.locator('button[name="action_run"]'),
+            page.locator(
+                'footer button[name="action_run"], footer button[name="action_export_xlsx"]',
+            ),
             action.label,
-        ).toBeVisible();
+        ).toHaveCount(0);
         await page.screenshot({
             path: evidenceName(testInfo, `${action.fin}-wizard`),
             fullPage: true,
@@ -288,6 +301,11 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
     await expect(
         page.locator('.o_field_widget[name="company_id"]'),
     ).toContainText(COMPANY);
+    const header = page.locator(".o_form_statusbar");
+    await expect(header.locator('button[name="action_run"]')).toBeVisible();
+    await expect(
+        header.locator('button[name="action_export_xlsx"]'),
+    ).toBeVisible();
     await page.screenshot({
         path: evidenceName(testInfo, "fin04-wizard-company"),
         fullPage: true,
@@ -300,11 +318,7 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
         fullPage: true,
     });
 
-    // Known blocker (2026-11-17): the eight actions use target="current", but the
-    // Run/Export buttons live in <footer>, and Odoo 19 renders footers only when
-    // env.inDialog is true (target="new"). Until that is fixed this click cannot
-    // find the button; the failure is the acceptance oracle for the defect.
-    await page.locator('button[name="action_run"]').click();
+    await header.locator('button[name="action_run"]').click();
     await expect(
         page.locator('.o_field_widget[name="result_summary"]'),
     ).toContainText("FIN04");
@@ -316,7 +330,7 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
 
     const [download] = await Promise.all([
         page.waitForEvent("download"),
-        page.locator('button[name="action_export_xlsx"]').click(),
+        header.locator('button[name="action_export_xlsx"]').click(),
     ]);
     // The period in the filename proves the July dates reached the report scope.
     expect(download.suggestedFilename()).toBe(
@@ -327,12 +341,17 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
     const saved = await download.path();
     expect(saved, "download path").not.toBeNull();
     expect((await stat(saved!)).size).toBeGreaterThan(0);
-    // A workbook is a ZIP container; an HTML error page would not start with PK.
-    const handle = await open(saved!, "r");
-    const header = Buffer.alloc(2);
-    await handle.read(header, 0, 2, 0);
-    await handle.close();
-    expect(header.toString("latin1")).toBe("PK");
+    // Structure smoke test: an HTML error page saved as .xlsx would not be a
+    // ZIP, and a ZIP that is not a workbook would miss the spreadsheet part.
+    // Cell-level reconciliation against the finance payload stays manual UAT.
+    const archive = await readFile(saved!);
+    expect(archive.subarray(0, 2).toString("latin1")).toBe("PK");
+    const contentTypes = readZipEntry(archive, "[Content_Types].xml").toString(
+        "utf8",
+    );
+    expect(contentTypes).toContain("spreadsheetml.sheet.main+xml");
+    const workbook = readZipEntry(archive, "xl/workbook.xml").toString("utf8");
+    expect(workbook).toContain('name="Summary"');
 
     await page.screenshot({
         path: evidenceName(testInfo, "fin04-export-xlsx"),

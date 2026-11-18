@@ -15,7 +15,7 @@ XLSX belum terpenuhi dan pengguna tidak bisa membawa angka keluar dari Odoo.
 | Berkas | Isi |
 |---|---|
 | `addons/id_finance_reporting/wizards/finance_report_wizard.py` | `action_export_xlsx`: membangun workbook dari snapshot yang sama dengan pratinjau, menyimpan `result_xlsx` + `result_filename`, mengembalikan tautan `/web/content` |
-| `addons/id_finance_reporting/views/finance_report_wizard_views.xml` | Tombol **Export XLSX** di footer form |
+| `addons/id_finance_reporting/views/finance_report_wizard_views.xml` | Tombol **Run Report** dan **Export XLSX** di header form (halaman penuh, `target: current`) |
 | `scripts/ops/verify_finance_i2_exposure.py` | `check_xlsx_export`: helper guard, guard level workbook, 8 jenis laporan, pembersihan workbook basi, izin baca/tolak |
 | `addons/id_finance_reporting/i18n/id.po` | 27 entri baru (20 paket awal + 7 koreksi P2) |
 

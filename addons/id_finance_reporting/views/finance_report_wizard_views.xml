@@ -5,6 +5,10 @@
         <field name="model">id.finance.report.wizard</field>
         <field name="arch" type="xml">
             <form string="Finance Report">
+                <header>
+                    <button name="action_run" string="Run Report" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button name="action_export_xlsx" string="Export XLSX" type="object" class="btn-secondary"/>
+                </header>
                 <sheet>
                     <group>
                         <group>
@@ -53,11 +57,6 @@
                         </page>
                     </notebook>
                 </sheet>
-                <footer>
-                    <button name="action_run" string="Run Report" type="object" class="btn-primary" data-hotkey="q"/>
-                    <button name="action_export_xlsx" string="Export XLSX" type="object" class="btn-secondary"/>
-                    <button string="Close" special="cancel" class="btn-secondary"/>
-                </footer>
             </form>
         </field>
     </record>

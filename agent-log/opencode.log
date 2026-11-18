@@ -272,3 +272,15 @@
 - [F] Dampak: langkah 3-4 UAT finance tidak bisa diklik; spec gagal di button[name=action_run] sebagai oracle acceptance.
 - [F] Opsi: target: new untuk 8 action (disarankan; action_run sudah target current) atau tombol ke <header>. Belum diubah, menunggu keputusan pemilik.
 - Task managed by Agent-Opencode at 2026-11-17T12:24:59+07:00
+
+[2026-11-18T08:09:00+07:00] [INFO] Tombol Run/Export dipindah ke header wizard finance; oracle XLSX diperkuat
+- [F] Keputusan pemilik: laporan tetap halaman penuh; action_run + action_export_xlsx ke <header>; 8 action tetap target: current.
+- [F] finance_report_wizard_views.xml: footer lama (2 tombol duplikat + Close special=cancel) dihapus.
+- [F] verify_finance_activation_demo.py: guard view ter-resolve (tombol di header, tidak di footer) + 8 action res_model/view_mode/target current; ringkasan di JSON INIT_FINANCE_ACTIVATION.
+- [F] finance-uat.spec.ts: assert tombol di .o_form_statusbar dan tidak di footer; pembaca ZIP minimal (tests/live/zip.ts) memeriksa [Content_Types].xml (spreadsheetml.sheet.main+xml) dan xl/workbook.xml (sheet Summary).
+- [F] PRODUCTION_FINANCE_UAT.md + I2_XLSX_EXPORT.md: status perbaikan header, bukti struktur XLSX, sisa rekonsiliasi isi.
+- [F] main b57d12c di-merge tanpa konflik; ruff PASS, 14 manifest PASS, tsc 0 error, Prettier PASS untuk spec + helper ZIP.
+- [F] Pembaca ZIP diuji lokal pada ZIP deflate method 8: dua entri terbaca, entri hilang ditolak.
+- [F] Dampak test CUKUP: guard runtime di init-test (dipilih addons/id_finance*/**) + spec live; suite plan pwa + odoo_install/odoo_init/finance/upgrade.
+- [BU] Dispatch live (8 wizard, Run FIN04 Juli 2026, download XLSX) menunggu secret demo-ui + approval; rekonsiliasi isi, role Sales, costing/valuation tetap manual.
+- Task managed by Agent-Opencode at 2026-11-18T08:09:00+07:00
