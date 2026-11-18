@@ -3226,3 +3226,28 @@
   * python scripts/check_manifests.py: PASS (14 addon OK).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-18T12:35:00+07:00
+
+[2026-11-18T19:25:00+07:00] [INFO] Audit Komprehensif PR #110 & Handoff ke Antigravity
+- [F] Membaca transkrip diskusi pemilik+supervisor (review #5955750400, HEAD 396fc32), verdict HOLD
+- [F] BUG-1 dikonfirmasi: 339 AR Juli (Rp 2.387.592.728,60) di-skip diam-diam — resolver mencari payment_reference, baseline Juli simpan nomor invoice di field ref. Total AR pack: 1.202 (339 Juli + 863 Agustus)
+- [F] BUG-2 dikonfirmasi: seluruh 1.240 SO memiliki tanggal DO berbeda dari tanggal SO (semua mismatch). Loader mengoper so_row["date_order"] ke _validate_picking_safely(), seharusnya scheduled_delivery_date dari deliveries.csv
+- [F] Santos konflik: 65 dari 143 baris Santos pra-15 Agustus dipetakan ke program yang mulai 15 Agustus — tidak boleh
+- [F] CSV baseline tidak memiliki diskon multi-komponen: discount_pct selalu tunggal; 51 baris duplikat SO+SKU adalah multi-lot bukan multi-diskon
+- [F] Footer disc tidak ada di baseline: discount_dpp header = sum baris (0 mismatch dari 1.240 SO)
+- [F] OPEX langsung debit beban vs kas — tanpa vendor link, trip ref, payroll settlement terpisah
+- [F] invoices.csv sudah memiliki is_pkp, buyer_id_type, customer_tax_id tetapi loader belum membacanya ke field Odoo
+- [F] Handoff komprehensif ditulis di artifact HANDOFF_PR110_COMPREHENSIVE.md dengan 2 bug P1 dan 10 area P2
+- [F] Entri HANDOFF.md ditambahkan (urutan terbaru di atas)
+- [BU] Perbaikan kode aktual — ini analisis dan handoff, bukan implementasi
+
+[2026-11-18T19:55:00+07:00] [INFO] Perbaikan Komprehensif PR #110 (AR Resolver, DO Chronology, Retur Karantina, Tax, Promo Guard)
+- [F] BUG-1: Memperbaiki AR Resolver di scripts/ops/load_period_pack.py via _resolve_ar_invoice() dengan 3-tahap lookup: payment_reference -> name -> ref (Juli carry-forward). Menghilangkan silent skip dan menegakkan fail-closed StateInconsistencyError dalam strict mode.
+- [F] BUG-2: Memperbaiki kronologi DO picking di _validate_existing_so() dan _apply_sales_orders_and_deliveries() dengan properti do_date_map dari deliveries.csv (scheduled_delivery_date) menggantikan date_order.
+- [F] P2-C: Menambahkan guard validasi tanggal _resolve_promo_program() pada line item SO untuk menolak retroactive binding program Santos pra-15 Agustus.
+- [F] P2-H: Menambahkan _apply_rejections_and_quarantine() untuk memproses 47 penolakan pengiriman dari rejections.csv ke Karantina FMCG Maumbi via picking return internal.
+- [F] P2-I: Mengintegrasikan pembacaan atribut perpajakan PKP/Non-PKP (is_pkp, buyer_id_type, customer_tax_id) pada faktur dan mitra customer.
+- [F] P2-D: Menambahkan logging penelusuran [HISTORICAL_IMPORT_APPROVAL_BYPASS] untuk pesanan dengan diskon taktikal atau di bawah HPP.
+- [F] P2-J: Menambahkan klasifikasi audit log untuk biaya lapangan ([OPEX_FIELD_EXPENSE]) dan penggajian ([OPEX_PAYROLL_ENTRY]).
+- [F] Menambahkan 13 pengujian unit baru pada tests/test_period_pack_loader.py; total 75/75 pengujian LULUS (12.38s).
+- [F] Ruff check dan check_manifests 14 addon clean.
+- Task managed by antigravity at 2026-11-18T19:55:00+07:00

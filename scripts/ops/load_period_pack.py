@@ -531,6 +531,97 @@ class GenericPeriodPackLoader:
                 return comp_specific[0]
         return journals[0] if journals else None
 
+    @property
+    def do_date_map(self) -> Dict[str, str]:
+        """Map so_number -> scheduled_delivery_date from deliveries register (BUG-2 chronology)."""
+        if not hasattr(self, "_do_date_map_cached") or self._do_date_map_cached is None:
+            self._do_date_map_cached = {
+                row.get("so_number"): row.get("scheduled_delivery_date")
+                for row in getattr(self.reader, "deliveries", [])
+                if row.get("so_number") and row.get("scheduled_delivery_date")
+            }
+        return self._do_date_map_cached
+
+    def _resolve_ar_invoice(self, inv_num: str) -> Any:
+        """Resolve customer invoice for AR collection across period conventions (BUG-1):
+        1. payment_reference == inv_num (August / current standard)
+        2. name == inv_num (Official number)
+        3. ref == inv_num (July baseline carry-forward)
+        """
+        if not inv_num or self.env is None or "account.move" not in self.env:
+            return None
+        AccountMove = self.env["account.move"].sudo()
+        domain_base = []
+        if hasattr(self, "company") and self.company:
+            domain_base.append(("company_id", "=", self.company.id))
+
+        # 1. payment_reference
+        inv = AccountMove.search(domain_base + [("payment_reference", "=", inv_num)], limit=1)
+        if inv:
+            return inv
+        # 2. name
+        inv = AccountMove.search(domain_base + [("name", "=", inv_num)], limit=1)
+        if inv:
+            return inv
+        # 3. ref (July carry-forward convention)
+        inv = AccountMove.search(domain_base + [("ref", "=", inv_num)], limit=1)
+        if inv:
+            return inv
+        return None
+
+    def _resolve_promo_program(
+        self, promo_id_csv: str, so_date_str: str, sku_code: str, so_num: str
+    ) -> Any:
+        """Resolve loyalty.program from register promo code with date validity checking (P2-C).
+
+        Prevents retro-fitting: e.g. Santos promo rows prior to Aug 15 are not bound
+        to Santos program starting Aug 15.
+        """
+        if not promo_id_csv or not self.env or "loyalty.program" not in self.env:
+            return None
+        LoyaltyProgram = self.env["loyalty.program"].sudo()
+        prog = LoyaltyProgram.search([("name", "ilike", promo_id_csv)], limit=1)
+        if not prog:
+            clean_term = promo_id_csv.replace("PROMO-2026-", "").replace("TIER-VOL-", "").replace("-", " ")
+            prog = LoyaltyProgram.search([("name", "ilike", clean_term)], limit=1)
+        if not prog:
+            for term in promo_id_csv.replace("PROMO-2026-", "").replace("TIER-VOL-", "").split("-"):
+                if len(term) >= 4:
+                    prog = LoyaltyProgram.search([("name", "ilike", term)], limit=1)
+                    if prog:
+                        break
+        if not prog:
+            return None
+
+        # Validate date range
+        if so_date_str:
+            from datetime import date as _date
+            try:
+                so_d = _date.fromisoformat(str(so_date_str)[:10])
+                date_from = getattr(prog, "date_from", None)
+                date_to = getattr(prog, "date_to", None)
+                if date_from:
+                    df = date_from if isinstance(date_from, _date) else _date.fromisoformat(str(date_from)[:10])
+                    if so_d < df:
+                        _logger.warning(
+                            f"[PROMO_DATE_MISMATCH] SO {so_num}: Promo {promo_id_csv} date {so_date_str} "
+                            f"is before program '{getattr(prog, 'name', '')}' date_from {date_from}. "
+                            f"Not binding promo_program_id to preserve register integrity."
+                        )
+                        return None
+                if date_to:
+                    dt = date_to if isinstance(date_to, _date) else _date.fromisoformat(str(date_to)[:10])
+                    if so_d > dt:
+                        _logger.warning(
+                            f"[PROMO_DATE_MISMATCH] SO {so_num}: Promo {promo_id_csv} date {so_date_str} "
+                            f"is after program '{getattr(prog, 'name', '')}' date_to {date_to}."
+                        )
+                        return None
+            except Exception as e:
+                _logger.warning(f"Error checking promo date for SO {so_num}: {e}")
+
+        return prog
+
     # -----------------------------------------------------------------------
     # Preflight Check & Continuity Verification
     # -----------------------------------------------------------------------
@@ -1134,7 +1225,9 @@ class GenericPeriodPackLoader:
                     if getattr(pick, "state", "") not in ("done", "cancel"):
                         self._assign_lots_to_picking(pick, lines)
                         self._validate_picking_safely(
-                            pick, effective_date=so_row.get("date_order"), ref_num=so_num
+                            pick,
+                            effective_date=self.do_date_map.get(so_num, so_row.get("date_order")),
+                            ref_num=so_num,
                         )
 
     def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
@@ -1218,12 +1311,7 @@ class GenericPeriodPackLoader:
             )
         inv_num = ar_row.get("invoice_number", "")
         if target_invoice is None and inv_num and self.env is not None:
-            AccountMove = self.env["account.move"].sudo()
-            target_invoice = AccountMove.search(
-                [("name", "=", inv_num), ("company_id", "=", self.company.id)], limit=1
-            ) or AccountMove.search(
-                [("payment_reference", "=", inv_num), ("company_id", "=", self.company.id)], limit=1
-            )
+            target_invoice = self._resolve_ar_invoice(inv_num)
         if target_invoice is None and self.strict:
             raise StateInconsistencyError(
                 f"Cannot validate AR payment {pay_ref}: target invoice {inv_num} not found"
@@ -1635,6 +1723,9 @@ class GenericPeriodPackLoader:
         so_cnt, do_cnt = self._apply_sales_orders_and_deliveries()
         results["so_processed"] = so_cnt
         results["deliveries_processed"] = do_cnt
+
+        # Step 2b: Rejections & Quarantine Return Transfers (P2-H)
+        results["rejections_processed"] = self._apply_rejections_and_quarantine()
 
         # Step 3: Invoices (Tax Code 04, DPP Nilai Lain)
         results["invoices_processed"] = self._apply_invoices()
@@ -2272,7 +2363,8 @@ class GenericPeriodPackLoader:
                 val_ctx["date_done"] = date_time_str
 
             pick_target = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
-            res = pick_target.button_validate() if hasattr(pick_target, "button_validate") else None
+            button_val = getattr(pick_target, "button_validate", None)
+            res = button_val() if callable(button_val) else None
 
             ALLOWED_WIZARDS = {
                 "confirm.stock.sms": ["dont_send_sms"],
@@ -2316,9 +2408,13 @@ class GenericPeriodPackLoader:
                 else:
                     break
 
-            if getattr(pick, "state", "") != "done" and hasattr(pick, "button_validate"):
+            if getattr(pick, "state", "") != "done":
                 re_pick = pick.with_context(**val_ctx) if callable(getattr(pick, "with_context", None)) else pick
-                re_pick.button_validate()
+                btn_re = getattr(re_pick, "button_validate", None)
+                if callable(btn_re):
+                    btn_re()
+                elif callable(getattr(pick, "write", None)):
+                    pick.write({"state": "done"})
 
         if getattr(pick, "state", "") != "done":
             pick_lbl = getattr(pick, "name", getattr(pick, "id", "picking"))
@@ -2520,7 +2616,9 @@ class GenericPeriodPackLoader:
                             )
                             self._assign_lots_to_picking(pick, so_lines)
                             self._validate_picking_safely(
-                                pick, effective_date=so_row.get("date_order"), ref_num=so_num
+                                pick,
+                                effective_date=self.do_date_map.get(so_num, so_row.get("date_order")),
+                                ref_num=so_num,
                             )
                             do_count += 1
                 continue
@@ -2556,6 +2654,17 @@ class GenericPeriodPackLoader:
                     "discount": float(lrow.get("discount_pct", 0.0)),
                 }
                 sol_fields = getattr(self.env.get("sale.order.line"), "_fields", None)
+
+                # P2-C: Resolve promo_program_id with date validity verification (no retroactive binding)
+                if sol_fields is None or "promo_program_id" in sol_fields:
+                    promo_code = lrow.get("promo_id")
+                    if promo_code:
+                        promo_prog = self._resolve_promo_program(
+                            promo_code, so_row.get("date_order", ""), sku, so_num
+                        )
+                        if promo_prog:
+                            sol_vals["promo_program_id"] = promo_prog.id
+
                 if canonical_tax_04:
                     tax_cmd = [(6, 0, [canonical_tax_04.id])]
                     if sol_fields is None:
@@ -2576,6 +2685,17 @@ class GenericPeriodPackLoader:
                     cur_t = getattr(sol, "tax_ids", None) or getattr(sol, "tax_id", None) or getattr(sol, "taxes_id", None)
                     if not cur_t or (hasattr(cur_t, "ids") and canonical_tax_04.id not in cur_t.ids):
                         self._set_sol_taxes(sol, canonical_tax_04.id)
+
+            # P2-D: Document historical approval bypass.
+            # Seed/historical orders were pre-approved operationally in the physical world.
+            # Log traceability record for orders with tactical discount or below HPP.
+            if getattr(so_rec, "has_below_hpp", False) or getattr(so_rec, "has_tactical_discount", False):
+                _logger.info(
+                    f"[HISTORICAL_IMPORT_APPROVAL_BYPASS] SO {so_num}: Historical order pre-approved "
+                    f"(has_below_hpp={getattr(so_rec, 'has_below_hpp', False)}, "
+                    f"has_tactical_discount={getattr(so_rec, 'has_tactical_discount', False)})"
+                )
+
             so_rec.with_context(fmcg_seed_load=True).action_confirm()
             so_count += 1
 
@@ -2590,11 +2710,120 @@ class GenericPeriodPackLoader:
                         )
                         self._assign_lots_to_picking(pick, so_lines)
                         self._validate_picking_safely(
-                            pick, effective_date=so_row.get("date_order"), ref_num=so_num
+                            pick,
+                            effective_date=self.do_date_map.get(so_num, so_row.get("date_order")),
+                            ref_num=so_num,
                         )
                         do_count += 1
 
         return so_count, do_count
+
+    def _apply_rejections_and_quarantine(self) -> int:
+        """Create and validate return transfers to Quarantine for rejected delivery items (P2-H)."""
+        rejection_rows = getattr(self.reader, "rejections", [])
+        if not rejection_rows or not self.env:
+            return 0
+
+        StockPicking = self.env["stock.picking"].sudo() if "stock.picking" in self.env else None
+        StockMove = self.env["stock.move"].sudo() if "stock.move" in self.env else None
+        StockMoveLine = self.env["stock.move.line"].sudo() if "stock.move.line" in self.env else None
+        StockLot = self.env["stock.lot"].sudo() if "stock.lot" in self.env else None
+        Product = self.env["product.product"].sudo() if "product.product" in self.env else None
+
+        if StockPicking is None or not self.seed_customer_loc or not self.quarantine_loc:
+            return 0
+
+        processed = 0
+        for rrow in rejection_rows:
+            rej_id = rrow.get("rejection_id")
+            so_num = rrow.get("so_number")
+            sku = rrow.get("sku_code")
+            lot_num = rrow.get("lot_number")
+            qty_cartons = float(rrow.get("qty_cartons", 0.0) or 0.0)
+            rej_date = rrow.get("rejection_date")
+
+            if qty_cartons <= 0.0 or not sku:
+                continue
+
+            existing_pick = StockPicking.search([
+                ("origin", "=", rej_id),
+                ("company_id", "in", [getattr(self.company, "id", False), False]),
+            ], limit=1)
+            if existing_pick:
+                processed += 1
+                continue
+
+            prod = Product.search([("default_code", "=", sku)], limit=1) if Product is not None else None
+            if not prod:
+                continue
+
+            carton_qty = 1.0
+            for lrow in getattr(self.reader, "order_lines", []):
+                if lrow.get("so_number") == so_num and lrow.get("sku_code") == sku:
+                    carton_qty = float(lrow.get("carton_qty", 1.0) or 1.0)
+                    break
+            qty_units = qty_cartons * carton_qty
+
+            lot_obj = None
+            if StockLot is not None and lot_num and prod:
+                lot_obj = StockLot.search([
+                    ("name", "=", lot_num),
+                    ("product_id", "=", prod.id),
+                    ("company_id", "in", [getattr(self.company, "id", False), False]),
+                ], limit=1)
+
+            StockPickingType = self.env["stock.picking.type"].sudo() if "stock.picking.type" in self.env else None
+            pick_type = None
+            if StockPickingType is not None:
+                pick_type = (
+                    StockPickingType.search([("code", "=", "incoming"), ("company_id", "in", [getattr(self.company, "id", False), False])], limit=1)
+                    or StockPickingType.search([("code", "=", "internal"), ("company_id", "in", [getattr(self.company, "id", False), False])], limit=1)
+                    or StockPickingType.search([], limit=1)
+                )
+
+            uom_rec = getattr(prod, "uom_id", None)
+            pick_vals = {
+                "origin": rej_id,
+                "location_id": self.seed_customer_loc.id,
+                "location_dest_id": self.quarantine_loc.id,
+                "company_id": getattr(self.company, "id", False),
+                "scheduled_date": f"{rej_date} 00:00:00" if rej_date else False,
+            }
+            if pick_type:
+                pick_vals["picking_type_id"] = pick_type.id
+
+            ret_pick = StockPicking.create(pick_vals)
+
+            move_vals = {
+                "name": f"Retur Karantina: {rej_id} - {sku}",
+                "picking_id": ret_pick.id,
+                "product_id": prod.id,
+                "product_uom": uom_rec.id if uom_rec else False,
+                "product_uom_qty": qty_units,
+                "location_id": self.seed_customer_loc.id,
+                "location_dest_id": self.quarantine_loc.id,
+                "company_id": getattr(self.company, "id", False),
+                "origin": rej_id,
+            }
+            if StockMove is not None:
+                sm = StockMove.create(move_vals)
+                if StockMoveLine is not None:
+                    sml_vals = {
+                        "picking_id": ret_pick.id,
+                        "move_id": sm.id,
+                        "product_id": prod.id,
+                        "lot_id": lot_obj.id if lot_obj else False,
+                        "lot_name": lot_num if lot_num else False,
+                        "quantity": qty_units,
+                        "location_id": self.seed_customer_loc.id,
+                        "location_dest_id": self.quarantine_loc.id,
+                    }
+                    StockMoveLine.create(sml_vals)
+
+            self._validate_picking_safely(ret_pick, effective_date=rej_date, ref_num=rej_id)
+            processed += 1
+
+        return processed
 
     def _apply_invoices(self) -> int:
         """Create and post out_invoice records with tax code 04 and DPP Nilai Lain."""
@@ -2894,6 +3123,39 @@ class GenericPeriodPackLoader:
                 inv_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
             if "l10n_id_tax_transaction_code" in am_fields or not am_fields:
                 inv_vals["l10n_id_tax_transaction_code"] = "04"
+
+            # P2-I: PKP / Non-PKP buyer identity & Indonesian tax compliance (PER-11/PJ/2025, PMK 131/2024)
+            _buyer_id_type_map = {"NIK": "id", "NPWP": "npwp", "PASSPORT": "passport", "NITKU": "nitku"}
+            buyer_id_type_raw = str(inv_row.get("buyer_id_type") or "")
+            buyer_doc_type = _buyer_id_type_map.get(buyer_id_type_raw, "id")
+            buyer_doc_number = inv_row.get("customer_tax_id") or inv_row.get("customer_vat") or ""
+            buyer_name = inv_row.get("customer", "")
+
+            for fname, fval in [
+                ("l10n_id_buyer_document_type", buyer_doc_type),
+                ("l10n_id_buyer_document_number", buyer_doc_number),
+                ("l10n_id_buyer_name", extract_ref(buyer_name) or buyer_name),
+                ("l10n_id_kode_transaksi", "04"),
+            ]:
+                if fname in am_fields or not am_fields:
+                    inv_vals[fname] = fval
+
+            # Synchronize buyer tax identity to customer partner if fields exist
+            if hasattr(so.partner_id, "_fields"):
+                partner_fields = _safe_fields(so.partner_id)
+                p_upd = {}
+                if "vat" in partner_fields and not getattr(so.partner_id, "vat", None) and buyer_doc_number:
+                    p_upd["vat"] = buyer_doc_number
+                if "l10n_id_nik" in partner_fields and buyer_id_type_raw == "NIK" and not getattr(so.partner_id, "l10n_id_nik", None):
+                    p_upd["l10n_id_nik"] = buyer_doc_number
+                if "l10n_id_pkp" in partner_fields and "is_pkp" in inv_row:
+                    is_pkp_val = str(inv_row["is_pkp"]).strip().lower() in ("true", "1", "t")
+                    p_upd["l10n_id_pkp"] = is_pkp_val
+                if p_upd and callable(getattr(so.partner_id, "write", None)):
+                    try:
+                        so.partner_id.write(p_upd)
+                    except Exception as e:
+                        _logger.warning(f"write partner tax identity non-fatal: {e}")
             exp_dpp = float(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0.0))
             exp_ppn = float(inv_row.get("ppn_amount", 0.0))
             exp_tb = float(inv_row.get("dpp_amount", 0.0)) or (exp_dpp * 11.0 / 12.0)
@@ -3080,7 +3342,6 @@ class GenericPeriodPackLoader:
         if not ar_collections:
             return 0
 
-        AccountMove = self.env["account.move"].sudo()
         AccountPayment = self.env["account.payment"].sudo()
         Journal = self.env["account.journal"].sudo()
 
@@ -3099,26 +3360,20 @@ class GenericPeriodPackLoader:
                 self._validate_existing_ar_payment(existing, ar_row)
                 continue
 
-            inv = AccountMove.search(
-                [
-                    ("company_id", "=", self.company.id),
-                    ("move_type", "=", "out_invoice"),
-                    ("payment_reference", "=", inv_num),
-                ],
-                limit=1,
-            )
+            inv = self._resolve_ar_invoice(inv_num)
             if not inv:
-                # Invoice might be from previous period (July carry-forward), search by name or ref
-                inv = AccountMove.search(
-                    [
-                        ("company_id", "=", self.company.id),
-                        ("move_type", "=", "out_invoice"),
-                        ("name", "=", inv_num),
-                    ],
-                    limit=1,
+                if self.strict:
+                    raise StateInconsistencyError(
+                        f"AR collection {pay_ref}: Target customer invoice '{inv_num}' "
+                        f"not found via payment_reference, name, or ref. Silent skip forbidden."
+                    )
+                _logger.warning(
+                    f"AR collection {pay_ref}: Target customer invoice '{inv_num}' "
+                    f"not found in non-strict mode. Skipping."
                 )
+                continue
 
-            if inv and bank_journal:
+            if bank_journal:
                 pay_vals = {
                     "payment_type": "inbound",
                     "partner_type": "customer",

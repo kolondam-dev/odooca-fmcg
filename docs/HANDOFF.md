@@ -1,3 +1,41 @@
+## 2026-11-18T19:55:00+07:00 — antigravity — Perbaikan Komprehensif PR #110: AR Cross-Period Resolver, DO Chronology, Retur Karantina, Tax Identity, & Santos Promo Guard (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Penanganan audit supervisor (review #5955750400, HEAD 396fc32, verdict HOLD) pada PR #110.
+- [F] Dua bug konkret dan seluruh alur transaksi operasional diperbaiki secara komprehensif pada generic period pack loader.
+
+**Berubah:**
+1. **BUG-1 (AR Cross-Period Resolver & Anti-Silent-Skip):**
+   - Menambahkan helper `_resolve_ar_invoice()` di `scripts/ops/load_period_pack.py` dengan fallback 3-tahap: `payment_reference` -> `name` -> `ref` (konvensi baseline Juli).
+   - Menghilangkan silent skip pada `_apply_ar_collections()`: jika invoice tidak ditemukan dalam mode strict, wajib raise `StateInconsistencyError`.
+   - Mengintegrasikan rekonsiliasi 339 pembayaran invoice Juli (Rp 2.387.592.728,60) bersama 863 pembayaran Agustus (total 1.202 AR collections).
+2. **BUG-2 (DO Date Chronology):**
+   - Menambahkan properti `do_date_map` yang memetakan `so_number` ke `scheduled_delivery_date` dari register `deliveries.csv`.
+   - Memastikan validasi picking pada `_validate_existing_so()` dan `_apply_sales_orders_and_deliveries()` menggunakan tanggal DO aktual (bukan tanggal SO) sehingga kronologi pergerakan stok, tanggal surat jalan, dan HPP FIFO konsisten.
+3. **P2-C (Santos Promo Date Conflict & Guard):**
+   - Menambahkan method `_resolve_promo_program()` dengan validasi tanggal: 65 baris promo Santos sebelum 15 Agustus tidak lagi diikat secara retroaktif ke program Santos yang baru mulai 15 Agustus, mencegah diskon ganda dan mencatat peringatan `[PROMO_DATE_MISMATCH]`.
+4. **P2-H (Retur Karantina Pengiriman):**
+   - Menambahkan method `_apply_rejections_and_quarantine()` yang memproses 47 penolakan pengiriman dari `rejections.csv` ke lokasi `quarantine_loc` ("Karantina FMCG Maumbi") via transfer picking internal Odoo.
+5. **P2-I (Pajak PKP / Non-PKP Buyer Identity):**
+   - Membaca atribut `is_pkp`, `buyer_id_type`, `customer_tax_id`, dan `customer_vat` pada `_apply_invoices()`, memetakan ke field lokalisasi Indonesia `l10n_id_buyer_document_type`, `l10n_id_buyer_document_number`, `l10n_id_buyer_name`, dan `l10n_id_kode_transaksi = "04"`.
+6. **P2-D (Historical Import Approval Traceability):**
+   - Menambahkan logging `[HISTORICAL_IMPORT_APPROVAL_BYPASS]` pada `_apply_sales_orders_and_deliveries()` untuk pesanan dengan diskon taktikal atau di bawah HPP guna memisahkan jalur impor data historis dengan transaksi operasional.
+7. **P2-J (OPEX & Payroll Traceability):**
+   - Menambahkan klasifikasi dan audit log terpisah untuk biaya lapangan (`[OPEX_FIELD_EXPENSE]`) dan penggajian (`[OPEX_PAYROLL_ENTRY]`).
+8. **Pengujian Komprehensif (75/75 PASS):**
+   - Menambahkan 13 test baru di `tests/test_period_pack_loader.py` mencakup: `TestArResolverCrossPeriod` (3 test), `TestDoDateChronology` (2 test), `TestSantosPromoDateConflict` (2 test), `TestRejectionsReturnQuarantine` (2 test), `TestTaxPkpNonPkpIdentity` (2 test), dan `TestCascadingAndFooterDiscountSpecification` (2 test).
+   - Seluruh 75 pengujian terbukti 100% LULUS (75/75 PASS dalam 12.38 detik).
+
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 75/75 PASS (12.38s).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 galat).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+
+**Belum diuji:**
+- [BU] Verifikasi hasil workflow CI GitHub pada remote runner pasca-push.
+
+**Signature:** Task managed by antigravity at 2026-11-18T19:55:00+07:00
+
 ## 2026-11-18T12:35:00+07:00 — antigravity — Kepatuhan Kebijakan #145: Pemisahan F4 Period Pack ke Workflow Terpisah & Restorasi Timeout install-test (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Penegakan kepatuhan terhadap kebijakan PR #145 ("ci: pilih workflow berdasarkan dampak perubahan") pada PR #110.

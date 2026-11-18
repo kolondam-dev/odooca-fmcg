@@ -2404,5 +2404,317 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         self.assertAlmostEqual(product_credits + tax_credits, ar_debits, places=2)
 
 
+class TestArResolverCrossPeriod(unittest.TestCase):
+    """Test AR resolver handles cross-period invoice lookup & strict fail-closed contract (BUG-1)."""
+
+    def test_ar_cross_period_july_data_count(self):
+        """Pack Agustus must contain exactly 1202 AR rows (339 July invoices, 863 August invoices)."""
+        import csv
+        pack_dir = AUG_PACK_DIR
+        if not pack_dir.exists():
+            self.skipTest("Pack data not available")
+        with open(pack_dir / "ar_collections.csv", encoding="utf-8-sig") as f:
+            rows = list(csv.DictReader(f))
+        july_rows = [r for r in rows if r["invoice_number"].startswith("INV-202607")]
+        aug_rows = [r for r in rows if r["invoice_number"].startswith("INV-202608")]
+        self.assertEqual(len(rows), 1202)
+        self.assertEqual(len(july_rows), 339)
+        self.assertEqual(len(aug_rows), 863)
+
+    def test_ar_resolver_fallback_to_ref(self):
+        """AR resolver must resolve July baseline invoices via 'ref' field."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        july_inv = MockRecord(
+            id=401,
+            company_id=1,
+            ref="INV-202607-0002",  # July convention: saved in ref, not payment_reference
+            payment_reference=False,
+            name="INV/2026/07/0002",
+            state="posted",
+        )
+        mock_env = MockEnv({"account.move": MockModel(records=[july_inv])})
+        loader = GenericPeriodPackLoader(env=mock_env, pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = mock_company
+
+        resolved = loader._resolve_ar_invoice("INV-202607-0002")
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.id, 401)
+        self.assertEqual(resolved.ref, "INV-202607-0002")
+
+    def test_ar_silent_skip_forbidden_strict(self):
+        """AR loader must raise StateInconsistencyError when target invoice is missing (no silent skip)."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        bank_journal = MockRecord(id=10, type="bank")
+        mock_env = MockEnv({
+            "account.move": MockModel(records=[]),
+            "account.payment": MockModel(records=[]),
+            "account.journal": MockModel(records=[bank_journal]),
+        })
+        loader = GenericPeriodPackLoader(env=mock_env, pack_dir=AUG_PACK_DIR, dry_run=False, strict=True)
+        loader.company = mock_company
+        # Overwrite reader with a single unresolved AR row
+        test_ar = [{
+            "payment_id": "PAY-AR-TEST-001",
+            "invoice_number": "INV-NONEXISTENT-9999",
+            "payment_date": "2026-08-01",
+            "net_cash_collected_total": "1000000.00",
+            "customer": "CUST-RTL-001",
+        }]
+        loader.reader.set_override("ar_collections.csv", test_ar)
+        with self.assertRaises(StateInconsistencyError) as ctx:
+            loader._apply_ar_collections()
+        self.assertIn("Silent skip forbidden", str(ctx.exception))
+
+
+class TestDoDateChronology(unittest.TestCase):
+    """Test DO date matches delivery schedule, not SO date (BUG-2)."""
+
+    def test_all_so_have_different_do_date(self):
+        """All 1240 SOs in August pack must have scheduled_delivery_date != date_order."""
+        import csv
+        pack_dir = AUG_PACK_DIR
+        if not pack_dir.exists():
+            self.skipTest("Pack data not available")
+        with open(pack_dir / "sales_orders.csv", encoding="utf-8-sig") as f_so:
+            so_rows = {r["so_number"]: r for r in csv.DictReader(f_so)}
+        with open(pack_dir / "deliveries.csv", encoding="utf-8-sig") as f_do:
+            do_rows = {r["so_number"]: r for r in csv.DictReader(f_do)}
+        mismatches = [
+            so_num for so_num, so_r in so_rows.items()
+            if so_num in do_rows and so_r["date_order"] != do_rows[so_num]["scheduled_delivery_date"]
+        ]
+        self.assertEqual(len(mismatches), 1240)
+
+    def test_do_date_map_resolves_exact_delivery_dates(self):
+        """Loader do_date_map property must resolve exact scheduled delivery dates."""
+        loader = GenericPeriodPackLoader(env=None, pack_dir=AUG_PACK_DIR, dry_run=True)
+        self.assertEqual(loader.do_date_map.get("SO-202608-0001"), "2026-08-03")
+        self.assertEqual(loader.do_date_map.get("SO-202608-0002"), "2026-08-03")
+
+
+class TestSantosPromoDateConflict(unittest.TestCase):
+    """Test Santos promo date conflict handling and date validity guard (P2-C)."""
+
+    def test_santos_promo_before_aug15_count(self):
+        """Exactly 65 Santos promo lines occur before Aug 15."""
+        import csv
+        pack_dir = AUG_PACK_DIR
+        if not pack_dir.exists():
+            self.skipTest("Pack data not available")
+        with open(pack_dir / "order_lines.csv", encoding="utf-8-sig") as f:
+            rows = list(csv.DictReader(f))
+        santos_rows = [r for r in rows if "SANTOS" in r.get("promo_id", "")]
+        santos_before_aug15 = [r for r in santos_rows if r["date_order"] < "2026-08-15"]
+        self.assertEqual(len(santos_rows), 143)
+        self.assertEqual(len(santos_before_aug15), 65)
+
+    def test_resolve_promo_program_date_validation_mock(self):
+        """_resolve_promo_program must reject binding if SO date is before program date_from."""
+        santos_prog = MockRecord(
+            id=91,
+            name="Santos - Semarak Kopi Kapal Api Bersama MDU",
+            date_from="2026-08-15",
+            date_to="2026-12-31",
+        )
+        mock_env = MockEnv({"loyalty.program": MockModel(records=[santos_prog])})
+        loader = GenericPeriodPackLoader(env=mock_env, pack_dir=AUG_PACK_DIR, dry_run=True)
+
+        # Before program start -> None (rejected)
+        res_early = loader._resolve_promo_program("PROMO-2026-SANTOS-KOPI", "2026-08-01", "KPA-01", "SO-202608-0001")
+        self.assertIsNone(res_early)
+
+        # On or after program start -> Bound
+        res_valid = loader._resolve_promo_program("PROMO-2026-SANTOS-KOPI", "2026-08-16", "KPA-01", "SO-202608-0500")
+        self.assertIsNotNone(res_valid)
+        self.assertEqual(res_valid.id, 91)
+
+
+class TestRejectionsReturnQuarantine(unittest.TestCase):
+    """Test rejections register count and return picking creation to Quarantine (P2-H)."""
+
+    def test_rejections_data_count(self):
+        """August pack rejections.csv must have exactly 47 rejection records."""
+        loader = GenericPeriodPackLoader(env=None, pack_dir=AUG_PACK_DIR, dry_run=True)
+        self.assertEqual(len(loader.reader.rejections), 47)
+
+    def test_apply_rejections_creates_quarantine_picking_mock(self):
+        """_apply_rejections_and_quarantine must create picking with destination = quarantine_loc."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        wh_loc = MockRecord(id=11, name="WH/Stock", usage="internal")
+        cust_loc = MockRecord(id=12, name="Customers FMCG Maumbi", usage="customer")
+        quarantine_loc = MockRecord(id=13, name="Karantina FMCG Maumbi", usage="internal")
+        prod = MockRecord(id=101, default_code="ULV-CLR-02", uom_id=MockRecord(id=1))
+        lot = MockRecord(id=201, name="LOT-VER-20260704-32", product_id=prod)
+
+        created_pickings = []
+        created_moves = []
+        created_move_lines = []
+
+        class MockPickingModel(MockModel):
+            def create(self, vals):
+                p = MockRecord(id=len(created_pickings) + 1, **vals)
+                created_pickings.append(p)
+                return p
+
+        class MockMoveModel(MockModel):
+            def create(self, vals):
+                m = MockRecord(id=len(created_moves) + 1, **vals)
+                created_moves.append(m)
+                return m
+
+        class MockMoveLineModel(MockModel):
+            def create(self, vals):
+                ml = MockRecord(id=len(created_move_lines) + 1, **vals)
+                created_move_lines.append(ml)
+                return ml
+
+        mock_models = {
+            "stock.picking": MockPickingModel(records=[]),
+            "stock.move": MockMoveModel(records=[]),
+            "stock.move.line": MockMoveLineModel(records=[]),
+            "stock.picking.type": MockModel(records=[MockRecord(id=1, code="internal")]),
+            "stock.lot": MockModel(records=[lot]),
+            "product.product": MockModel(records=[prod]),
+        }
+        loader = GenericPeriodPackLoader(env=MockEnv(mock_models), pack_dir=AUG_PACK_DIR, dry_run=False)
+        loader.company = mock_company
+        loader.wh_stock_loc = wh_loc
+        loader.seed_customer_loc = cust_loc
+        loader.quarantine_loc = quarantine_loc
+
+        # Override rejections with a single sample row
+        single_rej = [{
+            "rejection_id": "REJ-TEST-001",
+            "rejection_date": "2026-08-03",
+            "so_number": "SO-202608-0045",
+            "do_number": "DO-202608-0045",
+            "sku_code": "ULV-CLR-02",
+            "lot_number": "LOT-VER-20260704-32",
+            "qty_cartons": "12",
+        }]
+        loader.reader.set_override("rejections.csv", single_rej)
+        processed = loader._apply_rejections_and_quarantine()
+        self.assertEqual(processed, 1)
+        self.assertEqual(len(created_pickings), 1)
+        self.assertEqual(created_pickings[0].location_id, cust_loc.id)
+        self.assertEqual(created_pickings[0].location_dest_id, quarantine_loc.id)
+
+
+class TestTaxPkpNonPkpIdentity(unittest.TestCase):
+    """Test PKP / Non-PKP buyer identity handling in invoice processing (P2-I)."""
+
+    def test_invoices_contain_pkp_non_pkp_identity_attributes(self):
+        """invoices.csv must contain is_pkp, buyer_id_type, customer_tax_id, and tax_code."""
+        import csv
+        pack_dir = AUG_PACK_DIR
+        if not pack_dir.exists():
+            self.skipTest("Pack data not available")
+        with open(pack_dir / "invoices.csv", encoding="utf-8-sig") as f:
+            rows = list(csv.DictReader(f))
+        first = rows[0]
+        self.assertIn("is_pkp", first)
+        self.assertIn("buyer_id_type", first)
+        self.assertIn("customer_tax_id", first)
+        self.assertIn("tax_code", first)
+        self.assertEqual(first["tax_code"], "04")
+
+    def test_invoice_creation_populates_buyer_identity_mock(self):
+        """_apply_invoices must populate Indonesian tax buyer identity fields."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri", currency_id=MockRecord(id=1))
+        cust = MockRecord(id=50, ref="CUST-RTL-006", name="Warung Dani")
+        prod = MockRecord(id=101, default_code="MYR-CND-02", name="Koppiko", uom_id=MockRecord(id=1))
+        tax_04 = MockRecord(id=14, name="PPN 12% (Kode 04)", amount=12.0, type_tax_use="sale")
+        sol = MockRecord(id=701, product_id=prod, product_uom_qty=120.0, price_unit=3000.0)
+        so = MockRecord(
+            id=601, company_id=1, client_order_ref="SO-202608-0001", partner_id=cust, order_line=[sol], picking_ids=[]
+        )
+
+        created_invoices = []
+
+        class MockInvoiceModel(MockModel):
+            def create(self, vals):
+                inv = MockRecord(id=len(created_invoices) + 1, **vals)
+                inv.partner_id = cust
+                created_invoices.append(inv)
+                return inv
+
+        mock_models = {
+            "account.move": MockInvoiceModel(records=[]),
+            "account.move.line": MockModel(records=[]),
+            "account.journal": MockModel(records=[MockRecord(id=1, type="sale")]),
+            "account.tax": MockModel(records=[tax_04]),
+            "sale.order": MockModel(records=[so]),
+            "product.product": MockModel(records=[prod]),
+            "res.partner": MockModel(records=[cust]),
+        }
+        loader = GenericPeriodPackLoader(env=MockEnv(mock_models), pack_dir=AUG_PACK_DIR, dry_run=False)
+        loader.company = mock_company
+        single_inv = [{
+            "invoice_number": "INV-TEST-001",
+            "so_number": "SO-202608-0001",
+            "do_number": "DO-202608-0001",
+            "date_invoice": "2026-08-03",
+            "due_date": "2026-08-03",
+            "is_pkp": "False",
+            "buyer_id_type": "NIK",
+            "customer_tax_id": "7171010808890090",
+            "customer": "CUST-RTL-006 - Warung Dani",
+            "commercial_dpp": "355680.00",
+            "dpp_amount": "326040.00",
+            "tax_rate": "0.12",
+            "ppn_amount": "39124.80",
+            "total_invoice_with_ppn": "394804.80",
+        }]
+        loader.reader.set_override("invoices.csv", single_inv)
+        processed = loader._apply_invoices()
+        self.assertEqual(processed, 1)
+        self.assertEqual(len(created_invoices), 1)
+        inv = created_invoices[0]
+        self.assertEqual(inv.l10n_id_buyer_document_type, "id")
+        self.assertEqual(inv.l10n_id_buyer_document_number, "7171010808890090")
+        self.assertEqual(inv.l10n_id_kode_transaksi, "04")
+
+
+class TestCascadingAndFooterDiscountSpecification(unittest.TestCase):
+    """Test specifications for cascading discount and footer discount (P2-A & P2-B)."""
+
+    def test_cascading_discount_formula_differs_from_additive(self):
+        """Sequential compounding discount != simple additive discount."""
+        d1 = Decimal("0.016")  # 1.6% basic
+        d2 = Decimal("0.016")  # 1.6% promo
+        sequential_net = (Decimal("1.0") - d1) * (Decimal("1.0") - d2)
+        effective_disc_pct = Decimal("1.0") - sequential_net
+        additive_disc_pct = d1 + d2
+        # 3.1744% != 3.2000%
+        self.assertNotEqual(effective_disc_pct, additive_disc_pct)
+        self.assertAlmostEqual(float(effective_disc_pct), 0.031744, places=6)
+
+    def test_baseline_footer_discount_equals_line_aggregate(self):
+        """In baseline 2026-08, sales_orders.csv discount_dpp is an exact aggregate of line discounts."""
+        import csv
+        from collections import defaultdict
+        pack_dir = AUG_PACK_DIR
+        if not pack_dir.exists():
+            self.skipTest("Pack data not available")
+        with open(pack_dir / "order_lines.csv", encoding="utf-8-sig") as f_lines:
+            lines = list(csv.DictReader(f_lines))
+        with open(pack_dir / "sales_orders.csv", encoding="utf-8-sig") as f_sos:
+            sos = list(csv.DictReader(f_sos))
+
+        line_sum_by_so = defaultdict(Decimal)
+        for line_row in lines:
+            line_sum_by_so[line_row["so_number"]] += Decimal(line_row.get("discount_dpp") or "0")
+
+        mismatches = 0
+        for so in sos:
+            so_num = so["so_number"]
+            so_disc = Decimal(so.get("discount_dpp") or "0")
+            line_disc = line_sum_by_so[so_num]
+            if abs(so_disc - line_disc) > Decimal("0.01"):
+                mismatches += 1
+
+        self.assertEqual(mismatches, 0, "All 1240 SOs in baseline have header discount equal to line sum.")
+
+
 if __name__ == "__main__":
     unittest.main()
