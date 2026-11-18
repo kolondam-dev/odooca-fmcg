@@ -9,7 +9,24 @@ describe("history route input", () => {
                 dialog: { type: "order", outlet: "CUST-1" },
             }).success,
         ).toBe(true);
+        for (const dialog of [
+            { type: "navigate", outlet: "CUST-1" },
+            { type: "navigate_do", delivery: "delivery-pod-v1:[1,2]" },
+        ])
+            expect(
+                RouteSchema.safeParse({ page: "home", dialog }).success,
+            ).toBe(true);
         for (const value of [
+            { page: "home", dialog: { type: "navigate" } },
+            { page: "home", dialog: { type: "navigate_do" } },
+            {
+                page: "home",
+                dialog: { type: "navigate", outlet: "A", latitude: 1.4 },
+            },
+            {
+                page: "home",
+                dialog: { type: "navigate_do", delivery: "A", longitude: 124 },
+            },
             { page: "admin" },
             { page: "sales", outlet: 1 },
             { page: "home", latitude: 1 },

@@ -4,6 +4,8 @@ export type Page = "home" | "sales" | "delivery" | "hris" | "more" | "expenses";
 export type Dialog =
     | { type: "order"; outlet: string }
     | { type: "display"; outlet: string }
+    | { type: "navigate"; outlet: string }
+    | { type: "navigate_do"; delivery: string }
     | { type: "extra" }
     | { type: "proof"; delivery: string }
     | { type: "expense"; trip?: string }
@@ -15,6 +17,15 @@ const DialogSchema = z.discriminatedUnion("type", [
     z.object({ type: z.literal("order"), outlet: z.string().min(1) }).strict(),
     z
         .object({ type: z.literal("display"), outlet: z.string().min(1) })
+        .strict(),
+    z
+        .object({ type: z.literal("navigate"), outlet: z.string().min(1) })
+        .strict(),
+    z
+        .object({
+            type: z.literal("navigate_do"),
+            delivery: z.string().min(1),
+        })
         .strict(),
     z
         .object({ type: z.literal("proof"), delivery: z.string().min(1) })
