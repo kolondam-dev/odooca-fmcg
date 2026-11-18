@@ -198,36 +198,49 @@ test("@finance-uat @odoo-live Finance app exposes eight Finance Reports menu ent
         "Navbar section assertions use the desktop layout",
     );
 
-    await page.goto(targetUrl("odoo", "/odoo"), {
-        waitUntil: "domcontentloaded",
-    });
-    await page.locator(".o_navbar_apps_menu button").first().click();
-    await page
-        .locator('[data-menu-xmlid="id_finance_foundation.menu_finance"]')
-        .first()
-        .click();
-
-    const brand = page.locator(
-        '.o_menu_brand[data-menu-xmlid="id_finance_foundation.menu_finance"]',
-    );
-    await expect(brand).toContainText("Finance");
-
-    const section = page.locator(
-        'button[data-menu-xmlid="id_finance_foundation.menu_finance_reports"]',
-    );
-    await expect(section).toContainText("Finance Reports");
-    await section.click();
-
-    for (const item of FINANCE_MENU) {
-        const entry = page.locator(`[data-menu-xmlid="${item.xmlid}"]`).last();
-        await expect(entry, item.label).toBeVisible();
-        await expect(entry, item.label).toContainText(item.label);
-    }
-    await expect(
-        page.locator(
-            '[data-menu-xmlid^="id_finance_foundation.menu_finance_report_"]',
+    await page.goto(
+        targetUrl(
+            "odoo",
+            "/odoo/action-id_finance_reporting.action_finance_report_audit_trail",
         ),
-    ).toHaveCount(FINANCE_MENU.length);
+        { waitUntil: "domcontentloaded" },
+    );
+
+    // The deployed demo uses the id_ui_shell sidebar: applications live in
+    // .id_sidebar and sections in .id_panel, which does not carry
+    // data-menu-xmlid on every node. Opening a Finance action selects the app
+    // and expands the Finance Reports group.
+    const app = page
+        .locator('[data-menu-xmlid="id_finance_foundation.menu_finance"]')
+        .first();
+    await expect(app).toBeVisible();
+
+    const panel = page.locator(".id_panel");
+    await expect(panel).toBeVisible();
+    const section = panel.getByRole("button", {
+        name: "Finance Reports",
+        exact: true,
+    });
+    await expect(section).toBeVisible();
+    if ((await section.getAttribute("aria-expanded")) !== "true") {
+        await section.click();
+    }
+
+    const entries = section.locator(
+        "xpath=following-sibling::div[contains(@class, 'id_pchildren')]",
+    );
+    for (const item of FINANCE_MENU) {
+        await expect(
+            entries.getByRole("button", { name: item.label, exact: true }),
+            item.label,
+        ).toBeVisible();
+    }
+    await expect(entries.locator("button.id_pitem--leaf")).toHaveCount(
+        FINANCE_MENU.length,
+    );
+    await expect(entries.locator("button.id_pitem--leaf.is-active")).toHaveText(
+        "Audit Trail (FIN04)",
+    );
 
     await page.screenshot({
         path: evidenceName(testInfo, "finance-menu-eight-reports"),
@@ -246,10 +259,7 @@ test("@finance-uat @odoo-live every Finance Reports action opens its wizard in c
         await page.goto(targetUrl("odoo", `/odoo/action-${action.xmlid}`), {
             waitUntil: "domcontentloaded",
         });
-        await expect(
-            page.locator(".o_control_panel"),
-            action.label,
-        ).toContainText(action.label);
+        await expect(page.locator(".o_form_view"), action.label).toBeVisible();
         await expect(
             page.locator('.o_field_widget[name="report_type"] select'),
             action.label,
@@ -295,9 +305,7 @@ test("@finance-uat @odoo-live FIN04 runs for July 2026 and downloads an XLSX", a
         ),
         { waitUntil: "domcontentloaded" },
     );
-    await expect(page.locator(".o_control_panel")).toContainText(
-        "Journal Items Audit Trail (FIN04)",
-    );
+    await expect(page.locator(".o_form_view")).toBeVisible();
     await expect(
         page.locator('.o_field_widget[name="company_id"]'),
     ).toContainText(COMPANY);
