@@ -193,8 +193,9 @@ export function OrderCorrections({
                             </article>
                         ))}
                         {businessRejected(leaf) && (
-                            <button
-                                class="secondary"
+                            <Button
+                                variant="sec"
+                                size="md"
                                 onClick={() =>
                                     void open(leaf, r.command.client_uuid)
                                 }
@@ -202,7 +203,7 @@ export function OrderCorrections({
                                 {expired
                                     ? "Lihat draft koreksi lewat hari"
                                     : "Koreksi SO ditolak"}
-                            </button>
+                            </Button>
                         )}
                     </details>
                 );

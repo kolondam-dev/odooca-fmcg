@@ -313,6 +313,13 @@ Utang:
 - Tes: e2e baru di `checkin-map.spec.ts` (chip bernada dan teks tetap penanda, tombol `ui-btn--sec`, selektor lama hilang dari DOM); `official-maps`, `status-sheets`, `ux-improvements`, dan `visit-evidence` tidak diubah dan lulus. **Satu tes lama diubah:** `visits.spec.ts` "visit location guards…" menegaskan `getByText("Akurasi belum pasti", {exact:true})` tunggal; kini teks itu juga menjadi chip panel peta sehingga ada dua elemen (strict mode), maka asersi diganti menjadi tepat dua (panel kunjungan + chip peta) dan chip di panel peta terlihat.
 - **Belum:** `CameraViewfinder` (kamera gelap khusus) dan jam/watermark-nya (K12) tidak disentuh. Tombol bergaya lama `class="secondary"/"primary"` masih ada di `DiscountApproval`, `CollectionWorkspace`, `OrderCorrections`, `DisplayPhoto`, `DeliveryApproval` (layar di luar lingkup K8; dibersihkan bersama layarnya). Peta jalan sesungguhnya (ubin OpenStreetMap) tidak diuji di CI karena ubin diblokir; hanya jalur gagal/diagram titik. Garis bawah "Keluar" di Lainnya (K30) belum diubah.
 
+### K32. Fase 3B-18 — Tombol gaya lama diganti `Button` DS; garis bawah "Keluar"
+
+- 10 tombol `<button class="secondary|primary">` di `DiscountApproval` (2), `CollectionWorkspace` (4), `OrderCorrections` (1), `DisplayPhoto` (1), `DeliveryApproval` (2) kini memakai `Button` DS (`sec`/`pri`, `md`; ikon kamera lewat prop `icon`). Perilaku, label, `disabled`, dan handler tidak berubah; hanya tampilan.
+- Aturan global `.secondary` dihapus dari `style.css`; `.display-photo-actions .secondary` menjadi `.display-photo-actions .ui-btn`. Penjaga regresi: `tests/ui-legacy-buttons.test.ts` gagal bila `<button class="secondary|primary">` muncul lagi di `src/components`.
+- Tautan "Keluar" di Lainnya tidak lagi bergaris bawah (`a.ui-row { text-decoration: none }`), dites di `profil.spec.ts` (K30 selesai).
+- **Belum:** layar-layar ini (persetujuan diskon/pengiriman, koreksi, form penagihan) masih bertata letak lama di luar tombolnya (`<p>`, `<label>`, `<fieldset>` polos) dan bermigrasi bersama alurnya; seberapa sering layar persetujuan/koreksi dijangkau alur harian belum dipetakan. `text-button` ("Unggah foto") dan `.header-fixed`/`.bottom-nav` tetap gaya lama.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).

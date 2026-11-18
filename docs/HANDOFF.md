@@ -1,3 +1,12 @@
+## 2026-11-18T20:36:17+07:00 — Agent-Claude-Dev1 — Fase 3B-18: tombol gaya lama jadi Button DS; garis bawah Keluar
+**Berubah:** `pwa/src/components/{DiscountApproval,CollectionWorkspace,OrderCorrections,DisplayPhoto,DeliveryApproval}.tsx` (10 tombol), `style.css` (`.secondary` dihapus), `ui/ui.css` (`a.ui-row`), `tests/ui-legacy-buttons.test.ts` (baru), `tests/browser/profil.spec.ts` (1 tes baru), `docs/ui/DS_RECONCILIATION.md` (K32), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
+**Hasil:** [F] 10 tombol `class="secondary|primary"` memakai `Button` DS; perilaku, label, disabled, handler tidak berubah. [F] Penjaga vitest mencegah tombol gaya lama muncul lagi. [F] Tautan Keluar di Lainnya tanpa garis bawah (K30 selesai).
+**Diverifikasi:** [F] `format:check`, `tsc`, `contracts:check` hijau; vitest 522 lulus. [F] Tiga dist dibuild ulang; e2e penuh phone+tablet: 260 lulus, 2 skip (fixme K28), 0 gagal.
+**Belum diuji:** [BU] Tampilan layar persetujuan diskon/pengiriman/koreksi tidak saya lihat langsung (tidak ada screenshot); hanya e2e dan tsc. [BU] CI GitHub pada HEAD akhir PR.
+**Perhatian reviewer:** Perubahan tampilan tombol saja; tata letak lain di layar-layar itu tetap gaya lama (K32). Tidak ada tes lama diubah.
+**Butir terbuka:** 0. Keputusan pemilik: PJP kosong (K28), format jam/detik watermark dan jam absen (K12). 1. Backend K10 dan snapshot `ar` (`collection_v2`). 2. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-18T20:36:17+07:00
+
 ## 2026-11-18T16:06:01+07:00 — Agent-Claude-Dev1 — Fase 3B-17: panel peta (CheckinMap) memakai atom DS (K8)
 **Berubah:** `pwa/src/components/CheckinMap.tsx`, `components/OfficialMaps.tsx`, `ui/ui.css` (`.ui-map*`), `style.css` (selector lama peta dihapus), `tests/browser/checkin-map.spec.ts` (tes baru), `tests/browser/visits.spec.ts` (1 asersi diubah), `docs/ui/DS_RECONCILIATION.md` (K31, K8 diperbarui), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
 **Hasil:** [F] Status peta jadi `Chip` bernada (teks tetap penanda), tombol jadi `Button` DS, pesan jadi `Callout`, warna SVG pakai token. [F] Logika peta, teks, dan paket evidence tidak berubah; peta tetap hanya tampilan. [F] Audit: `EvidenceCapture` dan `VisitPhotoField` ternyata sudah DS.
