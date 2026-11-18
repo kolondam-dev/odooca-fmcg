@@ -1,3 +1,9 @@
+## 2026-11-18T15:59:40+07:00 — Agent-Opencode — PR #151 disinkronkan ke main #155
+**Konteks:** [F] PR #151 pada `207b41b` memiliki 6/6 workflow sukses, tetapi `main` maju dua commit ke `005e8cf` (#155); GitHub melaporkan `mergeable=false`. Pemilik menegaskan UAT production pascadeploy bukan syarat merge untuk perbaikan tombol header.
+**Berubah:** [F] `origin/main` `005e8cf` digabungkan ke branch PR #151. Satu konflik hanya `docs/HANDOFF.md`; entri kedua pihak (termasuk 3B-16 milik Claude-Dev1) dipertahankan, tanpa mengubah implementasi header, oracle live, atau entri log agen lain.
+**Dampak test:** **CUKUP** — guard view ter-resolve pada `init-test` dan spec UI live untuk header serta XLSX tetap utuh; suite minimum `[odoo_install, odoo_init, pwa, finance, upgrade]` harus dijalankan kembali pada HEAD integrasi. [BU] CI exact-SHA integrasi, merge, upgrade view production, dan UAT Run/Export masih menunggu langkah berikutnya.
+**Signature:** Task managed by Agent-Opencode at 2026-11-18T15:59:40+07:00
+
 ## 2026-11-18T09:00:00+07:00 — Agent-Opencode — Bukti UI live: menu + 8 wizard + FIN04 Juli 2026 lulus, Run/Export menunggu deploy
 **Konteks:** [F] Lima dispatch `suite=odoo` dan dua dispatch `suite=routes` pada `live-ui-proof.yml` (`project=desktop`, `source_ref=Opencode-finance-uat-live`) dijalankan terhadap demo production. Tidak ada deploy dari branch ini.
 **Bukti yang tercapai:** [F] Run [44218732579](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44218732579) (commit `dcd0456`): test menu PASS; assertion `report_type` dan `company_id = PT Manado Distribusi Utama` untuk FIN04/05/07/08/37/38/51/57 berhasil dan delapan screenshot wizard tersimpan, tetapi test wizard secara keseluruhan **gagal** di oracle header. FIN04 Juli 2026 terisi dan screenshot `fin04-period-july-2026.png` menunjukkan `Jul 1`–`Jul 31`, tetapi test Run/Export secara keseluruhan **gagal** di oracle header. [F] Run [44216457966](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44216457966) (`suite=routes`) SUCCESS: screenshot route FIN04 + FIN51 lewat profil `finance-uat.json`.
@@ -42,6 +48,15 @@
 **Belum diuji:** [BU] Run remote nyata belum dijalankan: butuh Variables `demo-ui`, Secrets `ODOO_DEMO_LOGIN`/`ODOO_DEMO_PASSWORD`, dan approval pemilik; selector navbar/date widget belum diverifikasi terhadap production. [BU] Isi XLSX (sheet Summary, `__nested`, batas), penolakan role Sales, dan nilai costing kategori tetap manual. [BU] Diagnostik DB demo production tetap butuh shell container.
 **Batas:** [F] `REPORT_CATALOG.csv` tidak disentuh (58/58 `BELUM_DITERIMA`); tanpa merge/deploy dari asisten.
 **Signature:** Task managed by Agent-Opencode at 2026-11-17T12:02:45+07:00
+## 2026-11-18T13:50:57+07:00 — Agent-Claude-Dev1 — Fase 3B-16: pemangkasan CSS lama (K11)
+**Berubah:** `pwa/src/style.css` (2.683 -> 1.525 baris), `docs/ui/DS_RECONCILIATION.md` (K30), `docs/HANDOFF.md`, `agent-log/claude-design.log`. Tidak ada perubahan TSX/TS.
+**Hasil:** [F] 212 selector (208 aturan) berkelas mati dihapus lewat skrip PostCSS sekali pakai; kelas `is-*` dan keyframes tidak disentuh.
+**Diverifikasi:** [F] `format:check`, `tsc`, vitest 521 lulus. [F] Tiga dist dibuild ulang; e2e penuh phone+tablet: 256 lulus, 2 skip (fixme K28), 0 gagal. [F] Screenshot Beranda, Sales, HRIS, Lainnya (phone) diperiksa.
+**Belum diuji:** [BU] Tablet visual tidak diperiksa mata (hanya e2e). [BU] Kelas yang dibangun dengan penyambungan string tidak terdeteksi skrip. [BU] CI GitHub pada HEAD akhir PR.
+**Perhatian reviewer:** Perubahan murni penghapusan CSS; tolok ukur kelas dibaca dari `src/`, `tests/`, `index.html`, `ui/ui.css`. "Keluar" di Lainnya bergaris bawah (pra-ada) dicatat di K30, tidak diubah.
+**Butir terbuka:** 0. Lanjut 3B-17 (K8: peta dan foto bukti). 1. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-18T13:50:57+07:00
+
 ## 2026-11-18T09:45:53+07:00 — Agent-Claude-Dev1 — Fase 3B-15: Profil layar penuh, TaskForm dihapus, util jam
 **Berubah:** `pwa/src/components/ProfileScreen.tsx` (baru), `components/TaskForm.tsx` (dihapus), `App.tsx`, `ui/navigation.ts` (rute `proof` dihapus), `domain/format.ts` (`clockHM`, `WORK_TZ`), `components/ActivityScreens.tsx`, `components/OrderResult.tsx`, `ui/ui.css`, `tests/format-clock.test.ts` (baru), `tests/browser/profil.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K29), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
 **Hasil:** [F] Profil & Sesi Akun jadi layar penuh DS dengan isi dan tautan sama. [F] `TaskForm` dihapus: cabang `proof` tidak punya pemicu dan selalu galat; POD ada di layar Pod_* (K19). [F] `clockHM()` satu pemformat jam "HH.mm" WITA untuk `time()`, Riwayat/Antrean, dan Hasil kirim.

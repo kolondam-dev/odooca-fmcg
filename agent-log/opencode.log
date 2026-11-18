@@ -293,3 +293,10 @@
 - [BU] Run Report, Export XLSX, isi workbook belum terbukti sampai deploy view branch ini; artifact 3 hari.
 - [F] Dampak test CUKUP: guard init-test + spec live; tidak ada selector/oracle yang dilemahkan.
 - Task managed by Agent-Opencode at 2026-11-18T09:00:00+07:00
+
+[2026-11-18T15:59:40+07:00] [INFO] PR #151 sinkronisasi main #155 sebelum CI integrasi
+- [F] Pada 207b41b enam workflow sukses, tetapi main maju dua commit ke 005e8cf dan GitHub melaporkan mergeable=false.
+- [F] origin/main 005e8cf digabungkan; satu konflik hanya docs/HANDOFF.md, entri kedua pihak dipertahankan; implementasi header/oracle live tidak diubah.
+- [F] Dampak test CUKUP: init-test dan spec live tetap utuh; suite minimum odoo_install, odoo_init, pwa, finance, upgrade harus dijalankan ulang pada SHA integrasi.
+- [BU] CI integrasi, merge, upgrade view production, dan UAT Run/Export belum dijalankan pada tahap ini.
+- Task managed by Agent-Opencode at 2026-11-18T15:59:40+07:00
