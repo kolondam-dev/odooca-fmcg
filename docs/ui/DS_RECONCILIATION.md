@@ -171,7 +171,7 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Tagihan titipan toko di hub (Delivery_hub/detail):** selesai di K20.
 - **Biaya DO (`delivery_fee`) dihapus dari UI:** digantikan Biaya toko (`store_*`, flag `outlet_expense_v1`). Biaya level trip lewat Ajukan uang.
 - **Estimasi jarak ("0,1 km") di kartu toko:** tidak ada sumber data jarak di manifest; tidak ditampilkan.
-- **Navigasi:** membuka Google Maps eksternal; layar Navigasi DS (kartu in-app) belum dibuat.
+- **Navigasi:** membuka Google Maps eksternal; layar Navigasi DS (kartu in-app) belum dibuat. → Selesai di K27.
 
 ### K20. Fase 3B-6 — Penagihan (30–33, 52): sudah di PWA, kontrak usulan, sisa utang
 
@@ -246,7 +246,7 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Jarak:** hanya `outlet.distance` dari backend bila ada; kartu Delivery tanpa jarak (Beranda tidak membaca GPS). Muatan tanpa konversi "(1.760 pcs)" karena butuh konversi UoM dari backend.
 - **Navigasi:** tautan Google Maps eksternal (tab baru) ke koordinat outlet/DO; tanpa lokasi pengguna.
 - **"Mulai kirim/pengiriman" membuka tab Delivery** (daftar trip), bukan langsung DO pertama.
-- **Belum:** tab bawah "Delivery" khusus Canvasser dan layar Navigasi (DS `Navigasi`) belum diverifikasi ulang; Outlet*/Kunjungan_hub tetap fase berikutnya.
+- **Belum:** tab bawah "Delivery" khusus Canvasser (selesai di K26) dan layar Navigasi (DS `Navigasi`, selesai di K27); Outlet*/Kunjungan_hub selesai sebagian di K28 (sisanya utang backend).
 
 ### K26. Fase 3B-12 — Status lokasi di check-in toko, tab Delivery Canvasser
 
@@ -260,6 +260,43 @@ Catatan: Foto nota per komponen di mockup disederhanakan menjadi satu foto bersa
 - **Akurasi check-in diuji di browser dengan outlet ketat:** build QA punya saklar `fmcg:qa-strict-outlets` (App.tsx, dibuang di build produksi) dan fixture `useStrictOutlets` sehingga outlet tanpa `demo_unrestricted`; skenario `status-sheets.spec.ts` mulai dengan fix valid, mengembalikan fix 31 m saat "Mulai kunjungan" ditekan, lalu memastikan lembar "Akurasi lokasi rendah" muncul dan tidak ada `sales.visit.check_in` di antrean.
 - **Backend tidak memeriksa akurasi** untuk check-in/absen; batas ±30 m hanya di klien (DS).
 - **`aria-label` navigasi** tetap "Navigasi utama" (mockup memakai "Menu utama"); tes dan pembaca layar mengandalkan nama yang ada.
+
+### K27. Fase 3B-13 — Layar Navigasi (DS `Navigasi`)
+
+**Selesai di PWA:**
+- **Layar Navigasi in-app** (`NavigationScreen`): header "Navigasi", bidang peta 400 px, nama dan alamat tujuan, jarak "x,y km (garis lurus)", tombol "Buka di Google Maps" (tautan eksternal tab baru, `noopener`), dan bilah aksi "Saya sudah tiba · Check-in".
+- **Titik masuk:** "Navigasi ke outlet" (Beranda Sales), "Navigasi" (Beranda Delivery dan Canvasser) dan "Navigasi" pada daftar toko di tab Delivery kini membuka layar ini, bukan langsung Google Maps (K19/K25 yang menyebut tautan eksternal langsung digantikan).
+- **"Saya sudah tiba · Check-in":** Sales menggantikan rute dengan panel kunjungan outlet (Mulai kunjungan); Delivery membuka hub toko DO terkait (`DeliveryWorkspace` menerima `startTask`). Tombol ini hanya mengarahkan; check-in tetap divalidasi di panel kunjungan/hub (foto, akurasi ±30 m, geofence).
+- **Router:** dialog `navigate` (`outlet`) dan `navigate_do` (`delivery`) hanya membawa ID; koordinat tidak masuk riwayat browser. `Back` browser dan "Kembali" menutup layar tanpa pindah halaman. Guard: `navigate` hanya untuk outlet milik snapshot dan peran sales; `navigate_do` hanya peran delivery.
+- **Domain murni** `domain/navigation-target.ts` (`kmLabel`, `straightLineLabel`, `schematicMap`) dengan tes unit.
+
+**Perbedaan yang disengaja / utang:**
+- **Skema, bukan peta jalan.** Mockup menggambar jalan dan taman; PWA tidak punya data jalan dan tidak memuat tile (persetujuan privasi tile tetap hanya di pratinjau Check-in). Yang digambar hanya posisi perangkat, tujuan dan garis lurus, dengan keterangan "Skema garis lurus, bukan rute jalan" agar tidak terbaca sebagai rute. Peta bertile in-app dengan persetujuan menjadi utang tersendiri.
+- **Lokasi perangkat dibaca sekali saat layar dibuka** (`captureVisitLocation`), hanya untuk tampilan jarak/skema; tidak disimpan, bukan bukti, dan tidak dibatasi akurasi ±30 m. Beranda tetap tidak membaca GPS. Tanpa lokasi: Callout "Lokasi perangkat belum tersedia…" dan, bila ada, jarak snapshot `outlet.distance` apa adanya.
+- **Mode demo:** izin ditolak jatuh ke posisi simulasi dan ditandai "· posisi simulasi" pada jarak. Di live tidak ada simulasi.
+- **Jarak Delivery dari manifest** tetap tidak ada (utang K19/K25); layar Navigasi Delivery hanya menampilkan jarak bila lokasi perangkat tersedia.
+- **Header memakai tombol "Kembali"** komponen DS; tidak ada tombol "Buka di Google Maps" ganda di Beranda.
+- **Tes lama diubah:** `beranda-roles.spec.ts` sebelumnya menegaskan tautan eksternal pada Beranda; kini menegaskan tombol, dan atribut tautan dipindah ke `navigasi.spec.ts`. Ditandai untuk reviewer.
+
+### K28. Fase 3B-14 — Outlet, Outlet_kosong, Kunjungan_hub
+
+Yang dikerjakan: kartu outlet memuat jam rencana dan jarak dari snapshot (`domain/outlet-card.ts`, nilai kosong/placeholder tidak ditampilkan); keadaan kosong DS pada daftar outlet; kartu "Tagihan jatuh tempo" di hub menampilkan "Piutang berjalan" (`ar_outstanding`) dan peringatan "Melebihi limit kredit Rp … (TOP …)" hanya bila piutang melebihi limit. Tidak ada angka atau faktur karangan; gerbang Order (K3) tidak diubah.
+
+Cakupan fase: **kartu outlet dan hub kunjungan diterima; Outlet_kosong belum diterima** (UI ada, tidak terjangkau di aplikasi sampai keputusan PJP kosong dibuat). Peringatan limit mengikuti backend: hanya bila limit > 0 dan piutang melebihi limit (limit 0 = tanpa pemeriksaan nominal).
+
+Utang:
+- **PJP kosong tidak membuka sesi kerja:** `validMorningSnapshot` menolak `outlets.length === 0` (sengaja, diuji `morning.test.ts` "empty outlets"), sehingga layar Outlet_kosong belum terjangkau. UI sudah ada dan diverifikasi manual; tes e2e ditandai `test.fixme` sampai pemilik memutuskan aturan PJP kosong (butuh penanda backend).
+- **Header Outlet** tetap AppHeader bersama + toolbar di badan (bukan ikon Cari + "Extra call" di header DS).
+- **Chip "Tagihan N" dan "pada HH.MM" (outlet selesai)** belum ada datanya (jumlah faktur/`ar` per outlet, waktu check-out).
+- **Daftar faktur berkotak centang, total tagihan jatuh tempo, chip "Wajib ditagih hari ini", CTA "Mulai penagihan", stepper 4 tahap, gerbang Order "Terkunci"** menunggu snapshot `ar` dan alur penagihan Sales (backend, flag `collection_v2`).
+- **Label "Piutang berjalan"** menggantikan "Total tagihan" DS karena `ar_outstanding` bukan total faktur jatuh tempo.
+
+### K29. Fase 3B-15 — Profil layar penuh, TaskForm dihapus, util jam `HH.mm`
+
+- **Profil & Sesi Akun** kini layar penuh DS (`ProfileScreen`: kartu identitas, KV Perusahaan/Gudang & Hub/Rute & Sesi, tombol Ganti akun dan Keluar). Isi dan tautan tidak berubah (`/web/login?redirect=/field/`, `/web/session/logout?redirect=/field/`); tombol avatar header tetap "Profil dan Sesi Akun". Back peramban menutupnya lewat `useBackLayer`.
+- **`TaskForm` dihapus (K9 selesai).** Cabang `proof` (Bukti pengiriman lama) tidak punya pemicu di mana pun dan selalu berakhir dengan galat "Bukti tersimpan lokal"; POD sebenarnya sudah di layar Pod_* (K19). Rute `proof` dihapus dari `ui/navigation.ts` dan guard peran di `App.tsx`.
+- **Jam gaya DS (K12 sebagian):** `clockHM()` di `domain/format.ts` (24 jam, titik, WITA, tidak bergantung locale peramban) dipakai `time()`, Riwayat/Antrean (`ActivityScreens`), dan `OrderResult`. Jam dengan titik dua di `MorningSession` (jam absen "HH:mm:ss") dan `CameraViewfinder` (watermark kamera) sengaja belum diubah: butuh keputusan format watermark/detik; tetap utang K12.
+- **Belum:** selector CSS lama yang dulu dipakai TaskForm (`.sheet*`, `.modal-backdrop`, `.full-page-form`, `.sheet-body/-footer`, dst.) belum dihapus; dikerjakan di 3B-16 (K11) setelah dipastikan tidak ada pemakai lain.
 
 ## 3. Urutan integrasi yang disarankan
 

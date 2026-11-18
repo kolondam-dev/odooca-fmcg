@@ -3,9 +3,9 @@ import { Button, Card, CardHead, Chip, ListRow, Stats } from "../ui";
 import type { Snapshot } from "../domain/contracts";
 import {
     loadSummary,
-    navigationUrl,
     type DeliveryProgress,
 } from "../domain/delivery-progress";
+import { podKey } from "../domain/delivery-contracts";
 import { Icon } from "./Icon";
 
 /** Isi Beranda sesuai DS: kartu hari kerja (slot), angka ringkas, kunjungan berikutnya. */
@@ -21,6 +21,8 @@ export function Home({
     delivery,
     pendingExpense,
     onOpenVisit,
+    onNavigateOutlet,
+    onNavigateDelivery,
     onDelivery,
     onExpense,
 }: {
@@ -39,6 +41,9 @@ export function Home({
     delivery?: DeliveryProgress;
     pendingExpense: number;
     onOpenVisit: (id: string) => void;
+    /** Buka layar Navigasi DS untuk outlet / DO (bukan tautan eksternal langsung). */
+    onNavigateOutlet: (outletId: string) => void;
+    onNavigateDelivery: (podKey: string) => void;
     onDelivery: () => void;
     onExpense: () => void;
 }) {
@@ -53,16 +58,10 @@ export function Home({
             ? { tone: "info" as const, label: "Berjalan" }
             : { tone: "neu" as const, label: "Belum mulai" }
         : undefined;
-    const navLink = (latitude: number, longitude: number, label: string) => (
-        <a
-            class="ui-btn ui-btn--sec ui-btn--md"
-            href={navigationUrl(latitude, longitude)}
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            <Icon name="send" size={22} />
+    const navButton = (label: string, open: () => void) => (
+        <Button variant="sec" size="md" icon="send" onClick={open}>
             {label}
-        </a>
+        </Button>
     );
     const distanceLine = (o: Snapshot["outlets"][number]) => (
         <div class="ui-meta">
@@ -130,10 +129,8 @@ export function Home({
                         <CardHead title={next.name} />
                         <span class="ui-row__sub">{next.address}</span>
                         {distanceLine(next)}
-                        {navLink(
-                            next.latitude,
-                            next.longitude,
-                            "Navigasi ke outlet",
+                        {navButton("Navigasi ke outlet", () =>
+                            onNavigateOutlet(next.id),
                         )}
                     </Card>
                 </>
@@ -170,10 +167,8 @@ export function Home({
                                 {loadSummary([dNext])}
                             </span>
                         </div>
-                        {navLink(
-                            dNext.site.latitude,
-                            dNext.site.longitude,
-                            "Navigasi",
+                        {navButton("Navigasi", () =>
+                            onNavigateDelivery(podKey(dNext)),
                         )}
                     </Card>
                 </>

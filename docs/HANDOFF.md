@@ -1,3 +1,79 @@
+## 2026-11-18T12:35:00+07:00 — antigravity — Kepatuhan Kebijakan #145: Pemisahan F4 Period Pack ke Workflow Terpisah & Restorasi Timeout install-test (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Penegakan kepatuhan terhadap kebijakan PR #145 ("ci: pilih workflow berdasarkan dampak perubahan") pada PR #110.
+- [F] Head commit `45d8022` menaruh langkah verifikasi F4 (Generic period pack loader runtime proof) di dalam job `install-test` pada `.github/workflows/ci.yml` dan menaikkan `timeout-minutes` dari 30 ke 120 menit.
+- [F] Dampak: Job `install-test` yang merupakan pengujian Level 2 (anggaran 5–15 menit, batas maks 30 menit) berjalan hingga 80,7 menit (dengan F4 menghabiskan 75,3 menit), melanggar aturan anggaran level dan menumpuk pengujian L3 data berat ke `install-test`.
+**Berubah:**
+- `.github/workflows/ci.yml`:
+  - Mengembalikan `timeout-minutes` pada job `install-test` ke 30 menit.
+  - Menghapus langkah F4 period pack runtime proof dan artifact upload dari job `install-test`, menjaga `ci.yml` tetap ramping dan selaras dengan `origin/main`.
+- `.github/workflows/period-pack-runtime.yml`:
+  - Membuat workflow mandiri khusus untuk F4 period pack runtime proof dengan `timeout-minutes: 120`.
+  - Mengonfigurasi pemicu `pull_request` dan `push` (branches: [main]) berfilter `paths:` tertarget:
+    - `data/registers/periods/**`
+    - `scripts/ops/load_period_pack.py`
+    - `scripts/ops/verify_disposable_period_pack.py`
+    - `tests/test_period_pack_loader.py`
+    - `.github/workflows/period-pack-runtime.yml`
+  - Memverifikasi unit/contract tests, membangun image Odoo, menginisialisasi basis `ci_db`, serta membuktikan runtime F4 pada dua database disposable (`fmcg_period_disposable` dan `fmcg_period_disposable_b`) dengan pengunggahan artifact `period-pack-runtime-report`.
+- Sinkronisasi `origin/main`:
+  - Mengintegrasikan commit terbaru `origin/main` (PR #152, #153, #154) ke branch PR #110.
+  - Menyelesaikan konflik `docs/HANDOFF.md` dengan mempertahankan seluruh entri dari seluruh agen dalam urutan kronologis terbalik.
+**Diverifikasi:**
+- [F] `python -c "import glob,yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+['docker-compose.yml']]"`: PASS.
+- [F] `python -m unittest tests/test_ci_impact.py tests/test_ci_workflow_guards.py tests/test_live_ui_config.py -v`: 21/21 PASS (0.466s).
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 62/62 PASS (6.383s).
+- [F] `python -m ruff check .`: PASS clean (0 galat).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi hasil run GitHub Actions pada seluruh workflow PR #110 pasca-push (`CI`, `Seed supervision`, dan `Period Pack Runtime Verification`).
+**Signature:** Task managed by antigravity at 2026-11-18T12:35:00+07:00
+
+## 2026-11-18T09:45:53+07:00 — Agent-Claude-Dev1 — Fase 3B-15: Profil layar penuh, TaskForm dihapus, util jam
+**Berubah:** `pwa/src/components/ProfileScreen.tsx` (baru), `components/TaskForm.tsx` (dihapus), `App.tsx`, `ui/navigation.ts` (rute `proof` dihapus), `domain/format.ts` (`clockHM`, `WORK_TZ`), `components/ActivityScreens.tsx`, `components/OrderResult.tsx`, `ui/ui.css`, `tests/format-clock.test.ts` (baru), `tests/browser/profil.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K29), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
+**Hasil:** [F] Profil & Sesi Akun jadi layar penuh DS dengan isi dan tautan sama. [F] `TaskForm` dihapus: cabang `proof` tidak punya pemicu dan selalu galat; POD ada di layar Pod_* (K19). [F] `clockHM()` satu pemformat jam "HH.mm" WITA untuk `time()`, Riwayat/Antrean, dan Hasil kirim.
+**Diverifikasi:** [F] `format:check`, `tsc --noEmit`, `contracts:check` hijau; vitest 521 lulus (5 baru). [F] Screenshot Profil phone dan tablet diperiksa. [F] e2e penuh phone+tablet (tiga dist dibuild ulang): 256 lulus, 2 skip (fixme K28), 0 gagal.
+**Belum diuji:** [BU] CI GitHub pada HEAD akhir PR. [BU] Selector CSS lama bekas TaskForm belum dihapus (3B-16, K11). [BU] Jam `HH:mm:ss` di `MorningSession` dan watermark `CameraViewfinder` belum diseragamkan (K12).
+**Perhatian reviewer:** Tidak ada perubahan perilaku bisnis; rute `proof` dihapus karena tidak ada pemanggil (grep src/tests). Tautan Ganti akun/Logout kini anchor bergaya `ui-btn`.
+**Butir terbuka:** 0. Lanjut 3B-16 (K11: hapus CSS lama), lalu 3B-17 (K8: peta dan foto bukti). 1. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-18T09:45:53+07:00
+
+## 2026-11-18T08:39:33+07:00 — Codex — PR #152 sinkron ulang setelah PR #153
+**Konteks:** [F] Seluruh sembilan required context pada `ec53d4b` sudah SUCCESS, tetapi `main` maju ke `53cd5fe` ketika gate terakhir selesai karena PR #153 di-merge. Strict up-to-date policy dengan benar membuat bukti `ec53d4b` stale.
+**Berubah:** [F] `origin/main` `53cd5fe` di-merge ke branch PR #152. Satu konflik hanya pada `docs/HANDOFF.md`; seluruh entri Codex dan Claude-Dev1 dipertahankan dalam urutan waktu. Template kosong dan guard live UI tidak berubah.
+**Verifikasi:** [F] 21 test impact/workflow/template PASS, Ruff PASS, 14 manifest PASS, diff check bersih. Dampak test **SESUAIKAN**: suite existing tetap cukup tetapi wajib diulang pada merge SHA terbaru. [BU] Hindari merge PR lain ke `main` sampai PR #152 selesai agar strict gate tidak kembali stale.
+
+## 2026-11-18T08:14:26+07:00 — Codex — PR #152 disinkronkan untuk strict required checks
+**Diagnosis:** [F] Sembilan context ruleset (`static`, `install-test`, `init-test`, `pwa-gate`, `invariant-tests`, `seed-invariants`, `finance-gate`, `upgrade-gate`, `full-dataset-gate`) semuanya SUCCESS pada `d4f26e1`. [F] Merge tetap ditolak karena `main-quality-gate` memakai `strict_required_status_checks_policy=true` dan `main` sudah maju dua commit ke `b57d12c`; status `expected` bukan kegagalan suite lama, melainkan tuntutan hasil pada HEAD yang up-to-date.
+**Berubah:** [F] `origin/main` `b57d12c` di-merge ke branch PR #152 tanpa konflik. Perubahan PR #149 ikut utuh; template live UI tetap kosong dan `tests/test_live_ui_config.py` tetap tersedia. [F] Pemilik menerima risiko credential demo lama khusus PR ini sehingga rotasi bukan blocker.
+**Verifikasi:** [F] 21 test impact/workflow/template PASS, Ruff PASS, 14 manifest PASS. Dampak test **SESUAIKAN**: tidak perlu test baru; strict ruleset menuntut sembilan context existing dijalankan ulang pada merge SHA baru. [BU] Merge tetap HOLD sampai exact-SHA checks baru hijau.
+
+## 2026-11-18T08:00:58+07:00 — Agent-Claude-Dev1 — Fase 3B-14: perbaikan review P2 (limit kredit nol)
+**Konteks:** [F] Review PR #153 menahan HEAD `c17f8df`: `creditExceeded()` menampilkan "Melebihi limit kredit Rp0" untuk `credit_limit = 0` dengan piutang positif, padahal backend (`_compute_credit_limit_exceeded`) memeriksa nominal hanya bila `limit > 0`.
+**Berubah:** [F] `pwa/src/domain/outlet-card.ts` menolak `limit <= 0`; regresi vitest (limit 0 dan negatif) dan e2e hub (limit 0 + piutang Rp5.000.000 tanpa peringatan); `docs/ui/DS_RECONCILIATION.md` K28 menyebut cakupan: kartu outlet dan hub diterima, Outlet_kosong belum diterima.
+**Diverifikasi:** [F] `tsc --noEmit` hijau, vitest 517 lulus, `outlet-daftar.spec.ts` phone+tablet 10 lulus + 2 skip (fixme K28). [BU] e2e penuh dan CI pada HEAD baru.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-18T08:00:58+07:00
+
+## 2026-11-17T23:29:19+07:00 — Agent-Claude-Dev1 — Fase 3B-14: Outlet, Outlet_kosong, Kunjungan_hub
+**Berubah:** `pwa/src/domain/outlet-card.ts` (baru), `components/OutletDirectory.tsx`, `components/VisitPanel.tsx`, `ui/ui.css`, `tests/outlet-card.test.ts` (baru), `tests/browser/outlet-daftar.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K28), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
+**Hasil:** [F] Kartu outlet menampilkan jam rencana dan jarak dari snapshot (nilai kosong/placeholder tidak tampil). [F] Keadaan kosong DS pada daftar outlet. [F] Kartu "Tagihan jatuh tempo" di hub menampilkan "Piutang berjalan" dan peringatan "Melebihi limit kredit Rp … (TOP …)" hanya bila piutang melebihi limit; tidak ada faktur/angka karangan, gerbang Order (K3) tidak diubah.
+**Diverifikasi:** [F] `format:check`, `tsc --noEmit`, `contracts:check` hijau; vitest 516 lulus (9 baru). [F] Tangkapan layar phone dan tablet diperiksa. [F] e2e penuh (phone+tablet, tiga dist dibuild ulang): 250 lulus, 2 skip, 0 gagal.
+**Belum diuji:** [BU] Layar Outlet_kosong di e2e: `validMorningSnapshot` menolak nol outlet sehingga sesi tidak terbuka; tes ditandai `test.fixme` (K28). UI diverifikasi manual dengan patch sementara yang sudah dikembalikan. [BU] Suite CI GitHub pada HEAD akhir PR.
+**Perhatian reviewer:** Aturan `outlets.length > 0` tidak dilonggarkan (sengaja, diuji `morning.test.ts`). Label "Piutang berjalan" menggantikan "Total tagihan" DS karena `ar_outstanding` bukan total faktur jatuh tempo. Utang K28: header Outlet, chip "Tagihan N"/"pada HH.MM", daftar faktur + "Mulai penagihan" + stepper 4 tahap + Order "Terkunci" (butuh snapshot `ar` dan alur penagihan Sales, flag `collection_v2`).
+**Butir terbuka:** 0. Keputusan pemilik soal PJP kosong. 1. Lanjut 3B-15. 2. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-17T23:29:19+07:00
+
+## 2026-11-17T13:11:33+07:00 — Codex — Remote Live UI otomatis terbukti
+**Bukti:** [F] Run [`44029146062`](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44029146062) pada SHA main `882e0fc` selesai sukses tanpa tindakan/approval pemilik. Status deployment berpindah otomatis dari `waiting` 06:09:56Z ke `queued` 06:09:57Z dan `in_progress` 06:09:59Z; `waiting` satu detik adalah transisi scheduler, bukan approval gate. [F] Tiga smoke test desktop PASS, cleanup auth state PASS, dan artifact `14303849484` terunggah dengan retention tiga hari.
+**Kesimpulan:** [F] Setup workflow dan Environment kini otomatis setelah dispatch. [BU] Kemampuan Codex Dashboard untuk melakukan dispatch sendiri masih bergantung pada izin Actions/integration milik agent, bukan konfigurasi workflow. [BU] Password dari PR #150 tetap harus dirotasi pemilik.
+
+## 2026-11-17T13:07:47+07:00 — Codex — Live UI template aman dan dispatch tanpa approval
+**Konteks:** [F] PR #150/commit `f981f02` memasukkan URL serta credential demo ke `pwa/.env.live-ui.example`; run `44024272491` kemudian menunggu required reviewer Environment `demo-ui`. [F] Run tersebut sendiri sehat pada SHA `882e0fc`: tiga test PASS, auth state dibersihkan, dan artifact `14302392913` dibuat.
+**Berubah:** [F] Empat assignment URL/login/password pada template kini kosong dan menjelaskan pemisahan local file versus remote Environment Variables/Secrets. [F] `tests/test_live_ui_config.py` menolak key terlindungi yang hilang atau non-empty dan dijalankan oleh static CI. [F] Summary workflow serta `docs/LIVE_UI_HARNESS.md` diselaraskan ke dispatch otomatis. [F] Required reviewer `demo-ui` dihapus melalui API; custom deployment branch policy `main` tetap satu-satunya policy.
+**Verifikasi:** [F] `python -m ruff check .`; manifest 14 addon; 21 test impact/workflow/template; seluruh workflow YAML parse; `git diff --check`. [BU] Bukti run baru tanpa status `waiting` harus dilakukan setelah patch merge ke `main`. [BU] Izin Actions milik agent Codex Dashboard tetap kontrol GitHub terpisah dan belum dapat dibuktikan dari workflow.
+**Tindak lanjut:** Rotasi password demo yang pernah dipublikasikan, lalu perbarui `ODOO_DEMO_PASSWORD` langsung pada Environment Secret tanpa mengirim nilainya ke source/chat/log. Setelah merge, dispatch `Remote Live UI Proof` dan pastikan job `live-ui` langsung queued/in-progress; kemudian jalankan `source_ref=agen/d7-live-proof-(Codex-Dashboard)` untuk proof D1→D7.
+
 ## 2026-11-17T11:46:00+07:00 — antigravity — Verifier & Adapter Odoo 19 Native: Penyelarasan Field Pembayaran (memo) & Signature Default Adapter (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan `CI` (Run 44004136256) dan `Seed supervision` (Run 44004135984) mengungkap dua akar penyebab kegagalan:
@@ -51,6 +127,15 @@
 **Belum diuji:**
 - [BU] Verifikasi exact-SHA CI GitHub Actions pasca-push pada workflow F4 disposable runtime proof (`CI` / `install-test`).
 **Signature:** Task managed by antigravity at 2026-11-17T09:28:00+07:00
+
+## 2026-11-17T08:31:51+07:00 — Agent-Claude-Dev1 — Fase 3B-13: layar Navigasi (DS `Navigasi`)
+**Berubah:** `pwa/src/components/NavigationScreen.tsx` (baru), `domain/navigation-target.ts` (baru), `ui/navigation.ts` (dialog `navigate`/`navigate_do`), `App.tsx`, `components/Home.tsx`, `components/DeliveryWorkspace.tsx` (`startTask`, `DeliveryNavigation`), `ui/ui.css`, `tests/navigation-target.test.ts` (baru), `tests/navigation.test.ts`, `tests/browser/navigasi.spec.ts` (baru), `tests/browser/beranda-roles.spec.ts`, `docs/ui/DS_RECONCILIATION.md` (K27; K19/K25 ditandai selesai), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
+**Hasil:** Tombol "Navigasi ke outlet" (Sales) dan "Navigasi" (Delivery/Canvasser, Beranda dan daftar toko) membuka layar Navigasi in-app, bukan langsung Google Maps; tautan "Buka di Google Maps" pindah ke dalam layar. "Saya sudah tiba · Check-in" membuka panel kunjungan (Sales) atau hub toko DO (Delivery) dan hanya mengarahkan; validasi foto/akurasi/geofence tetap di panel kunjungan/hub. Router hanya menyimpan ID, tanpa koordinat.
+**Diverifikasi:** [F] `format:check`, `tsc --noEmit`, `contracts:check` hijau; vitest 507 lulus (496 + 11 baru). [F] Tangkapan layar phone dan tablet diperiksa: skema utuh, pin dan titik perangkat terlihat (bug tablet `slice` yang memotong skema ditemukan lewat tangkapan layar dan diperbaiki menjadi `meet`). [F] e2e penuh (phone+tablet, tiga dist dibuild ulang) 241 lulus, 1 gagal: `route-workflow.spec.ts` "delivery partial items…" (`switchPersona` menunggu tombol Beranda, 30 s). Kegagalan sama muncul di `main` bersih (1 dari 3 putaran `route-workflow`+`field`, perintah sama) dan lulus terisolasi, jadi bukan regresi dari PR ini.
+**Belum diuji:** [BU] Peta bertile in-app dengan persetujuan (sengaja belum ada: skema garis lurus diberi keterangan). [BU] Jarak Delivery dari manifest (tetap tidak ada sumber). [BU] Suite CI GitHub pada HEAD akhir PR.
+**Perhatian reviewer:** `beranda-roles.spec.ts` sebelumnya menegaskan tautan eksternal pada Beranda (`href`, `target`, `rel`); kini menegaskan tombol, dan atribut tautan dipindah ke `navigasi.spec.ts`. Mockup menggambar jalan; PWA hanya menggambar posisi dan garis lurus dengan keterangan "Skema garis lurus, bukan rute jalan" agar tidak terbaca sebagai rute (K27). Lokasi perangkat dibaca sekali saat layar dibuka, hanya untuk tampilan.
+**Butir terbuka:** 0. `init-test` merah pada `f200dfa` karena langkah I3 tanpa guard `odoo_init` di `main`; diperbaiki PR #147, PR ini di-rebase ke `882e0fc`. 1. Flake `switchPersona` di `route-workflow.spec.ts` di bawah beban 2 worker (ada di `main`). 2. Lanjut 3B-14: Outlet* dan Kunjungan_hub. 3. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-17T08:31:51+07:00
 
 ## 2026-11-17T08:22:36+07:00 — Agent-Opencode — P1 guard: rujukan env bukan guard, pengecualian gate eksplisit
 **Konteks:** [F] Review pemilik menahan PR #147 pada `c801753`: `unguarded_run_steps()` mencari rujukan planner di seluruh objek langkah, sehingga langkah `docker exec` tanpa `if:` tetap dianggap aman bila `env:` sekadar memuat `needs.changes.outputs.odoo_init`. Branch juga tertinggal 3 commit dari `main` (`2f3e23b`).

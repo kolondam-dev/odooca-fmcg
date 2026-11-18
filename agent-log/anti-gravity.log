@@ -3201,3 +3201,28 @@
   * python scripts/check_manifests.py: PASS (14 addon OK).
   * Zero touch live Railway / staging database.
 - Task managed by antigravity at 2026-11-17T11:46:00+07:00
+
+2026-11-18T12:35:00+07:00 [INFO] Kepatuhan Kebijakan #145: Pemisahan F4 Period Pack ke Workflow Terpisah & Restorasi Timeout install-test
+- Konteks:
+  * Penegakan kepatuhan terhadap kebijakan PR #145 ("ci: pilih workflow berdasarkan dampak perubahan") pada PR #110.
+  * Head 45d8022 sebelumnya menaruh langkah F4 (Generic period pack loader runtime proof) di dalam job install-test pada .github/workflows/ci.yml dan menaikkan timeout-minutes dari 30 ke 120 menit.
+  * Dampak pelanggaran: Job install-test (Level 2, anggaran 5-15 menit, batas 30 menit) berjalan hingga 80,7 menit (F4 sendiri menghabiskan 75,3 menit), melanggar aturan anggaran level CI dan menduplikasi pemuatan master serta baseline kanonikal.
+- Solusi & Perubahan:
+  1. .github/workflows/ci.yml:
+     - Mengembalikan timeout-minutes pada job install-test ke 30 menit (dari 120 menit).
+     - Menghapus langkah "F4 Generic period pack loader runtime proof (two disposable databases)" dan "Upload period pack runtime proof report" dari install-test.
+     - Menyelaraskan ci.yml 100% identik dengan origin/main.
+  2. .github/workflows/period-pack-runtime.yml:
+     - Membuat workflow baru yang terisolasi khusus untuk runtime proof period pack (F4) dengan batas waktu timeout-minutes: 120.
+     - Dibatasi oleh paths filter: data/registers/periods/**, scripts/ops/load_period_pack.py, scripts/ops/verify_disposable_period_pack.py, tests/test_period_pack_loader.py, dan .github/workflows/period-pack-runtime.yml.
+     - Menjalankan unit & contract tests sebelum docker build, lalu memverifikasi dua database disposable (Scenario A & Scenario B) dengan upload artifact laporan period-pack-runtime-report.
+  3. docs/HANDOFF.md & origin/main sync:
+     - Mengintegrasikan update origin/main (PR #152, #153, #154) dan menyelesaikan konflik HANDOFF.md dengan menjaga urutan kronologis terbalik.
+- Verifikasi:
+  * python -c "import glob,yaml; [yaml.safe_load(open(f)) for f in glob.glob('.github/workflows/*.yml')+['docker-compose.yml']]": PASS (seluruh YAML valid).
+  * python -m unittest tests/test_ci_impact.py tests/test_ci_workflow_guards.py tests/test_live_ui_config.py: 21/21 PASS (0.466s).
+  * python -m unittest tests/test_period_pack_loader.py: 62/62 PASS (6.383s).
+  * python -m ruff check .: PASS (All checks passed).
+  * python scripts/check_manifests.py: PASS (14 addon OK).
+  * Zero touch live Railway / staging database.
+- Task managed by antigravity at 2026-11-18T12:35:00+07:00

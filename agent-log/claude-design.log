@@ -302,3 +302,27 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - Fix valid lalu 31 m saat Mulai kunjungan: lembar Akurasi lokasi rendah, tanpa sales.visit.check_in di outbox
 - K26 diperbarui
 - Task managed by claude-design agent at 2026-11-16T09:45:39+07:00
+
+[2026-11-17T08:31:51+07:00] [INFO] PWA 3B-13: layar Navigasi DS
+- Layar Navigasi in-app (skema garis lurus, jarak, Buka di Google Maps, Saya sudah tiba · Check-in) untuk Beranda Sales/Delivery/Canvasser dan daftar toko Delivery
+- Router: dialog navigate/navigate_do hanya ID; tanpa koordinat di riwayat
+- vitest 507 lulus; e2e penuh 241/242, satu kegagalan route-workflow juga terjadi di main bersih (flake switchPersona di bawah beban)
+- K27 ditambahkan; flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-17T08:31:51+07:00
+
+[2026-11-17T23:29:19+07:00] [INFO] Fase 3B-14: Outlet, Outlet_kosong, Kunjungan_hub
+- vitest 516 lulus; e2e penuh 250 lulus, 2 skip (fixme K28)
+- K28 ditambahkan: PJP kosong belum bisa membuka sesi; utang faktur/penagihan menunggu backend
+- flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-17T23:29:19+07:00
+
+[2026-11-18T08:01:02+07:00] [INFO] 3B-14: perbaikan review P2 limit kredit nol
+- creditExceeded menolak limit <= 0 (selaras backend); regresi vitest+e2e
+- cakupan K28: Outlet_kosong belum diterima
+- Task managed by claude-design agent at 2026-11-18T08:01:02+07:00
+
+[2026-11-18T09:45:53+07:00] [INFO] Fase 3B-15: Profil layar penuh, TaskForm dihapus, util jam
+- vitest 521 lulus; e2e penuh 256 lulus, 2 skip (fixme K28)
+- K29 ditambahkan; K9 selesai; CSS lama (K11) menyusul di 3B-16
+- flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-18T09:45:53+07:00

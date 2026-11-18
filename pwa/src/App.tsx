@@ -1,6 +1,6 @@
 import { EvidenceIdentityContext } from "./ui/evidenceIdentity";
 import { ViewMemoryContext, useRememberedScroll } from "./ui/viewMemory";
-import { TaskForm } from "./components/TaskForm";
+import { ProfileScreen } from "./components/ProfileScreen";
 import { ExtraCallScreen } from "./components/ExtraCallScreen";
 import { AjukanUangScreen } from "./components/AjukanUangScreen";
 import { LiveClock } from "./components/LiveClock";
@@ -39,6 +39,8 @@ import { ExpenseWorkspace } from "./components/ExpenseWorkspace";
 import { Brand } from "./components/Brand";
 import { MorePage } from "./components/MorePage";
 import { deliveryProgress } from "./domain/delivery-progress";
+import { podKey } from "./domain/delivery-contracts";
+import { NavigationScreen } from "./components/NavigationScreen";
 import { MorningSession } from "./components/MorningSession";
 import {
     morningReady,
@@ -305,13 +307,20 @@ function Workspace({
         (route) => {
             const order =
                 route.dialog?.type === "order" ? route.dialog : undefined;
+            const nav =
+                route.dialog?.type === "navigate" ? route.dialog : undefined;
             return (
+                (route.dialog?.type !== "navigate_do" ||
+                    identity.roles.includes("delivery")) &&
+                (!nav ||
+                    (identity.roles.includes("sales") &&
+                        assignedOutlets.current.some(
+                            (o) => o.id === nav.outlet,
+                        ))) &&
                 canOpen(identity.roles, route.page) &&
                 (!route.outlet || route.page === "sales") &&
                 (route.dialog?.type !== "extra" ||
                     identity.roles.includes("sales")) &&
-                (route.dialog?.type !== "proof" ||
-                    identity.roles.includes("delivery")) &&
                 (!route.outlet ||
                     assignedOutlets.current.some(
                         (o) => o.id === route.outlet,
@@ -416,6 +425,17 @@ function Workspace({
         () => new SalesVisits(store, identity, provider, engine),
         [identity, provider, engine],
     );
+    const [deliveryStart, setDeliveryStart] = useState<string>();
+    const navOutlet =
+        dialog?.type === "navigate"
+            ? snapshot.outlets.find((o) => o.id === dialog.outlet)
+            : undefined;
+    const navDelivery =
+        dialog?.type === "navigate_do"
+            ? morning?.deliveryManifest?.find(
+                  (t) => podKey(t) === dialog.delivery,
+              )
+            : undefined;
     function openVisit(outlet: string) {
         if (!dailyReady) {
             openOrder(outlet);
@@ -687,6 +707,15 @@ function Workspace({
                                 }
                                 pendingExpense={pending + review}
                                 onOpenVisit={(id) => openVisit(id)}
+                                onNavigateOutlet={(outlet) =>
+                                    setDialog({ type: "navigate", outlet })
+                                }
+                                onNavigateDelivery={(delivery) =>
+                                    setDialog({
+                                        type: "navigate_do",
+                                        delivery,
+                                    })
+                                }
                                 onDelivery={() => go("delivery")}
                                 onExpense={() => setDialog({ type: "expense" })}
                             />
@@ -786,6 +815,10 @@ function Workspace({
                                     queue={queue}
                                     snapshot={snapshot}
                                     submit={submit}
+                                    startTask={deliveryStart}
+                                    onStarted={() =>
+                                        setDeliveryStart(undefined)
+                                    }
                                     changed={() => void refresh()}
                                 />
                                 <TripClosing
@@ -1064,6 +1097,38 @@ function Workspace({
                             close={() => setDialog(undefined)}
                         />
                     )}
+                    {navOutlet && (
+                        <NavigationScreen
+                            key={JSON.stringify(dialog)}
+                            target={navOutlet}
+                            fallbackDistance={navOutlet.distance}
+                            onBack={() => setDialog(undefined)}
+                            onArrive={() => {
+                                navigation.navigate(
+                                    { page: "sales", outlet: navOutlet.id },
+                                    true,
+                                );
+                                haptic();
+                            }}
+                        />
+                    )}
+                    {navDelivery && (
+                        <NavigationScreen
+                            key={JSON.stringify(dialog)}
+                            target={{
+                                name: navDelivery.outlet,
+                                address: navDelivery.address,
+                                latitude: navDelivery.site.latitude,
+                                longitude: navDelivery.site.longitude,
+                            }}
+                            onBack={() => setDialog(undefined)}
+                            onArrive={() => {
+                                setDeliveryStart(podKey(navDelivery));
+                                navigation.navigate({ page: "delivery" }, true);
+                                haptic();
+                            }}
+                        />
+                    )}
                     {dialog?.type === "extra" && (
                         <ExtraCallScreen
                             snapshot={snapshot}
@@ -1088,31 +1153,20 @@ function Workspace({
                             close={() => setDialog(undefined)}
                         />
                     )}
-                    {dialog &&
-                        dialog.type !== "attendance" &&
-                        dialog.type !== "leave" &&
-                        dialog.type !== "extra" &&
-                        dialog.type !== "expense" &&
-                        dialog.type !== "order" &&
-                        dialog.type !== "display" && (
-                            <TaskForm
-                                key={JSON.stringify(dialog)}
-                                dialog={dialog}
-                                store={store}
-                                identity={identity}
-                                snapshot={snapshot}
-                                owner={owner}
-                                workStatus={
-                                    checkedOut
-                                        ? "Sesi kerja selesai"
-                                        : dailyReady
-                                          ? "Sesi kerja aktif"
-                                          : "Sesi kerja belum dibuka"
-                                }
-                                submit={submit}
-                                close={() => setDialog(undefined)}
-                            />
-                        )}
+                    {dialog?.type === "profile" && (
+                        <ProfileScreen
+                            identity={identity}
+                            snapshot={snapshot}
+                            workStatus={
+                                checkedOut
+                                    ? "Sesi kerja selesai"
+                                    : dailyReady
+                                      ? "Sesi kerja aktif"
+                                      : "Sesi kerja belum dibuka"
+                            }
+                            close={() => setDialog(undefined)}
+                        />
+                    )}
                 </div>
             </ViewMemoryContext.Provider>
         </EvidenceIdentityContext.Provider>

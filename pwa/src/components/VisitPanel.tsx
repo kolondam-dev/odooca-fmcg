@@ -1,3 +1,4 @@
+import { creditExceeded } from "../domain/outlet-card";
 import { VisitPhotoField } from "./VisitPhotoField";
 import { BiayaTokoScreen } from "./BiayaTokoScreen";
 import { CloseVisitScreen } from "./CloseVisitScreen";
@@ -328,6 +329,7 @@ export function VisitPanel({
     });
     const money = (value?: number | null) =>
         value != null ? idr.format(value) : "—";
+    const overCredit = creditExceeded(commercial);
     const checkinBlocked =
         !info ||
         !!info.active ||
@@ -549,9 +551,21 @@ export function VisitPanel({
                     title="Tagihan jatuh tempo"
                     status={{ tone: "neu", label: "Segera tersedia" }}
                 />
+                {commercial?.ar_outstanding ? (
+                    <KV
+                        label="Piutang berjalan"
+                        value={money(commercial.ar_outstanding)}
+                    />
+                ) : null}
+                {overCredit ? (
+                    <Callout tone="bad" icon="clock">
+                        Melebihi limit kredit {money(overCredit.limit)}
+                        {overCredit.terms ? ` (${overCredit.terms})` : ""}.
+                    </Callout>
+                ) : null}
                 <span class="ui-row__sub">
-                    Penagihan di aplikasi belum aktif. Order tidak menunggu
-                    tagihan pada versi ini.
+                    Daftar faktur dan penagihan di aplikasi belum aktif. Order
+                    tidak menunggu tagihan pada versi ini.
                 </span>
             </Card>
             <Card tight>

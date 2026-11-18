@@ -12,6 +12,31 @@
     font: 600 16px/24px var(--font);
     flex: none;
 }
+a.ui-btn {
+    text-decoration: none;
+}
+.ui-profile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.ui-profile__avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ui-profile__name {
+    margin: 0;
+    font: 700 18px/24px var(--font);
+}
+.ui-profile__title {
+    margin: 2px 0 0;
+    color: var(--c-mute);
+    font: 400 14px/20px var(--font);
+}
 .ui-btn--lg {
     height: var(--btn-lg);
 }
@@ -1794,4 +1819,107 @@ select.ui-select {
 }
 a.ui-btn {
     text-decoration: none;
+}
+
+/* Navigasi (DS Navigasi): skema posisi + info tujuan */
+.ui-navmap {
+    position: relative;
+    flex: none;
+    width: 100%;
+    height: min(400px, 48vh);
+    background: var(--c-map);
+    overflow: hidden;
+}
+.ui-navmap svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.ui-navmap__route {
+    stroke: var(--c-pri);
+    stroke-width: 4;
+    stroke-dasharray: 10 8;
+    stroke-linecap: round;
+}
+.ui-navmap__halo {
+    fill: var(--c-pri);
+    fill-opacity: 0.3;
+}
+.ui-navmap__me {
+    fill: var(--c-pri);
+    stroke: #fff;
+    stroke-width: 3;
+}
+.ui-navmap__pin path,
+.ui-navmap__pin circle {
+    fill: none;
+    stroke: var(--c-bad);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.ui-navmap__cap {
+    position: absolute;
+    left: 12px;
+    bottom: 8px;
+    padding: 2px 8px;
+    border-radius: var(--r-pill);
+    background: rgba(255, 255, 255, 0.85);
+    font: 500 12px/16px var(--font);
+    color: var(--c-mute);
+}
+.ui-navinfo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+}
+.ui-navinfo__name {
+    margin: 0;
+    font: 700 20px/28px var(--font);
+    color: var(--c-ink);
+}
+.ui-navinfo .ui-meta {
+    margin: 6px 0 4px;
+}
+
+/* Outlet: meta kartu dan keadaan kosong (DS Outlet, Outlet_kosong) */
+.ui-ocard__m {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--c-ink);
+}
+.ui-ocard__m .icon {
+    color: var(--c-mute);
+}
+.ui-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 32px 24px;
+    text-align: center;
+}
+.ui-empty__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-neu-bg);
+    color: var(--c-mute);
+}
+.ui-empty__title {
+    margin: 0;
+    font: 700 18px/24px var(--font);
+    color: var(--c-ink);
+}
+.ui-empty__text {
+    margin: 0;
+    font: 400 14px/20px var(--font);
+    color: var(--c-mute);
 }
