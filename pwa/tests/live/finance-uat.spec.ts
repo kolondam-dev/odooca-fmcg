@@ -164,28 +164,31 @@ async function setDate(page: Page, field: string, iso: string) {
     const widget = page.locator(`.o_field_widget[name="${field}"]`);
     await expect(widget).toBeVisible();
 
-    const button = widget.locator("button").first();
-    if (await button.count()) {
-        await button.click();
-    }
-    const input = widget.locator("input").first();
-    await expect(input).toBeVisible();
+    const open = async () => {
+        const input = widget.locator("input").first();
+        if (!(await input.isVisible())) {
+            await widget.locator("button").first().click();
+        }
+        await expect(input).toBeVisible();
+        return input;
+    };
 
+    const input = await open();
     const sample = await input.inputValue();
     const order = dateOrder(sample);
     await input.fill(formatDateLike(iso, sample, order));
     await input.press("Enter");
 
-    const [year, month, day] = iso.split("-").map(Number);
-    await expect
-        .poll(async () => {
-            const current = widget.locator("input");
-            const raw = (await current.count())
-                ? await current.first().inputValue()
-                : await widget.innerText();
-            return parseDisplayed(raw, order);
-        })
-        .toEqual({ year, month, day });
+    // The closed widget may abbreviate the month ("Jul 1"), so reopen the
+    // picker and read the committed value in the same numeric format.
+    const committed = await open();
+    const raw = await committed.inputValue();
+    expect(parseDisplayed(raw, order), `${field} committed value`).toEqual({
+        year: Number(iso.slice(0, 4)),
+        month: Number(iso.slice(5, 7)),
+        day: Number(iso.slice(8, 10)),
+    });
+    await page.keyboard.press("Escape");
 }
 
 test("@finance-uat @odoo-live Finance app exposes eight Finance Reports menu entries", async ({
