@@ -167,7 +167,15 @@ async function setDate(page: Page, field: string, iso: string) {
     const open = async () => {
         const input = widget.locator("input").first();
         if (!(await input.isVisible())) {
-            await widget.locator("button").first().click();
+            // The widget renders a button until it owns focus; focusing it is
+            // enough to reveal the input, and unlike a click it cannot be
+            // swallowed by the date-picker overlay.
+            await widget.locator("button").first().focus();
+            try {
+                await expect(input).toBeVisible({ timeout: 3_000 });
+            } catch {
+                await widget.locator("button").first().click();
+            }
         }
         await expect(input).toBeVisible();
         return input;
@@ -179,16 +187,28 @@ async function setDate(page: Page, field: string, iso: string) {
     await input.fill(formatDateLike(iso, sample, order));
     await input.press("Enter");
 
-    // The closed widget may abbreviate the month ("Jul 1"), so reopen the
-    // picker and read the committed value in the same numeric format.
-    const committed = await open();
-    const raw = await committed.inputValue();
-    expect(parseDisplayed(raw, order), `${field} committed value`).toEqual({
+    // The closed widget shows "Jul 1" (no year), but its button always carries
+    // data-tooltip with the numeric full date. Read that instead of reopening
+    // the picker, which is a portal outside this widget.
+    const expected = {
         year: Number(iso.slice(0, 4)),
         month: Number(iso.slice(5, 7)),
         day: Number(iso.slice(8, 10)),
-    });
-    await page.keyboard.press("Escape");
+    };
+    await expect
+        .poll(async () => {
+            const button = widget.locator("button").first();
+            if (await button.count()) {
+                const tooltip = await button.getAttribute("data-tooltip");
+                if (tooltip) return parseDisplayed(tooltip, order);
+            }
+            const current = widget.locator("input").first();
+            if (await current.count()) {
+                return parseDisplayed(await current.inputValue(), order);
+            }
+            return null;
+        })
+        .toEqual(expected);
 }
 
 test("@finance-uat @odoo-live Finance app exposes eight Finance Reports menu entries", async ({
