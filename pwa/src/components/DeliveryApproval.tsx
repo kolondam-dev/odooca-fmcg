@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+import { Button } from "../ui";
 import { approvalTiers } from "../domain/delivery-approval";
 import type { FieldStore, QueueItem } from "../storage/store";
 export function DeliveryApproval({
@@ -71,8 +72,9 @@ export function DeliveryApproval({
                         {row.state === "needs_approval" &&
                             ["spv", "branch_manager"].map((role) => (
                                 <span key={role}>
-                                    <button
-                                        class="secondary"
+                                    <Button
+                                        variant="sec"
+                                        size="md"
                                         disabled={busy}
                                         onClick={() =>
                                             void decide(
@@ -85,9 +87,10 @@ export function DeliveryApproval({
                                         }
                                     >
                                         Setujui {role}
-                                    </button>
-                                    <button
-                                        class="secondary"
+                                    </Button>
+                                    <Button
+                                        variant="sec"
+                                        size="md"
                                         disabled={busy}
                                         onClick={() =>
                                             void decide(
@@ -100,7 +103,7 @@ export function DeliveryApproval({
                                         }
                                     >
                                         Tolak {role}
-                                    </button>
+                                    </Button>
                                 </span>
                             ))}
                     </article>

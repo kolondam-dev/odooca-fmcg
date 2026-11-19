@@ -1,4 +1,5 @@
 import { isDemoMode } from "../domain/running-mode";
+import { Button } from "../ui";
 import { useContext } from "preact/hooks";
 import { EvidenceIdentityContext } from "../ui/evidenceIdentity";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -169,15 +170,16 @@ export function DisplayPhoto({
                 />
             )}
             <div class="display-photo-actions">
-                <button
+                <Button
                     type="button"
-                    class="secondary"
+                    variant="sec"
+                    size="md"
+                    icon="camera"
                     disabled={busy}
                     onClick={() => setOpen(true)}
                 >
-                    <Icon name="camera" size={18} />
                     {value ? "Ambil ulang" : "Ambil foto"}
-                </button>
+                </Button>
                 <button
                     type="button"
                     class="text-button"
