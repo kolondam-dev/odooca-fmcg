@@ -1,3 +1,9 @@
+## 2026-11-19T13:46:37+07:00 — Codex — PR #159 merge ke main `9f00b01` (PASS, dampak test CUKUP)
+**Merge:** [F] `origin/main` maju `1e19a89..9f00b01`; merge commit `9f00b01` adalah "Merge pull request #159 from kolondam-dev/agen/native-n1-foundation" dan head PR `87570dafb91cc310c37364e1d6eef4cc390f82d0` adalah ancestor `main`.
+**Verdict:** [F] Re-review independen menyatakan PASS dengan dampak test **CUKUP**; tiga counterexample P1/P2 dieksekusi pada lapisan repository + Room + HTTP lokal, bukan hanya enum/planner.
+**Isi main sekarang:** [F] `SessionRequestGate` (lease owner + generation), penghentian tepat setelah 401 pertama, requeue `AUTH_REQUIRED` hanya untuk owner yang berhasil login, job `data-tests`, dan `android-gate` yang mewajibkan `DATA_RESULT`.
+**Batas:** [F] Tidak ada deployment manual dan tidak ada pengeditan data server. [BU] Emulator API 24/35, Redmi 4X, POCO M3, dan backend live tetap acceptance N2 terpisah.
+
 ## 2026-11-19T12:46:03+07:00 — Codex — PR #159 bukti exact-SHA hijau (belum merge)
 **SHA:** [F] Head PR `3ad5558faa0aeade9e2154b8fe37fd68647f68f`; seluruh 28 check wajib PASS pada SHA tersebut.
 **Bukti data-layer:** [F] Run `44464870477`, job `data-tests` (attempt 2) lulus 2m13s. Artifact berisi `TEST-...OutboxSessionIntegrationTest.xml` dengan `tests=3`, `failures=0`, `errors=0`, `skipped=0`, `time=6.519s`, yaitu `queuedOwnerCannotUseAnotherOwnersSession`, `first401StopsBatchAndOnlySameOwnerReauthenticationResumesIt`, dan `accountSwitchBetweenTwoSendsStopsBeforeSecondRequest`.
