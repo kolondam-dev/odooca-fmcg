@@ -50,6 +50,15 @@ Catat SHA arahan yang dibaca dalam checkpoint branch tim. Jika perubahan menyent
 - **Dev:** lanjutkan DEV-01A/01B tanpa menunggu Figma. Pakai D01-r1 untuk memetakan tes, dengan scope smoke tetap berjalan pada layar yang tersedia. Implementasi visual D01 memakai frame/versi yang diterima. Saat mengerjakan D01-05c/d, gunakan counterexample receipt 2xx dengan UUID cocok dan status yang tidak dikenal. Source saat ini memetakan status di luar `accepted`/`needs_approval` ke `REJECTED`. UI hanya boleh menampilkan penolakan resmi untuk receipt `rejected` yang valid. Arahkan status tak dikenal ke state kendala protokol/review, dan uji pembedaan dengan receipt bisnis valid, 403 tanpa receipt, dan respons yang gagal diparse. Scope tes repository/API dan Compose masuk slice D01 terkait, terpisah dari smoke emulator.
 - **Dependensi:** jalur resmi PJP opsi C, carry-over, absensi dan AR tetap bergantung pada B03/B04/B07. Persetujuan checkpoint ini memberi jalur lanjut desain dan perencanaan tes. Perubahan kode, freeze desain dan integrasi membutuhkan bukti sesuai gate masing-masing.
 
+### Review Lead — DEV-01
+
+**HOLD untuk acceptance runtime** pada Dev HEAD `dcad2156ee918a264aa93c71f63835306c25069a`. [Diff checkpoint](https://github.com/kolondam-dev/odooca-fmcg/compare/92da15d...dcad2156ee918a264aa93c71f63835306c25069a). Lead menjalankan gate statis pada SHA tersebut, Bash syntax dan uji host laporan instrumentation untuk hasil absen, lulus dan duplikat. Hasil gate: Ruff, 14 manifest, 29 tes kontrak CI dan token lulus. Planner memilih full regression, 11 suite, karena workflow dan tes control plane berubah. Build APK dan tes Kotlin yang dilaporkan Dev merujuk sumber `9d51fb8`. Gate Gradle penuh serta bukti API 24/35 belum tersedia.
+
+**Dampak test: TAMBAH.** Gate lama membuktikan build, lint, domain dan data. Kelas baru perlu bukti yang membedakan APK terpasang dari aplikasi benar-benar mencapai Login setelah cold start dan mampu menjalankan flow awal. Pertahankan emulator opt-in dan required context yang ada. Jalankan smoke API 24/35 dahulu pada SHA kandidat, lalu UI instrumentation bila smoke lulus di keduanya. Lampirkan hasil KVM, image revision, SHA, hash APK, boot/install, Login dan laporan UI. Android required gate dan full regression harus dibuktikan sesuai planner pada kandidat integrasi terkini.
+
+- **Dev:** pertahankan scope DEV-01 dan commit yang ada. Belum ada run GitHub untuk checkpoint saat ditinjau. Dispatch oleh Lead lewat GH CLI menerima `Forbidden` saat akses endpoint workflow; akses melalui Cloud Desktop juga belum tersedia. Bukti lokal tidak menutup acceptance emulator. DEV-02A dan perluasan visual D01 tetap di luar checkpoint.
+- **Design:** lanjutkan DES-02 dan pekerjaan yang independen dari emulator. Ref Design kini `6abeef3a7c3a8ecb232854efbd4e6e948308b78d` dengan parent dan tree identik dengan checkpoint `37d97eb`; perubahan metadata tidak mengubah verdict DES-00/DES-01. File/library Figma dan penerimaan visual tetap terbuka.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
