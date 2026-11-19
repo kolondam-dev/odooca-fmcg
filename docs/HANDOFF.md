@@ -1,3 +1,8 @@
+## 2026-11-19T15:40:25+07:00 — Codex — Spesifikasi engineering Android v2
+**Berubah:** [F] SSOT Android v2, design system dengan kontrak Figma/Compose, paket Design dan Dev, register endpoint/backend/DB, serta gerbang integrasi antartim dan slice publikasi.
+**Diverifikasi:** [F] Basis main `e28e655` dan pemeriksaan keterlacakan enam dokumen. Perubahan ini dokumentasi.
+**Menunggu:** [BU] File Figma/library yang akan dipakai sebagai referensi resmi, inventaris frame aktual, uji emulator/fisik dan Odoo disposable.
+
 ## 2026-11-19T14:53:47+07:00 — Codex — Baseline koordinasi Android
 **Berubah:** [F] SSOT dan register blocker di `docs/android/ARCHITECTURE.md`, spec Design/Dev dan operasi branch, plus `android/tools/integration_gate.sh`.
 **Diverifikasi:** [F] Basis `e28e655`. Ruff, 14 manifest serta tes kontrak selector, workflow dan Android lulus.

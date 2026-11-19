@@ -1,6 +1,6 @@
 # Odooca Field Android — arsitektur dan rencana induk
 
-Baseline engineering v1, 19 November 2026 WIB. Snapshot sumber: main `e28e655`. Pemilik produk menetapkan cakupan dan menerima perubahan perilaku. Lead Android memelihara dokumen ini, urutan integrasi, dan bukti penerimaan. Status milestone diperbarui bersama bukti pada SHA yang diperiksa.
+Baseline engineering v2, 19 November 2026 WIB. Snapshot sumber: main `e28e655`. Pemilik produk menetapkan cakupan dan menerima perubahan perilaku. Lead Android memelihara dokumen ini, urutan integrasi, dan bukti penerimaan. Status milestone diperbarui bersama bukti pada SHA yang diperiksa.
 
 Dokumen ini menjadi acuan Android untuk requirement, milestone, dan dependency. [Blueprint v0.1](../blueprints/native_android_architecture_blueprint.md) adalah riwayat keputusan engineering. [SCOPE](../SCOPE.md) dan [Playbook](../PLAYBOOK_DISTRIBUTOR_FMCG.md) menetapkan domain, [rancangan API/PWA](../blueprints/mobile_api_and_pwa_plan.md) menjelaskan evolusi kontrak, [rekonsiliasi DS](../ui/DS_RECONCILIATION.md) memetakan desain PWA, dan [README Android](../../android/README.md) menjelaskan build yang tersedia. Instruksi terbaru pemilik berlaku jika ada perbedaan. Perilaku API diperiksa dari controller, model, tes, dan runtime target. Draft OpenAPI dan Figma perlu dicocokkan dengan bukti tersebut.
 
@@ -63,21 +63,30 @@ N2a, desain N0, dan validasi domain N3 dapat maju paralel. N2b digunakan untuk m
 
 ## Register dependency endpoint, backend dan DB
 
-Status merujuk ke snapshot sumber. Pemilik dependency kontrak adalah lead Android bersama maintainer backend/domain yang ditetapkan pemilik. Kondisi runtime tetap perlu bukti per target.
+[BACKEND_REGISTER](BACKEND_REGISTER.md) adalah register normatif B01–B09. Isinya endpoint aktual, gap per area, exit criteria, fallback client serta matriks target DB. P0 memblokir acceptance scope tertentu. Rancangan UI, emulator smoke dan pekerjaan domain yang independen dapat berjalan paralel.
 
-| ID | Yang tersedia | Yang kurang dan bukti penutupan | Dampak |
-|---|---|---|---|
-| B01 | `/web/session/authenticate`, cookie dan bootstrap CSRF sebagai adapter sementara. | Desain auth/expiry/revoke native, matriks akun, role bertumpuk dan capability otoritatif. Login dan revoke teruji terhadap Odoo target. | N2b dan aktivasi resmi |
-| B02 | Kalibrasi dan sinyal lokasi lokal. | Endpoint registrasi, hasil kalibrasi/integritas, keputusan qualification dan requalification server. Uji dua perangkat fisik. | N2b aktivasi resmi |
-| B03 | Snapshot katalog v2, outlet, kantor opsional. | Penanda PJP kosong sah, Extra call tanpa sesi PJP, command NOO, jadwal/AR resmi, field jam rencana/jarak yang disepakati. Uji penugasan biasa dan kosong di hari WITA. | N4 dan pengalaman outlet |
-| B04 | Evidence foto privat dan command kunjungan. | Command absensi resmi dan receipt yang membuka sesi hari kerja. Buktikan user/company/hari, geofence kantor, replay dan hari Minggu. | N4 hari kerja penuh |
-| B05 | Command SO dan approval versi yang didukung backend. | Pricing v2, revisi, promo/budget, AR kredit, foto SKU/version, riwayat dan display stock. Hidupkan capability setelah uji kontrak, perhitungan dan approval. | N5 Sales lengkap |
-| B06 | Handler POD/trip dan pemeriksaan picking. | Snapshot DO/manifest, assignment driver dan efek stock/settlement yang disepakati. Fixture manifest scoped, partial/reject dan trip close teruji. | N5 Delivery |
-| B07 | Alur PWA dan kontrak usulan. | Collection settlement, saldo dan jadwal dari AR resmi, field expense, setoran dan biaya toko, serta efek payment/ledger. Uji saldo, replay dan rekonsiliasi. | N5 kas dan penagihan |
-| B08 | Desain PWA HRIS. | Endpoint dan record rules personal untuk cuti/slip, data payroll yang layak dipublikasikan, dan receipt. | N6 |
-| B09 | Odoo CI memakai Postgres disposable. Railway demo dan `demo-ui` digunakan untuk acceptance web. | Harness Android ↔ Odoo disposable dengan endpoint, DB, fixture user/company/assignment, clock WITA, reset antar-run dan cleanup. Perubahan server persisten butuh otorisasi tersendiri. | N2b–N5 integration |
+## Boundaries dan state lintas tim
 
-Flag `order_pricing_v2`, `collection_v2`, `field_expense_v2`, `cash_deposit_v1`, dan `outlet_expense_v1` belum aktif di baseline. Android menampilkan kemampuan yang dipastikan server. Data simulasi aplikasi berjalan di luar target resmi dan fixture pengujian diisolasi.
+| Boundary | Invariant | Bukti minimum |
+|---|---|---|
+| Bootstrap → snapshot | Account, company, gudang, versi dan hari WITA cocok dengan scope server. Cache lama punya identitas dan status umur yang jelas. | Data layer menolak scope salah dan fixture Odoo membuktikan account ganda, hari berganti dan PJP kosong sah. |
+| Draft → outbox | Owner, UUID, payload, evidence dan dependency tersimpan atomik. Lifecycle media mengikuti command dan policy retensi. | Room migration, process death, retry dan bukti bahwa akun lain tidak bisa mengirim atau membaca item. |
+| Evidence → command | Privasi dan konteks foto dijaga, lokasi dinilai untuk kualitas secara terpisah dari integritas. Server memeriksa evidence sebelum menerima aksi resmi. | Uji izin, hash, geofence, salah outlet, salah owner, format serta storage gagal. |
+| Receipt → UI | HTTP, status lokal dan keputusan server punya state berbeda. Approval, accepted dan rejected berasal dari receipt yang valid. | State matrix Design dan uji Compose harus cocok dengan wire contract, termasuk 401, retry dan penolakan bisnis. |
+| Feature → capability | Server menentukan operasi yang tersedia. Perubahan capability saat resume menutup aksi yang tak lagi sah dan melindungi draf. | Tes capability on/off dan pencabutan role sebelum command dikirim. |
+| Token → UI | Nama semantik terhubung ke token bersama. Perubahan token atau komponen membawa review dan bukti di Figma dan Compose. | Generator zero-diff, screenshot state yang terdampak dan review Design. |
+
+Alur state dari draf sampai transaksi resmi secara konseptual: **draf lokal → menunggu bukti/jaringan → mengirim → receipt**. Sesi kedaluwarsa menahan antrean dan memerlukan akun asal. Timeout dengan hasil ambigu ditangani dengan replay UUID yang sama menurut kontrak. Receipt `needs_approval` tidak disamakan dengan `accepted`. Mapping akhir ke enum dan API mengikuti [spesifikasi Dev](DEV_SPEC.md).
+
+## Keputusan lintas tim yang masih terbuka
+
+| ID | Keputusan | Bukti dan pihak penerima |
+|---|---|---|
+| DEC-01 | File/versi Figma acuan, publish Library, kebutuhan Penpoint. | Pemilik menetapkan file dan jalur feedback. Design menyertakan inventory dan mapping ke [Design System](DESIGN_SYSTEM.md). |
+| DEC-02 | OS perangkat aktual, `minSdk` final, GPS, dan qualification. | Lead, Dev dan backend meninjau matriks emulator/fisik serta kebijakan perangkat. |
+| DEC-03 | Auth/revoke/retensi, capability role bertumpuk dan kebijakan cache offline. | Lead dan maintainer backend menyetujui kontrak dan jalur recovery. Pemilik meninjau dampak kebijakan pengguna. |
+| DEC-04 | Target Odoo Android disposable dan akses runner. | Catat PIC, repo/backend SHA, fixture, target DB dan hasil cleanup. |
+| DEC-05 | Format jam rencana, scope tema awal, target performa Redmi 4X, pilot dan rilis. | Pemilik meninjau usulan. Ukur startup, frame, memori dan performa sinkronisasi sebelum menetapkan budget. |
 
 ## Lingkungan dan bukti
 

@@ -29,3 +29,34 @@ Gate memeriksa ancestor `origin/main`, working tree bersih, whitespace, Ruff, ma
 3. Merge melalui PR dengan otorisasi yang berlaku untuk PR tersebut. Lead memperbarui baseline tim dan memverifikasi SHA pascamerge. Deploy, pengujian terhadap Railway dan mutasi data mengikuti otorisasi tersendiri.
 
 Urutan awal: dokumen/operasi → N2a smoke emulator dan D01 → N2b backend disposable/identity → N3 recovery → N4 visit → N5 commerce/logistics. Masing-masing slice dapat diterima dengan bukti sesuai scope.
+
+## Kepemilikan dan konflik
+
+| Area | Penanggung jawab | Review minimum |
+|---|---|---|
+| SSOT, register blocker, gate, kandidat rilis | Lead | Pemilik untuk scope, reviewer independen untuk integrasi. |
+| Figma, state matrix, token semantik dan prototype | Design | Pemilik untuk visual, Dev untuk feasibility dan pemetaan Compose. |
+| Android, instrumentation dan evidence runtime | Dev | Lead untuk arsitektur, Design untuk kesesuaian visual, reviewer independen untuk kualitas. |
+| API Odoo, shared schema/token, DB dan CI | Maintainer area bersama Lead | Review lintas tim; perubahan capability atau target persisten mengikuti mandat pemilik. |
+
+Leader mengelola sinkronisasi dan staging commit. Sebelum fast-forward worktree tim, periksa status bersih dan ancestor. Jika branch tim memiliki commit berbeda atau perubahan lokal, hentikan fast-forward dan integrasikan melalui merge yang ditinjau bersama pemilik branch. Untuk perubahan yang bertumpuk di DS dan app, integrasikan primitives/kontrak yang dipakai kedua slice terlebih dahulu. Fitur memakai versi yang sama pada candidate. Handoff/agent-log dipertahankan append-only saat konflik.
+
+## Gate desain ke implementasi
+
+1. **Siap dirancang.** Paket memiliki Rxx, flow, aktor, source, capability dan Bxx. Perbedaan kebijakan dicatat sebagai DEC. Feature yang menunggu kontrak dapat menyiapkan prototype dengan fixture.
+2. **Siap diimplementasikan.** Lead mencatat URL/node/version yang diterima, state matrix, token/component mapping, contoh ukuran/font dan delta keputusan. Dev mengikat rute dan test ID ke versi itu sebelum mengerjakannya.
+3. **Siap diintegrasikan.** Cocokkan screenshot/semantics/actual flow dengan versi Figma yang disetujui. Jika desain atau kontrak bergerak, catat delta dan jalankan ulang suite yang terdampak. Bukti runtime mengikuti tabel DEV. Gate lokal dan CI tidak menggantikan pemeriksaan visual atau acceptance perangkat.
+4. **Siap dipublikasikan.** Reviewer mencatat verdict dan dampak test pada SHA terkini. Branch memakai basis terbaru dan scope kandidat yang disetujui. Aturan required checks, review dan otorisasi tetap mengikuti repo.
+
+## Urutan kandidat remote
+
+| Slice | Isi | Bukti sebelum pengajuan |
+|---|---|---|
+| S0 | SSOT, design system, spec kedua tim dan operasi. | Konsistensi tautan/traceability, gate lokal, dan review scope. |
+| S1 | DES-00/01/02 + D01 sesuai paket yang diterima, DEV-01A/01B terpisah bila independen. | Baseline node/versi untuk desain. Boot dan smoke API 24/35 untuk kandidat emulator. |
+| S2 | DEV-02A/02B dan keputusan perangkat. | Fixture Odoo disposable, scope, expiry, bukti hardware terpisah, serta keputusan B01/B02. |
+| S3 | DEV-03A/03B. | Bukti Room/HTTP, process death, migrasi dan retry. |
+| S4 | DEV-04A lalu DEV-04B sesuai B03/B04. | Receipt server untuk kunjungan/evidence dan acceptance terpisah untuk absensi. |
+| S5+ | Sales, Delivery, kas, HRIS dan pilot. | Per capability, QA fixture, efek server, bukti fisik dan sign-off release sesuai scope. |
+
+Kandidat dapat berupa lebih dari satu PR bila dependency independen. Setiap PR mencatat base/head, daftar commit sumber, rancangan yang dipakai, blocker yang tersisa, hasil planner, proof link, temuan review serta otorisasi yang berlaku. SHA pascamerge menjadi titik integrasi berikutnya.

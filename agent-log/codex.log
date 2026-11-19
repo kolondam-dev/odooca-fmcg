@@ -479,3 +479,9 @@
 - [F] Basis origin/main e28e655; Ruff, 14 manifest dan tes kontrak CI lulus.
 - [BU] Integrasi Figma, emulator, perangkat fisik dan backend Android tetap mengikuti milestone.
 - Task managed by codex agent at 2026-11-19T14:53:47+07:00
+
+[2026-11-19T15:40:25+07:00] [INFO] Spesifikasi engineering Android v2
+- [F] Perluas SSOT, paket Design dan Dev, gate lintas tim; tambah design system dan register kontrak endpoint/DB.
+- [F] Enam dokumen diperiksa konsistensi tautan, requirement, komponen dan blocker.
+- [BU] Frame sumber Figma, acceptance perangkat dan runtime Odoo tetap mengikuti milestone.
+- Task managed by codex agent at 2026-11-19T15:40:25+07:00
