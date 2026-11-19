@@ -2794,30 +2794,53 @@ class GenericPeriodPackLoader:
 
             ret_pick = StockPicking.create(pick_vals)
 
+            sm_fields = _safe_fields(StockMove) if StockMove is not None else {}
             move_vals = {
-                "name": f"Retur Karantina: {rej_id} - {sku}",
                 "picking_id": ret_pick.id,
                 "product_id": prod.id,
-                "product_uom": uom_rec.id if uom_rec else False,
                 "product_uom_qty": qty_units,
                 "location_id": self.seed_customer_loc.id,
                 "location_dest_id": self.quarantine_loc.id,
                 "company_id": getattr(self.company, "id", False),
-                "origin": rej_id,
             }
+            if uom_rec and hasattr(uom_rec, "id"):
+                if "product_uom" in sm_fields or not sm_fields:
+                    move_vals["product_uom"] = uom_rec.id
+                elif "product_uom_id" in sm_fields:
+                    move_vals["product_uom_id"] = uom_rec.id
+            if "description_picking" in sm_fields:
+                move_vals["description_picking"] = f"Retur Karantina: {rej_id} - {sku}"
+            if "origin" in sm_fields or not sm_fields:
+                move_vals["origin"] = rej_id
+
             if StockMove is not None:
                 sm = StockMove.create(move_vals)
                 if StockMoveLine is not None:
+                    sml_fields = _safe_fields(StockMoveLine)
                     sml_vals = {
                         "picking_id": ret_pick.id,
                         "move_id": sm.id,
                         "product_id": prod.id,
-                        "lot_id": lot_obj.id if lot_obj else False,
-                        "lot_name": lot_num if lot_num else False,
-                        "quantity": qty_units,
                         "location_id": self.seed_customer_loc.id,
                         "location_dest_id": self.quarantine_loc.id,
                     }
+                    if "company_id" in sml_fields:
+                        sml_vals["company_id"] = getattr(self.company, "id", False)
+                    if lot_obj and ("lot_id" in sml_fields or not sml_fields):
+                        sml_vals["lot_id"] = lot_obj.id
+                    if lot_num and ("lot_name" in sml_fields or not sml_fields):
+                        sml_vals["lot_name"] = lot_num
+                    if "quantity" in sml_fields or not sml_fields:
+                        sml_vals["quantity"] = qty_units
+                    elif "qty_done" in sml_fields:
+                        sml_vals["qty_done"] = qty_units
+                    if uom_rec and hasattr(uom_rec, "id"):
+                        if "product_uom_id" in sml_fields:
+                            sml_vals["product_uom_id"] = uom_rec.id
+                        elif "product_uom" in sml_fields or not sml_fields:
+                            sml_vals["product_uom"] = uom_rec.id
+                    if "picked" in sml_fields or not sml_fields:
+                        sml_vals["picked"] = True
                     StockMoveLine.create(sml_vals)
 
             self._validate_picking_safely(ret_pick, effective_date=rej_date, ref_num=rej_id)

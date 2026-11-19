@@ -2598,6 +2598,10 @@ class TestRejectionsReturnQuarantine(unittest.TestCase):
         self.assertEqual(len(created_pickings), 1)
         self.assertEqual(created_pickings[0].location_id, cust_loc.id)
         self.assertEqual(created_pickings[0].location_dest_id, quarantine_loc.id)
+        self.assertEqual(len(created_moves), 1)
+        self.assertNotIn(
+            "name", getattr(created_moves[0], "_data", {}), "stock.move must not have 'name' field (Odoo 19)."
+        )
 
 
 class TestTaxPkpNonPkpIdentity(unittest.TestCase):
