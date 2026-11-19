@@ -135,11 +135,6 @@ small {
     width: 100%;
     margin-top: 18px;
 }
-.secondary {
-    background: #fff;
-    color: var(--blue);
-    border: 1px solid #dce5ef;
-}
 .text-button {
     padding: 7px 0;
     background: transparent;
@@ -985,9 +980,8 @@ textarea {
     gap: 10px;
     align-items: center;
 }
-.display-photo-actions .secondary {
+.display-photo-actions .ui-btn {
     flex: 1;
-    min-height: 44px;
 }
 
 /* Authentication and task pages */

@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+import { Button } from "../ui";
 import {
     approvalRoot,
     rootOrderDate,
@@ -82,20 +83,22 @@ export function DiscountApproval({
                             {row.label} · {row.command.client_uuid.slice(0, 8)}
                         </p>
                         {blocked && <p role="status">{blocked}</p>}
-                        <button
-                            class="secondary"
+                        <Button
+                            variant="sec"
+                            size="md"
                             disabled={busy || !!blocked}
                             onClick={() => void decide(row, true)}
                         >
                             Setujui diskon
-                        </button>
-                        <button
-                            class="secondary"
+                        </Button>
+                        <Button
+                            variant="sec"
+                            size="md"
                             disabled={busy || !!blocked}
                             onClick={() => void decide(row, false)}
                         >
                             Tolak diskon
-                        </button>
+                        </Button>
                     </div>
                 );
             })}

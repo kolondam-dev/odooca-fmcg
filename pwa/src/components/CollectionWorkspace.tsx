@@ -1,4 +1,5 @@
 import { businessRejected } from "../domain/outbox-state";
+import { Button } from "../ui";
 import { useEffect, useState } from "preact/hooks";
 import { z } from "zod";
 import {
@@ -344,13 +345,14 @@ function CollectionForm({
                         di Lainnya; bukan AR lunas.
                     </p>
                     {businessRejected(saved) && (
-                        <button
-                            class="secondary"
+                        <Button
+                            variant="sec"
+                            size="md"
                             disabled={busy}
                             onClick={() => void startCorrection()}
                         >
                             Koreksi collection ditolak
-                        </button>
+                        </Button>
                     )}
                     {value.correction_reason && (
                         <p>
@@ -402,12 +404,13 @@ function CollectionForm({
                                     }
                                 />
                             </label>
-                            <button
-                                class="secondary"
+                            <Button
+                                variant="sec"
+                                size="md"
                                 onClick={() => setRevision(undefined)}
                             >
                                 Kembali ke pencatatan tersimpan
-                            </button>
+                            </Button>
                         </>
                     )}
                     <label>
@@ -477,20 +480,22 @@ function CollectionForm({
                         existingRef={photo}
                         onChange={setPhoto}
                     />
-                    <button
-                        class="secondary"
+                    <Button
+                        variant="sec"
+                        size="md"
                         disabled={!photo}
                         onClick={() => void action(false)}
                     >
                         Simpan draft collection
-                    </button>
-                    <button
-                        class="primary"
+                    </Button>
+                    <Button
+                        variant="pri"
+                        size="md"
                         disabled={!photo}
                         onClick={() => void action(true)}
                     >
                         Ajukan penerimaan untuk review
-                    </button>
+                    </Button>
                 </fieldset>
             ) : (
                 <p>Memulihkan data collection…</p>

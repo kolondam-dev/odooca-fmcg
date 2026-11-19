@@ -338,3 +338,9 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - K31 ditambahkan; CameraViewfinder dan tombol gaya lama di layar lain tetap utang
 - flag backend tetap OFF
 - Task managed by claude-design agent at 2026-11-18T16:06:01+07:00
+
+[2026-11-18T20:36:17+07:00] [INFO] Fase 3B-18: tombol gaya lama jadi Button DS; Keluar tanpa garis bawah
+- vitest 522; e2e penuh 260 lulus, 2 skip
+- K32 ditambahkan; K30 selesai
+- flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-18T20:36:17+07:00
