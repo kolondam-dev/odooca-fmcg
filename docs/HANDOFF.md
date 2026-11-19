@@ -1,3 +1,9 @@
+## 2026-11-19 — [BU] Backlog: keputusan Extra call/NOO, PJP, approval kumulatif (claude-design)
+
+- Diputuskan pemilik: Extra call disetujui Supervisor, NOO disetujui Branch Manager, approval hanya untuk yang kumulatif melebihi tier.
+- `docs/ui/BACKLOG_FE_BE.md`: penjelasan PJP (apa/kenapa/untuk apa, opsi A/B/C), bagian 5 audit `id_approval`, temuan BE-14..BE-17, backlog BE-18 dan FE-11.
+- Hanya dokumentasi; tanpa perubahan kode.
+
 ## 2026-11-19T16:34:46+07:00 — Agent-Claude-Dev1 — Inventarisasi ulang backlog frontend dan backend
 **Berubah:** `docs/ui/BACKLOG_FE_BE.md` (baru), `docs/HANDOFF.md`, `agent-log/claude-design.log`. Tidak ada perubahan kode.
 **Hasil:** [F] Backlog FE (FE-1..FE-10: komponen `UnitQty`, komponen serupa, Extra call, NOO, saran order, absen, dll.) dan BE (6 endpoint, 6 dari 15 command ada, celah snapshot, 13 temuan) dengan urutan kerja dan 7 keputusan pemilik.
