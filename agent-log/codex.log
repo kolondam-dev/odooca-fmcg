@@ -473,3 +473,25 @@
 - [F] No manual deployment was run and no server data was edited.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-19T13:46:37+07:00
+
+[2026-11-19T14:53:47+07:00] [INFO] Baseline koordinasi Android
+- [F] Menyiapkan SSOT, spec Design dan Dev, register blocker, prosedur integrasi, dan gate lokal.
+- [F] Basis origin/main e28e655; Ruff, 14 manifest dan tes kontrak CI lulus.
+- [BU] Integrasi Figma, emulator, perangkat fisik dan backend Android tetap mengikuti milestone.
+- Task managed by codex agent at 2026-11-19T14:53:47+07:00
+
+[2026-11-19T15:40:25+07:00] [INFO] Spesifikasi engineering Android v2
+- [F] Perluas SSOT, paket Design dan Dev, gate lintas tim; tambah design system dan register kontrak endpoint/DB.
+- [F] Enam dokumen diperiksa konsistensi tautan, requirement, komponen dan blocker.
+- [BU] Frame sumber Figma, acceptance perangkat dan runtime Odoo tetap mengikuti milestone.
+- Task managed by codex agent at 2026-11-19T15:40:25+07:00
+
+[2026-11-19T17:01:49+07:00] [INFO] Handoff lokal Android, akses GitHub melalui Lead
+- [F] Perjelas batas akses Design/Dev dan prosedur bundle antarsesi Cloud.
+- [F] Gate lokal menerima SHA main dari Lead tanpa akses remote.
+- Task managed by codex agent at 2026-11-19T17:01:49+07:00
+
+[2026-11-19T17:17:03+07:00] [INFO] Alur sinkronisasi Lead Android
+- [F] Checkout utama membuka main lokal sebagai mirror fast-forward origin/main.
+- [F] Gate Lead menyegarkan dan memeriksa ulang main GitHub, serta menghentikan kandidat yang tertinggal.
+- Task managed by codex agent at 2026-11-19T17:17:03+07:00

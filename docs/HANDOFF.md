@@ -1,3 +1,21 @@
+## 2026-11-19T17:17:03+07:00 — Codex — Sinkronisasi Lead Android
+**Berubah:** [F] Checkout utama memakai main lokal yang mengikuti origin/main. Dokumen menjelaskan kandidat per slice dan pemeriksaan kebaruan main sebelum perakitan, push, serta merge. Gate menambah opsi Lead `--refresh-main`.
+**Scope:** [F] Branch tim tetap lokal. Publikasi kandidat mengikuti checkpoint dan mandat pemilik.
+
+## 2026-11-19T17:01:49+07:00 — Codex — Handoff lokal Android
+**Berubah:** [F] Lead menangani seluruh GitHub. Design dan Dev memakai branch lokal dan bundle bila checkout berbeda. Tambahkan panduan operasi lokal dan pilihan basis gate dari SHA yang diserahkan Lead.
+**Menunggu:** [BU] Handoff bundle ke sesi tim bila tidak memakai checkout yang sama.
+
+## 2026-11-19T15:40:25+07:00 — Codex — Spesifikasi engineering Android v2
+**Berubah:** [F] SSOT Android v2, design system dengan kontrak Figma/Compose, paket Design dan Dev, register endpoint/backend/DB, serta gerbang integrasi antartim dan slice publikasi.
+**Diverifikasi:** [F] Basis main `e28e655` dan pemeriksaan keterlacakan enam dokumen. Perubahan ini dokumentasi.
+**Menunggu:** [BU] File Figma/library yang akan dipakai sebagai referensi resmi, inventaris frame aktual, uji emulator/fisik dan Odoo disposable.
+
+## 2026-11-19T14:53:47+07:00 — Codex — Baseline koordinasi Android
+**Berubah:** [F] SSOT dan register blocker di `docs/android/ARCHITECTURE.md`, spec Design/Dev dan operasi branch, plus `android/tools/integration_gate.sh`.
+**Diverifikasi:** [F] Basis `e28e655`. Ruff, 14 manifest serta tes kontrak selector, workflow dan Android lulus.
+**Belum diuji:** [BU] Mode Gradle lokal, emulator, perangkat fisik, konektivitas Odoo Android dan integrasi workspace desain.
+
 ## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
 
 - D5 PJP kosong opsi C; D6 rekomendasi penyetuju/approval disetujui; D7 Tier 0, kumulatif %, rantai berjenjang, batas per principal, diskon program resmi ikut dihitung.
