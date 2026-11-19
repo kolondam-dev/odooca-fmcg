@@ -336,3 +336,11 @@
 - [F] python -m ruff check . PASS; check_manifests 14 addon PASS; unittest FIN04 8/8 PASS; diff --check PASS. Ruff tersedia lewat python -m ruff walau CLI tidak di PATH.
 - [BU] Native Odoo dan CI exact SHA belum diuji; planner setelah commit wajib. Tidak ada status katalog yang diubah, PR atau deploy production.
 - Task managed by Agent-Opencode at 2026-11-19T11:38:25+07:00
+
+[2026-11-19T14:56:43+07:00] [INFO] I2a tie-out nilai XLSX FIN01/02/03/51/57
+- [F] Pembaca/pembanding XLSX offline baru menolak formula, numeric-string, coverage/duplikat, dan nilai salah; oracle native merender OCA FIN01/02/03 full+jurnal sales serta custom FIN51/57 pada fixture disposable.
+- [F] TAMBAH: 22 unit sintetis PASS termasuk split document dengan total sama, gross mutation, distinct non-register move/line dan aritmetika register-GL; FIN04 8 unit, ruff, 14 manifest, diff check juga PASS.
+- [F] Branch fast-forward ke origin/main e28e655 tanpa mengubah riwayat agen lain; REPORT_CATALOG.csv tidak diubah.
+- [BU] Render native menunggu Finance I0 exact-SHA; workbook/AML live privat, role Sales production, mapping/perimeter, freeze dan sign-off Controller+QA tetap HOLD. Fixture bukan penerimaan live.
+- [BU] whats_new.sh gagal karena CRLF pipefail; pemeriksaan ekuivalen git fetch/divergence/log/status dilakukan dan skrip tidak diubah.
+- Task managed by opencode at 2026-11-19T14:56:43+07:00

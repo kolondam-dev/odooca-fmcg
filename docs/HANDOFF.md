@@ -13,6 +13,13 @@
 **Perhatian reviewer:** Jam absen di `MorningSession` berubah dari `HH:mm:ss` ke `HH.mm.ss`; tes lama `login-attendance-ux` menerima keduanya (`[.:]`) dan lulus. Tidak ada tes lama diubah.
 **Butir terbuka:** 0. Backend: penanda PJP kosong sah, modul piutang + jadwal penagihan -> snapshot `ar`, command NOO, Extra call tanpa sesi PJP (K33, K10). 1. Pemilik: apakah jam rencana PJP harus berdetik. 2. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
 **Signature:** Task managed by Agent Claude-Dev1 at 2026-11-19T11:30:55+07:00
+## 2026-11-19T14:56:43+07:00 — Agent-Opencode — I2a tie-out nilai XLSX FIN01/02/03/51/57
+**Berubah:** [F] Modul offline `scripts/ops/verify_finance_i2_xlsx.py` membaca workbook OCA/custom dan menolak formula, angka teks, coverage/duplikat serta nominal salah. Oracle native I2a kini merender XLSX asli melalui wizard FIN01/02/03 (full + jurnal sales), FIN51 dua-company 1×+7×, dan FIN57 invoice/bill/refund; hasil dibandingkan ke AML/expected table tanpa menyimpan workbook. FIN51 export sudah diwiring setelah snapshot combined. `REPORT_CATALOG.csv` tidak diubah.
+**Dampak test: TAMBAH.** Risiko sel ekspor dapat berbeda dari payload native dan agregat dapat menyembunyikan baris ganda. [F] 22 unit sintetis mencakup positive tie-out serta counterexample formula, numeric-string, nilai/coverage/duplicate block, split document dengan total sama, gross mutation, distinct move/line, dan aritmetika register↔GL. [F] Ruff, 14 manifest, FIN04 8 unit, unit XLSX 22, dan `git diff --check` lulus lokal. [BU] Render Odoo/OCA asli hanya tersedia di CI; Finance I0 exact-SHA belum berjalan.
+**Batas:** [F] Branch disinkronkan fast-forward ke `origin/main` `e28e655`; perubahan main hanya PWA/log dan riwayat agen lain dipertahankan. [BU] Bukti fixture disposable tidak menerima laporan live. Workbook/AML live tetap privat; mapping/perimeter, freeze, akun Sales-only production, digest/provenance, serta sign-off Controller + QA belum tersedia. Semua 58 ID tetap `BELUM_DITERIMA`.
+**Catatan alat:** [BU] `bash scripts/agent/whats_new.sh opencode` gagal karena file checkout CRLF dibaca sebagai `pipefail\r`; pemeriksaan ekuivalen dilakukan lewat `git fetch`, divergence/log/status, lalu branch disinkronkan. Skrip koordinasi tidak diubah pada slice ini.
+**Signature:** task managed by opencode at 2026-11-19T14:56:43+07:00
+
 ## 2026-11-19T13:51:15+07:00 — Codex supervisor — PR #161 integration
 **Changed:** Merged main 9f00b01; resolved only HANDOFF conflict, preserving both histories verbatim. Finance implementation and test oracle unchanged.
 **Verified:** 31 finance/planner/workflow unit tests and 14 manifests PASS; cached diff check clean.
