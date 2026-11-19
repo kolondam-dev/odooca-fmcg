@@ -490,3 +490,8 @@
 - [F] Perjelas batas akses Design/Dev dan prosedur bundle antarsesi Cloud.
 - [F] Gate lokal menerima SHA main dari Lead tanpa akses remote.
 - Task managed by codex agent at 2026-11-19T17:01:49+07:00
+
+[2026-11-19T17:17:03+07:00] [INFO] Alur sinkronisasi Lead Android
+- [F] Checkout utama membuka main lokal sebagai mirror fast-forward origin/main.
+- [F] Gate Lead menyegarkan dan memeriksa ulang main GitHub, serta menghentikan kandidat yang tertinggal.
+- Task managed by codex agent at 2026-11-19T17:17:03+07:00

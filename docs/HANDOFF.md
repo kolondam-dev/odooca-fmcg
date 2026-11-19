@@ -1,3 +1,7 @@
+## 2026-11-19T17:17:03+07:00 — Codex — Sinkronisasi Lead Android
+**Berubah:** [F] Checkout utama memakai main lokal yang mengikuti origin/main. Dokumen menjelaskan kandidat per slice dan pemeriksaan kebaruan main sebelum perakitan, push, serta merge. Gate menambah opsi Lead `--refresh-main`.
+**Scope:** [F] Branch tim tetap lokal. Publikasi kandidat mengikuti checkpoint dan mandat pemilik.
+
 ## 2026-11-19T17:01:49+07:00 — Codex — Handoff lokal Android
 **Berubah:** [F] Lead menangani seluruh GitHub. Design dan Dev memakai branch lokal dan bundle bila checkout berbeda. Tambahkan panduan operasi lokal dan pilihan basis gate dari SHA yang diserahkan Lead.
 **Menunggu:** [BU] Handoff bundle ke sesi tim bila tidak memakai checkout yang sama.

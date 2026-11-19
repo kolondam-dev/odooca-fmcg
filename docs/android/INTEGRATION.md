@@ -15,26 +15,41 @@ Cloud dengan repository yang sama dapat menyediakan checkout terpisah per chat. 
 - Tim membuat commit atomik per ID paket dalam bahasa Indonesia. Tambahkan jejak HANDOFF dan log sesuai aturan repo. Gunakan signature workstream `Task managed by Agent Codex-Mobile Native at <ISO8601 +07:00>` sebagai atribusi native, dan baris terakhir yang dikenali protokol `task managed by codex agent at <ISO8601 +07:00>` sampai aturan bersama menyelaraskan dua format. Gunakan identitas Git yang disetujui pemilik.
 - Untuk setiap milestone, buat branch kandidat yang berangkat dari `origin/main` terbaru. Integrasikan hanya commit yang masuk scope dan sudah ditinjau, termasuk versi desain yang disetujui. Tinjau konflik shared contract/DS bersama pemilik area dan pertahankan riwayat HANDOFF/log. Catat commit asal dan SHA kandidat. Branch tim dapat terus mengerjakan slice berikutnya di worktree masing-masing.
 
-## Gate lokal dan Cloud
+## Mirror lokal dan jalur integrasi Lead
 
-Untuk Lead, pada branch kandidat dengan perubahan yang sudah di-commit:
+`/workspace/odooca-fmcg` membuka `main` lokal sebagai mirror GitHub. Worktree tim dan integrasi berbagi objek Git dengan repo itu di instance Cloud yang sama. Lead menjaga mirror bersih dan menggesernya hanya dengan fast-forward. Jika main lokal berisi commit tambahan, berubah di working tree, atau history GitHub ditulis ulang, hentikan sinkronisasi mirror dan periksa selisihnya sebelum memperbarui ref. Jangan reset pekerjaan pihak lain.
+
+Pada awal checkpoint, setelah menerima handoff, dan sebelum merakit kandidat:
 
 ```bash
-git fetch origin main
-bash android/tools/integration_gate.sh
-# Jalankan juga Gradle bila JDK 17, SDK 35 dan build-tools tersedia
-bash android/tools/integration_gate.sh --gradle
+git -C /workspace/odooca-fmcg fetch origin refs/heads/main:refs/remotes/origin/main
+git -C /workspace/odooca-fmcg status --short --branch
+# Setelah memeriksa branch main dan worktree bersih:
+git -C /workspace/odooca-fmcg merge --ff-only origin/main
+git -C /workspace/odooca-fmcg rev-parse origin/main
 ```
 
-Default gate Lead memeriksa ancestor `origin/main`. Untuk tim, gunakan `ANDROID_GATE_BASE=<SHA main dari Lead> bash android/tools/integration_gate.sh` tanpa akses remote. Gate memeriksa ancestor basis yang dipilih, working tree bersih, whitespace, Ruff, manifest, impact planner, tes selector/gate, dan kesesuaian token. Mode Gradle menambah domain, OpenAPI, data-layer, lint dan build debug. Gunakan branch yang di-commit agar planner melihat delta kandidat. Simpan output serta SHA basis/head di handoff. Gate tersedia di workstation dan Cloud dengan dependensi terkait, sementara GitHub menjalankan required checks existing. Untuk emulator gunakan bukti DEV-01 dan perangkat fisik sesuai milestone.
+1. Catat SHA main yang baru. Untuk team worktree, periksa status, HEAD dan delta sejak baseline. Jika perubahan upstream menyentuh scope aktif, sepakati checkpoint dan sinkronkan branch tim saat bersih. Pertahankan draf dan commit tim. Untuk sesi terpisah, kirim baseline yang dipatok dan terima hasil melalui bundle lokal sesuai [panduan tim](LOCAL_WORKFLOW.md).
+2. Review handoff dan daftar commit yang diterima. Dari `origin/main` yang baru diverifikasi, buat worktree kandidat pada `agen/android-integration-<slice>-Codex-Mobile-Native`. Integrasikan hanya commit slice yang disetujui dan dependency yang belum ada di main. Catat SHA asal dan ulangi pemeriksaan diff. Konflik kontrak atau desain dibahas dengan pemilik area.
+3. Periksa main sekali lagi sebelum membentuk commit integrasi. Jika bergerak, ambil basis baru dan rakit ulang sebelum commit atau sinkronkan kandidat yang sudah terlanjur memiliki commit. Jika kandidat sudah dipublikasikan, merge main baru ke kandidat dan pertahankan riwayat PR.
 
-## Publikasi per milestone
+## Gate lokal dan publikasi
 
-1. Lead mengajukan slice bila requirement dan acceptance sudah jelas. Lampirkan desain versi/node yang diterima, blocker dan status, daftar file, planner, serta evidence yang tepat. Push branch kandidat dan buka PR ke `main` dalam cakupan otorisasi pemilik.
-2. Pastikan required checks hijau untuk HEAD terkini, basis masih up to date, dan thread review selesai. Jika main maju, sinkronkan dan ulangi bukti sesuai selector. Reviewer mencatat **Dampak test** dengan alasan dan counterexample yang relevan.
-3. Merge melalui PR dengan otorisasi yang berlaku untuk PR tersebut. Lead memperbarui baseline tim dan memverifikasi SHA pascamerge. Deploy, pengujian terhadap Railway dan mutasi data mengikuti otorisasi tersendiri.
+Pada kandidat yang sudah di-commit, Lead menjalankan:
 
-Urutan awal: dokumen/operasi → N2a smoke emulator dan D01 → N2b backend disposable/identity → N3 recovery → N4 visit → N5 commerce/logistics. Masing-masing slice dapat diterima dengan bukti sesuai scope.
+```bash
+bash android/tools/integration_gate.sh --refresh-main
+# Jika toolchain Gradle tersedia:
+bash android/tools/integration_gate.sh --refresh-main --gradle
+```
+
+Gate Lead menyegarkan `origin/main`, memeriksa ancestor dan working tree bersih, whitespace, Ruff, manifest, planner, tes kontrak CI, dan token. Gate membandingkan lagi SHA GitHub main pada akhir verifikasi. Mode Gradle menambah domain, OpenAPI, data layer, lint dan build debug. Tim bekerja dengan `ANDROID_GATE_BASE=<SHA main dari Lead> bash android/tools/integration_gate.sh` di lokal. Flag `--refresh-main` hanya untuk Lead.
+
+1. Sebelum push, Lead memastikan kandidat masih mencakup tip main terbaru. Bila tip berubah setelah gate selesai, sinkronkan dan jalankan ulang pengujian sesuai dampak. Push ref kandidat melalui otorisasi pemilik, buka PR menuju main, dan catat base/head serta bukti.
+2. Sebelum merge, verifikasi lagi base dan head PR, status up-to-date, required checks pada revisi yang tepat, dan thread review. Bila main bergerak sewaktu CI berjalan, sinkronkan kandidat dan ulangi bukti. Checks dan ruleset GitHub menjadi pengaman terakhir jika ada perubahan bersamaan setelah pemeriksaan Lead.
+3. Setelah merge melalui PR, fetch dan fast-forward mirror lokal. Beri tim SHA main baru dan instruksi sinkronisasi. Deploy, Railway dan mutasi database tetap mengikuti otorisasi terpisah.
+
+Urutan: dokumen/operasi → N2a smoke emulator dan D01 → N2b backend disposable/identity → N3 recovery → N4 visit → N5 commerce/logistics.
 
 ## Kepemilikan dan konflik
 

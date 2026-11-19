@@ -1,13 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -gt 1 || ( $# -eq 1 && "$1" != --gradle ) ]]; then
-    echo "Usage: bash android/tools/integration_gate.sh [--gradle]" >&2
-    exit 2
-fi
+run_gradle=false
+refresh_main=false
+for option in "$@"; do
+    case "$option" in
+        --gradle) run_gradle=true ;;
+        --refresh-main) refresh_main=true ;;
+        *)
+            echo "Usage: bash android/tools/integration_gate.sh [--gradle] [--refresh-main]" >&2
+            exit 2
+            ;;
+    esac
+done
 
 cd "$(git rev-parse --show-toplevel)"
 base_ref="${ANDROID_GATE_BASE:-refs/remotes/origin/main}"
+if "$refresh_main"; then
+    if [[ -n "${ANDROID_GATE_BASE:-}" ]]; then
+        echo "--refresh-main uses origin/main. Clear ANDROID_GATE_BASE first." >&2
+        exit 2
+    fi
+    git fetch origin refs/heads/main:refs/remotes/origin/main
+fi
 base="$(git rev-parse --verify --end-of-options "${base_ref}^{commit}")"
 head="$(git rev-parse HEAD)"
 printf 'Base %s\nHEAD %s\n' "$base" "$head"
@@ -33,7 +48,7 @@ trap 'rm -f "$token_file"' EXIT
 python android/tools/gen_design_tokens.py pwa/design/tokens.json "$token_file"
 diff -u android/core/designsystem/src/main/kotlin/com/kolondam/odooca/field/designsystem/Tokens.kt "$token_file"
 
-if [[ $# -eq 1 ]]; then
+if "$run_gradle"; then
     (
         cd android
         ./gradlew --no-daemon :core:domain:test :core:data:testDebugUnitTest \
@@ -42,4 +57,12 @@ if [[ $# -eq 1 ]]; then
     python android/tools/validate_contract.py pwa/contracts/openapi.json android/core/domain/build/contract-samples
 else
     echo "Gradle checks require --gradle and the Android toolchain."
+fi
+
+if "$refresh_main"; then
+    remote_main="$(git ls-remote --exit-code origin refs/heads/main)"
+    if [[ "${remote_main%%$'\t'*}" != "$base" ]]; then
+        echo "GitHub main changed during validation. Sync the candidate and rerun the gate." >&2
+        exit 1
+    fi
 fi
