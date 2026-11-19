@@ -83,6 +83,9 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         self.assertIn("resumeAfterAuthentication", source)
         self.assertIn("RobolectricTestRunner", source)
         self.assertIn("inMemoryDatabaseBuilder", source)
+        # Server HTTP harus memakai kelas yang ada di android.jar; com.sun.* tidak tersedia.
+        self.assertIn("ServerSocket", source)
+        self.assertNotIn("com.sun", source)
 
 
 if __name__ == "__main__":

@@ -10,12 +10,15 @@ import com.kolondam.odooca.field.data.network.PersistentCookieJar
 import com.kolondam.odooca.field.data.security.SecretCipher
 import com.kolondam.odooca.field.data.security.SessionStore
 import com.kolondam.odooca.field.domain.sync.CommandState
-import com.sun.net.httpserver.HttpExchange
-import com.sun.net.httpserver.HttpServer
-import java.net.InetSocketAddress
+import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.InetAddress
+import java.net.ServerSocket
+import java.net.Socket
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
@@ -53,10 +56,9 @@ class OutboxSessionIntegrationTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         context.getSharedPreferences("odooca_session", Context.MODE_PRIVATE).edit().clear().commit()
         backend = SessionBackend()
-        val baseUrl = backend.start()
         val store = SessionStore(context, PlainCipher)
         api = OdoocaApi(
-            ApiConfig(baseUrl, null),
+            ApiConfig(backend.start(), null),
             PersistentCookieJar(store),
             store,
         )
@@ -203,98 +205,138 @@ class OutboxSessionIntegrationTest {
         override suspend fun invalidate(lease: SessionLease) = session.invalidate(lease)
     }
 
-    /** Server HTTP JDK minimal: login sesi, bootstrap identitas, dan penerimaan command. */
+    /**
+     * Server HTTP/1.1 minimal di atas ServerSocket (tersedia di android.jar):
+     * login sesi, bootstrap identitas, dan penerimaan command. Satu koneksi dilayani sekaligus.
+     */
     private class SessionBackend {
         private val commands = ConcurrentLinkedQueue<CommandRequest>()
-        private val executor = Executors.newFixedThreadPool(4)
-        private lateinit var server: HttpServer
+        private val socket = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
+        private val worker = thread(isDaemon = true, name = "session-backend") { serve() }
         val rejectNextCommand = AtomicBoolean(false)
 
-        fun start(): String {
-            server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
-            server.executor = executor
-            server.createContext("/") { exchange -> respond(exchange) }
-            server.start()
-            return "http://127.0.0.1:${server.address.port}"
-        }
+        fun start(): String = "http://127.0.0.1:${socket.localPort}"
 
         fun stop() {
-            server.stop(0)
-            executor.shutdownNow()
+            runCatching { socket.close() }
+            worker.join(2_000)
         }
 
         fun snapshot(): List<CommandRequest> = commands.toList()
 
-        private fun respond(exchange: HttpExchange) {
-            try {
-                val body = exchange.requestBody.readBytes().toString(Charsets.UTF_8)
-                val cookie = exchange.requestHeaders.getFirst("Cookie")
-                when (exchange.requestURI.path) {
-                    "/web/session/authenticate" -> {
-                        val login = Regex("\"login\":\"([^\"]+)\"").find(body)?.groupValues?.get(1)
-                        if (login == null) {
-                            write(exchange, 400, "{}", null)
-                        } else {
-                            write(
-                                exchange,
-                                200,
-                                "{\"jsonrpc\":\"2.0\",\"result\":{\"uid\":1}}",
-                                "session_id=$login; Path=/",
-                            )
-                        }
-                    }
-                    "/api/v1/me/bootstrap" -> {
-                        val owner = ownerOf(cookie)
-                        if (owner == null) {
-                            write(exchange, 401, "{}", null)
-                        } else {
-                            write(
-                                exchange,
-                                200,
-                                "{\"id\":\"$owner\",\"companyId\":\"1\",\"name\":\"User $owner\"," +
-                                    "\"businessDate\":\"2026-11-19\",\"csrfToken\":\"csrf-$owner\"}",
-                                null,
-                            )
-                        }
-                    }
-                    "/api/v1/sync/commands" -> {
-                        val uuid = Regex("\"client_uuid\":\"([^\"]+)\"")
-                            .find(body)
-                            ?.groupValues
-                            ?.get(1)
-                            ?: "missing"
-                        commands += CommandRequest(
-                            uuid,
-                            ownerOf(cookie),
-                            exchange.requestHeaders.getFirst("X-CSRF-Token"),
-                        )
-                        if (rejectNextCommand.compareAndSet(true, false)) {
-                            write(exchange, 401, "{}", null)
-                        } else {
-                            write(
-                                exchange,
-                                200,
-                                "{\"client_uuid\":\"$uuid\",\"status\":\"accepted\"," +
-                                    "\"reference\":\"R-$uuid\"}",
-                                null,
-                            )
-                        }
-                    }
-                    else -> write(exchange, 404, "{}", null)
-                }
-            } catch (t: Throwable) {
-                runCatching { write(exchange, 500, "{}", null) }
-            } finally {
-                runCatching { exchange.close() }
+        private fun serve() {
+            while (!socket.isClosed) {
+                val client = runCatching { socket.accept() }.getOrNull() ?: return
+                runCatching { handle(client) }
             }
         }
 
-        private fun write(exchange: HttpExchange, code: Int, body: String, cookie: String?) {
+        private fun handle(client: Socket) {
+            client.use { connection ->
+                connection.soTimeout = 10_000
+                val input = BufferedInputStream(connection.getInputStream())
+                val requestLine = readLine(input) ?: return
+                val path = requestLine.split(' ').getOrNull(1) ?: return
+                val headers = readHeaders(input)
+                val body = readBody(input, headers["content-length"]?.toIntOrNull() ?: 0)
+                val reply = route(path, body, headers["cookie"], headers["x-csrf-token"])
+                write(connection.getOutputStream(), reply.status, reply.body, reply.cookie)
+            }
+        }
+
+        private fun route(path: String, body: String, cookie: String?, csrf: String?): Reply = when (path) {
+            "/web/session/authenticate" -> {
+                val login = Regex("\"login\":\"([^\"]+)\"").find(body)?.groupValues?.get(1)
+                if (login == null) {
+                    Reply(400, "{}")
+                } else {
+                    Reply(200, "{\"jsonrpc\":\"2.0\",\"result\":{\"uid\":1}}", "session_id=$login; Path=/")
+                }
+            }
+            "/api/v1/me/bootstrap" -> {
+                val owner = ownerOf(cookie)
+                if (owner == null) {
+                    Reply(401, "{}")
+                } else {
+                    Reply(
+                        200,
+                        "{\"id\":\"$owner\",\"companyId\":\"1\",\"name\":\"User $owner\"," +
+                            "\"businessDate\":\"2026-11-19\",\"csrfToken\":\"csrf-$owner\"}",
+                    )
+                }
+            }
+            "/api/v1/sync/commands" -> {
+                val uuid = Regex("\"client_uuid\":\"([^\"]+)\"").find(body)?.groupValues?.get(1) ?: "missing"
+                commands += CommandRequest(uuid, ownerOf(cookie), csrf)
+                if (rejectNextCommand.compareAndSet(true, false)) {
+                    Reply(401, "{}")
+                } else {
+                    Reply(
+                        200,
+                        "{\"client_uuid\":\"$uuid\",\"status\":\"accepted\",\"reference\":\"R-$uuid\"}",
+                    )
+                }
+            }
+            else -> Reply(404, "{}")
+        }
+
+        private fun readLine(input: InputStream): String? {
+            val buffer = ByteArrayOutputStream()
+            while (true) {
+                val byte = input.read()
+                if (byte < 0) {
+                    return if (buffer.size() == 0) null else String(buffer.toByteArray(), Charsets.UTF_8)
+                }
+                if (byte == '\n'.code) break
+                if (byte != '\r'.code) buffer.write(byte)
+            }
+            return String(buffer.toByteArray(), Charsets.UTF_8)
+        }
+
+        private fun readHeaders(input: InputStream): Map<String, String> {
+            val headers = mutableMapOf<String, String>()
+            while (true) {
+                val line = readLine(input) ?: break
+                if (line.isEmpty()) break
+                val separator = line.indexOf(':')
+                if (separator > 0) {
+                    headers[line.substring(0, separator).trim().lowercase()] =
+                        line.substring(separator + 1).trim()
+                }
+            }
+            return headers
+        }
+
+        private fun readBody(input: InputStream, length: Int): String {
+            if (length <= 0) return ""
+            val bytes = ByteArray(length)
+            var offset = 0
+            while (offset < length) {
+                val read = input.read(bytes, offset, length - offset)
+                if (read < 0) break
+                offset += read
+            }
+            return String(bytes, 0, offset, Charsets.UTF_8)
+        }
+
+        private fun write(output: OutputStream, status: Int, body: String, cookie: String? = null) {
             val bytes = body.toByteArray(Charsets.UTF_8)
-            exchange.responseHeaders.set("Content-Type", "application/json")
-            if (cookie != null) exchange.responseHeaders.add("Set-Cookie", cookie)
-            exchange.sendResponseHeaders(code, bytes.size.toLong())
-            exchange.responseBody.use { it.write(bytes) }
+            val reason = when (status) {
+                200 -> "OK"
+                401 -> "Unauthorized"
+                404 -> "Not Found"
+                else -> "Bad Request"
+            }
+            val head = buildString {
+                append("HTTP/1.1 $status $reason\r\n")
+                append("Content-Type: application/json\r\n")
+                append("Content-Length: ${bytes.size}\r\n")
+                if (cookie != null) append("Set-Cookie: $cookie\r\n")
+                append("Connection: close\r\n\r\n")
+            }
+            output.write(head.toByteArray(Charsets.US_ASCII))
+            output.write(bytes)
+            output.flush()
         }
 
         private fun ownerOf(cookie: String?): String? = cookie
@@ -303,6 +345,8 @@ class OutboxSessionIntegrationTest {
             ?.firstOrNull { it.startsWith("session_id=") }
             ?.substringAfter('=')
             ?.takeIf { it.isNotBlank() }
+
+        private data class Reply(val status: Int, val body: String, val cookie: String? = null)
     }
 
     private object PlainCipher : SecretCipher {

@@ -1,4 +1,4 @@
-[2026-10-25T23:12:56+07:00] [INFO] Gate CI invariant seed dan workflow supervisi
+﻿[2026-10-25T23:12:56+07:00] [INFO] Gate CI invariant seed dan workflow supervisi
 - Validator independen, replay lot dan mutation tests; baseline gagal, tanpa modifikasi dataset.
 - Bukti runtime Odoo dan penguncian ruleset belum diverifikasi; lihat kontrak invariant.
 - Task managed by codex agent at 2026-10-25T23:12:56+07:00
@@ -34,14 +34,14 @@
 
 [2026-10-26T20:42:43+07:00] [INFO] Rancangan API backend dan PWA hybrid
 - Mandat pemilik: back-office Odoo web penuh, lapangan dan personal HRIS PWA sendiri.
-- Rancangan docs/blueprints/mobile_api_and_pwa_plan.md: kontrak, auth/role/scope, outbox, media, domain dan MOB-00–06.
+- Rancangan docs/blueprints/mobile_api_and_pwa_plan.md: kontrak, auth/role/scope, outbox, media, domain dan MOB-00â€“06.
 - Seluruh fitur baru masih rancangan; tidak mengubah runtime/dataset atau deploy.
 - Task managed by codex agent at 2026-10-26T20:42:43+07:00
 
 [2026-10-26T21:13:52+07:00] [INFO] Elaborasi plan mobile v0.2 sesuai 11 tambahan requirement pemilik
 - Binding akun/perangkat, sesi pagi, approval extra call/diskon/HPP, biaya DO/trip dan petty cash BBM H-1/insidentil.
-- Foto timestamp/geotag/pinpoint map, geofence 5–15m, location interval 5/15 menit, polling auto-sync/notifikasi dan bottom nav motion/haptic low-end.
-- Matriks R01–R11 dan gate ditambahkan; batas PWA background/spoofing dijelaskan dengan sumber teknis.
+- Foto timestamp/geotag/pinpoint map, geofence 5â€“15m, location interval 5/15 menit, polling auto-sync/notifikasi dan bottom nav motion/haptic low-end.
+- Matriks R01â€“R11 dan gate ditambahkan; batas PWA background/spoofing dijelaskan dengan sumber teknis.
 - JSON/struktur/tabel dan diff whitespace diperiksa; semua fitur baru masih rancangan, tidak deploy/push atau ubah dataset.
 - Task managed by codex agent at 2026-10-26T21:13:52+07:00
 
@@ -54,7 +54,7 @@
 
 [2026-10-26T21:53:04+07:00] [INFO] Plan v0.4: frontend-first dan scope mobile-only
 - Mandat pemilik: tidak mengambil pekerjaan agent lain; backend menjadi dependency/handoff.
-- Urutan PWA-01–06: UI, alur client, offline, kontrak formal, HTTP adapter, E2E live; interface minimum sejak awal dan mock eksplisit.
+- Urutan PWA-01â€“06: UI, alur client, offline, kontrak formal, HTTP adapter, E2E live; interface minimum sejak awal dan mock eksplisit.
 - Satu plan mobile tetap di blueprints; gap menjadi snapshot audit, SCOPE/DEVELOPMENT cukup rujukan saat koordinasi. Tidak ada implementasi aplikasi atau perubahan dokumen domain agent lain.
 - Task managed by codex agent at 2026-10-26T21:53:04+07:00
 
@@ -342,7 +342,7 @@
 
 [2026-11-11T19:04:48+07:00] [INFO] D1: scroll dan drill-down peta wilayah
 - Perbaiki overflow action D1 dan klik poligon.
-- Gunakan batas Sulut di repo untuk kabupaten/kota → kecamatan → kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
+- Gunakan batas Sulut di repo untuk kabupaten/kota â†’ kecamatan â†’ kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
 - Task managed by codex agent at 2026-11-11T19:04:48+07:00
 
 [2026-11-16T09:35:05+07:00] [INFO] Kontrak dampak test review supervisor
@@ -443,3 +443,11 @@
 - [F] Local: ruff, 14 manifests, 28 CI tests, guard grep clean, YAML parse, and diff check pass.
 - [BU] Gradle/Robolectric compilation and the new data-layer tests still require GitHub Actions because this machine has no JDK/Android SDK.
 - Task managed by codex agent at 2026-11-19T12:06:10+07:00
+[2026-11-19T12:22:57+07:00] [WARN] PR159 data-tests compile failure fixed (com.sun not in android.jar)
+- [F] Android run 44463681119 at 63b1d3d: guards, domain-tests, Android impact plan PASS; data-tests FAILED at :core:data:compileDebugUnitTestKotlin with Unresolved reference 'sun' for com.sun.net.httpserver.
+- [F] Cause: Android unit tests compile against android.jar, which does not ship the JDK jdk.httpserver module, so com.sun.net.httpserver is unavailable even though the JVM runtime has it.
+- [F] Fix: replaced the test backend with a minimal HTTP/1.1 server over java.net.ServerSocket (available in android.jar); login, bootstrap, command recording, Set-Cookie, and 401 injection behavior are unchanged.
+- [F] tests/test_android_ci.py now pins ServerSocket usage and asserts com.sun is absent from the data-layer test.
+- [F] Local: ruff, 14 manifests, 28 CI tests, guard grep, and diff check pass.
+- [BU] Gradle/Robolectric execution of the rewritten data-layer tests still requires the next GitHub Actions run.
+- Task managed by codex agent at 2026-11-19T12:22:57+07:00

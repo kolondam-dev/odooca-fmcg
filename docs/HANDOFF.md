@@ -1,3 +1,11 @@
+## 2026-11-19T12:22:57+07:00 — Codex — PR #159 data-tests gagal kompilasi lalu diperbaiki (belum merge)
+**Konteks:** [F] Run Android `44463681119` pada `63b1d3d`: `Android impact plan`, `guards`, dan `domain-tests` PASS; `data-tests` FAILED pada `:core:data:compileDebugUnitTestKotlin`.
+**Akar masalah:** [F] Log memuat `Unresolved reference 'sun'` untuk `com.sun.net.httpserver`. Unit test Android dikompilasi terhadap `android.jar`, yang tidak memuat modul JDK `jdk.httpserver`, sehingga kelas `com.sun.*` tidak tersedia meski JVM runner memilikinya.
+**Perbaikan:** [F] Server uji diganti menjadi HTTP/1.1 minimal di atas `java.net.ServerSocket` (tersedia di `android.jar`). Perilaku tetap: login mengembalikan `Set-Cookie session_id=<login>`, bootstrap mengembalikan identitas + `csrfToken`, command dicatat lengkap dengan owner cookie dan header CSRF, serta 401 dapat disuntikkan untuk tepat satu request.
+**Kontrak tes:** [F] `tests/test_android_ci.py` kini mematok penggunaan `ServerSocket` dan memastikan `com.sun` tidak muncul lagi di test data-layer.
+**Verifikasi lokal:** [F] Ruff, 14 manifest, 28 test CI, guard grep, dan diff check lulus. [BU] Eksekusi Gradle/Robolectric menunggu run GitHub Actions berikutnya pada exact SHA.
+**Status:** [BU] PR #159 tetap HOLD; verdict PASS dan izin merge belum ada.
+
 ## 2026-11-19T12:06:10+07:00 — Codex — PR #159 perbaikan P1/P2 antrean sesi (belum merge)
 **Konteks:** [F] Review HOLD pada `81ee3b0` menetapkan dua blocker source-level: worker antrean A dapat memakai cookie/CSRF sesi B, dan 401 tidak menghentikan batch serta tidak memulihkan item setelah reauth. [F] Perbaikan diterapkan pada working tree branch `agen/native-n1-foundation`.
 **Perubahan:** [F] `SessionManager` kini memegang `SessionRequestGate` dengan lease `(owner, generation)` dan mutex; login/logout dan pengiriman antrean tidak dapat bertukar cookie di tengah request. `OutboxRepository` memeriksa owner per item, berhenti tepat setelah 401, menginvalidasi hanya lease generasi yang cocok, dan `resumeAfterAuthentication(owner)` hanya membuka `AUTH_REQUIRED` milik owner yang berhasil login tanpa mengubah UUID/dependensi. `AppContainer` menyambungkan reauth ke requeue + `OutboxScheduler.kick`; logout menjadi suspend.
