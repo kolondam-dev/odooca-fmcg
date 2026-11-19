@@ -1,3 +1,27 @@
+## 2026-11-19T17:55:00+07:00 — antigravity — Resolusi Carry-Forward AR PAY-AR-00988 (INV-202607-1300) & Sinkronisasi origin/main #170 (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan GitHub Actions pada Job 135393278958 (`Generic Period Pack Loader Runtime Proof (F4)`):
+  `StateInconsistencyError: AR collection PAY-AR-00988: Target customer invoice 'INV-202607-1300' not found via payment_reference, name, or ref. Silent skip forbidden.`
+- [F] Akar masalah: Invoice `INV-202607-1300` merupakan salah satu dari 48 faktur carry-forward Juli yang dijadwalkan dispatch pada 2026-08-01 (tercatat resmi di `data/registers/state_20260801.json`). Karena pemuatan baseline Juli awal dipotong pada tanggal penutupan 2026-07-31 (`CANONICAL_CUTOFF_DATE=2026-07-31`), 48 pesanan dan faktur ini belum diselesaikan di DB ketika loader memproses rekonsiliasi AR 1.202 baris (339 pelunasan invoice Juli + 863 invoice Agustus).
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menambahkan method `_apply_prior_period_carry_forward()` di Step 0 `execute_apply()` untuk menjalankan penyelesaian carry-forward 48 DO & Faktur Juli pada 2026-08-01 secara idempoten dan bebas drift melalui `CanonicalPerpetualAdapter`.
+  - Menambahkan fallback re-resolving carry-forward otomatis di `_resolve_ar_invoice()` jika target invoice carry-forward (`INV-202607-*`) belum terbit sebelum melempar galat fail-closed.
+- `.github/workflows/period-pack-runtime.yml`:
+  - Menambahkan eksekusi validasi carry-forward 1 Agustus (`CANONICAL_CUTOFF_DATE=2026-08-01`) pada database disposable Scenario A (`fmcg_period_disposable`).
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan unit test `test_ar_resolver_carry_forward_fallback` yang memverifikasi bahwa resolver AR secara adaptif menuntaskan invoice carry-forward yang dicari tanpa silent skip.
+- Sinkronisasi `origin/main`:
+  - Menggabungkan merge commit `39172de` (PR #160, #161, #163, #169, #170) ke dalam branch `agen/seed-f4-period-pack-loader` dengan resolusi konflik `docs/HANDOFF.md` terurut mundur.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 76/76 PASS (7.435s).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py scripts/ops/verify_disposable_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 galat).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA workflow GitHub Actions pada runner CI remote pasca-push.
+**Signature:** Task managed by antigravity at 2026-11-19T17:55:00+07:00
+
 ## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
 
 - D5 PJP kosong opsi C; D6 rekomendasi penyetuju/approval disetujui; D7 Tier 0, kumulatif %, rantai berjenjang, batas per principal, diskon program resmi ikut dihitung.

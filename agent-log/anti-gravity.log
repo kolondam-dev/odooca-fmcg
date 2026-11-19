@@ -3261,3 +3261,15 @@
 - [F] Menggabungkan pembaruan origin/main commit 9f00b01 (PR #159) ke cabang agen/seed-f4-period-pack-loader secara bersih tanpa konflik.
 - [F] Verifikasi ruff check dan check_manifests 14 addon valid.
 - Task managed by antigravity at 2026-11-19T13:48:00+07:00
+
+[2026-11-19T17:55:00+07:00] [INFO] Fix AR Carry-Forward Resolution PAY-AR-00988 & Sync origin/main #170
+- [F] Menganalisis kegagalan Job 135393278958 pada Period Pack Runtime Verification: StateInconsistencyError: AR collection PAY-AR-00988: Target customer invoice 'INV-202607-1300' not found.
+- [F] Akar masalah: Invoice INV-202607-1300 merupakan salah satu dari 48 faktur carry-forward Juli yang dijadwalkan dispatch pada 2026-08-01 (state_20260801.json). Karena baseline Juli dipotong pada cutoff 2026-07-31, 48 faktur ini belum dibuat di DB saat ar_collections.csv Agustus merekonsiliasi pembayaran PAY-AR-00988.
+- [F] Memperbaiki scripts/ops/load_period_pack.py:
+  1. Menambahkan _apply_prior_period_carry_forward() pada Step 0 execute_apply() untuk mengeksekusi penyelesaian pesanan dan penerbitan faktur 48 carry-forward Juli pada 2026-08-01 secara idempoten dan bebas drift.
+  2. Menambahkan fallback re-resolving otomatis di _resolve_ar_invoice() untuk invoice berawalan INV-202607- sebelum menolak transaksi.
+- [F] Memperbarui .github/workflows/period-pack-runtime.yml: menambahkan bootstrap carry-forward 1 Agustus (CANONICAL_CUTOFF_DATE=2026-08-01) pada fmcg_period_disposable.
+- [F] Menambahkan unit test test_ar_resolver_carry_forward_fallback pada tests/test_period_pack_loader.py (76/76 PASS dalam 7.43s).
+- [F] Menyinkronkan origin/main commit 39172de (PR #160, #161, #163, #169, #170) dan menyelesaikan konflik HANDOFF.md secara terurut.
+- [F] Ruff check dan check_manifests 14 addon clean.
+- Task managed by antigravity at 2026-11-19T17:55:00+07:00

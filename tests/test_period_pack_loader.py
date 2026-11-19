@@ -2465,6 +2465,29 @@ class TestArResolverCrossPeriod(unittest.TestCase):
             loader._apply_ar_collections()
         self.assertIn("Silent skip forbidden", str(ctx.exception))
 
+    def test_ar_resolver_carry_forward_fallback(self):
+        """AR resolver triggers carry-forward fallback when July carry-forward invoice is requested."""
+        mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
+        mock_env = MockEnv({"account.move": MockModel(records=[])})
+        loader = GenericPeriodPackLoader(env=mock_env, pack_dir=AUG_PACK_DIR, dry_run=False, strict=True)
+        loader.company = mock_company
+
+        cf_called = []
+
+        def mock_cf():
+            cf_called.append(True)
+            # Simulate invoice becoming available after carry forward run
+            cf_inv = MockRecord(id=999, company_id=1, ref="INV-202607-1300", name="INV/2026/08/0001", state="posted")
+            mock_env.models["account.move"]._records.append(cf_inv)
+            return 1
+
+        loader._apply_prior_period_carry_forward = mock_cf
+
+        resolved = loader._resolve_ar_invoice("INV-202607-1300")
+        self.assertTrue(len(cf_called) > 0, "Carry forward should have been triggered")
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.ref, "INV-202607-1300")
+
 
 class TestDoDateChronology(unittest.TestCase):
     """Test DO date matches delivery schedule, not SO date (BUG-2)."""

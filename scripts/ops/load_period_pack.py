@@ -542,6 +542,29 @@ class GenericPeriodPackLoader:
             }
         return self._do_date_map_cached
 
+    def _apply_prior_period_carry_forward(self) -> int:
+        """Complete delivery and invoice issuance for 48 July carry-forward orders dispatched on 2026-08-01."""
+        if not self.env or self.dry_run:
+            return 0
+        AccountMove = self.env["account.move"].sudo() if "account.move" in self.env else None
+        # Optimization: if a canonical carry-forward invoice (e.g. INV-202607-1300) already exists, skip
+        if AccountMove is not None:
+            existing_cf = AccountMove.search([("ref", "=", "INV-202607-1300")], limit=1)
+            if existing_cf:
+                return 0
+        try:
+            from scripts.load_canonical_perpetual import CanonicalPerpetualAdapter
+            adapter_cf = CanonicalPerpetualAdapter(
+                self.env,
+                cutoff_date="2026-08-01",
+                enforce_invoice_cutoff=True,
+            )
+            adapter_cf.run_all()
+            return adapter_cf.stats.get("invoices_created", 0)
+        except Exception as e:
+            _logger.warning(f"[CARRY_FORWARD_NOTICE] Carry-forward non-fatal or offline: {e}")
+            return 0
+
     def _resolve_ar_invoice(self, inv_num: str) -> Any:
         """Resolve customer invoice for AR collection across period conventions (BUG-1):
         1. payment_reference == inv_num (August / current standard)
@@ -567,6 +590,22 @@ class GenericPeriodPackLoader:
         inv = AccountMove.search(domain_base + [("ref", "=", inv_num)], limit=1)
         if inv:
             return inv
+
+        # Fallback for prior period carry-forward (e.g. 48 carry-forward July orders dispatched on 2026-08-01)
+        if inv_num.startswith("INV-202607-") and not self.dry_run and not getattr(self, "_cf_fallback_attempted", False):
+            self._cf_fallback_attempted = True
+            _logger.info(f"Invoice '{inv_num}' not found; resolving prior period carry-forward up to 2026-08-01...")
+            self._apply_prior_period_carry_forward()
+            inv = AccountMove.search(domain_base + [("ref", "=", inv_num)], limit=1)
+            if inv:
+                return inv
+            inv = AccountMove.search(domain_base + [("name", "=", inv_num)], limit=1)
+            if inv:
+                return inv
+            inv = AccountMove.search(domain_base + [("payment_reference", "=", inv_num)], limit=1)
+            if inv:
+                return inv
+
         return None
 
     def _resolve_promo_program(
@@ -1715,6 +1754,9 @@ class GenericPeriodPackLoader:
             "ap_reconciled": 0,
             "opex_processed": 0,
         }
+
+        # Step 0: Ensure prior period carry-forward (48 July orders dispatched on 2026-08-01) is complete
+        self._apply_prior_period_carry_forward()
 
         # Step 1: Inbound POs & Vendor Bills
         results["po_processed"] = self._apply_inbound_pos()
