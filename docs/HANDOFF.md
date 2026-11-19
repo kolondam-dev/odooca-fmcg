@@ -1,3 +1,10 @@
+## 2026-11-19T19:33:41+07:00 — Codex Android Dev — DEV-01B kandidat instrumentation
+**Base dan SHA:** [F] Main `39172de`, arahan `92da15d`, DEV-01A `59d89f8`. SHA checkpoint adalah commit yang memperkenalkan entri ini pada branch `agen/android-dev-Codex-Mobile-Native`.
+**Berubah:** [F] Mode UI opsional menyiapkan fixture HTTP loopback debug, Login kosong/salah/benar, resume/rekreasi Activity, Beranda kosong, navigasi Kalibrasi, penolakan izin lokasi OS dan logout. Android 12+ meminta fine dan coarse bersama. Test ID dan status/timing dipublikasikan via laporan tersanitasi.
+**Gate:** [F] Actionlint, Bash syntax, Ruff, 14 manifest, 29 tes kontrak/planner Android, fixture HTTP dan filter laporan lulus. Build APK tes `:app:assembleDebugAndroidTest -Podooca.uiFixture=true` lulus pada Temurin 17.0.17+10 dan SDK 35. Pemeriksaan kandidat menggunakan `ANDROID_GATE_BASE=39172de`. Planner memilih full regression karena workflow berubah.
+**Bukti runtime:** [BU] API 24: boot/install/cold start/Login/instrumentation belum diuji. API 35: seluruh tahap tersebut belum diuji. Cloud tidak memiliki `/dev/kvm`; biner adb 37.0.1 terpasang tetapi gagal menyiapkan `.android` pada direktori home Cloud yang read-only. Lead menjalankan matriks pada SHA checkpoint sesuai instruksi README. Izin diberikan/perkiraan, font/ukuran/rotasi, Odoo disposable B09 dan perangkat fisik masih terbuka.
+**Dampak test:** **TAMBAH** — kegagalan membuka aplikasi, navigasi awal, form dan penanganan izin harus terlihat terpisah dari hasil build dan install. Scope checkpoint berhenti sebelum DEV-02A dan perluasan visual D01.
+
 ## 2026-11-19T19:30:53+07:00 — Codex Android Dev — DEV-01A kandidat smoke emulator
 **Base:** [F] Main `39172de`; baseline bersama dan arahan `92da15d` pada branch `agen/android-dev-Codex-Mobile-Native`.
 **Berubah:** [F] Matriks manual API 24/35 Google APIs x86_64, toolchain berpinned, smoke cold start dengan oracle foreground dan semantics Login, artefak tersanitasi, serta kontrak job opsional di luar `android-gate`.

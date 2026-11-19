@@ -2,20 +2,21 @@
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
-if [[ $# -ne 2 || ! "$1" =~ ^(24|35)$ ]]; then
-    echo "Usage: $0 {24|35} evidence-dir" >&2
+if [[ $# -ne 3 || ! "$1" =~ ^(24|35)$ || ! "$3" =~ ^(smoke|ui)$ ]]; then
+    echo "Usage: $0 {24|35} evidence-dir {smoke|ui}" >&2
     exit 2
 fi
 
 api=$1
 mkdir -p "$2"
 evidence=$(realpath "$2")
-for name in smoke.tsv login.png; do
+for name in smoke.tsv login.png display.txt instrumentation.tsv; do
     if [[ -e "$evidence/$name" ]]; then
         echo "Use a fresh evidence directory for each run" >&2
         exit 2
     fi
 done
+mode=$3
 sdk=${ANDROID_SDK_ROOT:?Set ANDROID_SDK_ROOT to the isolated smoke SDK}
 adb=$sdk/platform-tools/adb
 emulator=$sdk/emulator/emulator
@@ -33,12 +34,17 @@ apk=android/app/build/outputs/apk/debug/app-debug.apk
 report=$evidence/smoke.tsv
 stage=toolchain
 emulator_pid=
+fixture_pid=
 record() {
     printf '%s\t%s\n' "$1" "$2" | tee -a "$report"
 }
 cleanup() {
     local result=$?
     if (( result != 0 )); then record "$stage" FAIL; fi
+    if [[ -n "$fixture_pid" ]]; then
+        timeout 5 "$adb" reverse --remove tcp:18080 >/dev/null 2>&1 || true
+        kill "$fixture_pid" 2>/dev/null || true
+    fi
     if [[ -n "$emulator_pid" ]]; then
         timeout 5 "$adb" emu kill >/dev/null 2>&1 || true
         kill "$emulator_pid" 2>/dev/null || true
@@ -57,7 +63,8 @@ record api "$api"
 record abi "$abi"
 record image "$image"
 record expected_image_revision "$image_revision"
-for check in kvm build boot install cold_start login_ui; do
+record mode "$mode"
+for check in kvm build boot install cold_start login_ui instrumentation; do
     record "$check" NOT_RUN
 done
 
@@ -98,7 +105,9 @@ grep -qi 'KVM.*usable' "$work/accel.log"
 record kvm PASS
 
 stage=build
-(cd android && timeout 12m ./gradlew --no-daemon :app:assembleDebug -Podooca.baseUrl=https://ci.invalid)
+gradle_args=(-Podooca.baseUrl=https://ci.invalid)
+if [[ "$mode" == ui ]]; then gradle_args=(-Podooca.uiFixture=true); fi
+(cd android && timeout 12m ./gradlew --no-daemon :app:assembleDebug "${gradle_args[@]}")
 test -s "$apk"
 record apk_sha256 "$(sha256sum "$apk" | cut -d' ' -f1)"
 record build PASS
@@ -185,3 +194,33 @@ timeout 10 "$adb" exec-out screencap -p > "$work/login.png"
 test -s "$work/login.png"
 mv "$work/login.png" "$evidence/login.png"
 record login_ui PASS
+
+if [[ "$mode" == ui ]]; then
+    stage=instrumentation
+    connected=$(timeout 10 "$adb" devices | awk 'NR > 1 && NF {print $1}')
+    if [[ "$connected" != "$ANDROID_SERIAL" ]]; then
+        echo "Instrumentation requires exactly one attached device: the smoke AVD" >&2
+        exit 1
+    fi
+    python3 android/tools/ui_smoke_fixture.py &
+    fixture_pid=$!
+    for _ in {1..20}; do
+        kill -0 "$fixture_pid"
+        if curl -fsS --max-time 1 http://127.0.0.1:18080/health >/dev/null 2>&1; then break; fi
+        sleep 0.25
+    done
+    kill -0 "$fixture_pid"
+    curl -fsS --max-time 1 http://127.0.0.1:18080/health >/dev/null
+    timeout 10 "$adb" reverse tcp:18080 tcp:18080
+    timeout 10 "$adb" shell pm clear "$package" | grep -q '^Success'
+    timeout 10 "$adb" shell wm size | tee "$evidence/display.txt"
+    timeout 10 "$adb" shell wm density | tee -a "$evidence/display.txt"
+    timeout 10 "$adb" shell settings get system font_scale | tee -a "$evidence/display.txt"
+    test_started=$(date +%s%N)
+    test_result=0
+    (cd android && timeout 12m ./gradlew --no-daemon :app:connectedDebugAndroidTest "${gradle_args[@]}") || test_result=$?
+    python3 android/tools/ui_smoke_report.py android/app/build/outputs/androidTest-results/connected/debug \
+        "$evidence/instrumentation.tsv" "$test_started"
+    test "$test_result" -eq 0
+    record instrumentation PASS
+fi

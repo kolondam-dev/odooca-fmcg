@@ -25,6 +25,10 @@ on:
         description: Run optional emulator smoke on API 24 and 35
         type: boolean
         default: false
+      emulator_ui:
+        description: Also run initial UI instrumentation when emulator smoke is enabled
+        type: boolean
+        default: false
   pull_request:
   push:
     branches: [main]
@@ -241,6 +245,8 @@ jobs:
       fail-fast: false
       matrix:
         api: [24, 35]
+    env:
+      SMOKE_MODE: ${{ inputs.emulator_ui && 'ui' || 'smoke' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -292,7 +298,7 @@ jobs:
       - name: Boot, install and verify Login
         env:
           API: ${{ matrix.api }}
-        run: bash android/tools/emulator_smoke.sh "$API" "$EVIDENCE_DIR"
+        run: bash android/tools/emulator_smoke.sh "$API" "$EVIDENCE_DIR" "$SMOKE_MODE"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

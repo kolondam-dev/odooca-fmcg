@@ -510,3 +510,8 @@
 - [F] Base 39172de; arahan bersama 92da15d; smoke manual API 24/35, KVM, boot, install dan Login.
 - [BU] Runtime API 24/35 menunggu runner ber-KVM dan bukti pada SHA kandidat.
 - Task managed by codex agent at 2026-11-19T19:30:53+07:00
+
+[2026-11-19T19:33:41+07:00] [INFO] DEV-01B siapkan instrumentation alur awal Android
+- [F] Fixture HTTP loopback khusus debug, Login, sesi awal, Beranda, Kalibrasi dan penolakan izin OS.
+- [F] Fixture dan filter laporan diuji pada host. [BU] Runtime API 24/35 menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-19T19:33:41+07:00

@@ -5,6 +5,7 @@ plugins {
 }
 
 val baseUrl = (project.findProperty("odooca.baseUrl") as String?).orEmpty()
+val uiFixture = project.findProperty("odooca.uiFixture") == "true"
 val database = (project.findProperty("odooca.database") as String?).orEmpty()
 
 android {
@@ -19,11 +20,22 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
         buildConfigField("String", "DATABASE", "\"$database\"")
     }
 
+    if (uiFixture) {
+        sourceSets["debug"].res.srcDir("src/uiFixture/res")
+    }
+
     buildTypes {
+        debug {
+            if (uiFixture) {
+                buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:18080\"")
+                buildConfigField("String", "DATABASE", "\"ui-test\"")
+            }
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -63,4 +75,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.kotlinx.coroutines.android)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    androidTestImplementation(bom)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.uiautomator)
 }

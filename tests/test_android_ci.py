@@ -47,6 +47,7 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         events = workflow[True]  # YAML 1.1 interprets the Actions key "on" as true.
         inputs = events["workflow_dispatch"]["inputs"]
         self.assertIs(inputs["emulator_smoke"]["default"], False)
+        self.assertIs(inputs["emulator_ui"]["default"], False)
         self.assertNotIn("emulator_smoke", events["workflow_call"]["inputs"])
         jobs = workflow["jobs"]
         self.assertEqual(
