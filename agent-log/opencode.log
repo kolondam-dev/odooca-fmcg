@@ -300,3 +300,39 @@
 - [F] Dampak test CUKUP: init-test dan spec live tetap utuh; suite minimum odoo_install, odoo_init, pwa, finance, upgrade harus dijalankan ulang pada SHA integrasi.
 - [BU] CI integrasi, merge, upgrade view production, dan UAT Run/Export belum dijalankan pada tahap ini.
 - Task managed by Agent-Opencode at 2026-11-18T15:59:40+07:00
+
+[2026-11-18T19:18:28+07:00] [INFO] PR #151 merged, view finance di-upgrade, Run/Export production teruji
+- [F] Integrasi main 005e8cf pada e5983c9: enam workflow SUCCESS; INIT_FINANCE_ACTIVATION=PASS (dua tombol di header, footer kosong, 8 action target current). Dampak test CUKUP; oracle tidak diubah.
+- [F] PR #151 merged sebagai ace3df27b1f0ac39504c404584528c3e50b14ffc. Railway production odooca-fmcg deployment f62f40d4-18d4-45e2-9b2f-596c1a38a3e6 SUCCESS.
+- [F] Arch DB sebelum upgrade masih tanpa header (mark activate_finance_reports_v1 sudah ada); upgrade Odoo terarah -u id_finance_reporting --stop-after-init via Railway SSH sebagai odoo, exit 0. Query sesudahnya: header/run/export true; footer false. Tanpa RESET_DB/SQL tulis manual.
+- [F] Live UI run 44302027254 SUCCESS 5/5 (8 menu, 8 wizard, FIN04 Juli Run, unduhan XLSX dengan nama benar serta PK/[Content_Types].xml/xl/workbook.xml Summary). Artifact screenshot Run/Export ada; berkas XLSX asli hanya diperiksa di runner, tidak diunggah. Routes run 44302063284 SUCCESS.
+- [BU] Rekonsiliasi nilai sel XLSX, role Sales, costing/valuation, dan penerimaan katalog tetap manual. Log/HANDOFF ikut commit PR berikutnya; tidak membuat PR docs-only.
+- Task managed by Agent-Opencode at 2026-11-18T19:18:28+07:00
+
+[2026-11-19T09:12:20+07:00] [INFO] Baseline 58 laporan dan blocker penerimaan per iterasi
+- [F] Katalog 58/58 BELUM_DITERIMA; tracker baru memetakan semua 58 ID tanpa missing/duplikat: I2=16, I3=12, I4=10, I5=9, I6=8, I7=3; tanpa mengubah katalog.
+- [F] DB demo: 2 company, 3978 posted moves, 13900 posted lines; report/foundation/account_financial_report/l10n_id_efaktur_coretax installed; mis_builder/account_reconcile_oca/account_asset_management/hr_expense/payroll uninstalled.
+- [F] Diagnostik I3 produksi read-only FINANCE_I3_COSTING_RUN=PASS (bukan HPP accepted): 51 kategori, 29 FIFO+real_time, 22 standard+periodic, 7 produk storable berbiaya standar nol, 3091 done valued moves; kategori/transaksi tidak diubah.
+- [F] Probe role production FINANCE_SALES_SCOPE=UNAVAILABLE: tidak ada akun Sales-only aktif untuk company 1; penolakan role live belum terbukti. Fixture CI disposable bukan pengganti.
+- [F] Dampak test CUKUP untuk docs/triase: cek coverage tracker 58/58 ID unik; tidak ada perubahan kode/oracle/selector/REPORT_CATALOG.csv.
+- [BU] Mapping COA dan metode per kategori disahkan Controller, test Sales-only berotorisasi, data FIN55/payroll/Tax PIC, staging/restore rehearsal dan sign-off per ID diperlukan untuk status DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-19T09:12:20+07:00
+
+[2026-11-19T09:21:41+07:00] [INFO] FIN04 XLSX vs AML: comparator offline dan counterexamples
+- [F] Baru: scripts/ops/verify_fin04_workbook.py membandingkan ID AML dan debit/credit/balance per baris dari XLSX dengan CSV AML sumber independen; scope company/date/journal/account/posted, tolak formula, ID duplikat, nominal teks, source inkonsisten. Tidak membaca atau mengubah production.
+- [F] TAMBAH: scripts/ops/test_verify_fin04_workbook.py 8/8 PASS; check_manifests 14 addon PASS; diff --check PASS. Path scripts/ops baru perlu finance/full regression sesuai selector fail-closed. Ruff lokal tidak tersedia; CI exact SHA belum berjalan.
+- [BU] Tidak ada XLSX/CSV live yang direkonsiliasi; sign-off Finance Controller+QA, source provenance, role negatif, staging/restore dan frozen close tetap blocker sebelum FIN04 DITERIMA. Katalog tidak diubah.
+- Task managed by Agent-Opencode at 2026-11-19T09:21:41+07:00
+
+[2026-11-19T11:22:54+07:00] [INFO] Slice I2a: FIN04 XLSX ↔ AML terhubung fixture native; satu PR per paket
+- [F] Koreksi append-only path prototipe sebelumnya: pembanding scripts/ops/verify_finance_fin04_workbook.py; unit tests/test_finance_fin04_workbook.py; kedua path terpilih finance, test juga seed menurut .ci/test-impact.yml.
+- [F] scripts/ops/verify_finance_i2_ledgers_core.py kini mengekspor wizard FIN04 pada fixture disposable dua company, membaca AML independen, dan tie-out XLSX per ID/nominal + total oracle, dengan temporary files dibersihkan; belum dieksekusi native sampai CI exact SHA.
+- [F] SESUAIKAN: unit offline 8/8 PASS; manifests 14 addon PASS; diff --check PASS. Planner pada HEAD uncommitted memberi suite kosong (bukan bukti bebas gate); ruff lokal tidak ada.
+- [BU] FIN04 live, ACL Sales-only, mapping/perimeter dan sign-off Controller+QA masih HOLD; tidak ada commit/PR/deploy; status katalog 58/58 BELUM_DITERIMA.
+- Task managed by Agent-Opencode at 2026-11-19T11:22:54+07:00
+
+[2026-11-19T11:38:25+07:00] [INFO] Main #158 diintegrasi; gate lokal commit I2a
+- [F] origin/main 1e19a89 (#158) fast-forward; konflik stash apply hanya HANDOFF, entri Claude-Dev1 3B-18 dan Opencode dipertahankan seluruhnya.
+- [F] python -m ruff check . PASS; check_manifests 14 addon PASS; unittest FIN04 8/8 PASS; diff --check PASS. Ruff tersedia lewat python -m ruff walau CLI tidak di PATH.
+- [BU] Native Odoo dan CI exact SHA belum diuji; planner setelah commit wajib. Tidak ada status katalog yang diubah, PR atau deploy production.
+- Task managed by Agent-Opencode at 2026-11-19T11:38:25+07:00

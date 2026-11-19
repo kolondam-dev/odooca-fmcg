@@ -6,25 +6,39 @@ export const money = (n: number) =>
     }).format(n);
 /** Zona kerja DS: WITA. */
 export const WORK_TZ = "Asia/Makassar";
-/**
- * Jam gaya DS "HH.mm" (24 jam, titik, WITA). Nilai kosong atau tidak valid -> "".
- * Satu-satunya pemformat jam hari; jangan mengandalkan locale peramban.
- */
-export function clockHM(value?: string | number | Date | null): string {
-    if (value === undefined || value === null || value === "") return "";
+const clockParts = (value?: string | number | Date | null) => {
+    if (value === undefined || value === null || value === "") return undefined;
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
+    if (Number.isNaN(date.getTime())) return undefined;
     const parts = new Intl.DateTimeFormat("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
+        second: "2-digit",
         hourCycle: "h23",
         timeZone: WORK_TZ,
     }).formatToParts(date);
     const get = (type: string) =>
         parts.find((part) => part.type === type)?.value ?? "";
-    return `${get("hour")}.${get("minute")}`;
+    return { h: get("hour"), m: get("minute"), s: get("second") };
+};
+/**
+ * Jam kejadian gaya DS "HH.mm.ss" (24 jam, titik, WITA). Waktu yang tercatat
+ * (absen, order tersimpan, antrean, riwayat) selalu lengkap sampai detik
+ * karena dibutuhkan untuk audit. Kosong atau tidak valid -> "".
+ */
+export function clockHMS(value?: string | number | Date | null): string {
+    const c = clockParts(value);
+    return c ? `${c.h}.${c.m}.${c.s}` : "";
 }
-export const time = (value: string) => clockHM(value);
+/**
+ * Jam rencana tanpa detik ("HH.mm"), khusus slot jadwal (jam kunjungan PJP),
+ * BUKAN waktu kejadian. Untuk waktu yang tercatat pakai `clockHMS`.
+ */
+export function clockHM(value?: string | number | Date | null): string {
+    const c = clockParts(value);
+    return c ? `${c.h}.${c.m}` : "";
+}
+export const time = (value: string) => clockHMS(value);
 export const queueLabels = {
     queued: "Menunggu koneksi",
     sending: "Mengirim",
