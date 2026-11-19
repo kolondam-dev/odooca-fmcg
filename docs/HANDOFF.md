@@ -1,3 +1,9 @@
+## 2026-11-19T13:46:37+07:00 — Codex — PR #159 merge ke main `9f00b01` (PASS, dampak test CUKUP)
+**Merge:** [F] `origin/main` maju `1e19a89..9f00b01`; merge commit `9f00b01` adalah "Merge pull request #159 from kolondam-dev/agen/native-n1-foundation" dan head PR `87570dafb91cc310c37364e1d6eef4cc390f82d0` adalah ancestor `main`.
+**Verdict:** [F] Re-review independen menyatakan PASS dengan dampak test **CUKUP**; tiga counterexample P1/P2 dieksekusi pada lapisan repository + Room + HTTP lokal, bukan hanya enum/planner.
+**Isi main sekarang:** [F] `SessionRequestGate` (lease owner + generation), penghentian tepat setelah 401 pertama, requeue `AUTH_REQUIRED` hanya untuk owner yang berhasil login, job `data-tests`, dan `android-gate` yang mewajibkan `DATA_RESULT`.
+**Batas:** [F] Tidak ada deployment manual dan tidak ada pengeditan data server. [BU] Emulator API 24/35, Redmi 4X, POCO M3, dan backend live tetap acceptance N2 terpisah.
+
 ## 2026-11-19T11:30:55+07:00 — Agent-Claude-Dev1 — Fase 3B-19: waktu kejadian berdetik (K12) dan keputusan PJP kosong (K28)
 **Berubah:** `pwa/src/domain/format.ts` (`clockHMS`, `clockHM` dibatasi untuk jam rencana), `components/ActivityScreens.tsx`, `components/OrderResult.tsx`, `components/MorningSession.tsx`, `tests/format-clock.test.ts` (diperluas + penjaga), `tests/browser/jam-detik.spec.ts` (baru), `docs/ui/DS_RECONCILIATION.md` (K33), `docs/HANDOFF.md`, `agent-log/claude-design.log`.
 **Keputusan pemilik:** [F] K12: detik tetap dibutuhkan; tidak boleh ada waktu kejadian yang hanya HH.mm. [F] K28: opsi B; app tetap terbuka, salesman tanpa PJP tidak memulai sesi PJP, jalur Extra call dan/atau NOO; paket tetap membawa stok, harga, promo/diskon, piutang; feed piutang dari modul pengelola piutang > jadwal penagihan (belum ada, utang backend).
