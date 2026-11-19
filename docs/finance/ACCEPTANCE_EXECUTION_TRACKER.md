@@ -44,8 +44,10 @@ demo utama: **PT Manado Distribusi Utama** (ID 1). Dasar keputusan:
 run [44302027254](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44302027254)
 menunjukkan menu/wizard 8 action, FIN04 Juli Run dan XLSX berstruktur; run
 [44302063284](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44302063284)
-menunjukkan dua route. XLSX asli tidak disimpan artifact; **isi sel belum
-direkonsiliasi**. Ini hanya bukti UI/struktur untuk FIN04, bukan penerimaan ID.
+menunjukkan dua route. XLSX asli tidak disimpan artifact; **isi sel live belum
+direkonsiliasi**. Fixture disposable kini mempunyai pembanding isi FIN01/02/03/
+04/51/57, tetapi hasil native untuk FIN01/02/03/51/57 masih [BU] sampai CI
+exact-SHA menjalankannya. Bukti fixture bukan penerimaan ID atau bukti live.
 Probe read-only Odoo pada company 1 menunjukkan
 `FINANCE_SALES_SCOPE=UNAVAILABLE`: **tidak ada user aktif Sales-only** yang
 berwenang pada company 1 untuk uji negatif production. Fixture Sales/Driver di
@@ -62,9 +64,9 @@ implementasi atau test eksekutabel, bukti exact SHA, catatan log/HANDOFF, dan
 daftar ID yang *masih* HOLD. Pengumpulan bukti privat serta sign-off I8 bisa
 menyusul per ID tanpa PR baru jika tidak ada perubahan kode/katalog; perubahan
 katalog digabung dalam PR paket fungsi yang relevan atau satu PR penerimaan
-I8 setelah keputusan tertulis, bukan PR kosmetik per ID. **Slice pertama I2a belum siap PR:** pembanding
-FIN04 harus lolos integrasi native, dan bukti finansial live serta izin role
-belum lengkap. Laporkan saat commit/PR benar-benar terjadi beserta SHA/tautan,
+I8 setelah keputusan tertulis, bukan PR kosmetik per ID. **Slice I2a tetap HOLD
+untuk penerimaan live:** pembanding fixture harus lolos CI exact-SHA, lalu bukti
+finansial live dan izin role masih diperlukan. Laporkan saat commit/PR benar-benar terjadi beserta SHA/tautan,
 bukan mengklaim submit dari working tree.
 
 | Prioritas / iterasi | ID (jumlah) | Paket kerja dan acceptance terukur | Blocker penting / pelepasnya |
@@ -102,6 +104,29 @@ owner dan rerun—bukan mengubah oracle atau menyembunyikan exception.
 5. **UAT per ID:** baru setelah hasil per-ID lengkap dan sign-off diberikan,
    ubah status katalog satu baris per keputusan. Tidak ada target tanggal
    acceptance yang sah sebelum blocker di atas dilepas.
+
+### I2a: tie-out nilai XLSX pada fixture disposable (bukan bukti live)
+
+`scripts/ops/verify_finance_i2_xlsx.py` membaca XLSX tanpa Odoo dan menolak
+formula, angka yang tersimpan sebagai teks, header/coverage hilang, kode
+duplikat, serta nilai yang tidak cocok. `verify_finance_i2_ledgers_core.py`
+menghasilkan workbook lewat wizard/report asli pada dua company sintetis lalu:
+
+- FIN01: opening, detail debit/credit, ending, jumlah AML dan filter jurnal;
+- FIN02: semua account termasuk zero row, period balance dan ending;
+- FIN03: debit/credit serta jumlah detail per jurnal, termasuk filter jurnal;
+- FIN51: semua combined account, identitas balance, dan seluruh totals pada
+  perimeter 1× + 7× (combined, tanpa eliminasi);
+- FIN57: tepat satu invoice/bill/refund per tipe, net/tax/gross; semua entri
+  duplicate list ditolak tanpa bergantung tipe sel; coverage akun tie-out unik
+  dan nilai register/GL/non-register per akun dibandingkan dengan pembacaan AML
+  posted independen; distinct non-register move/line juga dipatok;
+- FIN04: seluruh AML/value melalui pembanding independen di bawah.
+
+Unit offline sintetis menutup 28 kasus positif/counterexample. [BU] Render OCA
+native dan workbook custom pada DB disposable hanya dijalankan oleh Finance I0
+CI; hasil belum boleh disebut PASS sebelum check exact-SHA hijau. Tidak ada
+workbook bisnis, AML live, atau status katalog yang berubah.
 
 ### FIN04: pembanding XLSX ↔ AML independen (belum dijalankan pada live)
 
