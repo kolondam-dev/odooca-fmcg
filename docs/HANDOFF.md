@@ -1,3 +1,7 @@
+## 2026-11-19T17:01:49+07:00 — Codex — Handoff lokal Android
+**Berubah:** [F] Lead menangani seluruh GitHub. Design dan Dev memakai branch lokal dan bundle bila checkout berbeda. Tambahkan panduan operasi lokal dan pilihan basis gate dari SHA yang diserahkan Lead.
+**Menunggu:** [BU] Handoff bundle ke sesi tim bila tidak memakai checkout yang sama.
+
 ## 2026-11-19T15:40:25+07:00 — Codex — Spesifikasi engineering Android v2
 **Berubah:** [F] SSOT Android v2, design system dengan kontrak Figma/Compose, paket Design dan Dev, register endpoint/backend/DB, serta gerbang integrasi antartim dan slice publikasi.
 **Diverifikasi:** [F] Basis main `e28e655` dan pemeriksaan keterlacakan enam dokumen. Perubahan ini dokumentasi.

@@ -7,12 +7,13 @@ if [[ $# -gt 1 || ( $# -eq 1 && "$1" != --gradle ) ]]; then
 fi
 
 cd "$(git rev-parse --show-toplevel)"
-base="$(git rev-parse --verify refs/remotes/origin/main)"
+base_ref="${ANDROID_GATE_BASE:-refs/remotes/origin/main}"
+base="$(git rev-parse --verify --end-of-options "${base_ref}^{commit}")"
 head="$(git rev-parse HEAD)"
 printf 'Base %s\nHEAD %s\n' "$base" "$head"
 
 if ! git merge-base --is-ancestor "$base" "$head"; then
-    echo "Sync this candidate with origin/main before checking it." >&2
+    echo "Candidate HEAD must include the selected base $base_ref." >&2
     exit 1
 fi
 if [[ -n "$(git status --porcelain)" ]]; then

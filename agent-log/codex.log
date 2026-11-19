@@ -485,3 +485,8 @@
 - [F] Enam dokumen diperiksa konsistensi tautan, requirement, komponen dan blocker.
 - [BU] Frame sumber Figma, acceptance perangkat dan runtime Odoo tetap mengikuti milestone.
 - Task managed by codex agent at 2026-11-19T15:40:25+07:00
+
+[2026-11-19T17:01:49+07:00] [INFO] Handoff lokal Android, akses GitHub melalui Lead
+- [F] Perjelas batas akses Design/Dev dan prosedur bundle antarsesi Cloud.
+- [F] Gate lokal menerima SHA main dari Lead tanpa akses remote.
+- Task managed by codex agent at 2026-11-19T17:01:49+07:00
