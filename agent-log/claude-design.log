@@ -360,3 +360,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-19T16:41:15+07:00] [INFO] Backlog: keputusan Extra call/NOO, PJP, approval kumulatif
 - D1 Extra call=Supervisor, D2 NOO=Branch Manager, D3 approval hanya yang kumulatif melebihi tier; BE-14..BE-18, FE-11; rekomendasi zona bebas+kumulatif
 - Task managed by claude-design agent at 2026-11-19T16:41:15+07:00
+
+[2026-11-19T17:23:45+07:00] [INFO] Keputusan D5-D7 dicatat
+- PJP opsi C; Tier 0; kumulatif %; berjenjang; per principal; program resmi ikut
+- Task managed by claude-design agent at 2026-11-19T17:23:45+07:00

@@ -1,3 +1,8 @@
+## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
+
+- D5 PJP kosong opsi C; D6 rekomendasi penyetuju/approval disetujui; D7 Tier 0, kumulatif %, rantai berjenjang, batas per principal, diskon program resmi ikut dihitung.
+- `docs/ui/BACKLOG_FE_BE.md` diperbarui (§3, §5.4, BE-15). Docs saja.
+
 ## 2026-11-19 — [BU] Backlog: keputusan Extra call/NOO, PJP, approval kumulatif (claude-design)
 
 - Diputuskan pemilik: Extra call disetujui Supervisor, NOO disetujui Branch Manager, approval hanya untuk yang kumulatif melebihi tier.

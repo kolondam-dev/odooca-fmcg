@@ -250,11 +250,10 @@ Jadi layar Outlet_kosong tidak akan pernah muncul di LIVE kecuali perilaku ini d
 
 ### 3.3 Keputusan yang masih terbuka
 
-1. PJP kosong: pilih opsi A, B, atau C di atas (rekomendasi: C).
 2. NOO: boleh kunjungan survei dan/atau order sebelum disetujui Branch Manager; apakah otomatis masuk PJP.
 3. Saran order: target (median 3 order vs par manual), kelipatan minimum, sumber SKU wajib listing.
 4. Kredit: apakah PWA memblokir order untuk mode `strict` (faktur jatuh tempo) atau hanya memperingatkan.
-5. Bentuk zona bebas dan kumulasi approval diskon (bagian 5, pertanyaan 1–4).
+5. Angka batas Tier 0 dan tier per principal (diisi lewat konfigurasi backend, bukan keputusan kode).
 6. Jam rencana PJP ("08.30") tanpa detik — asumsi saat ini.
 
 ## 4. Urutan kerja yang disarankan
@@ -262,7 +261,7 @@ Jadi layar Outlet_kosong tidak akan pernah muncul di LIVE kecuali perilaku ini d
 1. **Backend P0 (kontrak dan korektif):** BE-1 (versi snapshot tanpa stok), BE-9, BE-8 (setelah tes), BE-11, `features` pada bootstrap/snapshot, `outlets[].time/distance/urutan`, `deliveries`.
 2. **Frontend paralel, tanpa backend:** FE-1 `UnitQty`, FE-2 (`Money`, `SyncStatusChip`, `Timestamp`, `EmptyState`), FE-6 absen.
 3. **Backend P1:** BE-7 bagian baca (`ar`, faktur terbuka, `credit_mode`), BE-5 setelah keputusan 1, BE-6 (fakta saran), `order_history`.
-4. **Approval (baru):** BE-14 segera (order lapangan menunggu tanpa pemberitahuan), BE-15/BE-18 setelah pemilik memberi angka; lalu FE-11.
+4. **Approval (baru):** BE-14 segera (order lapangan menunggu tanpa pemberitahuan), BE-15/BE-18 (angka batas lewat konfigurasi); lalu FE-11.
 5. **Frontend P1 setelah data siap:** FE-5 saran order, FE-7 Outlet_kosong, FE-8 sisa hub.
 6. **Backend P1 command:** `sales.extra_call.request` (BE-3), `outlet.register.request` (BE-4), `hris.attendance.capture`, kemudian `hris.leave.request`, `field_expense.*`, `collection.*`, `delivery.cash_deposit.submit`, `sales.order.revise`.
 7. **Frontend setelah command:** FE-3 lengkap, FE-4 NOO.
@@ -300,13 +299,17 @@ Mesin (`approval_request.py:156-175`) membangun rantai **berjenjang**: semua tie
 6. **Extra call → Supervisor (D1):** buat model `fmcg.pjp.visit` (outlet, salesman, tanggal, alasan, jenis terencana/extra, status, relasi approval) dan sambungkan kategori `extra_call` yang sudah ada; SLA 2 jam; auto-aktifkan di daftar Outlet saat disetujui.
 7. **NOO → Branch Manager (D2):** kategori baru `new_outlet` (res_model `res.partner`), Tier 1 Branch Manager (SLA 24 jam); outlet dibuat `active=False` berstatus menunggu, diaktifkan saat disetujui; syarat bayar awal tunai/COD sampai dievaluasi lewat kategori limit kredit yang sudah ada.
 
-### 5.4 Pertanyaan untuk pemilik (menentukan angka dan cakupan)
+### 5.4 Keputusan pemilik (2026-11-19) dan implikasi desain
 
-1. Berapa batas zona bebas (%), dan berlaku per order, per outlet-bulan, atau per salesman-hari?
-2. Kumulatif diukur sebagai persen diskon efektif atau rupiah diskon? (Rupiah lebih adil lintas SKU; persen lebih mudah dijelaskan.)
-3. Rantai berjenjang (Supervisor lalu Branch Manager) atau langsung ke tier tertinggi?
-4. Apakah batas berbeda per kanal atau principal (promo principal sering punya anggaran sendiri)?
-5. Apakah diskon program resmi (`id_promo_governance`) termasuk dalam kumulasi atau dikecualikan karena sudah melalui persetujuan promo?
+| Pertanyaan                | Keputusan                 | Implikasi                                                                                                                                 |
+| ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Zona bebas                | Dibuat **Tier 0**         | Aturan "Tanpa approval" dengan batas % yang dapat dikonfigurasi; di bawah batas order langsung diterima.                                  |
+| Ukuran kumulatif          | **Persen** diskon efektif | `measure` = % efektif bertumpuk `1 − Π(1 − dᵢ)`; rupiah tidak dipakai sebagai dasar tier.                                                 |
+| Rantai                    | **Berjenjang**            | Perilaku mesin sekarang dipertahankan: semua tier terlampaui menjadi langkah berurutan.                                                   |
+| Batas per kanal/principal | **Berbeda per principal** | Aturan tier mendapat dimensi `principal_id` (kosong = default umum); aturan khusus principal menimpa default.                             |
+| Diskon program resmi      | **Ikut dihitung**         | Diskon `id_promo_governance` masuk akumulasi bersama diskon baris, footer, dan taktikal. Pengelolaan lebih granular dilakukan di backend. |
+
+Catatan desain: karena batas berbeda per principal dan order dapat memuat beberapa principal, kumulatif dihitung **per principal** (baris dikelompokkan menurut principal produk), lalu tier tertinggi di antara principal menentukan rantai. Ini asumsi saya; mohon dikoreksi bila ingin dihitung per order utuh.
 
 ### 5.5 Backlog baru dari bagian ini
 
