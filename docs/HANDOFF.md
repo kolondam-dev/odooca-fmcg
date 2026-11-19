@@ -1,3 +1,22 @@
+## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
+
+- D5 PJP kosong opsi C; D6 rekomendasi penyetuju/approval disetujui; D7 Tier 0, kumulatif %, rantai berjenjang, batas per principal, diskon program resmi ikut dihitung.
+- `docs/ui/BACKLOG_FE_BE.md` diperbarui (§3, §5.4, BE-15). Docs saja.
+
+## 2026-11-19 — [BU] Backlog: keputusan Extra call/NOO, PJP, approval kumulatif (claude-design)
+
+- Diputuskan pemilik: Extra call disetujui Supervisor, NOO disetujui Branch Manager, approval hanya untuk yang kumulatif melebihi tier.
+- `docs/ui/BACKLOG_FE_BE.md`: penjelasan PJP (apa/kenapa/untuk apa, opsi A/B/C), bagian 5 audit `id_approval`, temuan BE-14..BE-17, backlog BE-18 dan FE-11.
+- Hanya dokumentasi; tanpa perubahan kode.
+
+## 2026-11-19T16:34:46+07:00 — Agent-Claude-Dev1 — Inventarisasi ulang backlog frontend dan backend
+**Berubah:** `docs/ui/BACKLOG_FE_BE.md` (baru), `docs/HANDOFF.md`, `agent-log/claude-design.log`. Tidak ada perubahan kode.
+**Hasil:** [F] Backlog FE (FE-1..FE-10: komponen `UnitQty`, komponen serupa, Extra call, NOO, saran order, absen, dll.) dan BE (6 endpoint, 6 dari 15 command ada, celah snapshot, 13 temuan) dengan urutan kerja dan 7 keputusan pemilik.
+**Temuan penting (dari kode, bukan dugaan):** [F] BE-1 versi snapshot memuat stok hidup sehingga order offline ditolak tiap stok berubah. [F] BE-2 `deliveries: []` hard-coded dan `time`/`distance` outlet selalu kosong (kartu outlet 3B-14 belum menampilkan data nyata di LIVE). [F] BE-5 PJP kosong ditolak backend juga dan assignment disalin otomatis dari hari sebelumnya. [F] `features`, `order_history`, `extra_call_outlets`, `discount_programs`, `ar_outstanding` tidak dikirim backend.
+**Belum diuji:** [BU] BE-8 (diskon baris tanpa pengajuan) dan BE-11 (openapi vs payload) ditandai perlu verifikasi dengan tes. [BU] Radius check-in sisi server tidak terverifikasi. [BU] Hitungan tes backend berdasarkan `def test`, bukan eksekusi.
+**Butir terbuka:** 0. 7 keputusan pemilik di dokumen bagian 3. 1. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-19T16:34:46+07:00
+
 ## 2026-11-19T13:46:37+07:00 — Codex — PR #159 merge ke main `9f00b01` (PASS, dampak test CUKUP)
 **Merge:** [F] `origin/main` maju `1e19a89..9f00b01`; merge commit `9f00b01` adalah "Merge pull request #159 from kolondam-dev/agen/native-n1-foundation" dan head PR `87570dafb91cc310c37364e1d6eef4cc390f82d0` adalah ancestor `main`.
 **Verdict:** [F] Re-review independen menyatakan PASS dengan dampak test **CUKUP**; tiga counterexample P1/P2 dieksekusi pada lapisan repository + Room + HTTP lokal, bukan hanya enum/planner.
