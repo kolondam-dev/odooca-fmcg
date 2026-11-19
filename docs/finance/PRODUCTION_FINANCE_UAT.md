@@ -1,11 +1,12 @@
 # Verifikasi produksi — finance reports dan HPP (daftar klik)
 
-Status: **daftar langkah untuk pemilik; belum dijalankan.** Aktivasi di production
-sudah tercatat di [I2_ACTIVATION.md](I2_ACTIVATION.md#status-produksi-bukti-read-only-2026-11-15),
-tetapi belum ada bukti bahwa admin demo benar-benar melihat menu, menjalankan
-laporan, dan mengunduh XLSX dari aplikasi yang live. Langkah 1–4 punya jalur
-otomatis lewat harness UI live; langkah 5–6 dan pemeriksaan isi XLSX tetap
-manual.
+Status: **langkah 1–4 terbukti sebagian lewat harness production; penerimaan
+katalog belum dilakukan.** Aktivasi tercatat di
+[I2_ACTIVATION.md](I2_ACTIVATION.md#status-produksi-bukti-read-only-2026-11-15).
+Run FIN04 Juli, delapan wizard, dan download XLSX berstruktur sudah lulus
+pascaupgrade (bukti di bawah). Langkah 5–6, rekonsiliasi isi XLSX dan penerimaan
+per FINxx masih terbuka; lihat
+[`ACCEPTANCE_EXECUTION_TRACKER.md`](ACCEPTANCE_EXECUTION_TRACKER.md).
 
 Tujuan daftar ini: mengubah bukti log menjadi bukti pemakaian, tanpa mengubah
 data. Semua langkah **read-only** dari sisi data; jangan menyimpan pengaturan,
@@ -135,20 +136,34 @@ berturut-turut pada commit `6ba03b4`, `47f1086`, `7e8a7d0`, `3f6a13a`, `6c5a2b2`
 | [44218051458](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44218051458) (`odoo`) | gagal | `date_from` Juli terpasang; verifikasi `date_to` gagal karena input date picker hanya ada selama widget memegang fokus |
 | [44218732579](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44218732579) (`odoo`) | gagal | menu PASS; assertion label dan company pada 8 wizard berhasil (8 screenshot); periode FIN04 2026-07-01..2026-07-31 terpasang (`fin04-period-july-2026.png`); kedua test gagal pada oracle `action_run` di header sebelum Run/Export |
 
-[F] Screenshot `fin04-period-july-2026.png` dari run terakhir menunjukkan
+[F] Screenshot `fin04-period-july-2026.png` dari run pra-upgrade menunjukkan
 `Report Type = FIN04 - Journal Items Audit Trail`, `Company = PT Manado
 Distribusi Utama`, `Date From = Jul 1`, `Date To = Jul 31`, sidebar Finance
 Reports dengan 8 entri, dan **tidak ada** tombol Run/Export di header formulir.
 Artinya company, delapan entri menu, delapan wizard, dan pengisian periode
-terbukti di UI demo; langkah Run/Export belum terbukti. [A] View server-side
-branch ini belum di-deploy.
+terbukti di UI demo pada saat itu; langkah Run/Export belum terbukti sebelum
+upgrade view.
 
-[BU] Run Report, Export XLSX, dan pemeriksaan isi workbook belum bisa lulus
-sampai server production menjalankan view dari branch ini; deploy adalah
-keputusan pemilik dan belum dilakukan. Oracle header sengaja tidak dilonggarkan.
-Spec kini gagal bila tombol kembali ke `<footer>`, bila tombol tidak ada di
-`.o_form_statusbar`, atau bila berkas unduhan bukan workbook XLSX
-(`[Content_Types].xml` + sheet `Summary`).
+### Bukti setelah merge dan upgrade view (2026-11-18)
+
+[F] PR #151 di-merge sebagai `ace3df27b1f0ac39504c404584528c3e50b14ffc`.
+Deployment Railway production service `odooca-fmcg`
+`f62f40d4-18d4-45e2-9b2f-596c1a38a3e6` sukses, tetapi arch view DB tetap lama
+karena mark aktivasi finance sudah ada. Upgrade Odoo **terarah**
+`-u id_finance_reporting --stop-after-init` dijalankan sebagai user `odoo`
+tanpa reset DB; query view setelahnya: `<header>` ada, `action_run` dan
+`action_export_xlsx` ada, `<footer>` tidak ada.
+
+| Run pascadeploy | Hasil | Bukti |
+|---|---|---|
+| [44302027254](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44302027254) (`odoo`, exact source SHA `ace3df2`) | **sukses 5/5 test** | menu delapan entri, delapan wizard/company, FIN04 Juli 2026 **Run Report** menghasilkan ringkasan dan tabel, **Export XLSX** memicu download; nama file sesuai periode, ukuran positif, header `PK`, `[Content_Types].xml` bertipe workbook, `xl/workbook.xml` memuat sheet `Summary`. Artifact `live-ui-odoo-desktop-ace3df27b1f0ac39504c404584528c3e50b14ffc` memuat screenshot `fin04-run-result.png` dan `fin04-export-xlsx.png` |
+| [44302063284](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44302063284) (`routes`, exact source SHA `ace3df2`) | **sukses** | route FIN04 dan FIN51 dapat dibuka setelah upgrade |
+
+[BU] File XLSX hanya diperiksa sementara di runner, tidak disimpan dalam artifact.
+Rekonsiliasi isi sel terhadap payload/ledger, akses role Sales, dan pengecekan
+costing/valuation tetap UAT manual pada snapshot ini; untuk hasil diagnostik
+read-only 2026-11-19 dan blocker yang lebih baru lihat
+[`ACCEPTANCE_EXECUTION_TRACKER.md`](ACCEPTANCE_EXECUTION_TRACKER.md).
 
 ## Bukti yang diminta
 
