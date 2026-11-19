@@ -165,6 +165,23 @@ costing/valuation tetap UAT manual pada snapshot ini; untuk hasil diagnostik
 read-only 2026-11-19 dan blocker yang lebih baru lihat
 [`ACCEPTANCE_EXECUTION_TRACKER.md`](ACCEPTANCE_EXECUTION_TRACKER.md).
 
+### Batas bukti fixture I2a dan bukti live
+
+[F] Repo mempunyai pembanding offline FIN04 dan unit sintetis pembaca XLSX
+FIN01/02/03/51/57. [BU] Gate Finance I0 pada exact SHA harus membuktikan render
+workbook asli OCA/custom dan tie-out-nya terhadap oracle fixture disposable.
+Walaupun gate itu lulus, hasilnya hanya menguji layout, filter, cakupan, angka,
+dan counterexample pada data sintetis yang di-rollback; hasil tersebut **tidak**
+menggantikan workbook live, digest/provenance, AML privat, freeze periode, uji
+Sales-only production, atau tanda tangan Controller + QA.
+
+Untuk bukti live, simpan workbook dan sumber AML hanya di storage privat
+berotorisasi. Catatan publik cukup memuat commit live, company/periode/filter,
+digest, jumlah/agregat teredaksi, hasil comparator, lokasi bukti privat, dan
+sign-off. Jangan melampirkan raw AML, identitas partner/pajak, dump, atau
+filestore ke repo/artifact publik. `REPORT_CATALOG.csv` tetap tidak berubah
+sampai gate live per ID lengkap.
+
 ## Bukti yang diminta
 
 Kirim ke catatan PR/HANDOFF:
