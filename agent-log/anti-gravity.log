@@ -3251,3 +3251,13 @@
 - [F] Menambahkan 13 pengujian unit baru pada tests/test_period_pack_loader.py; total 75/75 pengujian LULUS (12.38s).
 - [F] Ruff check dan check_manifests 14 addon clean.
 - Task managed by antigravity at 2026-11-18T19:55:00+07:00
+
+
+[2026-11-19T13:48:00+07:00] [INFO] Fix stock.move Payload Retur Karantina & Sync origin/main PR #159
+- [F] Menganalisis kegagalan Job 135337603033 pada Period Pack Runtime Verification: ValueError: Invalid field 'name' in 'stock.move'.
+- [F] Memperbaiki _apply_rejections_and_quarantine di scripts/ops/load_period_pack.py: menghapus key 'name' dari payload stock.move, memetakan ke description_picking dan origin adaptif sesuai Odoo 19.
+- [F] Menyelaraskan field stock.move.line: quantity vs qty_done, product_uom vs product_uom_id, serta picked=True.
+- [F] Menambahkan asersi assertNotIn('name', created_moves[0]._data) pada tests/test_period_pack_loader.py (75/75 PASS dalam 7.13s).
+- [F] Menggabungkan pembaruan origin/main commit 9f00b01 (PR #159) ke cabang agen/seed-f4-period-pack-loader secara bersih tanpa konflik.
+- [F] Verifikasi ruff check dan check_manifests 14 addon valid.
+- Task managed by antigravity at 2026-11-19T13:48:00+07:00

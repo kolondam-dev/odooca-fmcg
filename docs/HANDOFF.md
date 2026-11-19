@@ -1,3 +1,26 @@
+## 2026-11-19T13:48:00+07:00 — antigravity — Perbaikan Payload Pembuatan stock.move Retur Karantina (Odoo 19) & Sinkronisasi origin/main #159 (Branch: agen/seed-f4-period-pack-loader)
+**Konteks:**
+- [F] Analisis log kegagalan GitHub Actions pada Job 135337603033 (`Generic Period Pack Loader Runtime Proof (F4)`):
+  `recovery_status: FAIL: Invalid field 'name' in 'stock.move'`
+- [F] Akar masalah: Pada Odoo 19, model `stock.move` tidak memiliki field `'name'`. Pembuatan `stock.move` pada `_apply_rejections_and_quarantine()` sebelumnya secara eksplisit menyertakan key `"name": ...`, yang ditolak fail-closed oleh ORM Odoo 19.
+**Berubah:**
+- `scripts/ops/load_period_pack.py`:
+  - Menghapus key `"name"` dari payload `move_vals` pada `StockMove.create()`.
+  - Memetakan deskripsi teks ke field standar Odoo 19 `description_picking` (`f"Retur Karantina: {rej_id} - {sku}"`) dan mempertahankan `origin` bila didukung oleh `StockMove._fields`.
+  - Menyelaraskan pembuatan `stock.move.line` agar adaptif terhadap `quantity` vs `qty_done`, `product_uom` vs `product_uom_id`, dan menyetel `picked=True`.
+- `tests/test_period_pack_loader.py`:
+  - Menambahkan asersi pengujian `assertNotIn("name", created_moves[0]._data)` untuk mengunci bahwa model `stock.move` tidak lagi dipasangi field `'name'`.
+- Sinkronisasi `origin/main`:
+  - Menggabungkan pembaruan `origin/main` commit `9f00b01` (PR #159: Native N1 Foundation Android) ke dalam branch PR #110 tanpa konflik.
+**Diverifikasi:**
+- [F] `python -m unittest tests/test_period_pack_loader.py`: 75/75 PASS (7.133s).
+- [F] `python -m ruff check scripts/ops/load_period_pack.py tests/test_period_pack_loader.py`: PASS clean (0 galat).
+- [F] `python scripts/check_manifests.py`: PASS (14 addon OK).
+- [F] Zero touch live Railway / staging database.
+**Belum diuji:**
+- [BU] Verifikasi exact-SHA workflow GitHub Actions pada runner CI pasca-push.
+**Signature:** Task managed by antigravity at 2026-11-19T13:48:00+07:00
+
 ## 2026-11-19T12:46:03+07:00 — Codex — PR #159 bukti exact-SHA hijau (belum merge)
 **SHA:** [F] Head PR `3ad5558faa0aeade9e2154b8fe37fd68647f68f`; seluruh 28 check wajib PASS pada SHA tersebut.
 **Bukti data-layer:** [F] Run `44464870477`, job `data-tests` (attempt 2) lulus 2m13s. Artifact berisi `TEST-...OutboxSessionIntegrationTest.xml` dengan `tests=3`, `failures=0`, `errors=0`, `skipped=0`, `time=6.519s`, yaitu `queuedOwnerCannotUseAnotherOwnersSession`, `first401StopsBatchAndOnlySameOwnerReauthenticationResumesIt`, dan `accountSwitchBetweenTwoSendsStopsBeforeSecondRequest`.
