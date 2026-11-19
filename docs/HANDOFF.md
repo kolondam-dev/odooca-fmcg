@@ -1,3 +1,11 @@
+## 2026-11-19T19:26:17+07:00 — Codex-Android-Design — Checkpoint DES-00/DES-01 D01-r1
+**Basis:** [F] Main acuan `39172de900668263676577d843a095bf90065ec2`, parent dan arahan tim `92da15d64228b6c3da961115555c51c546e17a23`. Branch `agen/android-design-Codex-Mobile-Native`. Fetch ulang ref bersama sebelum penyerahan menunjukkan arahan yang sama.
+**Berubah:** [F] [Checkpoint D01-r1](android/DES01_D01_CHECKPOINT.md) mempertahankan audit D01-r0, menelusuri sumber PWA/Android/Odoo dan mencatat 22 state D01-01–05 dengan Rxx/Bxx/DS-Cxx, rute/Back, fallback, dan acceptance. PJP opsi C memisahkan kosong sah, carry-over dengan izin Supervisor dan paket yang tidak sah. Mapping Compose mencatat kontras, 48 dp sebagai target uji sementara, serta status lokal dan receipt resmi.
+**Diverifikasi:** [F] 22 ID unik dengan trace dan tautan lokal yang valid, Ruff, 14 manifest, 28 tes kontrak CI, dan generator token identik byte demi byte. Dampak test **CUKUP** untuk checkpoint dokumentasi, dengan acceptance perangkat/backend dicatat per state. Tidak ada perubahan runtime, token atau kontrak.
+**Belum diuji:** [BU] 0/62 frame diperiksa. URL/node/versi Figma belum tersedia. Belum ada review visual, emulator/perangkat fisik, atau acceptance Odoo disposable pada checkpoint ini.
+**Menunggu:** Pemilik menetapkan file/library/area review Figma dan meninjau 48 dp, label/status, serta detik jam rencana. Lead/maintainer mengonfirmasi B03/B04/B07 untuk scope PJP, AR dan absensi, serta menyiapkan jalur B01/B02/B09. Dev dapat menyiapkan kesiapan emulator dan fixture pada jalur terpisah. Implementasi visual D01 memakai versi yang telah direview.
+**Signature:** Task managed by Agent Codex-Mobile Native at 2026-11-19T19:26:17+07:00
+
 ## 2026-11-19T19:20:10+07:00 — Codex — Arahan tetap untuk dua tim Android
 **Berubah:** [F] [Handoff bersama](android/LOCAL_WORKFLOW.md) mencatat arahan per tim, waktu pemeriksaan baseline, dan pelaporan checkpoint melalui GitHub. DES-00/DES-01 dan DEV-01A/01B tetap aktif.
 **Scope:** [F] Pembaruan instruksi pada branch baseline bersama.
