@@ -469,3 +469,12 @@
 - [F] No manual deployment was run and no server data was edited.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-19T13:46:37+07:00
+[2026-11-19T14:56:43+07:00] [INFO] Audit burst Dependabot after PR159 merge
+- [F] .github/dependabot.yml originated in Android foundation commit f8ac567 and became active on the default branch when PR #159 merged as 9f00b01 at 2026-11-19T06:44:48Z.
+- [F] Dependabot performed its initial scan immediately: PR #162 at 06:46:39Z, then PRs #164-#168 at 07:01-07:02Z. The monthly schedule controls future scans, not the first activation scan.
+- [F] Six PRs are explained exactly by separate ecosystem limits: one grouped GitHub Actions PR and five Gradle PRs (open-pull-requests-limit=5): kotlin-compose group, android-jetpack group, AGP, OkHttp, and Gradle wrapper.
+- [F] These are version-update PRs from GitHub's app/dependabot account, not security-alert PRs and not deployment requests.
+- [F] PR #162 has 28/28 checks PASS but combines ten major GitHub Actions upgrades across nine workflow files; review before merge remains required.
+- [F] Android PRs #164-#168 must not be merged as-is: #164 cannot resolve KSP 2.3.14; #165 needs compileSdk >=37 and AGP >=9.1; #166 needs Gradle >=9.6; #167 needs compileSdk >=37 and has Kotlin metadata incompatibility; #168 intentionally fails the repository oracle pinning Gradle 8.9.
+- [A] Recommended policy: close the five incompatible Android PRs, retain or separately review #162, and revise Dependabot to ignore Android major-version jumps or use narrower compatible groups before the next monthly scan.
+- Task managed by codex agent at 2026-11-19T14:56:43+07:00
