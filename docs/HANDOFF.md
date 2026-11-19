@@ -1,3 +1,7 @@
+## 2026-11-19T19:15:04+07:00 — Codex — Baseline Android bersama
+**Berubah:** [F] Branch `agen/android-baseline-Codex-Mobile-Native` memuat baseline yang dipertahankan, main `39172de` dan [handoff bersama](android/LOCAL_WORKFLOW.md). Kedua tim memakai checkout Cloud masing-masing dan menyerahkan commit melalui branch GitHub.
+**Scope:** [F] Publikasi baseline terisolasi sesuai mandat pemilik; review, merge dan deployment tetap mengikuti otorisasi masing-masing.
+
 ## 2026-11-19T17:17:03+07:00 — Codex — Sinkronisasi Lead Android
 **Berubah:** [F] Checkout utama memakai main lokal yang mengikuti origin/main. Dokumen menjelaskan kandidat per slice dan pemeriksaan kebaruan main sebelum perakitan, push, serta merge. Gate menambah opsi Lead `--refresh-main`.
 **Scope:** [F] Branch tim tetap lokal. Publikasi kandidat mengikuti checkpoint dan mandat pemilik.
