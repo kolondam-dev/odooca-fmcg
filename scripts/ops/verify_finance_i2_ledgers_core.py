@@ -7,15 +7,20 @@ Balance; combined != consolidated), and FIN57 (Sales and purchase register).
 Never runs outside finance_i0_reports_disposable; rolls back all fixtures.
 """
 
+import base64
+import csv
 from collections import defaultdict
 from datetime import date
 import json
 from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent) if "__file__" in globals() else "/opt/scripts/ops")
 import verify_finance_golden_ledger as golden  # noqa: E402
 import verify_finance_ledger_security as sec  # noqa: E402
+import verify_finance_fin04_workbook as workbook_oracle  # noqa: E402
+import verify_finance_i2_xlsx as xlsx_oracle  # noqa: E402
 
 
 class RollbackI2a(Exception):
@@ -494,6 +499,268 @@ def assert_fin04_audit(snapshot, oracle, docs):
                 "FIN04 must identify unposted draft AMLs in period separately")
 
 
+def assert_fin04_export(env, company, d_from, d_to, oracle):
+    """Tie a real wizard XLSX to independently read AMLs; synthetic DB only."""
+    cols = ("aml_id", "company_id", "date", "parent_state", "journal_id",
+            "account_id", "display_type", "debit", "credit", "balance")
+    lines = env["account.move.line"].with_company(company).search([
+        ("company_id", "=", company.id), ("date", ">=", d_from), ("date", "<=", d_to),
+    ], order="id")
+    lines.check_access("read")
+    wizard = env["id.finance.report.wizard"].with_context(
+        allowed_company_ids=company.ids,
+    ).create({
+        "company_id": company.id,
+        "company_ids": [(6, 0, company.ids)],
+        "report_type": "audit_trail",
+        "date_from": d_from,
+        "date_to": d_to,
+        "only_posted_moves": True,
+    })
+    action = wizard.action_export_xlsx()
+    require(action["type"] == "ir.actions.act_url", "FIN04 export action did not return download")
+    with TemporaryDirectory(prefix="fin04-disposable-") as location:
+        source = Path(location) / "aml.csv"
+        exported = Path(location) / "fin04.xlsx"
+        with source.open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=cols)
+            writer.writeheader()
+            for line in lines:
+                writer.writerow({
+                    "aml_id": line.id,
+                    "company_id": line.company_id.id,
+                    "date": str(line.date),
+                    "parent_state": line.parent_state,
+                    "journal_id": line.journal_id.id,
+                    "account_id": line.account_id.id,
+                    "display_type": line.display_type or "",
+                    "debit": line.debit,
+                    "credit": line.credit,
+                    "balance": line.balance,
+                })
+        exported.write_bytes(base64.b64decode(wizard.result_xlsx))
+        result = workbook_oracle.verify(source, exported, str(company.id), d_from, d_to)
+    require(result["rows"] == len(oracle["period_aml_ids"]), "FIN04 XLSX oracle count mismatch")
+    require(float(result["debit"]) == oracle["total_debit"], "FIN04 XLSX debit mismatch")
+    require(float(result["credit"]) == oracle["total_credit"], "FIN04 XLSX credit mismatch")
+    return {"case": "FIN04_xlsx_vs_independent_AML", "company": company.id,
+            "period": f"{d_from}/{d_to}", "rows": result["rows"], "result": "PASS"}
+
+
+def oca_xlsx(env, company, model, values, report_name, data_updates=None):
+    """Render the pinned OCA XLSX action from a real wizard, in memory only."""
+    wizard = env[model].with_company(company).create(values)
+    data = wizard._prepare_report_data()
+    data.update(data_updates or {})
+    action_env = env["ir.actions.report"].with_company(company).with_context(active_id=wizard.id)
+    payload, kind = action_env._render_xlsx(report_name, wizard.ids, data)
+    require(kind == "xlsx", f"{report_name}: renderer did not return xlsx")
+    require(isinstance(payload, bytes) and payload[:2] == b"PK",
+            f"{report_name}: renderer did not return a workbook")
+    return payload
+
+
+def account_codes(company, accounts):
+    codes = {account.id: account.with_company(company).code for account in accounts.values()}
+    require(len(set(codes.values())) == len(codes),
+            "Fixture account codes are not unique inside the company")
+    return codes
+
+
+def oracle_by_code(oracle, codes):
+    return {
+        codes[account_id]: (
+            row["initial_balance"], row["debit"], row["credit"], row["ending_balance"],
+        )
+        for account_id, row in oracle["by_account"].items()
+    }
+
+
+def assert_fin01_export(env, company, accounts, oracle, d_from, d_to, journal_ids=None):
+    payload = oca_xlsx(
+        env,
+        company,
+        "general.ledger.report.wizard",
+        {
+            "company_id": company.id,
+            "date_from": d_from,
+            "date_to": d_to,
+            "target_move": "posted",
+            "hide_account_at_0": False,
+            "centralize": False,
+            "grouped_by": "none",
+            "account_journal_ids": [(6, 0, list(journal_ids or []))],
+        },
+        "a_f_r.report_general_ledger_xlsx",
+    )
+    result = xlsx_oracle.verify_oca_general_ledger(
+        payload,
+        oracle_by_code(oracle, account_codes(company, accounts)),
+        len(oracle["period_aml_ids"]),
+    )
+    return {
+        "case": "FIN01_xlsx_vs_independent_AML", "company": company.id,
+        "period": f"{d_from}/{d_to}", "journal_ids": list(journal_ids or []), **result,
+    }
+
+
+def assert_fin02_export(env, company, accounts, oracle, d_from, d_to, journal_ids=None):
+    payload = oca_xlsx(
+        env,
+        company,
+        "trial.balance.report.wizard",
+        {
+            "company_id": company.id,
+            "date_from": d_from,
+            "date_to": d_to,
+            "target_move": "posted",
+            "hide_account_at_0": False,
+            "journal_ids": [(6, 0, list(journal_ids or []))],
+        },
+        "a_f_r.report_trial_balance_xlsx",
+        {"fy_start_date": "2026-01-01"},
+    )
+    result = xlsx_oracle.verify_oca_trial_balance(
+        payload, oracle_by_code(oracle, account_codes(company, accounts)),
+    )
+    return {
+        "case": "FIN02_xlsx_vs_independent_AML", "company": company.id,
+        "period": f"{d_from}/{d_to}", "journal_ids": list(journal_ids or []), **result,
+    }
+
+
+def assert_fin03_export(env, company, journals, oracle, d_from, d_to, journal_ids=None):
+    payload = oca_xlsx(
+        env,
+        company,
+        "journal.ledger.report.wizard",
+        {
+            "company_id": company.id,
+            "date_from": d_from,
+            "date_to": d_to,
+            "move_target": "posted",
+            "journal_ids": [(6, 0, list(journal_ids or []))],
+            "group_option": "journal",
+        },
+        "a_f_r.report_journal_ledger_xlsx",
+    )
+    codes = {journal.id: journal.code for journal in journals.values()}
+    require(set(oracle["by_journal"]) <= set(codes),
+            "Journal oracle references a journal outside the fixture")
+    expected = {
+        codes[journal_id]: (row["debit"], row["credit"], len(row["aml_ids"]))
+        for journal_id, row in oracle["by_journal"].items()
+    }
+    result = xlsx_oracle.verify_oca_journal_ledger(payload, expected)
+    return {
+        "case": "FIN03_xlsx_vs_independent_AML", "company": company.id,
+        "period": f"{d_from}/{d_to}", "journal_ids": list(journal_ids or []), **result,
+    }
+
+
+def independent_fin57_tie_out(env, company, accounts, docs, d_from, d_to):
+    """Read FIN57 account coverage and values directly from posted AMLs."""
+    tracked = {
+        accounts[key].id for key in ("revenue", "expense", "tax_output", "tax_input")
+    }
+    document_moves = {
+        docs[key].id for key in ("invoice", "bill", "refund", "vendor_refund")
+    }
+    lines = env["account.move.line"].with_company(company).search([
+        ("company_id", "=", company.id),
+        ("parent_state", "=", "posted"),
+        ("date", ">=", d_from),
+        ("date", "<=", d_to),
+        ("display_type", "not in", ["line_note", "line_section", "line_subsection"]),
+        ("account_id", "in", sorted(tracked)),
+    ], order="id")
+    lines.check_access("read")
+    expected = {}
+    non_register_lines = lines.filtered(lambda line: line.move_id.id not in document_moves)
+    for account_id in sorted(tracked):
+        account_lines = lines.filtered(lambda line, acc=account_id: line.account_id.id == acc)
+        register_lines = account_lines.filtered(lambda line: line.move_id.id in document_moves)
+        other_lines = account_lines - register_lines
+        register = company.currency_id.round(sum(register_lines.mapped("balance")))
+        gl_balance = company.currency_id.round(sum(account_lines.mapped("balance")))
+        non_register = company.currency_id.round(sum(other_lines.mapped("balance")))
+        expected[account_id] = (register, gl_balance, non_register, 0)
+    return {
+        "by_account": expected,
+        "non_register_move_count": len(set(non_register_lines.move_id.ids)),
+        "non_register_line_count": len(non_register_lines),
+    }
+
+
+def assert_fin57_export(env, company, d_from, d_to, scale, tie_out_oracle):
+    wizard = env["id.finance.report.wizard"].with_context(
+        allowed_company_ids=company.ids,
+    ).create({
+        "company_id": company.id,
+        "company_ids": [(6, 0, company.ids)],
+        "report_type": "sales_purchase_register",
+        "date_from": d_from,
+        "date_to": d_to,
+        "register_type": "all",
+        "only_posted_moves": True,
+    })
+    action = wizard.action_export_xlsx()
+    require(action.get("type") == "ir.actions.act_url", "FIN57 export did not download")
+    payload = base64.b64decode(wizard.result_xlsx or b"")
+    expected = {
+        "out_invoice": (100 * scale, 10 * scale, 110 * scale, 1),
+        "out_refund": (-20 * scale, -2 * scale, -22 * scale, 1),
+        "in_invoice": (80 * scale, 8 * scale, 88 * scale, 1),
+        "in_refund": (-10 * scale, -1 * scale, -11 * scale, 1),
+    }
+    result = xlsx_oracle.verify_sales_purchase_register(
+        payload,
+        expected,
+        tie_out_oracle["by_account"],
+        tie_out_oracle["non_register_move_count"],
+        tie_out_oracle["non_register_line_count"],
+    )
+    return {
+        "case": "FIN57_xlsx_vs_expected_table", "company": company.id,
+        "period": f"{d_from}/{d_to}", **result,
+    }
+
+
+def assert_fin51_export(env, company, company_ids, d_from, d_to, multiplier):
+    wizard = env["id.finance.report.wizard"].with_context(
+        allowed_company_ids=company_ids,
+    ).create({
+        "company_id": company.id,
+        "company_ids": [(6, 0, list(company_ids))],
+        "report_type": "combined_trial_balance",
+        "date_from": d_from,
+        "date_to": d_to,
+        "only_posted_moves": True,
+    })
+    action = wizard.action_export_xlsx()
+    require(action.get("type") == "ir.actions.act_url", "FIN51 export did not download")
+    payload = base64.b64decode(wizard.result_xlsx or b"")
+    expected_rows = {}
+    for index, values in enumerate(I2A_JULY.values()):
+        opening, debit, credit, closing = (value * multiplier for value in values)
+        expected_rows[fin51_combined_code(index)] = (
+            opening, debit, credit, debit - credit, closing,
+        )
+    expected_totals = {
+        key: sum(row[position] for row in expected_rows.values())
+        for position, key in enumerate(
+            ("initial_balance", "debit", "credit", "balance", "ending_balance")
+        )
+    }
+    result = xlsx_oracle.verify_combined_trial_balance(
+        payload, expected_rows, expected_totals,
+    )
+    return {
+        "case": "FIN51_xlsx_vs_expected_table", "companies": list(company_ids),
+        "period": f"{d_from}/{d_to}", "multiplier": multiplier, **result,
+    }
+
+
 def fin51_combined_code(index):
     """Shared synthetic code for the index-th key of the I2a expected tables."""
     return f"I2ACOMB{index:02d}"
@@ -591,6 +858,7 @@ def run(env):
                     assert_fin04_audit(audit_val, oracle, docs if period_name == "july" else None)
 
                     if period_name == "july":
+                        evidence["cases"].append(assert_fin04_export(env, company, d_from, d_to, oracle))
                         # Verify partnerless group id == 0 on AP in FIN01 grouped_by='partners'
                         gl_summary, _ = extract_gl_summary(gl_val)
                         ap_groups = gl_summary[accounts["ap"].id]["partner_groups"]
@@ -626,6 +894,28 @@ def run(env):
                             ),
                             sale_oracle, None,
                         )
+                        for label, journal_filter, export_oracle in (
+                            ("full", None, oracle),
+                            ("sale_journal", sale_jnl, sale_oracle),
+                        ):
+                            evidence["cases"].append(assert_fin01_export(
+                                env, company, accounts, export_oracle, d_from, d_to,
+                                journal_ids=journal_filter,
+                            ))
+                            evidence["cases"].append(assert_fin02_export(
+                                env, company, accounts, export_oracle, d_from, d_to,
+                                journal_ids=journal_filter,
+                            ))
+                            evidence["cases"].append(assert_fin03_export(
+                                env, company, journals, export_oracle, d_from, d_to,
+                                journal_ids=journal_filter,
+                            ))
+                        fin57_tie_out = independent_fin57_tie_out(
+                            env, company, accounts, docs, d_from, d_to,
+                        )
+                        evidence["cases"].append(assert_fin57_export(
+                            env, company, d_from, d_to, scale, fin57_tie_out,
+                        ))
 
                 # Unreconcile probe + rollback: GL/TB/JL/FIN04 unchanged when reconciliation is undone
                 try:
@@ -676,6 +966,9 @@ def run(env):
             )
             assert_fin51_combined_rows(combined["combined_rows"], I2A_JULY, 8)
             require(combined["totals"]["debit"] == combined["totals"]["credit"], "FIN51 combined debit != credit")
+            evidence["cases"].append(assert_fin51_export(
+                env, comp_a, [comp_a.id, comp_b.id], "2026-07-01", "2026-07-31", 8,
+            ))
 
             # FIN51 Counterexample: same code with different name or account_type must fail closed
             from odoo.exceptions import UserError

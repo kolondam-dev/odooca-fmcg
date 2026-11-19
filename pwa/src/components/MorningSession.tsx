@@ -9,6 +9,7 @@ import {
     type MorningRecord,
 } from "../domain/morning";
 import type { FieldStore } from "../storage/store";
+import { clockHMS } from "../domain/format";
 export function MorningSession({
     identity,
     provider,
@@ -105,15 +106,7 @@ export function MorningSession({
             setStage(undefined);
         }
     }
-    const clock = (iso?: string) =>
-        iso
-            ? new Date(iso)
-                  .toLocaleTimeString("id-ID", {
-                      timeZone: "Asia/Makassar",
-                      hour12: false,
-                  })
-                  .replaceAll(".", ":")
-            : "";
+    const clock = (iso?: string) => clockHMS(iso);
     const checkedOut = !!today?.clockOutAt;
     const inTime = clock(today?.attendanceAt);
     return (
