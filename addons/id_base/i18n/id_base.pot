@@ -3,3 +3,155 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Picklist"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "<strong>Customer / Destination</strong>"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "<strong>Source Document</strong>"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "<strong>Scheduled</strong>"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Product"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Source Location"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Lot / Serial"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Reserved / Planned"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Packaging Breakdown"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "—"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "This picklist reads native Odoo demand and reservation lines. The report does not create or change lot or location assignments."
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Prepared by<br/><br/><br/>____________________"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Checked by<br/><br/><br/>____________________"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Approved by<br/><br/><br/>____________________"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Packlist"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Quantity"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Destination Package"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "No native operation or reservation lines are available. Print the packlist after the picking has native operation details."
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Packing staff<br/><br/><br/>____________________"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Inspector<br/><br/><br/>____________________"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Delivery Order"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "<strong>Ship To</strong>"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "<strong>Sales / Source Order</strong>"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "<strong>Delivery Date</strong>"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Package"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Handed over by<br/><br/><br/>____________________"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Received by<br/><br/><br/>____________________"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Date / Stamp<br/><br/><br/>____________________"
+msgstr ""
