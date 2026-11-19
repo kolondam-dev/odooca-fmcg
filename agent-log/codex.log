@@ -418,3 +418,11 @@
 - [F] Updated README build status; local validator prints four negative PASS results, Ruff and 26 CI tests pass.
 - [BU] Final exact-SHA rerun after the fourth-control commit remains required before merge readiness.
 - Task managed by codex agent at 2026-11-19T09:32:35+07:00
+
+[2026-11-19T11:03:28+07:00] [INFO] PR159 Android N1 final exact-source evidence PASS
+- [F] PR #159 source HEAD 08e1e8587829edd9a43df23b51e1dc33e3ded068 is CLEAN/MERGEABLE and all 27 full-regression checks succeeded.
+- [F] Android run 44445152085 logs show 72 domain tests, four negative OpenAPI controls, lintDebug, assembleDebug, artifact upload, and android-gate PASS.
+- [F] Downloaded final artifacts: 11 JUnit suites, 72 tests, zero failures/errors/skips; APK 12,796,157 bytes, SHA-256 a460a73de439c649696680b516cae248f3230f68f4e69876521057eb2f4c07ce matching sidecar, four artifact files.
+- [F] Test impact CUKUP after added Android suite and four-counterexample regression oracle; N1 foundation acceptance is PASS.
+- [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend assumptions remain N2 follow-up; merge requires separate owner authorization.
+- Task managed by codex agent at 2026-11-19T11:03:28+07:00
