@@ -320,6 +320,20 @@ Utang:
 - Tautan "Keluar" di Lainnya tidak lagi bergaris bawah (`a.ui-row { text-decoration: none }`), dites di `profil.spec.ts` (K30 selesai).
 - **Belum:** layar-layar ini (persetujuan diskon/pengiriman, koreksi, form penagihan) masih bertata letak lama di luar tombolnya (`<p>`, `<label>`, `<fieldset>` polos) dan bermigrasi bersama alurnya; seberapa sering layar persetujuan/koreksi dijangkau alur harian belum dipetakan. `text-button` ("Unggah foto") dan `.header-fixed`/`.bottom-nav` tetap gaya lama.
 
+### K33. Fase 3B-19 — Keputusan pemilik: jam berdetik (K12) dan PJP kosong (K28)
+
+**K12 — diputuskan: waktu kejadian selalu sampai detik.** Kelengkapan waktu hingga detik dibutuhkan (audit). Format tunggal waktu kejadian: `HH.mm.ss` WITA (24 jam, titik) lewat `clockHMS()` di `domain/format.ts`: Riwayat/Antrean (`ActivityScreens`), "Tersimpan di perangkat" (`OrderResult`), jam absen/pulang (`MorningSession`, sebelumnya `HH:mm:ss` bertitik dua, kini bertitik), dan `time()`. Yang sudah berdetik sejak awal tidak diubah: jam hidup (`LiveClock`), watermark kamera (`CameraViewfinder`), bukti foto (`Evidence`, `evidence-render`), jam absen detail (`AttendanceScreen`), `CollectionWorkspace` (snapshot). `clockHM()` (tanpa detik) dipertahankan hanya untuk slot rencana PJP ("08.30" pada kartu outlet dan Beranda), yang bukan waktu kejadian. Penjaga: `tests/format-clock.test.ts` menggagalkan build bila `clockHM(` dipakai di luar `format.ts` atau ada format jam Intl tanpa `second`; `tests/browser/jam-detik.spec.ts` memeriksa baris Riwayat. Pembaruan: K29 menyebut `clockHM` untuk Riwayat/Hasil kirim; itu digantikan oleh `clockHMS` di sini. **Pertanyaan terbuka:** apakah jam rencana PJP ("08.30") juga harus berdetik; saya anggap tidak (slot jadwal dari server tanpa detik).
+
+**K28 — diputuskan: opsi B (PJP kosong sah).** Prinsip pemilik: aplikasi tetap terbuka; salesman tanpa PJP tidak dapat memulai sesi PJP, tetapi punya dua jalur: **Extra call** (sudah ada) dan/atau **NOO** (daftar outlet baru, form baru). Layar Outlet_kosong (UI sudah ada, tes e2e `fixme`) menampilkan keduanya. Paket sinkron untuk PJP kosong tetap membawa stok, harga, promo/diskon, dan piutang, supaya Extra call yang disetujui dapat berlanjut menjadi kunjungan dan order.
+
+**Utang backend baru (belum ada, dicatat sebagai K33; PWA belum bisa dikerjakan sebelum ini):**
+1. **Penanda "PJP kosong sah"** pada paket sinkron pagi, yang membedakannya dari paket rusak/belum lengkap. Hanya dengan penanda itu `validMorningSnapshot` boleh menerima `outlets.length === 0`; aturan sekarang (tolak nol outlet, `morning.test.ts` "empty outlets") tetap berlaku tanpa penanda. Paket PJP kosong tetap wajib memuat stok, harga, promo/diskon.
+2. **Feed piutang dari modul pengelola piutang > jadwal penagihan** ke snapshot (`ar` per outlet, daftar faktur, jatuh tempo). Modul itu belum ada. Ini juga prasyarat K3 (`collection_v2`) dan sisa layar Kunjungan_hub dari K28 (daftar faktur, total tagihan, "Mulai penagihan", Order "Terkunci").
+3. **NOO (registrasi outlet baru):** belum ada form, tipe command, kontrak, maupun mockup DS di PWA. Butuh mockup/form baru, command backend (masuk K10), dan alur persetujuan. Tombolnya pada Outlet_kosong tampil nonaktif "Segera tersedia" sampai kontrak ada.
+4. **Extra call tanpa sesi PJP:** `extra_call_outlets` kini datang dari paket sinkron yang sama; untuk PJP kosong, paket itu harus tetap terbit dan dapat dibuka tanpa memicu galat "Sesi belum dibuka".
+
+**Urutan kerja PWA setelah backend siap:** (a) longgarkan `validMorningSnapshot` bersyarat penanda + aktifkan tes `fixme` Outlet_kosong; (b) tombol "Daftarkan outlet baru" (nonaktif lalu aktif); (c) NOO sebagai fase sendiri.
+
 ## 3. Urutan integrasi yang disarankan
 
 1. **Selesai:** token → atom → shell (header, nav) → Login/Beranda/Absen → Outlet/Check-in/Hub → Order POS/Ringkasan/Hasil kirim/Display & stok (K13).

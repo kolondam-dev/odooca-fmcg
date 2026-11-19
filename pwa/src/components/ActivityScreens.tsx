@@ -2,7 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { diagnoseSync, type SyncDiagnostic } from "../domain/sync-diagnostics";
 import { orderHasDiscountRequest } from "../domain/order-pricing";
-import { clockHM, money } from "../domain/format";
+import { clockHMS, money } from "../domain/format";
 import type { FieldStore, QueueItem } from "../storage/store";
 import {
     BottomSheet,
@@ -19,14 +19,13 @@ import {
 import { useBackLayer } from "../ui/navigation";
 import type { IconName } from "./Icon";
 
-const hhmm = (iso?: string) => clockHM(iso);
 const when = (iso?: string) => {
     if (!iso) return "";
     const day = (d: Date) =>
         d.toLocaleDateString("sv-SE", { timeZone: "Asia/Makassar" });
     const d = new Date(iso);
     return day(d) === day(new Date())
-        ? hhmm(iso).replace(":", ".")
+        ? clockHMS(iso)
         : "kemarin atau lebih lama";
 };
 
