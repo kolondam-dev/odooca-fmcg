@@ -31,12 +31,15 @@ private data class Sent(val outcome: SendOutcome, val receiptJson: String? = nul
 class OutboxRepository(
     private val db: OdoocaDatabase,
     private val api: OdoocaApi,
-    private val csrfToken: () -> String?,
+    private val session: SessionRequestGate,
 ) {
     private val dao get() = db.outbox()
     private val idsSerializer = ListSerializer(String.serializer())
 
     fun observe(ownerId: String): Flow<List<OutboxEntity>> = dao.observe(ownerId)
+
+    /** Hanya autentikasi owner yang sama yang boleh membuka kembali item AUTH_REQUIRED miliknya. */
+    suspend fun resumeAfterAuthentication(ownerId: String): Int = dao.resumeAfterAuthentication(ownerId)
 
     /** Menyimpan command yang siap dikirim. `id` = UUID klien dan juga `client_uuid` di payload. */
     suspend fun enqueueCommand(
@@ -97,8 +100,18 @@ class OutboxRepository(
                 return FlushResult(sent, authRequired = false, retryLater = waiting)
             }
             for (item in plan.send) {
-                sendOne(item, nowMs)
-                sent++
+                val access = session.withOwner(item.ownerId) { lease -> sendOne(item, lease.csrfToken, nowMs) }
+                when (access) {
+                    SessionAccess.Denied -> return FlushResult(sent, authRequired = true, retryLater = false)
+                    is SessionAccess.Granted<*> -> {
+                        val outcome = access.value ?: continue
+                        sent++
+                        if (outcome == SendOutcome.AuthRequired) {
+                            session.invalidate(access.lease)
+                            return FlushResult(sent, authRequired = true, retryLater = false)
+                        }
+                    }
+                }
             }
         }
     }
@@ -110,15 +123,15 @@ class OutboxRepository(
         }
     }
 
-    private suspend fun sendOne(item: QueueItem, nowMs: () -> Long) {
-        val entity = dao.get(item.id) ?: return
+    private suspend fun sendOne(item: QueueItem, csrfToken: String?, nowMs: () -> Long): SendOutcome? {
+        val entity = dao.get(item.id) ?: return null
         val attempts = item.attempts + 1
         dao.update(entity.copy(state = CommandState.SENDING.name, attempts = attempts))
 
         val result = try {
             when (item.kind) {
-                QueueKind.COMMAND -> sendCommand(entity, item.id)
-                QueueKind.EVIDENCE -> sendEvidence(entity, item.id)
+                QueueKind.COMMAND -> sendCommand(entity, item.id, csrfToken)
+                QueueKind.EVIDENCE -> sendEvidence(entity, item.id, csrfToken)
             }
         } catch (e: ApiException) {
             Sent(SendClassifier.classifyFailure(e.status, e.message.orEmpty(), attempts, nowMs()))
@@ -127,7 +140,7 @@ class OutboxRepository(
             Sent(SendClassifier.classifyFailure(null, "Respons server tidak dapat dibaca", attempts, nowMs()))
         }
 
-        val current = dao.get(item.id) ?: return
+        val current = dao.get(item.id) ?: return null
         val updated = when (val outcome = result.outcome) {
             is SendOutcome.Delivered -> current.copy(
                 state = outcome.state.name,
@@ -152,10 +165,11 @@ class OutboxRepository(
             )
         }
         dao.update(updated)
+        return result.outcome
     }
 
-    private suspend fun sendCommand(entity: OutboxEntity, id: String): Sent {
-        val r = api.postCommand(entity.payload, csrfToken())
+    private suspend fun sendCommand(entity: OutboxEntity, id: String, csrfToken: String?): Sent {
+        val r = api.postCommand(entity.payload, csrfToken)
         return Sent(
             SendClassifier.classifyReceipt(
                 commandUuid = id,
@@ -164,10 +178,10 @@ class OutboxRepository(
         )
     }
 
-    private suspend fun sendEvidence(entity: OutboxEntity, id: String): Sent {
+    private suspend fun sendEvidence(entity: OutboxEntity, id: String, csrfToken: String?): Sent {
         val photo = File(entity.filePath.orEmpty())
         if (!photo.isFile) return Sent(SendOutcome.Rejected(0, "Berkas foto bukti tidak ditemukan"))
-        val r = api.uploadEvidence(entity.payload, photo, csrfToken())
+        val r = api.uploadEvidence(entity.payload, photo, csrfToken)
         val outcome = SendClassifier.classifyReceipt(
             commandUuid = id,
             receipt = Receipt(r.clientUuid, ReceiptStatus.ACCEPTED, "Bukti diterima", r.bindingSha256),

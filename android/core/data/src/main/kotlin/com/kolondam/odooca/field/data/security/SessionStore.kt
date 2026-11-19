@@ -6,7 +6,7 @@ import android.content.Context
  * Penyimpanan sesi di perangkat: cookie sesi, token CSRF, dan identitas terakhir.
  * Nilai rahasia dienkripsi dengan Keystore; tidak ikut backup.
  */
-class SessionStore(context: Context, private val cipher: KeystoreCipher = KeystoreCipher()) {
+class SessionStore(context: Context, private val cipher: SecretCipher = KeystoreCipher()) {
     private val prefs = context.getSharedPreferences("odooca_session", Context.MODE_PRIVATE)
 
     private fun putSecret(key: String, value: String?) {

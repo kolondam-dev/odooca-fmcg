@@ -88,7 +88,9 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    fun logout() = container.session.logout()
+    fun logout() {
+        viewModelScope.launch { container.session.logout() }
+    }
 }
 
 @Composable

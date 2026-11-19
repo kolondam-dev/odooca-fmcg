@@ -44,4 +44,10 @@ interface OutboxDao {
 
     @Query("SELECT * FROM outbox WHERE ownerId = :owner ORDER BY createdAtMs DESC")
     fun observe(owner: String): Flow<List<OutboxEntity>>
+
+    @Query(
+        "UPDATE outbox SET state = 'QUEUED', error = NULL, nextAttemptAtMs = 0 " +
+            "WHERE ownerId = :owner AND state = 'AUTH_REQUIRED'",
+    )
+    suspend fun resumeAfterAuthentication(owner: String): Int
 }

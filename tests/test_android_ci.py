@@ -46,6 +46,44 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         source = (ANDROID / "tools" / "validate_contract.py").read_text(encoding="utf-8")
         self.assertEqual(source.count('check("[negatif]'), 4)
 
+    def test_workflow_runs_room_session_data_layer_tests(self):
+        workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+        self.assertIn("data-tests", workflow["jobs"])
+        self.assertEqual(workflow["jobs"]["data-tests"]["needs"], "changes")
+
+        source = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("./gradlew --no-daemon :core:data:testDebugUnitTest", source)
+        self.assertIn("android-data-reports-${{ github.sha }}", source)
+
+        gate = workflow["jobs"]["android-gate"]
+        self.assertIn("data-tests", gate["needs"])
+        self.assertIn("DATA_RESULT", gate["steps"][0]["env"])
+        self.assertIn('test "$DATA_RESULT" = success', gate["steps"][0]["run"])
+        self.assertIn('test "$DATA_RESULT" = skipped', gate["steps"][0]["run"])
+
+    def test_data_layer_test_covers_session_switch_and_401_recovery(self):
+        source = (
+            ANDROID
+            / "core"
+            / "data"
+            / "src"
+            / "test"
+            / "kotlin"
+            / "com"
+            / "kolondam"
+            / "odooca"
+            / "field"
+            / "data"
+            / "repo"
+            / "OutboxSessionIntegrationTest.kt"
+        ).read_text(encoding="utf-8")
+        self.assertIn("queuedOwnerCannotUseAnotherOwnersSession", source)
+        self.assertIn("first401StopsBatchAndOnlySameOwnerReauthenticationResumesIt", source)
+        self.assertIn("accountSwitchBetweenTwoSendsStopsBeforeSecondRequest", source)
+        self.assertIn("resumeAfterAuthentication", source)
+        self.assertIn("RobolectricTestRunner", source)
+        self.assertIn("inMemoryDatabaseBuilder", source)
+
 
 if __name__ == "__main__":
     unittest.main()

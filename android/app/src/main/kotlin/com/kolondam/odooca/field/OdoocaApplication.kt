@@ -11,6 +11,7 @@ import com.kolondam.odooca.field.data.repo.SessionManager
 import com.kolondam.odooca.field.data.repo.SnapshotRepository
 import com.kolondam.odooca.field.data.repo.VisitRepository
 import com.kolondam.odooca.field.data.security.SessionStore
+import com.kolondam.odooca.field.data.sync.OutboxScheduler
 import com.kolondam.odooca.field.data.sync.OutboxServices
 
 /** Kontainer dependensi manual: sedikit bagian bergerak, tanpa pemrosesan anotasi tambahan. */
@@ -20,10 +21,21 @@ class AppContainer(context: Context) {
     private val cookieJar = PersistentCookieJar(sessionStore)
     val api = OdoocaApi(config, cookieJar, sessionStore)
     val database: OdoocaDatabase = OdoocaDatabase.create(context)
-    val session = SessionManager(api, sessionStore)
+    val session: SessionManager
     val snapshots = SnapshotRepository(api, database)
-    val outbox = OutboxRepository(database, api) { session.csrfToken }
-    val visits = VisitRepository(database, outbox)
+    val outbox: OutboxRepository
+    val visits: VisitRepository
+
+    init {
+        lateinit var outboxForReauthentication: OutboxRepository
+        session = SessionManager(api, sessionStore) { ownerId ->
+            outboxForReauthentication.resumeAfterAuthentication(ownerId)
+            OutboxScheduler.kick(context, ownerId)
+        }
+        outbox = OutboxRepository(database, api, session)
+        outboxForReauthentication = outbox
+        visits = VisitRepository(database, outbox)
+    }
 }
 
 class OdoocaApplication : Application(), OutboxServices {

@@ -12,7 +12,7 @@ Acuan arsitektur: `docs/blueprints/native_android_architecture_blueprint.md`.
 |---|---|---|
 | `core/domain` | Kotlin murni: geofence, jendela waktu bukti, kualifikasi GPS, lifecycle command, perencana outbox, pembuat command check-in/out dan metadata evidence | Dikompilasi `-Werror`, **72 tes lolos**, payload **divalidasi terhadap skema OpenAPI** |
 | `core/designsystem` | Tema Compose; `Tokens.kt` dihasilkan dari `pwa/design/tokens.json` | Generator zero-diff dan kompilasi Gradle lulus di CI |
-| `core/data` | Klien Odoo (OkHttp), sesi terenkripsi Keystore, Room, repositori, WorkManager | KSP dan kompilasi Gradle lulus di CI |
+| `core/data` | Klien Odoo (OkHttp), sesi terenkripsi Keystore, Room, repositori, WorkManager | KSP, kompilasi Gradle, dan tes Room/sesi (Robolectric) lulus di CI |
 | `app` | Aktivitas, navigasi, layar Login, Beranda (outlet dari server), Kalibrasi GPS | Lint dan `assembleDebug` lulus di CI |
 
 ## Menjalankan
@@ -21,6 +21,7 @@ Acuan arsitektur: `docs/blueprints/native_android_architecture_blueprint.md`.
 # alamat backend wajib diisi (tanpa garis miring di akhir)
 ./gradlew :app:assembleDebug -Podooca.baseUrl=https://<host-odoo> -Podooca.database=<nama-db>
 ./gradlew :core:domain:test
+./gradlew :core:data:testDebugUnitTest
 ```
 
 Gunakan JDK 17. Gradle wrapper 8.9 beserta checksum distribusinya berada di
@@ -30,10 +31,11 @@ repository; jangan memakai instalasi Gradle global. Di Windows gunakan
 ## CI dan artifact
 
 Workflow `.github/workflows/android.yml` menjalankan guard token desain dan
-jalur data, 72 tes domain, validasi payload terhadap OpenAPI, lint, serta
-`assembleDebug`. APK debug, SHA-256, manifest ZIP, dan laporan lint disimpan
-sebagai artifact `odooca-field-debug-<sha>` selama 14 hari. Emulator dan uji
-perangkat fisik belum menjadi bagian bootstrap N1 ini.
+jalur data, 72 tes domain, validasi payload terhadap OpenAPI, tes Room/sesi
+data-layer, lint, serta `assembleDebug`. APK debug, SHA-256, manifest ZIP, dan
+laporan lint disimpan sebagai artifact `odooca-field-debug-<sha>`; laporan tes
+data-layer disimpan sebagai `android-data-reports-<sha>`. Keduanya berlaku 14
+hari. Emulator dan uji perangkat fisik belum menjadi bagian bootstrap N1 ini.
 
 `minSdk = 24` adalah titik awal. Nilai final ditetapkan dari uji Redmi 4X dan POCO M3.
 

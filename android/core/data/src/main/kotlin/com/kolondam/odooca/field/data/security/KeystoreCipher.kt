@@ -9,8 +9,13 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
+interface SecretCipher {
+    fun encrypt(plain: String): String
+    fun decrypt(token: String): String?
+}
+
 /** Enkripsi AES-GCM dengan kunci yang tidak pernah keluar dari Android Keystore. */
-class KeystoreCipher(private val alias: String = "odooca_session_key") {
+class KeystoreCipher(private val alias: String = "odooca_session_key") : SecretCipher {
     private fun key(): SecretKey {
         val store = KeyStore.getInstance(PROVIDER).apply { load(null) }
         (store.getKey(alias, null) as? SecretKey)?.let { return it }
@@ -28,7 +33,7 @@ class KeystoreCipher(private val alias: String = "odooca_session_key") {
         return generator.generateKey()
     }
 
-    fun encrypt(plain: String): String {
+    override fun encrypt(plain: String): String {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, key())
         val encrypted = cipher.doFinal(plain.toByteArray(Charsets.UTF_8))
@@ -36,7 +41,7 @@ class KeystoreCipher(private val alias: String = "odooca_session_key") {
     }
 
     /** Mengembalikan null bila data rusak atau kunci sudah tidak ada. */
-    fun decrypt(token: String): String? = runCatching {
+    override fun decrypt(token: String): String? = runCatching {
         val raw = Base64.decode(token, Base64.NO_WRAP)
         val iv = raw.copyOfRange(0, IV_BYTES)
         val cipher = Cipher.getInstance(TRANSFORMATION)

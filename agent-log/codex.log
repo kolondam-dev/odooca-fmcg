@@ -433,3 +433,13 @@
 - [F] No Android source, test oracle, workflow, or agent log entry from another agent was removed or weakened.
 - [BU] Exact-SHA full regression on the merge commit is required before restoring merge-ready status.
 - Task managed by codex agent at 2026-11-19T11:25:59+07:00
+
+[2026-11-19T12:06:10+07:00] [INFO] PR159 queue session isolation and 401 recovery
+- [F] SessionRequestGate lease (owner + generation) with a mutex that serializes login/logout against outbox sends, so queue A can never use session B cookies/CSRF.
+- [F] OutboxRepository stops the batch on the first 401, invalidates only the matching lease generation, and resumes AUTH_REQUIRED rows only for the owner that authenticated; UUID and dependencies are preserved.
+- [F] SessionManager reauthentication requeues the owner rows and kicks OutboxScheduler; logout is now suspend from HomeViewModel.
+- [F] New data-layer tests (Room in-memory + Robolectric + JDK HttpServer): cross-owner isolation, exactly one request on 401, same-owner reauth requeue with the same UUID, and account switch between two sends; the switch test asserts login cannot replace the session while a send holds the lease.
+- [F] CI: data-tests job runs :core:data:testDebugUnitTest, uploads android-data-reports, and DATA_RESULT is required by android-gate; tests/test_android_ci.py pins the task and gate wiring.
+- [F] Local: ruff, 14 manifests, 28 CI tests, guard grep clean, YAML parse, and diff check pass.
+- [BU] Gradle/Robolectric compilation and the new data-layer tests still require GitHub Actions because this machine has no JDK/Android SDK.
+- Task managed by codex agent at 2026-11-19T12:06:10+07:00
