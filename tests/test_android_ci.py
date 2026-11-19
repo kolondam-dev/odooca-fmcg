@@ -42,6 +42,10 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         self.assertIn("odooca-field-debug-${{ github.sha }}", source)
         self.assertIn("app-debug.apk.sha256", source)
 
+    def test_contract_validator_has_four_negative_schema_controls(self):
+        source = (ANDROID / "tools" / "validate_contract.py").read_text(encoding="utf-8")
+        self.assertEqual(source.count('check("[negatif]'), 4)
+
 
 if __name__ == "__main__":
     unittest.main()

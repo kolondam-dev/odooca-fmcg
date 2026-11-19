@@ -59,6 +59,9 @@ check("[negatif] uuid rusak", bad, command_variant("sales.visit.check_in"), expe
 bad = copy.deepcopy(check_in)
 bad["payload"]["site"]["radius"] = 500
 check("[negatif] radius 500", bad, command_variant("sales.visit.check_in"), expect_ok=False)
+bad = copy.deepcopy(check_in)
+del bad["client_uuid"]
+check("[negatif] client_uuid hilang", bad, command_variant("sales.visit.check_in"), expect_ok=False)
 bad = copy.deepcopy(evidence)
 bad["outlet_id"] = "OUT-7"
 check("[negatif] outlet non-angka", bad, named("OfficialEvidenceMetadata"), expect_ok=False)

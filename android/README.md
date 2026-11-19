@@ -11,9 +11,9 @@ Acuan arsitektur: `docs/blueprints/native_android_architecture_blueprint.md`.
 | Modul | Isi | Verifikasi |
 |---|---|---|
 | `core/domain` | Kotlin murni: geofence, jendela waktu bukti, kualifikasi GPS, lifecycle command, perencana outbox, pembuat command check-in/out dan metadata evidence | Dikompilasi `-Werror`, **72 tes lolos**, payload **divalidasi terhadap skema OpenAPI** |
-| `core/designsystem` | Tema Compose; `Tokens.kt` dihasilkan dari `pwa/design/tokens.json` | Generator berjalan; belum dibangun dengan Gradle |
-| `core/data` | Klien Odoo (OkHttp), sesi terenkripsi Keystore, Room, repositori, WorkManager | Sintaks diperiksa; belum dibangun dengan Gradle |
-| `app` | Aktivitas, navigasi, layar Login, Beranda (outlet dari server), Kalibrasi GPS | Sintaks diperiksa; belum dibangun dengan Gradle |
+| `core/designsystem` | Tema Compose; `Tokens.kt` dihasilkan dari `pwa/design/tokens.json` | Generator zero-diff dan kompilasi Gradle lulus di CI |
+| `core/data` | Klien Odoo (OkHttp), sesi terenkripsi Keystore, Room, repositori, WorkManager | KSP dan kompilasi Gradle lulus di CI |
+| `app` | Aktivitas, navigasi, layar Login, Beranda (outlet dari server), Kalibrasi GPS | Lint dan `assembleDebug` lulus di CI |
 
 ## Menjalankan
 
@@ -62,7 +62,8 @@ Backend dikerjakan paralel. Butir berikut dicatat sebagai hutang sambungan, buka
 ## Verifikasi kontrak
 
 `tools/validate_contract.py` memvalidasi payload yang dihasilkan tes domain terhadap `pwa/contracts/openapi.json`,
-termasuk kontrol negatif. Klien native tidak pernah mengirim field `mode`.
+termasuk empat kontrol negatif schema (UUID rusak, radius di luar batas, `client_uuid` hilang, dan outlet
+non-angka). Guard terpisah memastikan klien native tidak pernah mengirim field `mode`.
 
 ## Asumsi yang harus dibuktikan pada uji pertama ke backend nyata
 

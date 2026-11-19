@@ -410,3 +410,11 @@
 - [F] Added regression assertions rejecting v3; Ruff, workflow YAML, diff check, and 25 CI tests pass locally.
 - [BU] Android source compilation, lint, APK assembly, checksum, manifest, and artifact remain pending the rerun.
 - Task managed by codex agent at 2026-11-19T09:01:15+07:00
+
+[2026-11-19T09:32:35+07:00] [INFO] Android N1 artifact audit and fourth contract control
+- [F] PR #159 SHA 8233a0a full regression passed; Android run 44441270445 passed guards, 72/72 domain tests, lint, assembleDebug, and android-gate.
+- [F] Downloaded artifacts showed 11 JUnit XML suites with 72 tests and zero failures/errors/skips; APK 12,796,157 bytes with matching SHA-256 01b9a338d2ef1e17a4e30efcfbb79b4670e55cc9927f2604e9a2da89d511b1f7.
+- [F] Audit found only three printed negative OpenAPI schema controls; added a fourth counterexample that removes required client_uuid and a test pinning the count to four.
+- [F] Updated README build status; local validator prints four negative PASS results, Ruff and 26 CI tests pass.
+- [BU] Final exact-SHA rerun after the fourth-control commit remains required before merge readiness.
+- Task managed by codex agent at 2026-11-19T09:32:35+07:00
