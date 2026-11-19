@@ -36,6 +36,8 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         self.assertIn("./gradlew --no-daemon :core:domain:test", source)
         self.assertIn(":app:lintDebug :app:assembleDebug", source)
         self.assertNotIn("run: gradle ", source)
+        self.assertIn("android-actions/setup-android@v4", source)
+        self.assertNotIn("android-actions/setup-android@v3", source)
         self.assertIn("android/tools/validate_contract.py", source)
         self.assertIn("odooca-field-debug-${{ github.sha }}", source)
         self.assertIn("app-debug.apk.sha256", source)

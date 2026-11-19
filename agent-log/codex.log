@@ -403,3 +403,10 @@
 - [BU] Gradle domain tests, Android lint, and APK assembly await GitHub-hosted JDK 17/SDK 35 because this laptop has no Java or Android SDK.
 - [A] Test impact TAMBAH: new Android gate covers native build risks; emulator API 24/35 and Redmi 4X/POCO M3 remain later N2 acceptance.
 - Task managed by codex agent at 2026-11-19T08:37:19+07:00
+
+[2026-11-19T09:01:15+07:00] [INFO] Android SDK setup v4 compatibility fix
+- [F] PR #159 run 44438471600 proved guards and domain-tests PASS; build failed before Gradle because setup-android v3 requested Google's removed SDK package tools.
+- [F] Updated setup-android to v4 with empty default packages while retaining explicit platform android-35 and build-tools 35.0.0 installation.
+- [F] Added regression assertions rejecting v3; Ruff, workflow YAML, diff check, and 25 CI tests pass locally.
+- [BU] Android source compilation, lint, APK assembly, checksum, manifest, and artifact remain pending the rerun.
+- Task managed by codex agent at 2026-11-19T09:01:15+07:00
