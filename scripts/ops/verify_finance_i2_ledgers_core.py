@@ -7,15 +7,19 @@ Balance; combined != consolidated), and FIN57 (Sales and purchase register).
 Never runs outside finance_i0_reports_disposable; rolls back all fixtures.
 """
 
+import base64
+import csv
 from collections import defaultdict
 from datetime import date
 import json
 from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parent) if "__file__" in globals() else "/opt/scripts/ops")
 import verify_finance_golden_ledger as golden  # noqa: E402
 import verify_finance_ledger_security as sec  # noqa: E402
+import verify_finance_fin04_workbook as workbook_oracle  # noqa: E402
 
 
 class RollbackI2a(Exception):
@@ -494,6 +498,54 @@ def assert_fin04_audit(snapshot, oracle, docs):
                 "FIN04 must identify unposted draft AMLs in period separately")
 
 
+def assert_fin04_export(env, company, d_from, d_to, oracle):
+    """Tie a real wizard XLSX to independently read AMLs; synthetic DB only."""
+    cols = ("aml_id", "company_id", "date", "parent_state", "journal_id",
+            "account_id", "display_type", "debit", "credit", "balance")
+    lines = env["account.move.line"].with_company(company).search([
+        ("company_id", "=", company.id), ("date", ">=", d_from), ("date", "<=", d_to),
+    ], order="id")
+    lines.check_access("read")
+    wizard = env["id.finance.report.wizard"].with_context(
+        allowed_company_ids=company.ids,
+    ).create({
+        "company_id": company.id,
+        "company_ids": [(6, 0, company.ids)],
+        "report_type": "audit_trail",
+        "date_from": d_from,
+        "date_to": d_to,
+        "only_posted_moves": True,
+    })
+    action = wizard.action_export_xlsx()
+    require(action["type"] == "ir.actions.act_url", "FIN04 export action did not return download")
+    with TemporaryDirectory(prefix="fin04-disposable-") as location:
+        source = Path(location) / "aml.csv"
+        exported = Path(location) / "fin04.xlsx"
+        with source.open("w", newline="", encoding="utf-8") as stream:
+            writer = csv.DictWriter(stream, fieldnames=cols)
+            writer.writeheader()
+            for line in lines:
+                writer.writerow({
+                    "aml_id": line.id,
+                    "company_id": line.company_id.id,
+                    "date": str(line.date),
+                    "parent_state": line.parent_state,
+                    "journal_id": line.journal_id.id,
+                    "account_id": line.account_id.id,
+                    "display_type": line.display_type or "",
+                    "debit": line.debit,
+                    "credit": line.credit,
+                    "balance": line.balance,
+                })
+        exported.write_bytes(base64.b64decode(wizard.result_xlsx))
+        result = workbook_oracle.verify(source, exported, str(company.id), d_from, d_to)
+    require(result["rows"] == len(oracle["period_aml_ids"]), "FIN04 XLSX oracle count mismatch")
+    require(float(result["debit"]) == oracle["total_debit"], "FIN04 XLSX debit mismatch")
+    require(float(result["credit"]) == oracle["total_credit"], "FIN04 XLSX credit mismatch")
+    return {"case": "FIN04_xlsx_vs_independent_AML", "company": company.id,
+            "period": f"{d_from}/{d_to}", "rows": result["rows"], "result": "PASS"}
+
+
 def fin51_combined_code(index):
     """Shared synthetic code for the index-th key of the I2a expected tables."""
     return f"I2ACOMB{index:02d}"
@@ -591,6 +643,7 @@ def run(env):
                     assert_fin04_audit(audit_val, oracle, docs if period_name == "july" else None)
 
                     if period_name == "july":
+                        evidence["cases"].append(assert_fin04_export(env, company, d_from, d_to, oracle))
                         # Verify partnerless group id == 0 on AP in FIN01 grouped_by='partners'
                         gl_summary, _ = extract_gl_summary(gl_val)
                         ap_groups = gl_summary[accounts["ap"].id]["partner_groups"]
