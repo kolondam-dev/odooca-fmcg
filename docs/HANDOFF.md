@@ -1,3 +1,11 @@
+## 2026-11-19T12:46:03+07:00 — Codex — PR #159 bukti exact-SHA hijau (belum merge)
+**SHA:** [F] Head PR `3ad5558faa0aeade9e2154b8fe37fd68647f68f`; seluruh 28 check wajib PASS pada SHA tersebut.
+**Bukti data-layer:** [F] Run `44464870477`, job `data-tests` (attempt 2) lulus 2m13s. Artifact berisi `TEST-...OutboxSessionIntegrationTest.xml` dengan `tests=3`, `failures=0`, `errors=0`, `skipped=0`, `time=6.519s`, yaitu `queuedOwnerCannotUseAnotherOwnersSession`, `first401StopsBatchAndOnlySameOwnerReauthenticationResumesIt`, dan `accountSwitchBetweenTwoSendsStopsBeforeSecondRequest`.
+**Bukti Android lain:** [F] `guards`, `domain-tests` (11 suite, 72 test, 0 gagal), `build`, dan `android-gate` PASS. Artifact APK `app-debug.apk` 12.812.541 byte dengan SHA-256 `889a865028ca202344dcf6c9fa1dbb0974eca202480b2ab67233b3926ebc4932` yang cocok dengan sidecar, plus manifest dan laporan lint.
+**Catatan flake:** [F] Percobaan `data-tests` pertama pada SHA yang sama gagal hanya karena resolusi plugin KSP transien; job `build` pada run yang sama berhasil me-resolve KSP dan mengompilasi, lalu rerun job yang gagal lulus. Tidak ada perubahan kode di antara keduanya.
+**Suite lain:** [F] `CI` (install-test 9m44s, init-test 4m13s, static), `PWA quality`, `Seed supervision`, `Finance I0`, `Full Dataset` 19m41s, dan `Upgrade` 18m2s juga PASS pada `3ad5558`.
+**Status:** [BU] PR #159 tetap HOLD. Verdict PASS independen dan izin merge pemilik belum ada; emulator/perangkat fisik tetap acceptance N2 terpisah.
+
 ## 2026-11-19T12:22:57+07:00 — Codex — PR #159 data-tests gagal kompilasi lalu diperbaiki (belum merge)
 **Konteks:** [F] Run Android `44463681119` pada `63b1d3d`: `Android impact plan`, `guards`, dan `domain-tests` PASS; `data-tests` FAILED pada `:core:data:compileDebugUnitTestKotlin`.
 **Akar masalah:** [F] Log memuat `Unresolved reference 'sun'` untuk `com.sun.net.httpserver`. Unit test Android dikompilasi terhadap `android.jar`, yang tidak memuat modul JDK `jdk.httpserver`, sehingga kelas `com.sun.*` tidak tersedia meski JVM runner memilikinya.

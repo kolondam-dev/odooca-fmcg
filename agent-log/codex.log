@@ -451,3 +451,14 @@
 - [F] Local: ruff, 14 manifests, 28 CI tests, guard grep, and diff check pass.
 - [BU] Gradle/Robolectric execution of the rewritten data-layer tests still requires the next GitHub Actions run.
 - Task managed by codex agent at 2026-11-19T12:22:57+07:00
+[2026-11-19T12:46:03+07:00] [INFO] PR159 exact-SHA CI green at 3ad5558 with executed session tests
+- [F] PR #159 head is 3ad5558faa0aeade9e2154b8fe37fd68647f68f; all 28 required checks PASS on that SHA.
+- [F] Android run 44464870477: Android impact plan, guards, domain-tests, data-tests, build, and android-gate all success.
+- [F] data-tests artifact (attempt 2, same SHA) contains TEST-com.kolondam.odooca.field.data.repo.OutboxSessionIntegrationTest.xml: tests=3, failures=0, errors=0, skipped=0, time=6.519s; cases queuedOwnerCannotUseAnotherOwnersSession, first401StopsBatchAndOnlySameOwnerReauthenticationResumesIt, accountSwitchBetweenTwoSendsStopsBeforeSecondRequest.
+- [F] domain-tests artifact: 11 JUnit suites, 72 tests, 0 failures/errors/skips.
+- [F] APK artifact app-debug.apk 12,812,541 bytes; SHA-256 889a865028ca202344dcf6c9fa1dbb0974eca202480b2ab67233b3926ebc4932 matches the sidecar; manifest and lint report included.
+- [F] First data-tests attempt on the same SHA failed only on transient KSP plugin resolution; the build job in that same run resolved KSP and compiled successfully, and the rerun of the failed job passed in 2m13s.
+- [F] Remaining suites on 3ad5558 also pass: CI (install-test 9m44s, init-test 4m13s, static), PWA quality, Seed supervision, Finance I0, Full Dataset 19m41s, Upgrade 18m2s.
+- [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain N2 follow-up outside this PR.
+- [BU] Merge still requires an independent re-review verdict PASS and explicit owner authorization.
+- Task managed by codex agent at 2026-11-19T12:46:03+07:00
