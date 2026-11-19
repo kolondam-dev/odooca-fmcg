@@ -1,3 +1,7 @@
+## 2026-11-19T19:20:10+07:00 — Codex — Arahan tetap untuk dua tim Android
+**Berubah:** [F] [Handoff bersama](android/LOCAL_WORKFLOW.md) mencatat arahan per tim, waktu pemeriksaan baseline, dan pelaporan checkpoint melalui GitHub. DES-00/DES-01 dan DEV-01A/01B tetap aktif.
+**Scope:** [F] Pembaruan instruksi pada branch baseline bersama.
+
 ## 2026-11-19T19:15:04+07:00 — Codex — Baseline Android bersama
 **Berubah:** [F] Branch `agen/android-baseline-Codex-Mobile-Native` memuat baseline yang dipertahankan, main `39172de` dan [handoff bersama](android/LOCAL_WORKFLOW.md). Kedua tim memakai checkout Cloud masing-masing dan menyerahkan commit melalui branch GitHub.
 **Scope:** [F] Publikasi baseline terisolasi sesuai mandat pemilik; review, merge dan deployment tetap mengikuti otorisasi masing-masing.

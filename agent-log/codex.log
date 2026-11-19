@@ -500,3 +500,8 @@
 - [F] Pertahankan baseline 75b39a8 dan integrasikan main 39172de, termasuk keputusan PJP/approval terbaru.
 - [F] Handoff tim menggunakan baseline feature branch dan branch kerja masing-masing.
 - Task managed by codex agent at 2026-11-19T19:15:04+07:00
+
+[2026-11-19T19:20:10+07:00] [INFO] Arahan tetap untuk Design dan Dev Android
+- [F] Handoff GitHub menjadi rujukan instruksi strategis dan workflow kedua task.
+- [F] Tim memeriksa ref bersama dan menyertakan SHA arahan di checkpoint.
+- Task managed by codex agent at 2026-11-19T19:20:10+07:00
