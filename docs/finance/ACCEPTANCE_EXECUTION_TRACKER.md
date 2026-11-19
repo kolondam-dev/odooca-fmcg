@@ -121,7 +121,7 @@ menghasilkan workbook lewat wizard/report asli pada dua company sintetis lalu:
   aritmetika register↔GL, serta distinct non-register move/line;
 - FIN04: seluruh AML/value melalui pembanding independen di bawah.
 
-Unit offline sintetis menutup 22 kasus positif/counterexample. [BU] Render OCA
+Unit offline sintetis menutup 23 kasus positif/counterexample. [BU] Render OCA
 native dan workbook custom pada DB disposable hanya dijalankan oleh Finance I0
 CI; hasil belum boleh disebut PASS sebelum check exact-SHA hijau. Tidak ada
 workbook bisnis, AML live, atau status katalog yang berubah.

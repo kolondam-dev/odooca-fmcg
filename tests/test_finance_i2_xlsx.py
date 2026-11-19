@@ -301,6 +301,10 @@ class I2XlsxOracleTest(unittest.TestCase):
         header = {"A": "Entry", "B": "Date", "C": "Account", "D": "Partner",
                   "E": "Ref - Label", "F": "Taxes", "G": "Debit", "H": "Credit"}
         return [
+            ("Journal Ledger - FINANCE GOLDEN", [
+                {"A": "Journal Ledger - FINANCE GOLDEN A - IDR"},
+                {"B": "Company", "E": "FINANCE GOLDEN A"},
+            ]),
             ("FG A (IDR) - Golden A", [
                 {"A": "Journal Ledger"},
                 {},
@@ -318,6 +322,7 @@ class I2XlsxOracleTest(unittest.TestCase):
         write_workbook(self.xlsx, self.journal_ledger_sheets())
         result = self.check(oracle.verify_oca_journal_ledger, {"FG A": (10, 10, 2)})
         self.assertEqual(result["detail_lines"], 2)
+        self.assertEqual(result["cover_sheets"], 1)
 
     def test_oca_journal_ledger_totals_mutation_detected(self):
         write_workbook(self.xlsx, self.journal_ledger_sheets(credit=1))
@@ -328,6 +333,13 @@ class I2XlsxOracleTest(unittest.TestCase):
         write_workbook(self.xlsx, self.journal_ledger_sheets())
         with self.assertRaisesRegex(ValueError, "journal coverage mismatch"):
             self.check(oracle.verify_oca_journal_ledger, {"FG B": (10, 10, 2)})
+
+    def test_oca_journal_ledger_unknown_headerless_sheet_detected(self):
+        sheets = self.journal_ledger_sheets()
+        sheets.append(("Unexpected", [{"A": "not a journal detail sheet"}]))
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "Unexpected.*no detail header"):
+            self.check(oracle.verify_oca_journal_ledger, {"FG A": (10, 10, 2)})
 
     def test_formula_cell_rejected(self):
         write_workbook(self.xlsx, self.trial_balance_sheet())

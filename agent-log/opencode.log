@@ -344,3 +344,10 @@
 - [BU] Render native menunggu Finance I0 exact-SHA; workbook/AML live privat, role Sales production, mapping/perimeter, freeze dan sign-off Controller+QA tetap HOLD. Fixture bukan penerimaan live.
 - [BU] whats_new.sh gagal karena CRLF pipefail; pemeriksaan ekuivalen git fetch/divergence/log/status dilakukan dan skrip tidak diubah.
 - Task managed by opencode at 2026-11-19T14:56:43+07:00
+
+[2026-11-19T15:20:54+07:00] [WARN] PR #169 Finance I0 gagal pada cover sheet FIN03; parser diperbaiki fail-closed
+- [F] Run 44483831440 candidate-install-upgrade gagal pada ba009a2: cover worksheet OCA `Journal Ledger - ...` berisi judul/filter dan memang tidak memiliki header detail; finance-gate gagal sebagai agregator.
+- [F] Comparator kini mengizinkan maksimum satu cover dengan prefix resmi saja; sheet headerless lain tetap ditolak. Unit fixture meniru layout native dan menambah counterexample headerless `Unexpected`.
+- [F] TAMBAH tetap: ruff, 14 manifest, FIN04 8/8, XLSX 23/23, diff check PASS lokal.
+- [BU] Finance I0 exact-SHA baru menunggu commit/push; tidak ada merge/deploy atau perubahan katalog/live acceptance.
+- Task managed by opencode at 2026-11-19T15:20:54+07:00

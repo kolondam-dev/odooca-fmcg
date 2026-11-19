@@ -460,14 +460,26 @@ def verify_oca_journal_ledger(workbook, expected_by_code):
     """FIN03: each journal sheet must total to the independent AML oracle."""
     sheets = read_workbook(workbook)
     seen = {}
+    cover_sheets = 0
     for name, rows in sheets.items():
         if name.startswith("Tax - "):
             continue
         code = name.split(" (", 1)[0].strip()
         require(bool(code), f"FIN03 sheet {name!r} has no journal code")
         require(code not in seen, f"FIN03 repeats journal sheet {code!r}")
-        index, columns = _header(rows, {"Entry", "Date", "Account", "Debit", "Credit"},
-                                 f"FIN03 {code}")
+        try:
+            index, columns = _header(
+                rows, {"Entry", "Date", "Account", "Debit", "Credit"}, f"FIN03 {code}",
+            )
+        except ValueError:
+            # AbstractReportXlsx creates its report sheet before the Journal
+            # Ledger implementation adds one detail sheet per journal. That
+            # first sheet contains only the report title and filters.
+            require(name.startswith("Journal Ledger - "),
+                    f"FIN03 sheet {name!r} has no detail header")
+            cover_sheets += 1
+            require(cover_sheets == 1, "FIN03 workbook repeats its cover sheet")
+            continue
         debit = credit = Decimal(0)
         lines = 0
         for row in rows[index + 1:]:
@@ -493,4 +505,5 @@ def verify_oca_journal_ledger(workbook, expected_by_code):
         require(seen[code][:2] == (Decimal(0), Decimal(0)) and seen[code][2] == 0,
                 f"FIN03 unexpected active journal sheet {code!r}: {seen[code]}")
     return {"result": "PASS", "report_id": "FIN03", "journals": len(expected),
-            "detail_lines": sum(value[2] for value in seen.values())}
+            "detail_lines": sum(value[2] for value in seen.values()),
+            "cover_sheets": cover_sheets}
