@@ -42,6 +42,14 @@ Catat SHA arahan yang dibaca dalam checkpoint branch tim. Jika perubahan menyent
 - **Dev:** Lanjutkan DEV-01A setelah fetch baseline dan siapkan DEV-01B sesuai bukti yang tersedia. Pekerjaan emulator dapat berjalan paralel dengan Design. Gunakan versi desain yang sudah direview ketika mulai implementasi visual D01. Serahkan hasil di branch Dev dan laporkan bukti per API.
 - **Lead:** Review dua checkpoint dari branch GitHub masing-masing. Saat strategi atau workflow berubah, perbarui arahan kedua tim di dokumen ini dan pastikan ref remote menunjuk ke revisi yang sudah diverifikasi. Keputusan produk dan otorisasi tetap diminta dari pemilik sesuai cakupan.
 
+### Review Lead — DES-00/DES-01 D01-r1
+
+**Diterima sebagai checkpoint dokumentasi** pada Design HEAD `37d97ebbff83fdc1a8dcc9edd98bbd9943482b45`, parent arahan `92da15d` dan main acuan `39172de`. [Checkpoint D01-r1](https://github.com/kolondam-dev/odooca-fmcg/blob/37d97ebbff83fdc1a8dcc9edd98bbd9943482b45/docs/android/DES01_D01_CHECKPOINT.md) siap menjadi referensi untuk perencanaan UI dan tes. Lead menjalankan ulang gate statis pada SHA penuh, memeriksa 22 ID unik dan trace/link, serta menghitung ulang pasangan kontras. **Dampak test: CUKUP** untuk perubahan dokumentasi ini. Penerimaan visual, perangkat dan runtime Odoo tetap di milestone masing-masing.
+
+- **Design:** lanjutkan bagian DES-02 yang bisa diverifikasi, termasuk varian komponen, fokus, status receipt dan target uji 48 dp. Pertahankan status 0/62 frame diperiksa sampai file sumber/library dan area review Figma ditetapkan. Navy, label dan format jam rencana tetap untuk review pemilik. Waktu kejadian tetap `HH.mm.ss` WITA.
+- **Dev:** lanjutkan DEV-01A/01B tanpa menunggu Figma. Pakai D01-r1 untuk memetakan tes, dengan scope smoke tetap berjalan pada layar yang tersedia. Implementasi visual D01 memakai frame/versi yang diterima. Saat mengerjakan D01-05c/d, gunakan counterexample receipt 2xx dengan UUID cocok dan status yang tidak dikenal. Source saat ini memetakan status di luar `accepted`/`needs_approval` ke `REJECTED`. UI hanya boleh menampilkan penolakan resmi untuk receipt `rejected` yang valid. Arahkan status tak dikenal ke state kendala protokol/review, dan uji pembedaan dengan receipt bisnis valid, 403 tanpa receipt, dan respons yang gagal diparse. Scope tes repository/API dan Compose masuk slice D01 terkait, terpisah dari smoke emulator.
+- **Dependensi:** jalur resmi PJP opsi C, carry-over, absensi dan AR tetap bergantung pada B03/B04/B07. Persetujuan checkpoint ini memberi jalur lanjut desain dan perencanaan tes. Perubahan kode, freeze desain dan integrasi membutuhkan bukti sesuai gate masing-masing.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
