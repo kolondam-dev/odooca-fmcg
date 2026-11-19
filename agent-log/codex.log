@@ -473,3 +473,9 @@
 - [F] No manual deployment was run and no server data was edited.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-19T13:46:37+07:00
+
+[2026-11-19T14:53:47+07:00] [INFO] Baseline koordinasi Android
+- [F] Menyiapkan SSOT, spec Design dan Dev, register blocker, prosedur integrasi, dan gate lokal.
+- [F] Basis origin/main e28e655; Ruff, 14 manifest dan tes kontrak CI lulus.
+- [BU] Integrasi Figma, emulator, perangkat fisik dan backend Android tetap mengikuti milestone.
+- Task managed by codex agent at 2026-11-19T14:53:47+07:00

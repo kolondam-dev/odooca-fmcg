@@ -1,3 +1,8 @@
+## 2026-11-19T14:53:47+07:00 — Codex — Baseline koordinasi Android
+**Berubah:** [F] SSOT dan register blocker di `docs/android/ARCHITECTURE.md`, spec Design/Dev dan operasi branch, plus `android/tools/integration_gate.sh`.
+**Diverifikasi:** [F] Basis `e28e655`. Ruff, 14 manifest serta tes kontrak selector, workflow dan Android lulus.
+**Belum diuji:** [BU] Mode Gradle lokal, emulator, perangkat fisik, konektivitas Odoo Android dan integrasi workspace desain.
+
 ## 2026-11-19T13:46:37+07:00 — Codex — PR #159 merge ke main `9f00b01` (PASS, dampak test CUKUP)
 **Merge:** [F] `origin/main` maju `1e19a89..9f00b01`; merge commit `9f00b01` adalah "Merge pull request #159 from kolondam-dev/agen/native-n1-foundation" dan head PR `87570dafb91cc310c37364e1d6eef4cc390f82d0` adalah ancestor `main`.
 **Verdict:** [F] Re-review independen menyatakan PASS dengan dampak test **CUKUP**; tiga counterexample P1/P2 dieksekusi pada lapisan repository + Room + HTTP lokal, bukan hanya enum/planner.
