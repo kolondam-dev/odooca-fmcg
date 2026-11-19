@@ -42,6 +42,22 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         self.assertIn("odooca-field-debug-${{ github.sha }}", source)
         self.assertIn("app-debug.apk.sha256", source)
 
+    def test_emulator_matrix_is_opt_in_and_outside_required_gate(self):
+        workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+        events = workflow[True]  # YAML 1.1 interprets the Actions key "on" as true.
+        inputs = events["workflow_dispatch"]["inputs"]
+        self.assertIs(inputs["emulator_smoke"]["default"], False)
+        self.assertNotIn("emulator_smoke", events["workflow_call"]["inputs"])
+        jobs = workflow["jobs"]
+        self.assertEqual(
+            jobs["emulator-smoke"]["if"],
+            "github.event_name == 'workflow_dispatch' && inputs.emulator_smoke",
+        )
+        self.assertEqual(jobs["emulator-smoke"]["strategy"]["matrix"]["api"], [24, 35])
+        self.assertEqual(
+            jobs["android-gate"]["needs"], ["changes", "guards", "domain-tests", "data-tests", "build"]
+        )
+
     def test_contract_validator_has_four_negative_schema_controls(self):
         source = (ANDROID / "tools" / "validate_contract.py").read_text(encoding="utf-8")
         self.assertEqual(source.count('check("[negatif]'), 4)

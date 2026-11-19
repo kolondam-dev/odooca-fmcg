@@ -505,3 +505,8 @@
 - [F] Handoff GitHub menjadi rujukan instruksi strategis dan workflow kedua task.
 - [F] Tim memeriksa ref bersama dan menyertakan SHA arahan di checkpoint.
 - Task managed by codex agent at 2026-11-19T19:20:10+07:00
+
+[2026-11-19T19:30:53+07:00] [INFO] DEV-01A kandidat smoke Android API 24/35
+- [F] Base 39172de; arahan bersama 92da15d; smoke manual API 24/35, KVM, boot, install dan Login.
+- [BU] Runtime API 24/35 menunggu runner ber-KVM dan bukti pada SHA kandidat.
+- Task managed by codex agent at 2026-11-19T19:30:53+07:00

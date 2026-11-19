@@ -76,3 +76,32 @@ non-angka). Guard terpisah memastikan klien native tidak pernah mengirim field `
 
 Kamera (CameraX) dan layar check-in/check-out, order, display, delivery, penagihan, absensi, dan parsing snapshot
 lengkap, mengikuti urutan dependency di blueprint.
+
+## DEV-01A — emulator opsional
+
+Lead dapat menjalankan workflow **Android native** dari branch Dev yang memuat
+definisi workflow. Set input `ref` ke SHA kandidat, `force_all=true`,
+`emulator_smoke=true`. Jika GitHub menolak input baru dari branch
+fitur, jalankan perintah lokal pada runner Linux ber-KVM. Required `android-gate`
+terpisah dari hasil kedua job opsional. Perubahan workflow memilih full
+regression berdasarkan planner. Lead mengumpulkan full regression dan Android
+pada SHA yang sama.
+
+Untuk runner lokal, siapkan Temurin 17.0.17+10 dan SDK Linux x86_64 terisolasi
+dengan Command-line Tools 19.0, platform Android 35 rev 2, Build Tools 34.0.0 dan 35.0.0,
+Platform Tools 37.0.1, emulator 37.2.13, dan kedua image Google APIs x86_64
+(API 24 rev 27, API 35 rev 9). SDK Manager mungkin kemudian menawarkan versi
+lebih baru. Skrip berhenti saat revisi terpasang berbeda dari yang dipatok.
+Dengan `ANDROID_HOME` dan `ANDROID_SDK_ROOT` mengarah ke SDK tersebut dan
+`/dev/kvm` bisa dibaca/ditulis, jalankan setiap API secara berurutan:
+
+```bash
+bash android/tools/emulator_smoke.sh 24 /tmp/odooca-api24-smoke
+bash android/tools/emulator_smoke.sh 35 /tmp/odooca-api35-smoke
+```
+
+Pakai direktori bukti baru setiap run. Skrip membuat AVD bersih dengan timeout boot
+300 detik. Laporan TSV mencatat SDK/image, SHA, checksum dan hasil akselerasi,
+build, boot, install, cold start dan Login secara terpisah. Screenshot Login
+diambil pada AVD bersih sebelum kredensial diisi. Dump UI dan log mentah tidak
+masuk artefak. Kegagalan setup runner tampak pada job dan metadata SHA/API.

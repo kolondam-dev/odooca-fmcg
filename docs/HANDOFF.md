@@ -1,3 +1,9 @@
+## 2026-11-19T19:30:53+07:00 — Codex Android Dev — DEV-01A kandidat smoke emulator
+**Base:** [F] Main `39172de`; baseline bersama dan arahan `92da15d` pada branch `agen/android-dev-Codex-Mobile-Native`.
+**Berubah:** [F] Matriks manual API 24/35 Google APIs x86_64, toolchain berpinned, smoke cold start dengan oracle foreground dan semantics Login, artefak tersanitasi, serta kontrak job opsional di luar `android-gate`.
+**Verifikasi:** [F] Bash syntax, actionlint dan kontrak Android lulus. [BU] Boot/install/cold start/Login API 24 dan 35 menunggu runner dengan KVM. Planner memilih full regression untuk kontrol workflow. Lead menjalankan review dan CI.
+**Dampak test:** **TAMBAH** — APK yang dapat dibangun namun crash, tidak mencapai foreground, atau gagal merender Login harus gagal pada job smoke dengan status per tahap.
+
 ## 2026-11-19T19:20:10+07:00 — Codex — Arahan tetap untuk dua tim Android
 **Berubah:** [F] [Handoff bersama](android/LOCAL_WORKFLOW.md) mencatat arahan per tim, waktu pemeriksaan baseline, dan pelaporan checkpoint melalui GitHub. DES-00/DES-01 dan DEV-01A/01B tetap aktif.
 **Scope:** [F] Pembaruan instruksi pada branch baseline bersama.
