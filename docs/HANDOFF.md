@@ -1,3 +1,11 @@
+## 2026-11-19 — [F] FE-1 UnitQty: badge satuan karton/pack/pcs (claude-design)
+
+- Komponen `UnitQty` + `UnitLegend` (`components/UnitQty.tsx`), logika `splitUnits`/`stockUnits`/`unitLabel` (`domain/unit-qty.ts`), ikon `carton` (package) dan `pack` (stack), glyph `@` untuk pcs.
+- Dipakai di POS (stok, stok sistem, baris keranjang), Display & stok, Koreksi order. `stockText`/`tierText` dihapus dari `order-cart.ts`.
+- Pembaca layar: `role="img"` + `aria-label` "1 karton, 2 pack, 3 pcs". Legenda satuan sekali di POS.
+- Tes: `tests/unit-qty.test.ts` (termasuk penjaga tanpa "krt/pak" di komponen), `tests/browser/unit-qty.spec.ts`.
+- Belum dimigrasi (utang K34): Hasil kirim, baris pengiriman/POD, Closing trip, Riwayat, `loadSummary` ("20 karton · 8 pak") di `delivery-progress.ts`.
+
 ## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
 
 - D5 PJP kosong opsi C; D6 rekomendasi penyetuju/approval disetujui; D7 Tier 0, kumulatif %, rantai berjenjang, batas per principal, diskon program resmi ikut dihitung.
