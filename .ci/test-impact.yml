@@ -4,6 +4,7 @@ version: 1
 # suite in `all_suites`. Labels and manual inputs may add suites, never remove
 # the suites selected here.
 all_suites:
+  - android
   - odoo_install
   - odoo_init
   - odoo_ui
@@ -22,6 +23,7 @@ always_full:
   - "scripts/ci/**"
   - "tests/test_ci_impact.py"
   - "tests/test_ci_workflow_guards.py"
+  - "tests/test_android_ci.py"
 
 ignore_runtime:
   # Static validation still runs for these paths.
@@ -33,6 +35,21 @@ ignore_runtime:
   - ".editorconfig"
 
 rules:
+  - name: Android native client
+    paths:
+      - "android/**"
+    suites: [android]
+
+  - name: Shared mobile API contract
+    paths:
+      - "pwa/contracts/openapi.json"
+    suites: [pwa, mobile, android]
+
+  - name: Shared design tokens
+    paths:
+      - "pwa/design/tokens.json"
+    suites: [pwa, android]
+
   - name: Root Odoo image and deployment contract
     paths:
       - "Dockerfile"
