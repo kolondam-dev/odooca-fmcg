@@ -326,3 +326,15 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 - K29 ditambahkan; K9 selesai; CSS lama (K11) menyusul di 3B-16
 - flag backend tetap OFF
 - Task managed by claude-design agent at 2026-11-18T09:45:53+07:00
+
+[2026-11-18T13:50:57+07:00] [INFO] Fase 3B-16: pemangkasan CSS lama (K11)
+- style.css 2683 -> 1525 baris; 212 selector mati dihapus
+- vitest 521; e2e penuh 256 lulus, 2 skip
+- K30 ditambahkan; flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-18T13:50:57+07:00
+
+[2026-11-18T16:06:01+07:00] [INFO] Fase 3B-17: panel peta CheckinMap memakai atom DS (K8)
+- vitest 521; e2e penuh lulus setelah memperbaiki 1 asersi visits.spec
+- K31 ditambahkan; CameraViewfinder dan tombol gaya lama di layar lain tetap utang
+- flag backend tetap OFF
+- Task managed by claude-design agent at 2026-11-18T16:06:01+07:00

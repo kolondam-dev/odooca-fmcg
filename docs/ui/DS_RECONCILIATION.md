@@ -67,7 +67,7 @@ Cakupan kode: layar yang sudah mengikuti DS = Login, Beranda (3 keadaan), Absen 
 
 ### K8. Peta dan foto bukti masih gaya lama
 
-- [F] `CheckinMap`, `VisitPhotoField`, `EvidenceCapture`, `CameraViewfinder` belum DS. Kamera sengaja gelap khusus.
+- [F] `CheckinMap`, `VisitPhotoField`, `EvidenceCapture`, `CameraViewfinder` belum DS. Kamera sengaja gelap khusus. **Pembaruan (K31):** audit 3B-17 menemukan `EvidenceCapture` dan `VisitPhotoField` sudah memakai atom DS sejak fase sebelumnya; `CheckinMap` kini DS. Tinggal `CameraViewfinder` (gelap khusus, sengaja).
 - **Rekomendasi:** bangun ulang sebagai atom `MapPanel` dan `PhotoSlot` (pratinjau, ulangi, status kedaluwarsa) tanpa mengubah paket evidence (hash, watermark). Pertahankan test `visit-evidence`.
 
 ### K9. TaskForm monolit (1022 baris)
@@ -297,6 +297,21 @@ Utang:
 - **`TaskForm` dihapus (K9 selesai).** Cabang `proof` (Bukti pengiriman lama) tidak punya pemicu di mana pun dan selalu berakhir dengan galat "Bukti tersimpan lokal"; POD sebenarnya sudah di layar Pod_* (K19). Rute `proof` dihapus dari `ui/navigation.ts` dan guard peran di `App.tsx`.
 - **Jam gaya DS (K12 sebagian):** `clockHM()` di `domain/format.ts` (24 jam, titik, WITA, tidak bergantung locale peramban) dipakai `time()`, Riwayat/Antrean (`ActivityScreens`), dan `OrderResult`. Jam dengan titik dua di `MorningSession` (jam absen "HH:mm:ss") dan `CameraViewfinder` (watermark kamera) sengaja belum diubah: butuh keputusan format watermark/detik; tetap utang K12.
 - **Belum:** selector CSS lama yang dulu dipakai TaskForm (`.sheet*`, `.modal-backdrop`, `.full-page-form`, `.sheet-body/-footer`, dst.) belum dihapus; dikerjakan di 3B-16 (K11) setelah dipastikan tidak ada pemakai lain.
+
+### K30. Fase 3B-16 — Pemangkasan CSS lama (K11)
+
+- `pwa/src/style.css` turun dari 2.683 ke 1.525 baris: 212 selector (208 aturan) berkelas yang tidak lagi muncul di `src/`, `tests/`, `index.html`, maupun `ui/ui.css` dihapus (mis. `.sheet-body/-footer`, `.modal-backdrop`, `.full-page-form`, `.quick-*`, `.morning-card`, `.login-*`, `.product-*`, `.queue-*`). Pemangkasan dibuat dengan skrip PostCSS satu kali (bukan alat tetap): selector dibuang hanya bila memuat kelas mati di luar `:not()`; kelas `is-*` (dibangun dinamis, `is-${state}`) dan `@keyframes` tidak disentuh.
+- Pembuktian: vitest 521 lulus, e2e penuh phone+tablet 256 lulus (2 skip K28), screenshot Beranda, Sales, HRIS, Lainnya diperiksa.
+- **Belum:** kelas yang masih dipakai tetapi bergaya lama (mis. `.workflow-*` pada delivery, `.header-fixed`, `.bottom-nav`) tetap di `style.css` dan bermigrasi bersama layarnya (K8 dan sesudahnya). Kelas yang dibangun dengan penyambungan string (`"a-" + x`) tidak terdeteksi skrip; belum ada yang ditemukan, tetapi belum diperiksa perangkat nyata.
+- **Temuan terpisah:** tautan "Keluar" di Lainnya tampil bergaris bawah polos (dari `ui-row--danger` pada anchor; bukan dari pemangkasan). Cukup `text-decoration: none` pada `.ui-row`; belum diubah di fase ini.
+
+### K31. Fase 3B-17 — Panel peta (`CheckinMap`) memakai atom DS (K8)
+
+- `CheckinMap` ditulis ulang di sisi tampilan: `Chip` bernada untuk status (ok "Di dalam radius", bad "Di luar radius", warn "Akurasi belum pasti", neu "Posisi perangkat belum tersedia"), `Button` DS untuk Muat peta jalan, zoom, Tampilkan kedua titik, Tutup peta jalan, `Callout` untuk koordinat tidak valid, peta jalan gagal, dan memuat. Warna diagram SVG memakai token (`--c-ok/-bad/-pri/-neu/-surface`), kelas `.ui-map*` di `ui/ui.css`. Logika (`checkinMap`, jarak, waktu habis 10 dtk, zoom, pusat ulang) dan semua teks tidak berubah; peta ini tetap hanya tampilan, tidak mengesahkan check-in dan tidak menyentuh paket evidence (hash, watermark).
+- `OfficialMaps` (layar preview staging) memakai `Button` DS untuk "Ambil posisi untuk preview".
+- Selector lama `.checkin-map*`, `.compact-map*`, `.map-controls`, `.map-simulation-label` dihapus dari `style.css`.
+- Tes: e2e baru di `checkin-map.spec.ts` (chip bernada dan teks tetap penanda, tombol `ui-btn--sec`, selektor lama hilang dari DOM); `official-maps`, `status-sheets`, `ux-improvements`, dan `visit-evidence` tidak diubah dan lulus. **Satu tes lama diubah:** `visits.spec.ts` "visit location guards…" menegaskan `getByText("Akurasi belum pasti", {exact:true})` tunggal; kini teks itu juga menjadi chip panel peta sehingga ada dua elemen (strict mode), maka asersi diganti menjadi tepat dua (panel kunjungan + chip peta) dan chip di panel peta terlihat.
+- **Belum:** `CameraViewfinder` (kamera gelap khusus) dan jam/watermark-nya (K12) tidak disentuh. Tombol bergaya lama `class="secondary"/"primary"` masih ada di `DiscountApproval`, `CollectionWorkspace`, `OrderCorrections`, `DisplayPhoto`, `DeliveryApproval` (layar di luar lingkup K8; dibersihkan bersama layarnya). Peta jalan sesungguhnya (ubin OpenStreetMap) tidak diuji di CI karena ubin diblokir; hanya jalur gagal/diagram titik. Garis bawah "Keluar" di Lainnya (K30) belum diubah.
 
 ## 3. Urutan integrasi yang disarankan
 

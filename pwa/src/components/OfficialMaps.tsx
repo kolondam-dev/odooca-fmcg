@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
 import type { MapFix } from "../domain/checkin-map";
+import { Button } from "../ui";
 import { CheckinMap } from "./CheckinMap";
 
 export function OfficialMaps({ snapshot }: { snapshot: Snapshot }) {
@@ -104,11 +105,16 @@ export function OfficialMaps({ snapshot }: { snapshot: Snapshot }) {
                     </strong>
                 </p>
             )}
-            <button class="secondary" disabled={busy || !site} onClick={locate}>
+            <Button
+                variant="sec"
+                size="md"
+                disabled={busy || !site}
+                onClick={locate}
+            >
                 {busy
                     ? "Mengambil posisi perangkat…"
                     : "Ambil posisi untuk preview"}
-            </button>
+            </Button>
             {message && <p role="status">{message}</p>}
             {site && (
                 <CheckinMap

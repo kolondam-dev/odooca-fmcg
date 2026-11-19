@@ -163,3 +163,50 @@ test("denied outlet GPS labels fallback as simulation", async ({ page }) => {
         }),
     ).toContainText("posisi simulasi");
 });
+
+test("panel peta memakai atom DS: chip status bernada, tombol DS, tanpa selektor lama", async ({
+    page,
+    context,
+}) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({
+        latitude: -6.2,
+        longitude: 106.8,
+        accuracy: 25,
+    });
+    await page.route("https://tile.openstreetmap.org/**", (route) =>
+        route.abort(),
+    );
+    await page.goto("./");
+    await page
+        .getByRole("button", { name: "Absen masuk", exact: true })
+        .click();
+    const map = page.getByRole("region", {
+        name: "Preview peta Kantor Pusat",
+        exact: true,
+    });
+    await expect(map).toHaveClass(/ui-map/);
+    await page
+        .getByRole("button", { name: "Perbarui lokasi", exact: true })
+        .click();
+    // Di luar radius: nada bahaya, teks tetap menjadi penanda (bukan hanya warna).
+    await expect(map.locator(".ui-chip")).toHaveClass(/ui-chip--bad/);
+    await expect(map.locator(".ui-chip")).toHaveText("Di luar radius");
+    await expect(map.locator(".ui-map__canvas svg[role=img]")).toBeVisible();
+    await map
+        .getByRole("button", { name: "Muat peta jalan", exact: true })
+        .click();
+    for (const name of [
+        "Perbesar peta",
+        "Perkecil peta",
+        "Tampilkan kedua titik",
+        "Tutup peta jalan",
+    ])
+        await expect(
+            map.getByRole("button", { name, exact: true }),
+        ).toHaveClass(/ui-btn--sec/);
+    // Selektor lama sudah hilang dari DOM.
+    await expect(map.locator(".checkin-map-canvas, .map-controls")).toHaveCount(
+        0,
+    );
+});

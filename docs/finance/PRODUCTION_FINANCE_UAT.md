@@ -3,7 +3,9 @@
 Status: **daftar langkah untuk pemilik; belum dijalankan.** Aktivasi di production
 sudah tercatat di [I2_ACTIVATION.md](I2_ACTIVATION.md#status-produksi-bukti-read-only-2026-11-15),
 tetapi belum ada bukti bahwa admin demo benar-benar melihat menu, menjalankan
-laporan, dan mengunduh XLSX dari aplikasi yang live.
+laporan, dan mengunduh XLSX dari aplikasi yang live. Langkah 1–4 punya jalur
+otomatis lewat harness UI live; langkah 5–6 dan pemeriksaan isi XLSX tetap
+manual.
 
 Tujuan daftar ini: mengubah bukti log menjadi bukti pemakaian, tanpa mengubah
 data. Semua langkah **read-only** dari sisi data; jangan menyimpan pengaturan,
@@ -43,6 +45,110 @@ mengubah kategori, atau memposting jurnal.
    **Costing Method** dan **Inventory Valuation** apa adanya. Bandingkan dengan
    keluaran `FINANCE_I3_COSTING` di [I3_COSTING.md](I3_COSTING.md); jangan ubah
    nilainya pada langkah ini.
+
+## Jalur otomatis (harness UI live)
+
+Sebagian langkah di atas dapat dijalankan tanpa klik manual memakai harness
+[`Remote Live UI Proof`](../LIVE_UI_HARNESS.md). Spec ada di
+`pwa/tests/live/finance-uat.spec.ts`; profil route ada di
+`pwa/tests/live-profiles/finance-uat.json`.
+
+| Langkah manual | Bukti otomatis |
+|---|---|
+| 1. Company | setiap action Finance menampilkan `company_id` **PT Manado Distribusi Utama** |
+| 2. Menu | app **Finance** → section **Finance Reports** memuat 8 entri berlabel FIN04…FIN38 |
+| 3. Jalankan laporan | kedelapan action membuka wizard dengan `report_type` yang sesuai dan tombol **Run Report**/**Export XLSX** terlihat di header; FIN04 dijalankan untuk 2026-07-01..2026-07-31 dan ringkasan memuat `FIN04` |
+| 4. Unduh XLSX | **Export XLSX** menghasilkan `FIN04-audit-trail-2026-07-01_2026-07-31.xlsx`; spec memeriksa header ZIP `PK`, `[Content_Types].xml` memuat `spreadsheetml.sheet.main+xml`, dan `xl/workbook.xml` memuat sheet `Summary`, bukan halaman error |
+
+Prasyarat remote: Environment `demo-ui` berisi Variables `LIVE_UI_ODOO_URL` dan
+`LIVE_UI_PWA_URL`, serta Secrets `ODOO_DEMO_LOGIN`/`ODOO_DEMO_PASSWORD`; setiap
+run menunggu approval pemilik. Nilai rahasia tidak boleh ditempel ke chat atau
+log.
+
+```bash
+# wizard, Run, Export XLSX (8 action + FIN04 Juli 2026)
+gh workflow run live-ui-proof.yml --ref main \
+  -f source_ref=<branch-atau-SHA-yang-direview> \
+  -f suite=odoo -f project=desktop \
+  -f purpose="finance UAT read-only"
+
+# screenshot route FIN04 dan FIN51
+gh workflow run live-ui-proof.yml --ref main \
+  -f source_ref=<branch-atau-SHA-yang-direview> \
+  -f suite=routes -f project=desktop \
+  -f route_file=tests/live-profiles/finance-uat.json \
+  -f purpose="finance UAT routes read-only"
+```
+
+Ambil artifact `live-ui-<suite>-<project>-<sha>` (retensi 3 hari). Bukti yang
+dipakai: screenshot per langkah, nama berkas XLSX, struktur `[Content_Types].xml`
+dan `xl/workbook.xml`, serta ringkasan `FIN04`. Jalankan dengan
+`project=desktop`; test menu sengaja dilewati pada viewport telepon karena
+navbar-nya memakai sidebar.
+
+Batas otomatis: spec tidak menulis data bisnis. Satu-satunya penulisan adalah
+record transient `id.finance.report.wizard` yang dibuat oleh klik itu sendiri
+(`action_run`/`action_export_xlsx` menyimpan pratinjau dan ekspor di sana), jadi
+`LIVE_UI_ALLOW_WRITE` tetap `NO`.
+
+Sisa yang tetap manual:
+
+- rekonsiliasi isi XLSX terhadap payload: nilai sel, kolom `__nested`, dan catatan
+  batas 20.000 baris / 32.000 karakter / 200.000 karakter payload (struktur
+  workbook sudah diperiksa otomatis oleh spec);
+- penolakan peran user Sales (langkah 5);
+- nilai **Costing Method** dan **Inventory Valuation** dua kategori (langkah 6).
+
+### Perbaikan tombol wizard (2026-11-18)
+
+[F] Temuan 2026-11-17: kedelapan action memakai `target: current`, sedangkan
+tombol **Run Report** dan **Export XLSX** hanya ada di `<footer>`. Pada Odoo 19
+footer dirender hanya ketika form berada di dialog: `form_controller.xml`
+menggerbangi slot `layout-buttons` dengan `t-if="env.inDialog"`,
+`form_controller.js` memindahkan footer ke arsip dialog ("if we are in a
+dialog"), dan `action_service.js` memetakan `target: "new"` ke mode `inDialog`.
+Akibatnya tombol tidak muncul pada form halaman penuh.
+
+[F] Keputusan pemilik: laporan tetap halaman penuh, tombol dipindahkan ke
+`<header>`, dan kedelapan action tetap `target: current`. `<footer>` wizard
+dihapus, termasuk tombol **Close** `special="cancel"` yang tidak berarti pada
+halaman penuh. Dua wizard lain di repo (`id_base/coretax_export_wizard`,
+`id_promo_governance/promo_sku_wizard`) tetap memakai pola footer + dialog
+karena memang `target: new`; keduanya tidak diubah.
+
+[F] Guard regresi ada di `scripts/ops/verify_finance_activation_demo.py`, yang
+dijalankan job `init-test`: view ter-resolve harus punya `action_run` dan
+`action_export_xlsx` di `<header>`, tidak boleh menduplikasinya di `<footer>`,
+dan kedelapan action harus `res_model = id.finance.report.wizard`,
+`view_mode` memuat `form`, serta `target = current`. Ringkasan tombol dan target
+dicetak di JSON `INIT_FINANCE_ACTIVATION`.
+
+[F] Bukti UI live 2026-11-18 terhadap demo production (Environment `demo-ui`),
+berturut-turut pada commit `6ba03b4`, `47f1086`, `7e8a7d0`, `3f6a13a`, `6c5a2b2`,
+`dcd0456`:
+
+| Run | Hasil | Temuan |
+|---|---|---|
+| [44213971426](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44213971426) (`odoo`) | gagal | demo memakai sidebar `id_ui_shell`, jadi `.o_navbar_apps_menu` tidak ada; label action tidak dirender di record; `widget="selection"` berupa input, bukan `<select>`; company juga input |
+| [44216443729](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44216443729) (`odoo`) | gagal | menu 8 entri PASS, 8 screenshot wizard terkumpul; test wizard gagal pada oracle header dan test periode masih gagal pada picker tanggal |
+| [44216457966](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44216457966) (`routes`) | **sukses** | screenshot route FIN04 dan FIN51 dengan profil `tests/live-profiles/finance-uat.json` (`expectText` = `Payload (JSON)`) |
+| [44218051458](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44218051458) (`odoo`) | gagal | `date_from` Juli terpasang; verifikasi `date_to` gagal karena input date picker hanya ada selama widget memegang fokus |
+| [44218732579](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44218732579) (`odoo`) | gagal | menu PASS; assertion label dan company pada 8 wizard berhasil (8 screenshot); periode FIN04 2026-07-01..2026-07-31 terpasang (`fin04-period-july-2026.png`); kedua test gagal pada oracle `action_run` di header sebelum Run/Export |
+
+[F] Screenshot `fin04-period-july-2026.png` dari run terakhir menunjukkan
+`Report Type = FIN04 - Journal Items Audit Trail`, `Company = PT Manado
+Distribusi Utama`, `Date From = Jul 1`, `Date To = Jul 31`, sidebar Finance
+Reports dengan 8 entri, dan **tidak ada** tombol Run/Export di header formulir.
+Artinya company, delapan entri menu, delapan wizard, dan pengisian periode
+terbukti di UI demo; langkah Run/Export belum terbukti. [A] View server-side
+branch ini belum di-deploy.
+
+[BU] Run Report, Export XLSX, dan pemeriksaan isi workbook belum bisa lulus
+sampai server production menjalankan view dari branch ini; deploy adalah
+keputusan pemilik dan belum dilakukan. Oracle header sengaja tidak dilonggarkan.
+Spec kini gagal bila tombol kembali ke `<footer>`, bila tombol tidak ada di
+`.o_form_statusbar`, atau bila berkas unduhan bukan workbook XLSX
+(`[Content_Types].xml` + sheet `Summary`).
 
 ## Bukti yang diminta
 
