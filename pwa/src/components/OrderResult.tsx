@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "preact/hooks";
-import { clockHM, money } from "../domain/format";
+import { clockHMS, money } from "../domain/format";
 import type { QueueItem } from "../storage/store";
 import { Button, Card, Screen } from "../ui";
 import { Icon } from "./Icon";
@@ -39,7 +39,7 @@ function Step({
     );
 }
 
-const wita = (date = new Date()) => `${clockHM(date)} WITA`;
+const wita = (date = new Date()) => `${clockHMS(date)} WITA`;
 
 /** Layar "Order tersimpan" (DS: Hasil_kirim); status mengikuti item antrean. */
 export function OrderResult({
