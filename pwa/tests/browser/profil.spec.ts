@@ -42,3 +42,13 @@ test("Profil: tombol Kembali dan Back peramban menutup layar", async ({
     await page.goBack();
     await expect(screen).toHaveCount(0);
 });
+
+test("Lainnya: tautan Keluar tidak bergaris bawah (gaya baris DS)", async ({
+    page,
+}) => {
+    await page.goto("./");
+    await page.getByRole("button", { name: "Lainnya", exact: true }).click();
+    const logout = page.getByRole("link", { name: /Keluar/ });
+    await expect(logout).toBeVisible();
+    await expect(logout).toHaveCSS("text-decoration-line", "none");
+});
