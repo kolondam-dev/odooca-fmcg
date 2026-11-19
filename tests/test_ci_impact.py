@@ -25,6 +25,21 @@ class TestCiImpactPlanner(unittest.TestCase):
     def test_pwa_change_is_targeted(self):
         self.assertEqual(self.suites("pwa/src/App.tsx"), {"pwa"})
 
+    def test_android_change_is_targeted(self):
+        self.assertEqual(self.suites("android/app/src/main/AndroidManifest.xml"), {"android"})
+
+    def test_mobile_contract_selects_every_client(self):
+        self.assertEqual(
+            self.suites("pwa/contracts/openapi.json"),
+            {"android", "mobile", "pwa"},
+        )
+
+    def test_design_tokens_select_pwa_and_android(self):
+        self.assertEqual(
+            self.suites("pwa/design/tokens.json"),
+            {"android", "pwa"},
+        )
+
     def test_docs_only_has_no_runtime_suite(self):
         self.assertEqual(self.suites("docs/DEVELOPMENT.md", "agent-log/claude-dev.log"), set())
 

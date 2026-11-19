@@ -1,4 +1,4 @@
-[2026-10-25T23:12:56+07:00] [INFO] Gate CI invariant seed dan workflow supervisi
+﻿[2026-10-25T23:12:56+07:00] [INFO] Gate CI invariant seed dan workflow supervisi
 - Validator independen, replay lot dan mutation tests; baseline gagal, tanpa modifikasi dataset.
 - Bukti runtime Odoo dan penguncian ruleset belum diverifikasi; lihat kontrak invariant.
 - Task managed by codex agent at 2026-10-25T23:12:56+07:00
@@ -34,14 +34,14 @@
 
 [2026-10-26T20:42:43+07:00] [INFO] Rancangan API backend dan PWA hybrid
 - Mandat pemilik: back-office Odoo web penuh, lapangan dan personal HRIS PWA sendiri.
-- Rancangan docs/blueprints/mobile_api_and_pwa_plan.md: kontrak, auth/role/scope, outbox, media, domain dan MOB-00–06.
+- Rancangan docs/blueprints/mobile_api_and_pwa_plan.md: kontrak, auth/role/scope, outbox, media, domain dan MOB-00â€“06.
 - Seluruh fitur baru masih rancangan; tidak mengubah runtime/dataset atau deploy.
 - Task managed by codex agent at 2026-10-26T20:42:43+07:00
 
 [2026-10-26T21:13:52+07:00] [INFO] Elaborasi plan mobile v0.2 sesuai 11 tambahan requirement pemilik
 - Binding akun/perangkat, sesi pagi, approval extra call/diskon/HPP, biaya DO/trip dan petty cash BBM H-1/insidentil.
-- Foto timestamp/geotag/pinpoint map, geofence 5–15m, location interval 5/15 menit, polling auto-sync/notifikasi dan bottom nav motion/haptic low-end.
-- Matriks R01–R11 dan gate ditambahkan; batas PWA background/spoofing dijelaskan dengan sumber teknis.
+- Foto timestamp/geotag/pinpoint map, geofence 5â€“15m, location interval 5/15 menit, polling auto-sync/notifikasi dan bottom nav motion/haptic low-end.
+- Matriks R01â€“R11 dan gate ditambahkan; batas PWA background/spoofing dijelaskan dengan sumber teknis.
 - JSON/struktur/tabel dan diff whitespace diperiksa; semua fitur baru masih rancangan, tidak deploy/push atau ubah dataset.
 - Task managed by codex agent at 2026-10-26T21:13:52+07:00
 
@@ -54,7 +54,7 @@
 
 [2026-10-26T21:53:04+07:00] [INFO] Plan v0.4: frontend-first dan scope mobile-only
 - Mandat pemilik: tidak mengambil pekerjaan agent lain; backend menjadi dependency/handoff.
-- Urutan PWA-01–06: UI, alur client, offline, kontrak formal, HTTP adapter, E2E live; interface minimum sejak awal dan mock eksplisit.
+- Urutan PWA-01â€“06: UI, alur client, offline, kontrak formal, HTTP adapter, E2E live; interface minimum sejak awal dan mock eksplisit.
 - Satu plan mobile tetap di blueprints; gap menjadi snapshot audit, SCOPE/DEVELOPMENT cukup rujukan saat koordinasi. Tidak ada implementasi aplikasi atau perubahan dokumen domain agent lain.
 - Task managed by codex agent at 2026-10-26T21:53:04+07:00
 
@@ -342,7 +342,7 @@
 
 [2026-11-11T19:04:48+07:00] [INFO] D1: scroll dan drill-down peta wilayah
 - Perbaiki overflow action D1 dan klik poligon.
-- Gunakan batas Sulut di repo untuk kabupaten/kota → kecamatan → kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
+- Gunakan batas Sulut di repo untuk kabupaten/kota â†’ kecamatan â†’ kelurahan/desa, dengan ranking berdasarkan penjualan yang lolos scope D1.
 - Task managed by codex agent at 2026-11-11T19:04:48+07:00
 
 [2026-11-16T09:35:05+07:00] [INFO] Kontrak dampak test review supervisor
@@ -395,3 +395,74 @@
 - [F] Verifikasi pasca-resolusi: 21 test impact/workflow/template PASS, Ruff PASS, 14 manifest PASS, diff check bersih.
 - [BU] Full regression harus lulus kembali pada merge SHA terbaru; hindari merge PR lain ke main sampai PR 152 selesai agar strict gate tidak kembali stale.
 - Task managed by codex agent at 2026-11-18T08:39:33+07:00
+
+[2026-11-19T08:37:19+07:00] [INFO] Android native N1 foundation prepared
+- [F] Imported the validated 67-file N2 package; internal ZIP SHA-256 3362253db66d6952ff5c486ccefbe7927e3cd3fd3190f0a467591e6fc062e15d.
+- [F] Added Gradle wrapper 8.9 with official distribution checksum, Android impact suite, stable android-gate, OpenAPI validation, lint/assembleDebug, APK checksum/manifest, and 14-day artifacts.
+- [F] Static evidence passed: Ruff, 14 manifests, 25 selector/workflow tests, YAML parse, design-token zero diff, credential/replacement-data audit, and git diff check.
+- [BU] Gradle domain tests, Android lint, and APK assembly await GitHub-hosted JDK 17/SDK 35 because this laptop has no Java or Android SDK.
+- [A] Test impact TAMBAH: new Android gate covers native build risks; emulator API 24/35 and Redmi 4X/POCO M3 remain later N2 acceptance.
+- Task managed by codex agent at 2026-11-19T08:37:19+07:00
+
+[2026-11-19T09:01:15+07:00] [INFO] Android SDK setup v4 compatibility fix
+- [F] PR #159 run 44438471600 proved guards and domain-tests PASS; build failed before Gradle because setup-android v3 requested Google's removed SDK package tools.
+- [F] Updated setup-android to v4 with empty default packages while retaining explicit platform android-35 and build-tools 35.0.0 installation.
+- [F] Added regression assertions rejecting v3; Ruff, workflow YAML, diff check, and 25 CI tests pass locally.
+- [BU] Android source compilation, lint, APK assembly, checksum, manifest, and artifact remain pending the rerun.
+- Task managed by codex agent at 2026-11-19T09:01:15+07:00
+
+[2026-11-19T09:32:35+07:00] [INFO] Android N1 artifact audit and fourth contract control
+- [F] PR #159 SHA 8233a0a full regression passed; Android run 44441270445 passed guards, 72/72 domain tests, lint, assembleDebug, and android-gate.
+- [F] Downloaded artifacts showed 11 JUnit XML suites with 72 tests and zero failures/errors/skips; APK 12,796,157 bytes with matching SHA-256 01b9a338d2ef1e17a4e30efcfbb79b4670e55cc9927f2604e9a2da89d511b1f7.
+- [F] Audit found only three printed negative OpenAPI schema controls; added a fourth counterexample that removes required client_uuid and a test pinning the count to four.
+- [F] Updated README build status; local validator prints four negative PASS results, Ruff and 26 CI tests pass.
+- [BU] Final exact-SHA rerun after the fourth-control commit remains required before merge readiness.
+- Task managed by codex agent at 2026-11-19T09:32:35+07:00
+
+[2026-11-19T11:03:28+07:00] [INFO] PR159 Android N1 final exact-source evidence PASS
+- [F] PR #159 source HEAD 08e1e8587829edd9a43df23b51e1dc33e3ded068 is CLEAN/MERGEABLE and all 27 full-regression checks succeeded.
+- [F] Android run 44445152085 logs show 72 domain tests, four negative OpenAPI controls, lintDebug, assembleDebug, artifact upload, and android-gate PASS.
+- [F] Downloaded final artifacts: 11 JUnit suites, 72 tests, zero failures/errors/skips; APK 12,796,157 bytes, SHA-256 a460a73de439c649696680b516cae248f3230f68f4e69876521057eb2f4c07ce matching sidecar, four artifact files.
+- [F] Test impact CUKUP after added Android suite and four-counterexample regression oracle; N1 foundation acceptance is PASS.
+- [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend assumptions remain N2 follow-up; merge requires separate owner authorization.
+- Task managed by codex agent at 2026-11-19T11:03:28+07:00
+
+[2026-11-19T11:25:59+07:00] [INFO] PR159 synchronized with main PR158
+- [F] After all checks passed on b4fe2d8, origin/main advanced to 1e19a89 via PR #158 and GitHub marked PR #159 conflicting.
+- [F] Merged origin/main; the only conflict was docs/HANDOFF.md, resolved by preserving both Android N1 and Claude-Dev1 3B-18 histories in chronological order.
+- [F] No Android source, test oracle, workflow, or agent log entry from another agent was removed or weakened.
+- [BU] Exact-SHA full regression on the merge commit is required before restoring merge-ready status.
+- Task managed by codex agent at 2026-11-19T11:25:59+07:00
+
+[2026-11-19T12:06:10+07:00] [INFO] PR159 queue session isolation and 401 recovery
+- [F] SessionRequestGate lease (owner + generation) with a mutex that serializes login/logout against outbox sends, so queue A can never use session B cookies/CSRF.
+- [F] OutboxRepository stops the batch on the first 401, invalidates only the matching lease generation, and resumes AUTH_REQUIRED rows only for the owner that authenticated; UUID and dependencies are preserved.
+- [F] SessionManager reauthentication requeues the owner rows and kicks OutboxScheduler; logout is now suspend from HomeViewModel.
+- [F] New data-layer tests (Room in-memory + Robolectric + JDK HttpServer): cross-owner isolation, exactly one request on 401, same-owner reauth requeue with the same UUID, and account switch between two sends; the switch test asserts login cannot replace the session while a send holds the lease.
+- [F] CI: data-tests job runs :core:data:testDebugUnitTest, uploads android-data-reports, and DATA_RESULT is required by android-gate; tests/test_android_ci.py pins the task and gate wiring.
+- [F] Local: ruff, 14 manifests, 28 CI tests, guard grep clean, YAML parse, and diff check pass.
+- [BU] Gradle/Robolectric compilation and the new data-layer tests still require GitHub Actions because this machine has no JDK/Android SDK.
+- Task managed by codex agent at 2026-11-19T12:06:10+07:00
+[2026-11-19T12:22:57+07:00] [WARN] PR159 data-tests compile failure fixed (com.sun not in android.jar)
+- [F] Android run 44463681119 at 63b1d3d: guards, domain-tests, Android impact plan PASS; data-tests FAILED at :core:data:compileDebugUnitTestKotlin with Unresolved reference 'sun' for com.sun.net.httpserver.
+- [F] Cause: Android unit tests compile against android.jar, which does not ship the JDK jdk.httpserver module, so com.sun.net.httpserver is unavailable even though the JVM runtime has it.
+- [F] Fix: replaced the test backend with a minimal HTTP/1.1 server over java.net.ServerSocket (available in android.jar); login, bootstrap, command recording, Set-Cookie, and 401 injection behavior are unchanged.
+- [F] tests/test_android_ci.py now pins ServerSocket usage and asserts com.sun is absent from the data-layer test.
+- [F] Local: ruff, 14 manifests, 28 CI tests, guard grep, and diff check pass.
+- [BU] Gradle/Robolectric execution of the rewritten data-layer tests still requires the next GitHub Actions run.
+- Task managed by codex agent at 2026-11-19T12:22:57+07:00
+[2026-11-19T12:46:03+07:00] [INFO] PR159 exact-SHA CI green at 3ad5558 with executed session tests
+- [F] PR #159 head is 3ad5558faa0aeade9e2154b8fe37fd68647f68f; all 28 required checks PASS on that SHA.
+- [F] Android run 44464870477: Android impact plan, guards, domain-tests, data-tests, build, and android-gate all success.
+- [F] data-tests artifact (attempt 2, same SHA) contains TEST-com.kolondam.odooca.field.data.repo.OutboxSessionIntegrationTest.xml: tests=3, failures=0, errors=0, skipped=0, time=6.519s; cases queuedOwnerCannotUseAnotherOwnersSession, first401StopsBatchAndOnlySameOwnerReauthenticationResumesIt, accountSwitchBetweenTwoSendsStopsBeforeSecondRequest.
+- [F] domain-tests artifact: 11 JUnit suites, 72 tests, 0 failures/errors/skips.
+- [F] APK artifact app-debug.apk 12,812,541 bytes; SHA-256 889a865028ca202344dcf6c9fa1dbb0974eca202480b2ab67233b3926ebc4932 matches the sidecar; manifest and lint report included.
+- [F] First data-tests attempt on the same SHA failed only on transient KSP plugin resolution; the build job in that same run resolved KSP and compiled successfully, and the rerun of the failed job passed in 2m13s.
+- [F] Remaining suites on 3ad5558 also pass: CI (install-test 9m44s, init-test 4m13s, static), PWA quality, Seed supervision, Finance I0, Full Dataset 19m41s, Upgrade 18m2s.
+- [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain N2 follow-up outside this PR.
+- [BU] Merge still requires an independent re-review verdict PASS and explicit owner authorization.
+- Task managed by codex agent at 2026-11-19T12:46:03+07:00
+[2026-11-19T13:51:15+07:00] [INFO] PR161 integration with main
+- Resolved only docs/HANDOFF.md, preserving both histories; finance code unchanged.
+- 31 unit tests and 14 manifests PASS; integration CI pending.
+- Task managed by codex agent at 2026-11-19T13:51:15+07:00
