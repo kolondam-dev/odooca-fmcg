@@ -515,3 +515,8 @@
 - [F] Fixture HTTP loopback khusus debug, Login, sesi awal, Beranda, Kalibrasi dan penolakan izin OS.
 - [F] Fixture dan filter laporan diuji pada host. [BU] Runtime API 24/35 menunggu runner ber-KVM.
 - Task managed by codex agent at 2026-11-19T19:33:41+07:00
+
+[2026-11-19T19:44:36+07:00] [INFO] Checkpoint lokal DEV-01A/01B untuk Lead
+- [F] Pada 9d51fb8, 72 tes domain dan OpenAPI lulus. APK debug dan APK instrumentation berhasil dibangun.
+- [BU] Robolectric dan lint Cloud menunggu dependensi Maven yang mendapat 403. Runtime API 24/35 menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-19T19:44:36+07:00
