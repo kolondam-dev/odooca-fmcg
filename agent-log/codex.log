@@ -395,3 +395,11 @@
 - [F] Verifikasi pasca-resolusi: 21 test impact/workflow/template PASS, Ruff PASS, 14 manifest PASS, diff check bersih.
 - [BU] Full regression harus lulus kembali pada merge SHA terbaru; hindari merge PR lain ke main sampai PR 152 selesai agar strict gate tidak kembali stale.
 - Task managed by codex agent at 2026-11-18T08:39:33+07:00
+
+[2026-11-19T08:37:19+07:00] [INFO] Android native N1 foundation prepared
+- [F] Imported the validated 67-file N2 package; internal ZIP SHA-256 3362253db66d6952ff5c486ccefbe7927e3cd3fd3190f0a467591e6fc062e15d.
+- [F] Added Gradle wrapper 8.9 with official distribution checksum, Android impact suite, stable android-gate, OpenAPI validation, lint/assembleDebug, APK checksum/manifest, and 14-day artifacts.
+- [F] Static evidence passed: Ruff, 14 manifests, 25 selector/workflow tests, YAML parse, design-token zero diff, credential/replacement-data audit, and git diff check.
+- [BU] Gradle domain tests, Android lint, and APK assembly await GitHub-hosted JDK 17/SDK 35 because this laptop has no Java or Android SDK.
+- [A] Test impact TAMBAH: new Android gate covers native build risks; emulator API 24/35 and Redmi 4X/POCO M3 remain later N2 acceptance.
+- Task managed by codex agent at 2026-11-19T08:37:19+07:00

@@ -1,0 +1,190 @@
+name: Android native
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
+      force_all:
+        required: false
+        default: true
+        type: boolean
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact branch, tag, or SHA to verify
+        required: false
+        type: string
+      force_all:
+        description: Run Android suite regardless of diff
+        required: false
+        default: true
+        type: boolean
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Android impact plan
+    runs-on: ubuntu-24.04
+    outputs:
+      android: ${{ steps.plan.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pyyaml
+      - name: Select Android suite
+        id: plan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          FORCE_ALL: ${{ inputs.force_all || contains(github.event.pull_request.labels.*.name, 'full-ci') || contains(github.event.pull_request.labels.*.name, 'android-ci') }}
+        run: |
+          args=()
+          if [ "$FORCE_ALL" = "true" ] || [ -z "$BASE_SHA" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            args+=(--force-suite android --files)
+          else
+            args+=(--base "$BASE_SHA" --head HEAD)
+          fi
+          python scripts/ci/plan.py "${args[@]}" --github-output "$GITHUB_OUTPUT"
+
+  guards:
+    needs: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Android suite not selected
+        if: needs.changes.outputs.android != 'true'
+        run: echo "PASS — no Android or shared-contract path changed; see impact plan."
+      - uses: gradle/actions/wrapper-validation@v4
+        if: needs.changes.outputs.android == 'true'
+      - name: Design tokens match the shared source
+        if: needs.changes.outputs.android == 'true'
+        run: |
+          python android/tools/gen_design_tokens.py pwa/design/tokens.json /tmp/Tokens.kt
+          diff -u android/core/designsystem/src/main/kotlin/com/kolondam/odooca/field/designsystem/Tokens.kt /tmp/Tokens.kt
+      - name: Reject replacement data paths
+        if: needs.changes.outputs.android == 'true'
+        run: |
+          if grep -rniE "mock|demo|dummy|fake|stub|simulat" android \
+             --include='*.kt' --include='*.kts' --include='*.xml' \
+             --include='*.toml' --include='*.md' --include='*.py' \
+             | grep -v 'device/LocationCollector.kt' \
+             | grep -v 'android/README.md'; then
+            echo "Forbidden replacement-data term found in Android sources" >&2
+            exit 1
+          fi
+
+  domain-tests:
+    if: needs.changes.outputs.android == 'true'
+    needs: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+      - name: Run pure Kotlin domain tests with warnings as errors
+        working-directory: android
+        run: ./gradlew --no-daemon :core:domain:test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate generated payloads against OpenAPI
+        run: |
+          python -m pip install jsonschema==4.23.0
+          python android/tools/validate_contract.py pwa/contracts/openapi.json android/core/domain/build/contract-samples
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-domain-reports-${{ github.sha }}
+          path: |
+            android/core/domain/build/reports/tests/
+            android/core/domain/build/test-results/
+            android/core/domain/build/contract-samples/
+          if-no-files-found: warn
+          retention-days: 14
+
+  build:
+    if: needs.changes.outputs.android == 'true'
+    needs: [changes, guards, domain-tests]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Install pinned Android SDK components
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+      - name: Lint and assemble debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon :app:lintDebug :app:assembleDebug -Podooca.baseUrl=https://ci.invalid
+      - name: Record APK checksum and manifest
+        run: |
+          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$apk"
+          sha256sum "$apk" > "$apk.sha256"
+          unzip -l "$apk" > android/app/build/outputs/apk/debug/app-debug.manifest.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: odooca-field-debug-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/outputs/apk/debug/app-debug.apk.sha256
+            android/app/build/outputs/apk/debug/app-debug.manifest.txt
+            android/app/build/reports/lint-results-debug.html
+          if-no-files-found: error
+          retention-days: 14
+
+  android-gate:
+    if: always()
+    needs: [changes, guards, domain-tests, build]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require selected Android gates or record intentional no-op
+        env:
+          SELECTED: ${{ needs.changes.outputs.android }}
+          GUARDS_RESULT: ${{ needs.guards.result }}
+          DOMAIN_RESULT: ${{ needs.domain-tests.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          test "$GUARDS_RESULT" = success
+          if [ "$SELECTED" != "true" ]; then
+            test "$DOMAIN_RESULT" = skipped
+            test "$BUILD_RESULT" = skipped
+            echo "PASS — Android suite intentionally not selected."
+          else
+            test "$DOMAIN_RESULT" = success
+            test "$BUILD_RESULT" = success
+          fi
