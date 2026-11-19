@@ -160,3 +160,149 @@ msgstr "Draf"
 #: model:ir.model.fields.selection,name:id_base.selection__coretax_export_wizard__state__done
 msgid "Done"
 msgstr "Selesai"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Picklist"
+msgstr "Daftar Pengambilan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "<strong>Customer / Destination</strong>"
+msgstr "<strong>Pelanggan / Tujuan</strong>"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "<strong>Source Document</strong>"
+msgstr "<strong>Dokumen Asal</strong>"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "<strong>Scheduled</strong>"
+msgstr "<strong>Dijadwalkan</strong>"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Product"
+msgstr "Produk"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Source Location"
+msgstr "Lokasi Asal"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Lot / Serial"
+msgstr "Lot / Nomor Seri"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Reserved / Planned"
+msgstr "Direservasi / Direncanakan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Packaging Breakdown"
+msgstr "Rincian Kemasan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "This picklist reads native Odoo demand and reservation lines. The report does not create or change lot or location assignments."
+msgstr "Daftar pengambilan ini membaca demand dan baris reservasi native Odoo. Laporan tidak membuat atau mengubah penetapan lot maupun lokasi."
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Prepared by<br/><br/><br/>____________________"
+msgstr "Disiapkan oleh<br/><br/><br/>____________________"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Checked by<br/><br/><br/>____________________"
+msgstr "Diperiksa oleh<br/><br/><br/>____________________"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Approved by<br/><br/><br/>____________________"
+msgstr "Disetujui oleh<br/><br/><br/>____________________"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Packlist"
+msgstr "Daftar Pengepakan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Quantity"
+msgstr "Kuantitas"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Destination Package"
+msgstr "Kemasan Tujuan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "No native operation or reservation lines are available. Print the packlist after the picking has native operation details."
+msgstr "Belum ada baris operasi atau reservasi native. Cetak daftar pengepakan setelah picking memiliki detail operasi native."
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Packing staff<br/><br/><br/>____________________"
+msgstr "Petugas pengepakan<br/><br/><br/>____________________"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Inspector<br/><br/><br/>____________________"
+msgstr "Pemeriksa<br/><br/><br/>____________________"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Delivery Order"
+msgstr "Surat Jalan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "<strong>Ship To</strong>"
+msgstr "<strong>Dikirim Kepada</strong>"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "<strong>Sales / Source Order</strong>"
+msgstr "<strong>Penjualan / Pesanan Asal</strong>"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "<strong>Delivery Date</strong>"
+msgstr "<strong>Tanggal Pengiriman</strong>"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Package"
+msgstr "Kemasan"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Handed over by<br/><br/><br/>____________________"
+msgstr "Diserahkan oleh<br/><br/><br/>____________________"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Received by<br/><br/><br/>____________________"
+msgstr "Diterima oleh<br/><br/><br/>____________________"
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Date / Stamp<br/><br/><br/>____________________"
+msgstr "Tanggal / Stempel<br/><br/><br/>____________________"
