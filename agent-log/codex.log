@@ -462,3 +462,7 @@
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain N2 follow-up outside this PR.
 - [BU] Merge still requires an independent re-review verdict PASS and explicit owner authorization.
 - Task managed by codex agent at 2026-11-19T12:46:03+07:00
+[2026-11-19T13:51:15+07:00] [INFO] PR161 integration with main
+- Resolved only docs/HANDOFF.md, preserving both histories; finance code unchanged.
+- 31 unit tests and 14 manifests PASS; integration CI pending.
+- Task managed by codex agent at 2026-11-19T13:51:15+07:00
