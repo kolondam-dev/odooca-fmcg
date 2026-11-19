@@ -117,7 +117,7 @@ class I2XlsxOracleTest(unittest.TestCase):
             self.verify_combined()
 
     # ------------------------------------------------------------------ FIN57
-    def register_sheets(self, difference=0, duplicates=False, non_register=None):
+    def register_sheets(self, difference=0, duplicate_value=None, non_register=None):
         if non_register is None:
             non_register = [{"A": 11, "B": 101}, {"A": 12, "B": 102}, {"A": 13, "B": 103}]
         return [
@@ -130,7 +130,8 @@ class I2XlsxOracleTest(unittest.TestCase):
                 {"A": "in_invoice", "B": 80, "C": 8, "D": 88},
                 {"A": "in_refund", "B": -10, "C": -1, "D": -11},
             ]),
-            ("duplicate_move_ids", [{"A": "value"}] + ([{"A": 5}] if duplicates else [])),
+            ("duplicate_move_ids", [{"A": "value"}]
+             + ([{"A": duplicate_value}] if duplicate_value is not None else [])),
             ("duplicate_line_ids", [{"A": "value"}]),
             ("non_register_gl_lines", [{"A": "line_id", "B": "move_id"}, *non_register]),
             ("gl_tie_out", [
@@ -147,6 +148,7 @@ class I2XlsxOracleTest(unittest.TestCase):
             self.xlsx.read_bytes(),
             {"out_invoice": (100, 10, 110, 1), "out_refund": (-20, -2, -22, 1),
              "in_invoice": (80, 8, 88, 1), "in_refund": (-10, -1, -11, 1)},
+            {1: (10, 15, 5, 0)},
             3, lines,
         )
 
@@ -157,8 +159,27 @@ class I2XlsxOracleTest(unittest.TestCase):
         self.assertEqual((result["non_register_moves"], result["non_register_rows"]), (3, 3))
 
     def test_register_duplicate_detected(self):
-        write_workbook(self.xlsx, self.register_sheets(duplicates=True))
+        write_workbook(self.xlsx, self.register_sheets(duplicate_value=5))
         with self.assertRaisesRegex(ValueError, "duplicate_move_ids is not empty"):
+            self.verify_register()
+
+    def test_register_text_duplicate_detected(self):
+        write_workbook(self.xlsx, self.register_sheets(duplicate_value="5"))
+        with self.assertRaisesRegex(ValueError, "duplicate_move_ids is not empty"):
+            self.verify_register()
+
+    def test_register_native_empty_placeholder_allowed(self):
+        sheets = self.register_sheets()
+        sheets[2] = ("duplicate_move_ids", [{"A": "No rows."}])
+        sheets[3] = ("duplicate_line_ids", [{"A": "Tidak ada baris."}])
+        write_workbook(self.xlsx, sheets)
+        self.assertEqual(self.verify_register()["documents"], 4)
+
+    def test_register_headerless_text_duplicate_detected(self):
+        sheets = self.register_sheets()
+        sheets[2] = ("duplicate_move_ids", [{"A": "5"}])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "duplicate_move_ids contains an entry"):
             self.verify_register()
 
     def test_register_tie_out_difference_detected(self):
@@ -187,6 +208,22 @@ class I2XlsxOracleTest(unittest.TestCase):
         sheets[5][1][1]["C"] = 16
         write_workbook(self.xlsx, sheets)
         with self.assertRaisesRegex(ValueError, "tie-out arithmetic"):
+            self.verify_register()
+
+    def test_register_offsetting_tie_out_mutation_detected(self):
+        sheets = self.register_sheets()
+        # Internal arithmetic still balances, but both values differ from AML oracle.
+        sheets[5][1][1]["C"] = 115
+        sheets[5][1][1]["D"] = 105
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "tie-out account 1: expected"):
+            self.verify_register()
+
+    def test_register_duplicate_tie_out_account_detected(self):
+        sheets = self.register_sheets()
+        sheets[5][1].append(dict(sheets[5][1][1]))
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "repeats account id 1"):
             self.verify_register()
 
     def test_register_non_register_move_count_detected(self):

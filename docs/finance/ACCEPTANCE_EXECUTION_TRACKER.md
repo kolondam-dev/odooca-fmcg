@@ -117,11 +117,13 @@ menghasilkan workbook lewat wizard/report asli pada dua company sintetis lalu:
 - FIN03: debit/credit serta jumlah detail per jurnal, termasuk filter jurnal;
 - FIN51: semua combined account, identitas balance, dan seluruh totals pada
   perimeter 1× + 7× (combined, tanpa eliminasi);
-- FIN57: tepat satu invoice/bill/refund per tipe, net/tax/gross, duplicate lists,
-  aritmetika register↔GL, serta distinct non-register move/line;
+- FIN57: tepat satu invoice/bill/refund per tipe, net/tax/gross; semua entri
+  duplicate list ditolak tanpa bergantung tipe sel; coverage akun tie-out unik
+  dan nilai register/GL/non-register per akun dibandingkan dengan pembacaan AML
+  posted independen; distinct non-register move/line juga dipatok;
 - FIN04: seluruh AML/value melalui pembanding independen di bawah.
 
-Unit offline sintetis menutup 23 kasus positif/counterexample. [BU] Render OCA
+Unit offline sintetis menutup 28 kasus positif/counterexample. [BU] Render OCA
 native dan workbook custom pada DB disposable hanya dijalankan oleh Finance I0
 CI; hasil belum boleh disebut PASS sebelum check exact-SHA hijau. Tidak ada
 workbook bisnis, AML live, atau status katalog yang berubah.

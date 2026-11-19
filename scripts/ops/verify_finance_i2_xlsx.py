@@ -210,7 +210,25 @@ def verify_combined_trial_balance(workbook, expected_rows, expected_totals):
     return {"result": "PASS", "report_id": "FIN51", "rows": len(seen)}
 
 
-def verify_sales_purchase_register(workbook, expected_documents, expected_non_register_moves,
+def _assert_empty_id_list(rows, where):
+    """Accept only the exporter's explicit empty placeholder or a header-only list."""
+    populated = [cell for row in rows for cell in row.values() if cell.value.strip()]
+    if (len(populated) == 1 and populated[0].kind == "s"
+            and populated[0].value.strip() in ("No rows.", "Tidak ada baris.")):
+        return
+    try:
+        index, columns = _header(rows, {"value"}, where)
+    except ValueError as exc:
+        raise ValueError(f"{where} contains an entry") from exc
+    entries = [
+        cell for row in rows[index + 1:] for cell in row.values()
+        if cell.value.strip()
+    ]
+    require(not entries, f"{where} is not empty: {len(entries)} duplicate ids")
+
+
+def verify_sales_purchase_register(workbook, expected_documents, expected_tie_out,
+                                   expected_non_register_moves,
                                    expected_non_register_lines=None):
     """FIN57: document amounts per type, empty duplicate lists, clean GL tie-out.
 
@@ -255,8 +273,7 @@ def verify_sales_purchase_register(workbook, expected_documents, expected_non_re
                 f"FIN57 {move_type}: expected {wanted}, got {tuple(got)}")
     for name in ("duplicate_move_ids", "duplicate_line_ids"):
         require(name in sheets, f"FIN57 workbook has no {name} sheet")
-        values = [cell.value for row in sheets[name] for cell in row.values() if cell.kind == "n"]
-        require(not values, f"FIN57 {name} is not empty: {len(values)} duplicate ids")
+        _assert_empty_id_list(sheets[name], f"FIN57 {name}")
     require("gl_tie_out" in sheets, "FIN57 workbook has no gl_tie_out sheet")
     index, columns = _header(
         sheets["gl_tie_out"],
@@ -264,12 +281,17 @@ def verify_sales_purchase_register(workbook, expected_documents, expected_non_re
          "unexplained_difference"},
         "FIN57 gl_tie_out",
     )
-    tie_rows = 0
+    tie_rows = {}
     for row in sheets["gl_tie_out"][index + 1:]:
         account = row.get(columns["account_id"])
         if account is None or account.kind != "n":
             continue
-        tie_rows += 1
+        account_id = decimal(account.value, "FIN57 tie-out account id")
+        require(account_id == account_id.to_integral_value() and account_id > 0,
+                "FIN57 tie-out account id must be a positive integer")
+        account_id = int(account_id)
+        require(account_id not in tie_rows,
+                f"FIN57 tie-out repeats account id {account_id}")
         register = _number(row, columns["register_balance"], "FIN57 register balance")
         gl_balance = _number(row, columns["gl_balance"], "FIN57 GL balance")
         non_register = _number(
@@ -283,7 +305,19 @@ def verify_sales_purchase_register(workbook, expected_documents, expected_non_re
         nested = _text(row, nested_column) if nested_column else ""
         require("unexplained_register_gl_difference" not in nested,
                 "FIN57 tie-out still reports an unexplained register/GL difference")
-    require(tie_rows > 0, "FIN57 workbook has no GL tie-out rows")
+        tie_rows[account_id] = (register, gl_balance, non_register, difference)
+    expected_ties = {
+        int(account_id): tuple(decimal(value, f"expected tie-out account {account_id}")
+                               for value in values)
+        for account_id, values in expected_tie_out.items()
+    }
+    missing = sorted(set(expected_ties) - set(tie_rows))
+    extra = sorted(set(tie_rows) - set(expected_ties))
+    require(not missing and not extra,
+            f"FIN57 tie-out account coverage mismatch: missing={missing}, extra={extra}")
+    for account_id, wanted in expected_ties.items():
+        require(tie_rows[account_id] == wanted,
+                f"FIN57 tie-out account {account_id}: expected {wanted}, got {tie_rows[account_id]}")
     require("non_register_gl_lines" in sheets, "FIN57 workbook has no non_register_gl_lines sheet")
     index, columns = _header(sheets["non_register_gl_lines"], {"line_id", "move_id"},
                              "FIN57 non_register_gl_lines")
@@ -308,7 +342,7 @@ def verify_sales_purchase_register(workbook, expected_documents, expected_non_re
                 "FIN57 non-register lines: expected "
                 f"{expected_non_register_lines}, got {len(line_ids)}")
     return {"result": "PASS", "report_id": "FIN57", "documents": sum(v[3] for v in seen.values()),
-            "tie_out_rows": tie_rows, "non_register_moves": len(move_ids),
+            "tie_out_rows": len(tie_rows), "non_register_moves": len(move_ids),
             "non_register_rows": len(line_ids)}
 
 

@@ -351,3 +351,11 @@
 - [F] TAMBAH tetap: ruff, 14 manifest, FIN04 8/8, XLSX 23/23, diff check PASS lokal.
 - [BU] Finance I0 exact-SHA baru menunggu commit/push; tidak ada merge/deploy atau perubahan katalog/live acceptance.
 - Task managed by opencode at 2026-11-19T15:20:54+07:00
+
+[2026-11-19T16:37:22+07:00] [WARN] PR #169 HOLD: tutup false PASS tie-out dan duplicate ID FIN57
+- [F] Reviewer mereproduksi offset GL+non-register +100, duplicate account row, dan duplicate ID teks yang tetap PASS pada 8688ea3; dampak test SESUAIKAN diterima.
+- [F] Comparator kini mematok unique exact account coverage dan register/GL/non-register/unexplained per account terhadap oracle posted AML langsung; expected tidak lagi berasal dari snapshot FIN57.
+- [F] Duplicate list menolak setiap entry numeric/text/headerless; hanya placeholder kosong resmi atau header-only diterima.
+- [F] Reproduksi baru + positive placeholder membuat unit XLSX 28/28 PASS; FIN04 8/8, ruff, 14 manifest, compile dan diff check PASS.
+- [BU] Finance I0 exact-SHA baru menunggu commit/push; PR, live acceptance dan katalog tetap HOLD, tanpa merge/deploy.
+- Task managed by opencode at 2026-11-19T16:37:22+07:00

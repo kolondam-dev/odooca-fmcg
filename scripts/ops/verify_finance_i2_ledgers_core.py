@@ -658,8 +658,41 @@ def assert_fin03_export(env, company, journals, oracle, d_from, d_to, journal_id
     }
 
 
-def assert_fin57_export(env, company, d_from, d_to, scale,
-                        expected_non_register_moves=3, expected_non_register_lines=None):
+def independent_fin57_tie_out(env, company, accounts, docs, d_from, d_to):
+    """Read FIN57 account coverage and values directly from posted AMLs."""
+    tracked = {
+        accounts[key].id for key in ("revenue", "expense", "tax_output", "tax_input")
+    }
+    document_moves = {
+        docs[key].id for key in ("invoice", "bill", "refund", "vendor_refund")
+    }
+    lines = env["account.move.line"].with_company(company).search([
+        ("company_id", "=", company.id),
+        ("parent_state", "=", "posted"),
+        ("date", ">=", d_from),
+        ("date", "<=", d_to),
+        ("display_type", "not in", ["line_note", "line_section", "line_subsection"]),
+        ("account_id", "in", sorted(tracked)),
+    ], order="id")
+    lines.check_access("read")
+    expected = {}
+    non_register_lines = lines.filtered(lambda line: line.move_id.id not in document_moves)
+    for account_id in sorted(tracked):
+        account_lines = lines.filtered(lambda line, acc=account_id: line.account_id.id == acc)
+        register_lines = account_lines.filtered(lambda line: line.move_id.id in document_moves)
+        other_lines = account_lines - register_lines
+        register = company.currency_id.round(sum(register_lines.mapped("balance")))
+        gl_balance = company.currency_id.round(sum(account_lines.mapped("balance")))
+        non_register = company.currency_id.round(sum(other_lines.mapped("balance")))
+        expected[account_id] = (register, gl_balance, non_register, 0)
+    return {
+        "by_account": expected,
+        "non_register_move_count": len(set(non_register_lines.move_id.ids)),
+        "non_register_line_count": len(non_register_lines),
+    }
+
+
+def assert_fin57_export(env, company, d_from, d_to, scale, tie_out_oracle):
     wizard = env["id.finance.report.wizard"].with_context(
         allowed_company_ids=company.ids,
     ).create({
@@ -681,7 +714,11 @@ def assert_fin57_export(env, company, d_from, d_to, scale,
         "in_refund": (-10 * scale, -1 * scale, -11 * scale, 1),
     }
     result = xlsx_oracle.verify_sales_purchase_register(
-        payload, expected, expected_non_register_moves, expected_non_register_lines,
+        payload,
+        expected,
+        tie_out_oracle["by_account"],
+        tie_out_oracle["non_register_move_count"],
+        tie_out_oracle["non_register_line_count"],
     )
     return {
         "case": "FIN57_xlsx_vs_expected_table", "company": company.id,
@@ -873,9 +910,11 @@ def run(env):
                                 env, company, journals, export_oracle, d_from, d_to,
                                 journal_ids=journal_filter,
                             ))
+                        fin57_tie_out = independent_fin57_tie_out(
+                            env, company, accounts, docs, d_from, d_to,
+                        )
                         evidence["cases"].append(assert_fin57_export(
-                            env, company, d_from, d_to, scale, 3,
-                            len(reg_val["non_register_gl_lines"]),
+                            env, company, d_from, d_to, scale, fin57_tie_out,
                         ))
 
                 # Unreconcile probe + rollback: GL/TB/JL/FIN04 unchanged when reconciliation is undone
