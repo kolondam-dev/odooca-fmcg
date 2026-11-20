@@ -359,3 +359,10 @@
 - [F] Reproduksi baru + positive placeholder membuat unit XLSX 28/28 PASS; FIN04 8/8, ruff, 14 manifest, compile dan diff check PASS.
 - [BU] Finance I0 exact-SHA baru menunggu commit/push; PR, live acceptance dan katalog tetap HOLD, tanpa merge/deploy.
 - Task managed by opencode at 2026-11-19T16:37:22+07:00
+
+[2026-11-20T08:49:53+07:00] [INFO] PR #169 merged: oracle FIN57 independen diterima pemilik
+- [F] PR #169 merge oleh kolondam-dev pada 2026-11-19T10:36:33Z; head 6f45f66d6784ff9836a90ebf9f1c15822869fb19, merge commit 918fd3e6b4d3d0dfc86aefa406e55cf463ce993d.
+- [F] Exact-SHA 6f45f66: 22 check PASS, 6 skipped impact plan, 0 gagal/pending (termasuk candidate-install-upgrade, finance-gate, install-test, init-test, invariant-tests, seed-invariants, Module Upgrade + upgrade-gate).
+- [F] Finance I0: FINANCE_I2A_LEDGERS_CORE PASS dua company disposable (scale 1/7), FIN57 4 dokumen / 3 non-register move / 4 akun tie-out unik vs posted AML; FIN01/02/03/04/51 PASS; rollback PASS.
+- [BU] Katalog tetap 58/58 BELUM_DITERIMA; penerimaan live FIN01/02/03/04/51/57 HOLD sampai bukti privat, mapping/perimeter, periode beku, penolakan Sales, dan sign-off Controller+QA.
+- Task managed by opencode at 2026-11-20T08:49:53+07:00
