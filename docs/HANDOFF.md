@@ -1,3 +1,10 @@
+## 2026-11-20T23:07:08+07:00 — Codex-Android-Design — Implementasi gap di Penpot 02 · Components
+**Basis:** [F] Parent Design `71dff8c`, main acuan Design `39172de`, arahan bersama `f9dae3b`.
+**Berubah:** [F] [DES-02-r1](android/DES02_SCREEN_COMPONENT_GAPS.md#7-penpot--des-02-r1-komponen-dari-gap-study) mencatat 23 keluarga baru, 83 varian dan enam varian Button pada [02 · Components](https://design.penpot.app/#/view?file-id=42288968-6e5e-808d-8008-f9456c20a1f7&page-id=d1ec018c-c393-80c4-8008-f94a84b178e0). Kelompok baru mengikuti kolom x=40 dan jarak 100 px setelah ProgressSteps.
+**Diverifikasi:** [F] Struktur dan batas board varian dibaca balik. Contoh check-in 1/2 memakai dua PhotoSlot dan tombol terkunci. Contoh respons receipt asing menggunakan Hasil perlu ditinjau. Dampak test **CUKUP** untuk dokumentasi dan komponen desain.
+**Menunggu:** [BU] Review desain, pengikatan dua bukti, implementasi serta acceptance Android/Odoo mengikuti milestone. Tidak ada perubahan kode runtime.
+**Signature:** Task managed by Agent Codex-Mobile Native at 2026-11-20T23:07:08+07:00
+
 ## 2026-11-20T15:25:53+07:00 — Codex-Android-Design — Dua foto check-in dan verifikasi Penpot
 **Basis:** [F] Parent Design `8d11a2c`, main acuan Design `39172de`, arahan bersama `6b894ca`.
 **Keputusan:** [F] **Foto lokasi toko** dan **Foto toko** wajib untuk check-in toko. Draf parsial tetap dapat disimpan. Uji 0/2, 1/2, 2/2, retake, offline dan receipt tercatat di D01-04d.
