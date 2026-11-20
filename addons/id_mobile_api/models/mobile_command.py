@@ -322,7 +322,14 @@ class MobileCommand(models.Model):
             so = SaleOrder.create(order_vals)
             created_orders.append(so)
 
-            if getattr(so, "credit_limit_exceeded", False) or getattr(so, "has_below_hpp", False) or discount_pct > 0:
+            # Diskon di baris (tanpa diskon header) juga wajib approval: sebelumnya lolos 'accepted'.
+            has_line_discount = any(vals[2].get("discount", 0.0) > 0.0 for vals in order_lines)
+            if (
+                getattr(so, "credit_limit_exceeded", False)
+                or getattr(so, "has_below_hpp", False)
+                or discount_pct > 0
+                or has_line_discount
+            ):
                 needs_approval = True
 
         so_names = ", ".join(so.name for so in created_orders)

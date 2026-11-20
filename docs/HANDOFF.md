@@ -1,3 +1,9 @@
+## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
+
+- P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.
+- Tes baru `test_line_discount_without_header_discount_needs_approval` (status, pengajuan, replay). Tes split-principal lama yang mengunci `accepted` untuk diskon baris diubah ke `needs_approval`.
+- Tes Odoo diverifikasi lewat CI (tanpa Odoo lokal).
+
 ## 2026-11-20 — [BU] BE-14: order lapangan membuat permintaan approval otomatis (claude-design)
 
 - `sale.order._mobile_auto_request_approvals()` (id_approval): diskon taktikal dan harga di bawah HPP membuat `fmcg.approval.request` + `action_submit`, tanpa wajib akun analitik; idempoten (kategori yang sudah berjalan dilewati); limit kredit memakai `action_request_credit_approval` id_base.
