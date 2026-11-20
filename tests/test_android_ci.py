@@ -17,9 +17,9 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         properties = (ANDROID / "gradle" / "wrapper" / "gradle-wrapper.properties").read_text(
             encoding="utf-8"
         )
-        self.assertIn("gradle-8.9-bin.zip", properties)
+        self.assertIn("gradle-9.9.1-bin.zip", properties)
         self.assertIn(
-            "distributionSha256Sum=d725d707bfabd4dfdc958c624003b3c80accc03f7037b5122c4b1d0ef15cecab",
+            "distributionSha256Sum=d8a18a7a841dd5df825d35a685fad6f2d7f12ac0c280e57b67c27b4a520ba228",
             properties,
         )
         self.assertTrue((ANDROID / "gradlew").is_file())
