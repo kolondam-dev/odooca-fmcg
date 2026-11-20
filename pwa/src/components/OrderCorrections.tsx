@@ -18,11 +18,11 @@ import {
     cartFromLegacy,
     cartLines,
     cartTotals,
-    tierText,
     type Cart,
     type LineDiscounts,
 } from "../domain/order-cart";
 import type { FooterDiscount } from "../domain/order-discount";
+import { UnitQty } from "./UnitQty";
 import {
     BottomSheet,
     Button,
@@ -454,10 +454,11 @@ function KoreksiScreen({
                                 <div>
                                     <strong>{product.name}</strong>
                                     <span class="ui-row__sub">
-                                        {tierText(
-                                            product,
-                                            form.cart[ql.product_id] ?? {},
-                                        )}
+                                        <UnitQty
+                                            tone="ink"
+                                            {...(form.cart[ql.product_id] ??
+                                                {})}
+                                        />
                                     </span>
                                 </div>
                                 <strong>{money(ql.gross)}</strong>

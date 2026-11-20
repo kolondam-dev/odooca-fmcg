@@ -98,18 +98,6 @@ export function cartLines(
     return { lines, stale, invalid };
 }
 
-/** Teks "4 krt 2 pak" memakai singkatan satuan produk. */
-export function tierText(_product: Product, tiers: Tiers) {
-    const short: Record<OrderUom, string> = {
-        carton: "krt",
-        pack: "pak",
-        pcs: "pcs",
-    };
-    return ORDER.filter((u) => (tiers[u] ?? 0) > 0)
-        .map((u) => `${tiers[u]} ${short[u]}`)
-        .join(" ");
-}
-
 export function cartTotals(
     cart: Cart,
     discounts: LineDiscounts,
@@ -127,23 +115,4 @@ export function cartTotals(
         total: quote.total,
         errors: [...invalid, ...quote.errors],
     };
-}
-
-/** Stok sistem (basis karton, boleh pecahan) dalam satuan campuran: "41 krt 6 pak". */
-export function stockText(
-    product: Product,
-    cartons: number,
-    catalogVersion?: 2,
-) {
-    const per = productPackaging(product, catalogVersion);
-    let pcs = Math.max(0, Math.round(cartons * per.carton));
-    const parts: string[] = [];
-    const k = Math.floor(pcs / per.carton);
-    pcs -= k * per.carton;
-    const p = per.pack === per.carton ? 0 : Math.floor(pcs / per.pack);
-    pcs -= p * per.pack;
-    if (k) parts.push(`${k} krt`);
-    if (p) parts.push(`${p} pak`);
-    if (pcs) parts.push(`${pcs} pcs`);
-    return parts.length ? parts.join(" · ") : "0 krt";
 }

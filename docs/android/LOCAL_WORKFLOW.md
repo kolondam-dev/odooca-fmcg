@@ -59,6 +59,14 @@ Catat SHA arahan yang dibaca dalam checkpoint branch tim. Jika perubahan menyent
 - **Dev:** pertahankan scope DEV-01 dan commit yang ada. Belum ada run GitHub untuk checkpoint saat ditinjau. Dispatch oleh Lead lewat GH CLI menerima `Forbidden` saat akses endpoint workflow; akses melalui Cloud Desktop juga belum tersedia. Bukti lokal tidak menutup acceptance emulator. DEV-02A dan perluasan visual D01 tetap di luar checkpoint.
 - **Design:** lanjutkan DES-02 dan pekerjaan yang independen dari emulator. Ref Design kini `6abeef3a7c3a8ecb232854efbd4e6e948308b78d` dengan parent dan tree identik dengan checkpoint `37d97eb`; perubahan metadata tidak mengubah verdict DES-00/DES-01. File/library Figma dan penerimaan visual tetap terbuka.
 
+### Arahan Lead — toolchain main setelah PR #173
+
+Main acuan untuk **kandidat integrasi DEV-01 berikutnya** adalah `127287a`, yang memuat [PR #173](https://github.com/kolondam-dev/odooca-fmcg/pull/173): AGP 9.5.1, Gradle 9.9.1, Kotlin 2.4.21 dan compileSdk 37. `targetSdk` tetap 35. Pemasangan SDK di workflow memakai paket `platforms;android-37.0`. API emulator 24/35 tetap menjadi matriks acceptance runtime.
+
+- **Dev:** pertahankan checkpoint `dcad2156ee918a264aa93c71f63835306c25069a` sebagai bukti historis. Sinkronkan kandidat DEV-01 terhadap main ini dan selaraskan workflow, SDK install dan pin wrapper dalam skrip serta tes dengan toolchain yang sudah di-merge. Pertahankan emulator opt-in, required gate, dan acceptance per API. Catat SHA kandidat dan hasil pemeriksaan; DEV-02A masih di luar scope. Gate lokal menggunakan SHA main baru. Acceptance runtime tetap HOLD dan full regression berjalan pada SHA integrasi.
+- **Design:** checkpoint draft DES-02-r0 pada `0f2739c7904fc4674b0e66ec83f78aefba2f60b0` sudah terlihat. Lanjut review visual dan dokumentasikan keputusan Figma. Upgrade toolchain tidak menghentikan alur ini. Approval visual dan inventaris frame sumber tetap mengikuti review pemilik.
+- **Akses Actions:** pada pemeriksaan Lead, whitelist `api.github.com` belum efektif pada instance yang sedang berjalan dan koneksi HTTPS ditolak proxy dengan 403. Lead memverifikasi jaringan dan akses Actions setelah pengaturan instance aktif.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

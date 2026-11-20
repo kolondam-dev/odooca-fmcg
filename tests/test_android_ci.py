@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 import zipfile
 from pathlib import Path
@@ -17,15 +18,36 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         properties = (ANDROID / "gradle" / "wrapper" / "gradle-wrapper.properties").read_text(
             encoding="utf-8"
         )
-        self.assertIn("gradle-8.9-bin.zip", properties)
+        self.assertIn("gradle-9.9.1-bin.zip", properties)
         self.assertIn(
-            "distributionSha256Sum=d725d707bfabd4dfdc958c624003b3c80accc03f7037b5122c4b1d0ef15cecab",
+            "distributionSha256Sum=d8a18a7a841dd5df825d35a685fad6f2d7f12ac0c280e57b67c27b4a520ba228",
             properties,
         )
         self.assertTrue((ANDROID / "gradlew").is_file())
         self.assertTrue((ANDROID / "gradlew.bat").is_file())
         with zipfile.ZipFile(ANDROID / "gradle" / "wrapper" / "gradle-wrapper.jar") as archive:
             self.assertIn("org/gradle/wrapper/GradleWrapperMain.class", archive.namelist())
+
+    def test_workflow_installs_the_platform_matching_compile_sdk(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        installed = re.findall(r"platforms;android-(\d+(?:\.\d+)?)", workflow)
+        self.assertEqual(2, len(installed), installed)
+
+        for module in ("app", "core/data", "core/designsystem"):
+            source = (ANDROID / module / "build.gradle.kts").read_text(encoding="utf-8")
+            match = re.search(r"compileSdk\s*=\s*(\d+)", source)
+            self.assertIsNotNone(match, f"compileSdk missing in {module}")
+            major = match.group(1)
+            for package in installed:
+                self.assertEqual(
+                    major,
+                    package.split(".")[0],
+                    f"{module} compiles against android-{major} but CI installs {package}",
+                )
+            # Since API 37 the platform package carries a minor version and
+            # AGP resolves compileSdk = 37 to android-37.0; android-37 does not exist.
+            if int(major) >= 37:
+                self.assertIn(f"platforms;android-{major}.0", workflow)
 
     def test_workflow_uses_wrapper_and_publishes_stable_gate(self):
         workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
