@@ -25,6 +25,8 @@ import send from "@phosphor-icons/core/assets/duotone/navigation-arrow-duotone.s
 import image from "@phosphor-icons/core/assets/duotone/image-duotone.svg?raw";
 import search from "@phosphor-icons/core/assets/duotone/magnifying-glass-duotone.svg?raw";
 import tag from "@phosphor-icons/core/assets/duotone/tag-duotone.svg?raw";
+import carton from "@phosphor-icons/core/assets/duotone/package-duotone.svg?raw";
+import pack from "@phosphor-icons/core/assets/duotone/stack-duotone.svg?raw";
 import box from "@phosphor-icons/core/assets/duotone/cube-duotone.svg?raw";
 import cart from "@phosphor-icons/core/assets/duotone/shopping-cart-duotone.svg?raw";
 import phone from "@phosphor-icons/core/assets/duotone/phone-duotone.svg?raw";
@@ -33,6 +35,8 @@ const icons = {
     search,
     tag,
     box,
+    carton,
+    pack,
     cart,
     phone,
     lock,

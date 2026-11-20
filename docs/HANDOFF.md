@@ -1,3 +1,38 @@
+## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
+
+- P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.
+- Tes baru `test_line_discount_without_header_discount_needs_approval` (status, pengajuan, replay). Tes split-principal lama yang mengunci `accepted` untuk diskon baris diubah ke `needs_approval`.
+- Tes Odoo diverifikasi lewat CI (tanpa Odoo lokal).
+
+## 2026-11-20 — [BU] BE-14: order lapangan membuat permintaan approval otomatis (claude-design)
+
+- `sale.order._mobile_auto_request_approvals()` (id_approval): diskon taktikal dan harga di bawah HPP membuat `fmcg.approval.request` + `action_submit`, tanpa wajib akun analitik; idempoten (kategori yang sudah berjalan dilewati); limit kredit memakai `action_request_credit_approval` id_base.
+- `_handle_sales_order_submit` memanggilnya bila `needs_approval` (pemanggilan lunak via `hasattr`, tanpa dependensi manifest baru); pesan receipt memuat nomor pengajuan.
+- Tier masih per permintaan tunggal (BE-15 menyusul). Tes Odoo: `test_03b/c/d` (id_approval) dan dua tes di `test_commands_api.py`; tidak dapat dijalankan lokal (tanpa Odoo), diverifikasi lewat CI.
+
+## 2026-11-20T08:41:39+07:00 — Codex — PR #173: toolchain Android AGP 9.5.1 / Gradle 9.9.1 / Kotlin 2.4.21 (menggantikan #164–#168)
+**Keputusan:** [A] Lima PR Dependabot Gradle tidak mungkin hijau sendiri-sendiri karena saling mengunci: AGP 9.5.1 menuntut Gradle ≥9.6, `core-ktx` 1.19.1 dan OkHttp 5.5.1 menuntut `compileSdk ≥37` dan AGP ≥9.1, KSP harus sepasang dengan Kotlin, dan Gradle 9.9.1 saja melanggar oracle wrapper 8.9. Kelimanya digabung menjadi PR #173 di atas `main` (bukan di atas cabang Dependabot).
+**Isi:** [F] Gradle wrapper 9.9.1 + checksum resmi, AGP 9.5.1, Kotlin 2.4.21, KSP 2.3.14, Compose BOM 2026.09.00, core-ktx 1.19.1, navigation 2.10.2, Room 2.8.5, WorkManager 2.12.0, OkHttp 5.5.1, serialization 1.13.0, coroutines 1.11.0, `compileSdk = 37`. `targetSdk` tetap 35 agar perilaku runtime tidak berubah.
+**Migrasi AGP 9:** [F] `android.builtInKotlin=false` + `android.newDsl=false` wajib berpasangan selama modul memakai plugin `org.jetbrains.kotlin.android`; `kotlinOptions` diganti `kotlin { compilerOptions { jvmTarget = JVM_17 } }`.
+**Temuan CI:** [F] `platforms;android-37` tidak ada; sejak API 37 paket platform memakai minor sehingga yang benar `platforms;android-37.0` (AGP 9.1.1+ memetakan `compileSdk = 37` ke hash `android-37.0`). Job `data-tests` dan `build` diperbaiki dan `tests/test_android_ci.py` mendapat test baru yang mengikat tiap `compileSdk` modul ke paket platform yang dipasang CI.
+**Temuan compiler:** [F] Kotlin 2.4 menandai cast di `VisitEvidenceTest.kt:112` sebagai "Cast is redundant"; modul domain memakai `allWarningsAsErrors`, jadi cast berlebih dihapus tanpa mengubah assertion dan tanpa melonggarkan `-Werror`.
+**Oracle:** [F] Pin wrapper dipindah ke `gradle-9.9.1-bin.zip` + checksum resmi `d8a18a7a…ba228` (diverifikasi dari `services.gradle.org`); oracle tetap menolak versi/checksum lain. Guard `mock|demo|dummy|fake|stub|simulat` tidak disentuh.
+**Bukti:** [F] SHA kode `fc166b2`: `guards`, `domain-tests`, `data-tests` (Room + Robolectric + OkHttp 5), `build` (`lintDebug` + `assembleDebug`), dan `android-gate` PASS; APK 15.376.991 byte, SHA-256 `6c0d1304abc5f9e16381de3a908ca9c0d32ebd250926300cb6998722bcc59ee6` cocok dengan sidecar. `tests/test_android_ci.py`, `test_ci_impact.py`, `test_ci_workflow_guards.py` = 29 lulus; `ruff` dan `check_manifests.py` PASS.
+**Flake:** [F] Resolusi plugin KSP gagal sesaat pada `domain-tests` (dan pada PR #162 yang tidak terkait) meski artefak `2.3.14` dan `2.0.21-1.0.28` tersedia di Maven Central dan Gradle Plugin Portal (HTTP 200 diverifikasi); rerun job hijau. [A] Kandidat mitigasi: `systemProp.org.gradle.internal.repository.max.retries` di `android/gradle.properties`.
+**Batas:** [F] Tidak ada merge, deploy, atau perubahan data server. [BU] Emulator API 24/35, Redmi 4X, POCO M3, backend live, dan acceptance `targetSdk` tetap N2 terpisah.
+
+## 2026-11-20 — [F] FE-1 perbaikan review PR #172: subtotal kartu SKU (claude-design)
+
+- P2: subtotal kartu SKU di POS masih "12 pcs · 0.5 box"; kini `UnitQty` bernada ink (mis. "2 pack"), harga tetap.
+- Tes e2e `unit-qty.spec.ts` diperluas: kuantitas badge + harga Rp 26.400 (2 pack Wafer) di phone dan tablet. Gerbang penuh hijau (264 e2e).
+
+## 2026-11-19 — [F] FE-1 UnitQty: badge satuan karton/pack/pcs (claude-design)
+
+- Komponen `UnitQty` + `UnitLegend` (`components/UnitQty.tsx`), logika `splitUnits`/`stockUnits`/`unitLabel` (`domain/unit-qty.ts`), ikon `carton` (package) dan `pack` (stack), glyph `@` untuk pcs.
+- Dipakai di POS (stok, stok sistem, baris keranjang), Display & stok, Koreksi order. `stockText`/`tierText` dihapus dari `order-cart.ts`.
+- Pembaca layar: `role="img"` + `aria-label` "1 karton, 2 pack, 3 pcs". Legenda satuan sekali di POS.
+- Tes: `tests/unit-qty.test.ts` (termasuk penjaga tanpa "krt/pak" di komponen), `tests/browser/unit-qty.spec.ts`.
+- Belum dimigrasi (utang K34): Hasil kirim, baris pengiriman/POD, Closing trip, Riwayat, `loadSummary` ("20 karton · 8 pak") di `delivery-progress.ts`.
 ## 2026-11-19T17:55:00+07:00 — antigravity — Resolusi Carry-Forward AR PAY-AR-00988 (INV-202607-1300) & Sinkronisasi origin/main #170 (Branch: agen/seed-f4-period-pack-loader)
 **Konteks:**
 - [F] Analisis log kegagalan GitHub Actions pada Job 135393278958 (`Generic Period Pack Loader Runtime Proof (F4)`):

@@ -364,3 +364,19 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-19T17:23:45+07:00] [INFO] Keputusan D5-D7 dicatat
 - PJP opsi C; Tier 0; kumulatif %; berjenjang; per principal; program resmi ikut
 - Task managed by claude-design agent at 2026-11-19T17:23:45+07:00
+
+[2026-11-19T21:52:07+07:00] [INFO] FE-1 UnitQty
+- badge karton/pack/pcs di POS, Display & stok, Koreksi order; utang K34 konsumen sisa
+- Task managed by claude-design agent at 2026-11-19T21:52:07+07:00
+
+[2026-11-20T07:57:29+07:00] [INFO] FE-1 fix review #172
+- subtotal kartu SKU memakai UnitQty; tes e2e diperluas
+- Task managed by claude-design agent at 2026-11-20T07:57:29+07:00
+
+[2026-11-20T08:20:12+07:00] [INFO] BE-14 approval otomatis dari order lapangan
+- id_approval._mobile_auto_request_approvals; handler memanggil lunak; tes Odoo via CI
+- Task managed by claude-design agent at 2026-11-20T08:20:12+07:00
+
+[2026-11-20T08:48:24+07:00] [INFO] BE-14 fix review #174
+- diskon baris tanpa header wajib approval; tes ditambah
+- Task managed by claude-design agent at 2026-11-20T08:48:24+07:00

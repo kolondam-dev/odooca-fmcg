@@ -70,6 +70,66 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         self.assertEqual(model.process_command(command), receipt)
         self.assertEqual(log.sale_order_ids, order)
 
+    def test_discount_order_creates_approval_request_for_approvers(self):
+        """BE-14: order diskon dari lapangan masuk antrean approval, tanpa menunggu orang membuka SO."""
+        if "fmcg.approval.request" not in self.env:
+            self.skipTest("id_approval tidak terpasang")
+        model = self._command_model()
+        command = {"client_uuid": str(uuid.uuid4()), "type": "sales.order.submit",
+                   "payload": self._valid_order_payload(
+                       discount_request={"percent": 5, "reason": "Customer promotion"})}
+        receipt = model.process_command(command)
+        self.assertEqual(receipt["status"], "needs_approval")
+        log = self.env["id.mobile.command"].search([("client_uuid", "=", command["client_uuid"])])
+        order = log.sale_order_ids
+        requests = self.env["fmcg.approval.request"].sudo().search([
+            ("res_model", "=", "sale.order"), ("res_id", "=", order.id)])
+        self.assertEqual(requests.mapped("category_id.code"), ["tactical_discount"])
+        self.assertEqual(requests.state, "pending")
+        self.assertEqual(requests.discount_percent, 5.0)
+        self.assertEqual(requests.reason, "Customer promotion")
+        self.assertIn(requests.name, receipt["message"])
+        # Replay idempoten: tidak menggandakan permintaan
+        self.assertEqual(model.process_command(command), receipt)
+        self.assertEqual(self.env["fmcg.approval.request"].sudo().search_count([
+            ("res_model", "=", "sale.order"), ("res_id", "=", order.id)]), 1)
+
+    def test_line_discount_without_header_discount_needs_approval(self):
+        """Review PR #174 (P1): diskon di baris tanpa diskon header tidak boleh lolos 'accepted'."""
+        model = self._command_model()
+        payload = self._valid_order_payload()
+        payload["lines"][0]["discount"] = 5
+        command = {"client_uuid": str(uuid.uuid4()), "type": "sales.order.submit", "payload": payload}
+        receipt = model.process_command(command)
+        self.assertEqual(receipt["status"], "needs_approval")
+        order = self.env["id.mobile.command"].search(
+            [("client_uuid", "=", command["client_uuid"])]).sale_order_ids
+        self.assertEqual(order.order_line.discount, 5)
+        if "fmcg.approval.request" in self.env:
+            requests = self.env["fmcg.approval.request"].sudo().search([
+                ("res_model", "=", "sale.order"), ("res_id", "=", order.id)])
+            self.assertEqual(requests.mapped("category_id.code"), ["tactical_discount"])
+            self.assertEqual(requests.state, "pending")
+            self.assertEqual(requests.discount_percent, 5.0)
+            self.assertIn(requests.name, receipt["message"])
+            self.assertEqual(model.process_command(command), receipt)
+            self.assertEqual(self.env["fmcg.approval.request"].sudo().search_count([
+                ("res_model", "=", "sale.order"), ("res_id", "=", order.id)]), 1)
+
+    def test_order_without_discount_creates_no_approval_request(self):
+        if "fmcg.approval.request" not in self.env:
+            self.skipTest("id_approval tidak terpasang")
+        model = self._command_model()
+        command = {"client_uuid": str(uuid.uuid4()), "type": "sales.order.submit",
+                   "payload": self._valid_order_payload()}
+        receipt = model.process_command(command)
+        if receipt["status"] != "accepted":
+            self.skipTest("fixture memicu approval kredit/HPP")
+        order = self.env["id.mobile.command"].search(
+            [("client_uuid", "=", command["client_uuid"])]).sale_order_ids
+        self.assertFalse(self.env["fmcg.approval.request"].sudo().search_count([
+            ("res_model", "=", "sale.order"), ("res_id", "=", order.id)]))
+
     def test_actor_model_guard(self):
         """Direct ORM/RPC call without mobile sales privileges must fail closed."""
         cmd = {
@@ -428,7 +488,8 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
 
         model = self._command_model()
         rc = model.process_command(command)
-        self.assertEqual(rc["status"], "accepted")
+        # Diskon baris 10%/5% wajib approval (review PR #174); sebelumnya lolos 'accepted'.
+        self.assertEqual(rc["status"], "needs_approval")
 
         orders = self.env["sale.order"].sudo().search([("origin", "=", f"PWA Mobile Order {cmd_uuid[:8]}")])
         self.assertEqual(len(orders), 2, "Must create 2 distinct SOs for 2 principals.")
