@@ -24,11 +24,11 @@ jobs:
     outputs:
       finance: ${{ steps.plan.outputs.finance }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: pip install pyyaml
@@ -56,12 +56,12 @@ jobs:
           --health-cmd "pg_isready -U odoo" --health-interval 5s
           --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build cached pinned project image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -188,7 +188,7 @@ jobs:
               --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
           ' < scripts/ops/verify_finance_i2_exposure.py 2>&1 | tee finance-i0-evidence/i2-exposure.log
           grep -q '^FINANCE_I2_EXPOSURE=PASS$' finance-i0-evidence/i2-exposure.log
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: finance-i0-candidate-evidence

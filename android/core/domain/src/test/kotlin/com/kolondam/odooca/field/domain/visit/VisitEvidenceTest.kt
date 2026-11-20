@@ -109,7 +109,7 @@ class VisitCommandTest {
     fun checkOutWithoutEvidenceIsAllowedButNotesLimited() {
         val ok = VisitCommands.checkOut(CMD, NOW, ctx(evidence = null), VisitOutcome.NO_ORDER, "", emptyList())
         assertIs<BuildResult.Ok>(ok)
-        assertFalse("\"evidence\"" in (ok as BuildResult.Ok).json)
+        assertFalse("\"evidence\"" in ok.json)
         val long = VisitCommands.checkOut(CMD, NOW, ctx(), VisitOutcome.NO_ORDER, "x".repeat(501), emptyList())
         assertEquals(setOf(ProblemCode.NOTES_TOO_LONG), invalid(long))
         val badOrder = VisitCommands.checkOut(CMD, NOW, ctx(), VisitOutcome.NO_ORDER, "", listOf("bukan-uuid"))
