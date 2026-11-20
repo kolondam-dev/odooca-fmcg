@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { Snapshot } from "../domain/contracts";
-import { setTier, stockText, tierQty, type Cart } from "../domain/order-cart";
+import { setTier, tierQty, type Cart } from "../domain/order-cart";
 import type { OrderUom } from "../domain/order-pricing";
+import { stockUnits } from "../domain/unit-qty";
+import { UnitQty } from "./UnitQty";
 import { unitOptions } from "../domain/product-units";
 import type { FieldStore } from "../storage/store";
 import { ActionCaption, Button, Callout, Screen, ScreenHeader } from "../ui";
@@ -152,11 +154,13 @@ export function DisplayStockScreen({
                             {product.name}
                             <span class="stock-row__sys">
                                 <Icon name="box" size={14} />{" "}
-                                {stockText(
-                                    product,
-                                    product.stock,
-                                    snapshot.catalog_version,
-                                )}
+                                <UnitQty
+                                    {...stockUnits(
+                                        product,
+                                        product.stock,
+                                        snapshot.catalog_version,
+                                    )}
+                                />
                             </span>
                         </legend>
                         <div class="stock-row__grid">

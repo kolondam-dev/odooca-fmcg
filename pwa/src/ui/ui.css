@@ -1999,3 +1999,57 @@ a.ui-btn {
 a.ui-row {
     text-decoration: none;
 }
+
+/* UnitQty: badge satuan karton / pack / pcs */
+.ui-unitqty {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    font-variant-numeric: tabular-nums;
+    vertical-align: middle;
+}
+.ui-unitqty__b {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px 2px 6px;
+    border-radius: var(--r-pill);
+    background: var(--c-surface-2, #e9eef7);
+    color: var(--c-ink-2, #34415f);
+    font: 700 13px/16px var(--font);
+    white-space: nowrap;
+}
+.ui-unitqty--md .ui-unitqty__b {
+    font-size: 15px;
+    line-height: 20px;
+    padding: 3px 10px 3px 8px;
+}
+.ui-unitqty__at {
+    font-weight: 800;
+}
+.ui-unitqty__zero {
+    font: 700 13px/16px var(--font);
+}
+.ui-unitqty--ink .ui-unitqty__b {
+    background: var(--c-ink);
+    color: var(--c-surface, #fff);
+}
+.ui-unitqty--bad .ui-unitqty__b,
+.ui-unitqty--bad .ui-unitqty__zero {
+    background: var(--c-bad-bg);
+    color: var(--c-bad);
+}
+.ui-unitqty--ok .ui-unitqty__b {
+    background: var(--c-ok-bg);
+    color: var(--c-ok);
+}
+.ui-unitlegend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin: 0;
+    font: 400 12px/16px var(--font);
+    color: var(--c-ink-3, #5b6b8a);
+}

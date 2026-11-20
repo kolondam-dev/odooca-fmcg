@@ -1,3 +1,35 @@
+## 2026-11-20 — [F] FE-1 perbaikan review PR #172: subtotal kartu SKU (claude-design)
+
+- P2: subtotal kartu SKU di POS masih "12 pcs · 0.5 box"; kini `UnitQty` bernada ink (mis. "2 pack"), harga tetap.
+- Tes e2e `unit-qty.spec.ts` diperluas: kuantitas badge + harga Rp 26.400 (2 pack Wafer) di phone dan tablet. Gerbang penuh hijau (264 e2e).
+
+## 2026-11-19 — [F] FE-1 UnitQty: badge satuan karton/pack/pcs (claude-design)
+
+- Komponen `UnitQty` + `UnitLegend` (`components/UnitQty.tsx`), logika `splitUnits`/`stockUnits`/`unitLabel` (`domain/unit-qty.ts`), ikon `carton` (package) dan `pack` (stack), glyph `@` untuk pcs.
+- Dipakai di POS (stok, stok sistem, baris keranjang), Display & stok, Koreksi order. `stockText`/`tierText` dihapus dari `order-cart.ts`.
+- Pembaca layar: `role="img"` + `aria-label` "1 karton, 2 pack, 3 pcs". Legenda satuan sekali di POS.
+- Tes: `tests/unit-qty.test.ts` (termasuk penjaga tanpa "krt/pak" di komponen), `tests/browser/unit-qty.spec.ts`.
+- Belum dimigrasi (utang K34): Hasil kirim, baris pengiriman/POD, Closing trip, Riwayat, `loadSummary` ("20 karton · 8 pak") di `delivery-progress.ts`.
+
+## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
+
+- D5 PJP kosong opsi C; D6 rekomendasi penyetuju/approval disetujui; D7 Tier 0, kumulatif %, rantai berjenjang, batas per principal, diskon program resmi ikut dihitung.
+- `docs/ui/BACKLOG_FE_BE.md` diperbarui (§3, §5.4, BE-15). Docs saja.
+
+## 2026-11-19 — [BU] Backlog: keputusan Extra call/NOO, PJP, approval kumulatif (claude-design)
+
+- Diputuskan pemilik: Extra call disetujui Supervisor, NOO disetujui Branch Manager, approval hanya untuk yang kumulatif melebihi tier.
+- `docs/ui/BACKLOG_FE_BE.md`: penjelasan PJP (apa/kenapa/untuk apa, opsi A/B/C), bagian 5 audit `id_approval`, temuan BE-14..BE-17, backlog BE-18 dan FE-11.
+- Hanya dokumentasi; tanpa perubahan kode.
+
+## 2026-11-19T16:34:46+07:00 — Agent-Claude-Dev1 — Inventarisasi ulang backlog frontend dan backend
+**Berubah:** `docs/ui/BACKLOG_FE_BE.md` (baru), `docs/HANDOFF.md`, `agent-log/claude-design.log`. Tidak ada perubahan kode.
+**Hasil:** [F] Backlog FE (FE-1..FE-10: komponen `UnitQty`, komponen serupa, Extra call, NOO, saran order, absen, dll.) dan BE (6 endpoint, 6 dari 15 command ada, celah snapshot, 13 temuan) dengan urutan kerja dan 7 keputusan pemilik.
+**Temuan penting (dari kode, bukan dugaan):** [F] BE-1 versi snapshot memuat stok hidup sehingga order offline ditolak tiap stok berubah. [F] BE-2 `deliveries: []` hard-coded dan `time`/`distance` outlet selalu kosong (kartu outlet 3B-14 belum menampilkan data nyata di LIVE). [F] BE-5 PJP kosong ditolak backend juga dan assignment disalin otomatis dari hari sebelumnya. [F] `features`, `order_history`, `extra_call_outlets`, `discount_programs`, `ar_outstanding` tidak dikirim backend.
+**Belum diuji:** [BU] BE-8 (diskon baris tanpa pengajuan) dan BE-11 (openapi vs payload) ditandai perlu verifikasi dengan tes. [BU] Radius check-in sisi server tidak terverifikasi. [BU] Hitungan tes backend berdasarkan `def test`, bukan eksekusi.
+**Butir terbuka:** 0. 7 keputusan pemilik di dokumen bagian 3. 1. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
+**Signature:** Task managed by Agent Claude-Dev1 at 2026-11-19T16:34:46+07:00
+
 ## 2026-11-19T13:46:37+07:00 — Codex — PR #159 merge ke main `9f00b01` (PASS, dampak test CUKUP)
 **Merge:** [F] `origin/main` maju `1e19a89..9f00b01`; merge commit `9f00b01` adalah "Merge pull request #159 from kolondam-dev/agen/native-n1-foundation" dan head PR `87570dafb91cc310c37364e1d6eef4cc390f82d0` adalah ancestor `main`.
 **Verdict:** [F] Re-review independen menyatakan PASS dengan dampak test **CUKUP**; tiga counterexample P1/P2 dieksekusi pada lapisan repository + Room + HTTP lokal, bukan hanya enum/planner.
@@ -13,6 +45,26 @@
 **Perhatian reviewer:** Jam absen di `MorningSession` berubah dari `HH:mm:ss` ke `HH.mm.ss`; tes lama `login-attendance-ux` menerima keduanya (`[.:]`) dan lulus. Tidak ada tes lama diubah.
 **Butir terbuka:** 0. Backend: penanda PJP kosong sah, modul piutang + jadwal penagihan -> snapshot `ar`, command NOO, Extra call tanpa sesi PJP (K33, K10). 1. Pemilik: apakah jam rencana PJP harus berdetik. 2. Flag `order_pricing_v2`, `field_expense_v2`, `cash_deposit_v1`, `outlet_expense_v1`, `collection_v2` tetap OFF.
 **Signature:** Task managed by Agent Claude-Dev1 at 2026-11-19T11:30:55+07:00
+## 2026-11-19T16:37:22+07:00 — Agent-Opencode — PR #169 tutup dua celah oracle FIN57
+**Review HOLD:** [F] Reviewer mereproduksi dua false PASS pada SHA `8688ea3`: nilai GL dan non-register FIN57 yang sama-sama ditambah 100 tetap memenuhi identitas internal, baris akun tie-out duplikat tidak ditolak, dan duplicate ID teks `"5"` diabaikan. Dampak test ditetapkan **SESUAIKAN**; PR belum merge dan acceptance live tetap HOLD.
+**Perbaikan:** [F] `verify_sales_purchase_register` kini menerima expected tie-out per account dari sumber independen, menolak account ID duplikat, mematok exact account coverage, serta membandingkan register/GL/non-register/unexplained per akun. Expected native dibangun langsung dari posted AML fixture untuk empat account revenue/expense/tax dan empat move invoice/bill/refund, bukan dari snapshot FIN57. Duplicate list hanya boleh placeholder kosong resmi atau header tanpa data; seluruh entry numeric/text/headerless ditolak.
+**Counterexample:** [F] Tambah reproduksi offset GL+non-register +100, duplicate tie-out account, duplicate ID teks berheader dan headerless, serta positive placeholder English/Indonesia. Unit XLSX kini 28/28 PASS; FIN04 8/8, Ruff seluruh repo, 14 manifest, compile dan diff-check PASS. [BU] Finance I0 exact-SHA baru wajib membuktikan oracle AML independen di Odoo.
+**Batas:** `REPORT_CATALOG.csv` tidak berubah; tidak ada merge/deploy. Bukti live privat, mapping/perimeter, freeze, role Sales production, dan sign-off Controller+QA tetap blocker.
+**Signature:** task managed by opencode at 2026-11-19T16:37:22+07:00
+
+## 2026-11-19T15:20:54+07:00 — Agent-Opencode — PR #169 perbaikan cover sheet FIN03
+**Temuan CI:** [F] Run Finance I0 `44483831440`, job `candidate-install-upgrade` pada SHA `ba009a2` gagal di FIN03: OCA abstract XLSX membuat cover worksheet `Journal Ledger - FINANCE GOLDEN...` berisi judul/filter sebelum implementasi menambah sheet detail per jurnal. Parser menganggap cover sebagai jurnal lalu menolak karena header detail tidak ada. `finance-gate` gagal hanya sebagai agregasi; install/init/seed dan upgrade zero-drift lulus.
+**Perbaikan:** [F] Comparator sekarang mengizinkan maksimum satu sheet headerless hanya bila namanya berpola cover resmi `Journal Ledger - `; sheet headerless lain tetap fail-closed. Fixture unit meniru cover asli dan counterexample `Unexpected` membuktikan pengecualian tidak menjadi bypass umum. Dampak test tetap **TAMBAH**.
+**Diverifikasi:** [F] Ruff seluruh repo, 14 manifest, FIN04 8/8, XLSX 23/23, dan diff-check PASS lokal. [BU] Finance I0 exact-SHA baru wajib hijau setelah commit/push; tidak ada oracle yang dilemahkan dan belum ada merge/deploy.
+**Signature:** task managed by opencode at 2026-11-19T15:20:54+07:00
+
+## 2026-11-19T14:56:43+07:00 — Agent-Opencode — I2a tie-out nilai XLSX FIN01/02/03/51/57
+**Berubah:** [F] Modul offline `scripts/ops/verify_finance_i2_xlsx.py` membaca workbook OCA/custom dan menolak formula, angka teks, coverage/duplikat serta nominal salah. Oracle native I2a kini merender XLSX asli melalui wizard FIN01/02/03 (full + jurnal sales), FIN51 dua-company 1×+7×, dan FIN57 invoice/bill/refund; hasil dibandingkan ke AML/expected table tanpa menyimpan workbook. FIN51 export sudah diwiring setelah snapshot combined. `REPORT_CATALOG.csv` tidak diubah.
+**Dampak test: TAMBAH.** Risiko sel ekspor dapat berbeda dari payload native dan agregat dapat menyembunyikan baris ganda. [F] 22 unit sintetis mencakup positive tie-out serta counterexample formula, numeric-string, nilai/coverage/duplicate block, split document dengan total sama, gross mutation, distinct move/line, dan aritmetika register↔GL. [F] Ruff, 14 manifest, FIN04 8 unit, unit XLSX 22, dan `git diff --check` lulus lokal. [BU] Render Odoo/OCA asli hanya tersedia di CI; Finance I0 exact-SHA belum berjalan.
+**Batas:** [F] Branch disinkronkan fast-forward ke `origin/main` `e28e655`; perubahan main hanya PWA/log dan riwayat agen lain dipertahankan. [BU] Bukti fixture disposable tidak menerima laporan live. Workbook/AML live tetap privat; mapping/perimeter, freeze, akun Sales-only production, digest/provenance, serta sign-off Controller + QA belum tersedia. Semua 58 ID tetap `BELUM_DITERIMA`.
+**Catatan alat:** [BU] `bash scripts/agent/whats_new.sh opencode` gagal karena file checkout CRLF dibaca sebagai `pipefail\r`; pemeriksaan ekuivalen dilakukan lewat `git fetch`, divergence/log/status, lalu branch disinkronkan. Skrip koordinasi tidak diubah pada slice ini.
+**Signature:** task managed by opencode at 2026-11-19T14:56:43+07:00
+
 ## 2026-11-19T13:51:15+07:00 — Codex supervisor — PR #161 integration
 **Changed:** Merged main 9f00b01; resolved only HANDOFF conflict, preserving both histories verbatim. Finance implementation and test oracle unchanged.
 **Verified:** 31 finance/planner/workflow unit tests and 14 manifests PASS; cached diff check clean.
