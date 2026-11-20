@@ -35,11 +35,11 @@ jobs:
     outputs:
       pwa: ${{ steps.plan.outputs.pwa }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: pip install pyyaml
@@ -65,13 +65,13 @@ jobs:
       run:
         working-directory: pwa
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: PWA suite not selected
         if: needs.changes.outputs.pwa != 'true'
         run: echo "PASS — no PWA path changed; see impact plan."
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: needs.changes.outputs.pwa == 'true'
         with:
           node-version: '24'
@@ -108,7 +108,7 @@ jobs:
         run: npm run build:staging
       - if: needs.changes.outputs.pwa == 'true'
         run: npm run check:build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: needs.changes.outputs.pwa == 'true'
         with:
           name: pwa-builds
@@ -124,20 +124,20 @@ jobs:
       run:
         working-directory: pwa
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: npm
           cache-dependency-path: pwa/package-lock.json
       - run: npm ci --no-fund
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: pwa-builds
           path: pwa/dist/
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: pwa-playwright-${{ runner.os }}-${{ hashFiles('pwa/package-lock.json') }}
@@ -152,7 +152,7 @@ jobs:
             echo
             echo "::endgroup::"
           done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: pwa-browser-diagnostics
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Build isolated hosting image and smoke health/static/API boundary

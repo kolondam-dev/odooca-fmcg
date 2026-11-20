@@ -49,11 +49,11 @@ jobs:
       full: ${{ steps.plan.outputs.full }}
       plan: ${{ steps.plan.outputs.plan }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install pyyaml
@@ -79,7 +79,7 @@ jobs:
             cat ci-impact-plan.json
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ci-impact-plan-${{ github.sha }}
           path: ci-impact-plan.json
@@ -88,10 +88,10 @@ jobs:
   static:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Pasang alat
@@ -139,17 +139,17 @@ jobs:
           --health-cmd "pg_isready -U odoo" --health-interval 5s
           --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Odoo runtime not selected
         if: needs.changes.outputs.odoo_install != 'true'
         run: echo "PASS — no Odoo runtime path changed; see CI impact plan."
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: needs.changes.outputs.odoo_install == 'true'
       - name: Build cached Odoo image
         if: needs.changes.outputs.odoo_install == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -243,7 +243,7 @@ jobs:
           curl -sf -o /dev/null http://localhost:8069/web/login
       - name: Cache Playwright Chromium
         if: needs.changes.outputs.odoo_ui == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: odoo-playwright-${{ runner.os }}-1.58.0
@@ -324,14 +324,14 @@ jobs:
           docker volume rm d1-filestore || true
           docker rm -f ui-smoke || true
           docker volume rm ui-filestore || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && needs.changes.outputs.dashboard == 'true'
         with:
           name: d1-native-visual-${{ github.event.pull_request.head.sha || github.sha }}
           path: d1-visual/
           if-no-files-found: error
           retention-days: 30
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && needs.changes.outputs.odoo_install == 'true'
         with:
           name: ui-smoke-diagnostics
@@ -361,17 +361,17 @@ jobs:
           --health-cmd "pg_isready -U postgres" --health-interval 5s
           --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Entrypoint runtime not selected
         if: needs.changes.outputs.odoo_init != 'true'
         run: echo "PASS — no init/deployment contract changed; see CI impact plan."
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
         if: needs.changes.outputs.odoo_init == 'true'
       - name: Build cached Odoo image
         if: needs.changes.outputs.odoo_init == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -480,7 +480,7 @@ jobs:
           [ -s historical_experiment_report.json ] || echo "[WARN] Laporan eksperimen historis kosong"
       - name: Upload artifact diagnostik eksperimen historis Odoo 19
         if: always() && needs.changes.outputs.seed == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: odoo19-historical-experiment-report
           path: |
@@ -494,7 +494,7 @@ jobs:
           docker exec -i odoo /opt/deploy/init.sh shell --no-http < scripts/ops/verify_disposable_slice.py 2>&1 | tee slice_runtime.log
       - name: Upload artifact verifikasi runtime disposable
         if: always() && needs.changes.outputs.seed == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: odoo19-disposable-slice-log
           path: |
