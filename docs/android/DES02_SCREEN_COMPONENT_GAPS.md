@@ -6,7 +6,7 @@
 
 **62/62 PNG referensi di arsip pemilik telah diperiksa secara visual melalui enam lembar kontak.** Seluruh ID memiliki padanan HTML. [Inventaris layar sumber](SCREEN_SOURCE_INVENTORY.md) mencatat path dalam ZIP, judul, padanan PWA, pemetaan Android dan gap per layar. Arsip adalah sumber pembandingan visual. Perilaku simulator merupakan hipotesis dan keputusan produk terkini mengatur versi Android.
 
-Koreksi atas rekonsiliasi PWA: layar **33** adalah Datepicker janji bayar, **47** adalah beranda HRIS, dan **48** adalah Ajukan cuti. Layar **24** menampilkan PJP kosong dengan Extra call; NOO dan carry-over merupakan perluasan berdasarkan keputusan yang lebih baru. Layar **28** menampilkan slot “Foto lokasi toko” dan “Foto toko”; kebutuhan dua bukti resmi masih perlu kajian bersama Lead/B02.
+Koreksi atas rekonsiliasi PWA: layar **33** adalah Datepicker janji bayar, **47** adalah beranda HRIS, dan **48** adalah Ajukan cuti. Layar **24** menampilkan PJP kosong dengan Extra call; NOO dan carry-over merupakan perluasan berdasarkan keputusan yang lebih baru. Layar **28** menampilkan slot “Foto lokasi toko” dan “Foto toko”. Pemilik menetapkan keduanya wajib untuk check-in toko.
 
 ## 2. Gap per workflow
 
@@ -98,3 +98,12 @@ Node pengguna dapat dikomentari di draft bila akses file memberi izin. Library b
 |---|---|---|
 | Jam rencana `HH.mm` | Jadwal pada kartu outlet, Beranda dan rute mengikuti presisi menit. Waktu kejadian tetap `HH.mm.ss` WITA. | Fixture jadwal `08.30`, kejadian `08.30.16 WITA` dan jadwal hilang. Gunakan sumber masing-masing. |
 | NOO menunggu persetujuan mengizinkan survei/foto saja | Bedakan aksi **Survei outlet** dan **Ambil foto** dari **Mulai kunjungan** dan **Buat order**. Saat status Menunggu persetujuan, kunjungan resmi dan order tetap terkunci. | B03 menetapkan scope, capability survei, keterikatan foto ke pengajuan dan keputusan Branch Manager. Uji pending + capability aktif/mati, ditolak, disetujui, dan scope owner salah. Status disetujui tetap mengikuti hak akses kunjungan/order. Aktivasi resmi belum tersedia. |
+| Kedua foto check-in toko wajib | Layar 28 dan D01-04 menampilkan slot **Foto lokasi toko** dan **Foto toko**. Status 0/2 atau 1/2 menahan check-in. Draf parsial dapat dipulihkan. Status 2/2 berarti kedua bukti lokal siap untuk alur lanjut. | Uji tiap slot hilang, foto tidak valid, retake, 2/2 valid, offline dan receipt. Bentuk wire, tujuan audit per slot, binding gambar dan acceptance resmi menunggu Lead/B02/B09. Source saat ini memakai satu `EvidenceRef` dan satu file per intent. |
+
+## 6. Penpot · verifikasi awal rebuild
+
+Pemilik memilih Penpot untuk pembangunan ulang design system. File aktif **Odooca-FMCG Field Apps**, ID `42288968-6e5e-808d-8008-f9456c20a1f7`, page `42288968-6e5e-808d-8008-f9456c20a1f8`. Figma DES-02-r0 tetap menjadi referensi checkpoint historis.
+
+- Koneksi baca/tulis MCP terverifikasi pada file ini. Set `Odooca/Primitives` berisi 41 token dari sumber repo dan `Odooca/Android` berisi 36 alias aktif. Alias primary resolve ke `#1B5E8C`.
+- Komponen lokal **DS-C08 · Bukti check-in** node `d1ec018c-c393-80c4-8008-f947b7864ffe` memiliki varian 0/2, 1/2 dan 2/2. Instance uji `d1ec018c-c393-80c4-8008-f947b81c1341` terverifikasi sebagai komponen, dengan dua slot terikat ke token tinggi 48 dan font Inter. Kesiapan desain 2/2 belum berarti check-in resmi.
+- Build lengkap komponen lain lintas workflow, pemetaan node desain baru, review visual dan publikasi library belum selesai.

@@ -1,3 +1,10 @@
+## 2026-11-20T15:25:53+07:00 — Codex-Android-Design — Dua foto check-in dan verifikasi Penpot
+**Basis:** [F] Parent Design `8d11a2c`, main acuan Design `39172de`, arahan bersama `6b894ca`.
+**Keputusan:** [F] **Foto lokasi toko** dan **Foto toko** wajib untuk check-in toko. Draf parsial tetap dapat disimpan. Uji 0/2, 1/2, 2/2, retake, offline dan receipt tercatat di D01-04d.
+**Diverifikasi:** [F] Penpot MCP membaca dan menulis pada Odooca-FMCG Field Apps, membuat 41 primitive, 36 alias dan komponen DS-C08 dengan tiga varian/instance terikat token. Export contoh 1/2 diperiksa. Ruff, 14 manifest dan 28 tes kontrak CI lulus. Dampak tes **CUKUP** untuk dokumentasi keputusan dan verifikasi akses.
+**Menunggu:** [BU] Rebuild library Penpot lengkap dan review pemilik. Source Android saat ini membawa satu EvidenceRef per intent. Lead dan maintainer bersama menetapkan binding dua bukti, tujuan audit per slot, bentuk wire, dan validasi server untuk B02/B09. Tidak ada perubahan runtime atau kontrak dalam checkpoint ini.
+**Signature:** Task managed by Agent Codex-Mobile Native at 2026-11-20T15:25:53+07:00
+
 ## 2026-11-20T09:36:42+07:00 — Codex-Android-Design — Validasi sumber 62 layar dan keputusan pemilik
 **Basis:** [F] Parent Design `0f2739c`, main acuan Design `39172de`, arahan bersama `6b894ca`. Main `127287a` berlaku untuk kandidat integrasi DEV-01 sebagaimana arahan Lead.
 **Berubah:** [F] [Inventaris sumber](android/SCREEN_SOURCE_INVENTORY.md) menghubungkan 62 referensi PNG/HTML dari ZIP pemilik dengan PWA, alur Android, DS dan gap. Koreksi nomor dari arsip: 33 Datepicker janji bayar, 47 HRIS, 48 Ajukan cuti.
