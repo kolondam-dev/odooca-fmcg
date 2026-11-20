@@ -473,3 +473,19 @@
 - [F] No manual deployment was run and no server data was edited.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-19T13:46:37+07:00
+
+[2026-11-20T08:41:39+07:00] [INFO] PR173 coordinated Android toolchain upgrade supersedes Dependabot PRs 164-168
+- [F] The five Dependabot Gradle PRs cannot pass in isolation: AGP 9.5.1 needs Gradle >= 9.6, core-ktx 1.19.1 and OkHttp 5.5.1 need compileSdk >= 37 and AGP >= 9.1, KSP must match Kotlin, and Gradle 9.9.1 alone breaks the wrapper oracle pinned to 8.9.
+- [F] PR #173 was opened from main (not from a Dependabot branch) with Gradle wrapper 9.9.1, AGP 9.5.1, Kotlin 2.4.21, KSP 2.3.14, Compose BOM 2026.09.00, core-ktx 1.19.1, navigation 2.10.2, Room 2.8.5, WorkManager 2.12.0, OkHttp 5.5.1, serialization 1.13.0, coroutines 1.11.0 and compileSdk 37.
+- [F] targetSdk stays 35 so runtime behaviour is unchanged; raising it remains an N2 device-acceptance decision.
+- [F] AGP 9 requires android.builtInKotlin=false together with android.newDsl=false while modules still apply org.jetbrains.kotlin.android; kotlinOptions was replaced with kotlin { compilerOptions { jvmTarget = JVM_17 } }.
+- [F] Since API 37 the SDK platform package carries a minor version: platforms;android-37 does not exist, platforms;android-37.0 does, and AGP 9.1.1+ resolves compileSdk = 37 to android-37.0.
+- [F] tests/test_android_ci.py now re-pins the wrapper to gradle-9.9.1-bin.zip with the official checksum d8a18a7a841dd5df825d35a685fad6f2d7f12ac0c280e57b67c27b4a520ba228 and adds a test binding every module's compileSdk to the platform the workflow installs; the oracle still rejects any other version or checksum.
+- [F] Kotlin 2.4 flags VisitEvidenceTest.kt:112 as "Cast is redundant" and the domain module compiles with allWarningsAsErrors; the redundant cast was removed without changing the assertion and without relaxing -Werror.
+- [F] On code SHA fc166b2 the Android workflow passed guards, domain-tests, data-tests (Room + Robolectric + OkHttp 5), build (lintDebug + assembleDebug) and android-gate; the APK is 15376991 bytes with SHA-256 6c0d1304abc5f9e16381de3a908ca9c0d32ebd250926300cb6998722bcc59ee6 matching its sidecar.
+- [F] Local contracts: 29 tests in test_android_ci.py, test_ci_impact.py and test_ci_workflow_guards.py pass; ruff and check_manifests.py pass.
+- [F] KSP plugin resolution failed transiently on domain-tests and on unrelated PR #162 although both KSP 2.3.14 and 2.0.21-1.0.28 artifacts return HTTP 200 from Maven Central and the Gradle Plugin Portal; rerunning the job passed.
+- [A] A retry setting such as systemProp.org.gradle.internal.repository.max.retries in android/gradle.properties would reduce that flake.
+- [F] No merge, deployment, or server-data change was performed by this work.
+- [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
+- Task managed by codex agent at 2026-11-20T08:41:39+07:00
