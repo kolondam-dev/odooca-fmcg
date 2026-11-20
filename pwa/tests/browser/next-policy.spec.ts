@@ -158,8 +158,10 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
             page.getByRole("region", { name: "Koreksi order" }),
         ).toContainText("Wafer Cokelat 24 g");
         await expect(
-            page.getByRole("region", { name: "Koreksi order" }),
-        ).toContainText("3 pcs");
+            page
+                .getByRole("region", { name: "Koreksi order" })
+                .getByRole("img", { name: "3 pcs" }),
+        ).toBeVisible();
         if (flow === "expired-draft") {
             const before = await readSoState(page);
             await page.clock.setSystemTime(new Date("2026-10-28T16:00:00Z"));
@@ -189,8 +191,10 @@ for (const flow of ["same-day", "expired-draft", "expired-pending"] as const)
                 })
                 .click();
             await expect(
-                page.getByRole("region", { name: "Koreksi order" }),
-            ).toContainText("3 pcs");
+                page
+                    .getByRole("region", { name: "Koreksi order" })
+                    .getByRole("img", { name: "3 pcs" }),
+            ).toBeVisible();
             await expect(
                 page.getByRole("button", {
                     name: "Ubah baris order",

@@ -24,9 +24,14 @@ Acuan arsitektur: `docs/blueprints/native_android_architecture_blueprint.md`.
 ./gradlew :core:data:testDebugUnitTest
 ```
 
-Gunakan JDK 17. Gradle wrapper 8.9 beserta checksum distribusinya berada di
-repository; jangan memakai instalasi Gradle global. Di Windows gunakan
-`gradlew.bat` dengan argumen yang sama.
+Gunakan JDK 17. Toolchain dipatok bersama: Gradle wrapper 9.9.1 (beserta checksum
+distribusinya), AGP 9.5.1, Kotlin 2.4.21, KSP 2.3.14, dan `compileSdk = 37`.
+Naikkan atau turunkan nilai itu sebagai satu kesatuan karena AGP mensyaratkan
+Gradle minimum, sedangkan AndroidX/OkHttp mensyaratkan `compileSdk` minimum.
+Jangan memakai instalasi Gradle global. Di Windows gunakan `gradlew.bat` dengan
+argumen yang sama. Komponen SDK yang dipasang CI adalah
+`platforms;android-37.0` dan `build-tools;36.0.0`; sejak API 37 paket platform
+memakai versi minor sehingga `platforms;android-37` tidak tersedia.
 
 ## CI dan artifact
 
