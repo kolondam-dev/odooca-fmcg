@@ -313,11 +313,11 @@ Catatan desain: karena batas berbeda per principal dan order dapat memuat bebera
 
 ### 5.5 Backlog baru dari bagian ini
 
-| ID    | Pekerjaan                                                                                   | Prioritas                       |
-| ----- | ------------------------------------------------------------------------------------------- | ------------------------------- |
-| BE-14 | Pembuatan permintaan approval otomatis dari `sales.order.submit` (+ analitik bawaan)        | P0                              |
-| BE-15 | Tier 0 zona bebas; aturan kumulatif (`scope`/`measure`/`window`); mode rantai               | P0 (setelah angka dari pemilik) |
-| BE-16 | Model `fmcg.pjp.visit` + command `sales.extra_call.request` + sambungan kategori            | P1                              |
-| BE-17 | Kategori `new_outlet` + command `outlet.register.request` + model status outlet             | P1                              |
-| BE-18 | `approval_tiers` pada snapshot (zona bebas, rentang tier, pemakaian kumulatif)              | P1                              |
-| FE-11 | Pratinjau tier di POS ("perlu Branch Manager") dan status approval pada Riwayat/Hasil kirim | P1 (setelah BE-14, BE-18)       |
+| ID    | Pekerjaan                                                                                                                                      | Prioritas                       |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| BE-14 | Pembuatan permintaan approval otomatis dari `sales.order.submit` (tanpa wajib analitik). **Selesai (PR BE-14); tier/akumulasi menunggu BE-15** | P0                              |
+| BE-15 | Tier 0 zona bebas; aturan kumulatif (`scope`/`measure`/`window`); mode rantai                                                                  | P0 (setelah angka dari pemilik) |
+| BE-16 | Model `fmcg.pjp.visit` + command `sales.extra_call.request` + sambungan kategori                                                               | P1                              |
+| BE-17 | Kategori `new_outlet` + command `outlet.register.request` + model status outlet                                                                | P1                              |
+| BE-18 | `approval_tiers` pada snapshot (zona bebas, rentang tier, pemakaian kumulatif)                                                                 | P1                              |
+| FE-11 | Pratinjau tier di POS ("perlu Branch Manager") dan status approval pada Riwayat/Hasil kirim                                                    | P1 (setelah BE-14, BE-18)       |
