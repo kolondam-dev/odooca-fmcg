@@ -345,3 +345,8 @@ Utang:
 ## 4. Keputusan yang perlu pemilik hanya bila bertentangan dengan rekomendasi di atas
 
 Tidak ada keputusan yang menunggu. Semua rekomendasi memakai prinsip: DS menang, fitur tanpa dukungan backend tampil "Segera tersedia" dan dinyalakan lewat kapabilitas dari server, bukan hard-code.
+
+### K34 — UnitQty belum dipakai di semua konsumen (FE-1)
+
+`UnitQty` baru dipasang di POS, Display & stok, dan Koreksi order. Belum dimigrasi: Hasil kirim (`OrderResult`), baris pengiriman/POD (`DeliveryTaskEditor`), Closing trip, Riwayat, dan `loadSummary()` di `domain/delivery-progress.ts` (teks "20 karton · 8 pak", dipakai tes). Penjaga `tests/unit-qty.test.ts` baru memeriksa singkatan `krt`/`pak` di komponen; perluas saat konsumen sisa dimigrasi.
+

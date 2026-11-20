@@ -21,12 +21,12 @@ import {
     cartFromLegacy,
     pcsOf,
     setTier,
-    stockText,
-    tierText,
     type Cart,
     type LineDiscounts,
 } from "../domain/order-cart";
 import type { OrderUom } from "../domain/order-pricing";
+import { stockUnits } from "../domain/unit-qty";
+import { UnitLegend, UnitQty } from "./UnitQty";
 import { unitOptions, productUnitLabels } from "../domain/product-units";
 import type { FieldStore, QueueItem } from "../storage/store";
 import {
@@ -93,9 +93,17 @@ export function ProductCard({
                             class={stock <= 0 ? "pos-card__out" : undefined}
                             aria-label={`Stok ${stock} ${labels.carton}`}
                         >
-                            {stock <= 0
-                                ? "Habis"
-                                : stockText(product, stock, catalogVersion)}
+                            {stock <= 0 ? (
+                                "Habis"
+                            ) : (
+                                <UnitQty
+                                    {...stockUnits(
+                                        product,
+                                        stock,
+                                        catalogVersion,
+                                    )}
+                                />
+                            )}
                         </span>
                     </span>
                 </div>
@@ -140,9 +148,7 @@ export function ProductCard({
             ))}
             {pcs > 0 ? (
                 <div class="pos-card__sum">
-                    <span class="ui-row__sub">
-                        {pcs} pcs · {Number(cartons.toFixed(2))} {labels.carton}
-                    </span>
+                    <UnitQty tone="ink" {...tiers} />
                     <strong>{money(subtotal)}</strong>
                 </div>
             ) : null}
@@ -225,7 +231,12 @@ function SkuSheet({
                 </div>
                 <div>
                     <h3>Stok sistem</h3>
-                    <p>{stockText(product, stock, catalogVersion)}</p>
+                    <p>
+                        <UnitQty
+                            size="md"
+                            {...stockUnits(product, stock, catalogVersion)}
+                        />
+                    </p>
                 </div>
             </div>
             <Button variant="sec" onClick={onClose}>
@@ -613,6 +624,7 @@ export function OrderScreen({
                     </button>
                 )}
             </div>
+            <UnitLegend />
             {lockHint && principals.length > 1 ? (
                 <Callout tone="info">
                     1 order hanya untuk 1 principal. Kosongkan keranjang untuk
@@ -708,8 +720,8 @@ export function OrderScreen({
                                         <strong>{product.name}</strong>
                                         <span class="ui-row__sub">
                                             {product.sku_code ?? product.id} ·{" "}
-                                            {tierText(product, tiers)} ({ql.pcs}{" "}
-                                            pcs)
+                                            <UnitQty tone="ink" {...tiers} /> (
+                                            {ql.pcs} pcs)
                                         </span>
                                     </div>
                                     <div class="pos-line__amt">
