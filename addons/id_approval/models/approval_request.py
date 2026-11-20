@@ -160,7 +160,22 @@ class FmcgApprovalRequest(models.Model):
                 continue
 
             # Cari aturan tier yang sesuai dari kategori
-            rules = rec.category_id.rule_ids.sorted(key=lambda r: r.tier_sequence)
+            target = self.env[rec.res_model].sudo().browse(rec.res_id).exists()
+            principal_id = target._approval_principal_id() if target and hasattr(
+                target, "_approval_principal_id") else False
+            # Zona bebas (Tier 0): diskon kumulatif di bawah batas tidak perlu approver.
+            free_limit = rec.category_id._free_zone_limit(principal_id) \
+                if rec.category_id.has_discount_tiers else None
+            if free_limit is not None and rec.discount_percent <= free_limit:
+                rec.write({"state": "approved", "current_tier_sequence": 0})
+                rec.message_post(
+                    body=f"Diskon kumulatif {rec.discount_percent:.2f}% berada dalam zona bebas "
+                         f"(&le; {free_limit:.2f}%): tidak perlu persetujuan.",
+                    subtype_xmlid="mail.mt_note",
+                )
+                rec._notify_target_record("approved")
+                continue
+            rules = rec.category_id._rules_for_principal(principal_id)
             applicable_rules = []
             for r in rules:
                 # Filter nominal jika kategori bertingkat nominal

@@ -224,6 +224,97 @@ class TestApprovalEngine(TransactionCase):
         })
         self.assertFalse(order._mobile_auto_request_approvals())
 
+    def _tactical_order(self, partner=None, product=None, qty=5.0, discount=5.0, extra_lines=()):
+        lines = [(0, 0, {
+            "product_id": (product or self.product).id,
+            "product_uom_qty": qty,
+            "price_unit": 12_000.0,
+            "discount": discount,
+        })]
+        lines += list(extra_lines)
+        return self.env["sale.order"].create({
+            "partner_id": (partner or self.partner_tempo).id,
+            "order_line": lines,
+        })
+
+    def _free_zone_rule(self):
+        return self.env.ref("id_approval.rule_tactical_tier0")
+
+    def test_07_tier0_default_zero_keeps_old_behaviour(self):
+        """BE-15: Tier 0 tersedia, batas awal 0% sehingga diskon manual tetap perlu approval."""
+        rule = self._free_zone_rule()
+        self.assertTrue(rule.is_free_zone)
+        self.assertEqual(rule.max_discount, 0.0)
+        reqs = self._tactical_order(discount=1.0)._mobile_auto_request_approvals()
+        self.assertEqual(reqs.category_id.code, "tactical_discount")
+        self.assertEqual(reqs.state, "pending")
+        # Tier 0 bukan langkah approver
+        self.assertNotIn(rule, reqs.line_ids.mapped("rule_id"))
+
+    def test_08_free_zone_skips_approval_and_above_limit_chains(self):
+        self._free_zone_rule().max_discount = 4.0
+        within = self._tactical_order(discount=4.0)
+        self.assertFalse(within._mobile_auto_request_approvals())
+        self.assertEqual(within.discount_approval_state, "none")
+        above = self._tactical_order(discount=5.0)
+        reqs = above._mobile_auto_request_approvals()
+        self.assertEqual(reqs.state, "pending")
+        self.assertEqual(len(reqs.line_ids), 2)  # SPV lalu Branch Manager, berjenjang
+
+    def test_09_free_zone_via_form_button_auto_approves(self):
+        self._free_zone_rule().max_discount = 4.0
+        order = self._tactical_order(discount=3.0)
+        order.tactical_analytic_account_id = self.analytic_account.id
+        action = order.action_request_tactical_discount_approval(reason="Dalam zona bebas")
+        req = self.env["fmcg.approval.request"].browse(action["res_id"])
+        self.assertEqual(req.state, "approved")
+        self.assertFalse(req.line_ids)
+        self.assertEqual(order.discount_approval_state, "approved")
+
+    def test_10_cumulative_includes_program_reward_lines(self):
+        """Diskon baris + baris reward program resmi digabung berbobot nilai."""
+        order = self._tactical_order(discount=5.0, extra_lines=[(0, 0, {
+            "product_id": self.product.id,
+            "product_uom_qty": 1.0,
+            "price_unit": -3_000.0,
+        })])
+        # gross 60.000; diskon 3.000 (5%) + reward 3.000 = 6.000 -> 10%
+        self.assertAlmostEqual(order._approval_cumulative_discount_pct("order"), 10.0, places=2)
+
+    def test_11_principal_specific_free_zone_overrides_default(self):
+        principal = self.env["id.principal"].create({"name": "Principal Uji", "code": "PRU"})
+        product_p = self.env["product.product"].create({
+            "name": "Produk Principal Uji", "standard_price": 10_000.0,
+            "list_price": 12_000.0, "principal_id": principal.id,
+        })
+        category = self._free_zone_rule().category_id
+        self.env["fmcg.approval.rule"].create({
+            "category_id": category.id, "tier_sequence": 0, "name": "Zona bebas Principal Uji",
+            "approver_type": "group", "group_id": self.grp_spv.id,
+            "is_free_zone": True, "max_discount": 6.0, "principal_id": principal.id,
+        })
+        # Principal Uji: 5% masih zona bebas; default (0%) tetap perlu approval
+        order_p = self._tactical_order(product=product_p, discount=5.0)
+        self.assertEqual(order_p._approval_principal_id(), principal.id)
+        self.assertFalse(order_p._mobile_auto_request_approvals())
+        order_default = self._tactical_order(discount=5.0)
+        self.assertTrue(order_default._mobile_auto_request_approvals())
+        # Aturan khusus principal juga menimpa tier umum: di atas 6% tetap melalui rantai
+        order_p2 = self._tactical_order(product=product_p, discount=8.0)
+        self.assertTrue(order_p2._mobile_auto_request_approvals())
+
+    def test_12_cumulative_scope_outlet_month_accumulates_orders(self):
+        category = self._free_zone_rule().category_id
+        category.cumulative_scope = "outlet_month"
+        prior = self._tactical_order(qty=10.0, discount=0.0)  # bruto 120.000, tanpa diskon
+        order = self._tactical_order(qty=5.0, discount=5.0)   # bruto 60.000, diskon 3.000
+        self.assertNotEqual(prior, order)
+        # 3.000 / (60.000 + 120.000) = 1,6667%
+        self.assertAlmostEqual(order._approval_cumulative_discount_pct("outlet_month"), 1.6667, places=3)
+        self.assertAlmostEqual(order._approval_cumulative_discount_pct("order"), 5.0, places=3)
+        self._free_zone_rule().max_discount = 2.0
+        self.assertFalse(order._mobile_auto_request_approvals())  # kumulatif 1,67% <= 2%
+
     def test_04_new_sku_activation_workflow(self):
         """SKU baru tidak aktif jual hingga disetujui manajemen."""
         prod_tmpl = self.env["product.template"].create({

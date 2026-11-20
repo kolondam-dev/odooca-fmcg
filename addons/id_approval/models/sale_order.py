@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
@@ -149,12 +151,12 @@ class SaleOrder(models.Model):
             "res_id": self.id,
             "reference_document": f"{self.name} - {self.partner_id.name}",
             "amount": self.amount_total,
-            "discount_percent": self.max_line_discount if hasattr(self, "max_line_discount") else 0.0,
+            "discount_percent": self._approval_cumulative_discount_pct(category.cumulative_scope),
             "analytic_account_id": self.tactical_analytic_account_id.id,
             "reason": reason or f"Pengajuan diskon taktikal untuk pesanan {self.name}",
         })
         req.action_submit()
-        if hasattr(self, "discount_approval_state"):
+        if hasattr(self, "discount_approval_state") and req.state == "pending":
             self.write({"discount_approval_state": "pending"})
         self.message_post(
             body=f"Pengajuan diskon taktikal <b>{req.name}</b> telah diajukan ke penyelia/manajer.",
@@ -168,6 +170,62 @@ class SaleOrder(models.Model):
             "type": "ir.actions.act_window",
             "target": "current",
         }
+
+    def _approval_principal_id(self):
+        """Principal pesanan (pesanan lapangan dipecah per principal; ambil dari baris produk)."""
+        self.ensure_one()
+        for line in self.order_line:
+            if line.product_id.principal_id:
+                return line.product_id.principal_id.id
+        return False
+
+    @staticmethod
+    def _discount_stats(lines):
+        """(nilai diskon Rp, nilai bruto Rp) dari baris: diskon baris + baris reward program resmi."""
+        gross = disc = 0.0
+        for line in lines:
+            if line.display_type:
+                continue
+            if line.price_subtotal < 0:  # baris reward/program bernilai negatif
+                disc += abs(line.price_subtotal)
+                continue
+            line_gross = line.price_unit * line.product_uom_qty
+            gross += line_gross
+            disc += line_gross * (line.discount or 0.0) / 100.0
+        return disc, gross
+
+    def _approval_cumulative_discount_pct(self, scope="order"):
+        """Diskon kumulatif (%), berbobot nilai, per principal pesanan.
+
+        Menggabungkan diskon baris + diskon program resmi (reward). Untuk cakupan
+        outlet_month / salesman_day, pesanan lain pada jendela yang sama (principal sama,
+        tidak batal, tidak ditolak) ikut dihitung bersama pesanan ini.
+        """
+        self.ensure_one()
+        disc, gross = self._discount_stats(self.order_line)
+        if scope in ("outlet_month", "salesman_day"):
+            principal = self._approval_principal_id()
+            day = (self.date_order or fields.Datetime.now()).date()
+            if scope == "outlet_month":
+                start = day.replace(day=1)
+                end = (start + timedelta(days=32)).replace(day=1)
+                owner = [("order_id.partner_id", "=", self.partner_id.id)]
+            else:
+                start, end = day, day + timedelta(days=1)
+                owner = [("order_id.user_id", "=", self.user_id.id)]
+            domain = owner + [
+                ("order_id", "!=", self.id),
+                ("order_id.state", "!=", "cancel"),
+                ("order_id.discount_approval_state", "!=", "rejected"),
+                ("order_id.date_order", ">=", fields.Datetime.to_datetime(start)),
+                ("order_id.date_order", "<", fields.Datetime.to_datetime(end)),
+                ("product_id.principal_id", "=", principal or False),
+            ]
+            other_disc, other_gross = self._discount_stats(
+                self.env["sale.order.line"].sudo().search(domain))
+            disc += other_disc
+            gross += other_gross
+        return round(disc / gross * 100.0, 4) if gross > 0 else 0.0
 
     def _open_approval_request(self, category_code):
         """Permintaan approval yang masih berjalan (draf/pending) untuk SO ini dan kategori tertentu."""
@@ -193,20 +251,30 @@ class SaleOrder(models.Model):
         for order in self:
             if order.has_tactical_discount and not order._open_approval_request("tactical_discount"):
                 category = Category.search([("code", "=", "tactical_discount")], limit=1)
-                if category:
+                cumulative = order._approval_cumulative_discount_pct(
+                    category.cumulative_scope if category else "order")
+                free_limit = category._free_zone_limit(order._approval_principal_id()) if category else None
+                if category and free_limit is not None and cumulative <= free_limit:
+                    order.message_post(
+                        body=f"Diskon kumulatif {cumulative:.2f}% berada dalam zona bebas "
+                             f"(&le; {free_limit:.2f}%): tanpa persetujuan.",
+                        subtype_xmlid="mail.mt_note",
+                    )
+                elif category:
                     req = Request.create({
                         "category_id": category.id,
                         "res_model": "sale.order",
                         "res_id": order.id,
                         "reference_document": f"{order.name} - {order.partner_id.name}",
                         "amount": order.amount_total,
-                        "discount_percent": order.max_line_discount,
+                        "discount_percent": cumulative,
                         "analytic_account_id": order.tactical_analytic_account_id.id or False,
                         "reason": (discount_reason or order.discount_approval_note
                                    or f"Diskon taktikal dari aplikasi lapangan untuk pesanan {order.name}"),
                     })
                     req.action_submit()
-                    order.write({"discount_approval_state": "pending"})
+                    if req.state == "pending":
+                        order.write({"discount_approval_state": "pending"})
                     order.message_post(
                         body=f"Pengajuan diskon taktikal <b>{req.name}</b> dibuat otomatis dari aplikasi lapangan.",
                         subtype_xmlid="mail.mt_note",

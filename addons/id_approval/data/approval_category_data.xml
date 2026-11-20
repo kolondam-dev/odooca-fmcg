@@ -92,6 +92,18 @@
         <field name="has_discount_tiers">True</field>
     </record>
 
+    <!-- Tier 0: zona bebas. Batas awal 0% = perilaku lama (semua diskon manual perlu approval);
+         pemilik mengisi batas sebenarnya (per principal lewat aturan khusus) di Tata Kelola Approval. -->
+    <record id="rule_tactical_tier0" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_tactical_discount"/>
+        <field name="tier_sequence">0</field>
+        <field name="name">Tier 0: Zona Bebas (tanpa persetujuan)</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
+        <field name="is_free_zone">True</field>
+        <field name="max_discount">0.0</field>
+    </record>
+
     <record id="rule_tactical_tier1" model="fmcg.approval.rule">
         <field name="category_id" ref="cat_tactical_discount"/>
         <field name="tier_sequence">1</field>

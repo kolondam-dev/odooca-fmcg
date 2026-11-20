@@ -1,3 +1,12 @@
+## 2026-11-20 — [BU] BE-15: Tier 0 dan approval diskon kumulatif per principal (claude-design)
+
+- Aturan: `principal_id` (aturan khusus principal menimpa umum, terpisah untuk zona bebas dan tier approver) dan `is_free_zone` (Tier 0; batas = `max_discount`). Kategori: `cumulative_scope` (order / outlet_month / salesman_day).
+- Diskon kumulatif % berbobot nilai: diskon baris + baris reward program resmi, per principal; jendela outlet-bulan/salesman-hari menggabungkan pesanan lain (principal sama, tidak batal/ditolak). Rantai tetap berjenjang.
+- Di dalam zona bebas: tanpa pengajuan (jalur lapangan) atau auto-approved tanpa langkah approver (tombol SO). Handler mobile membalas `accepted` bila tidak ada pengajuan/kredit/HPP pending.
+- Data: rule `rule_tactical_tier0` dengan batas awal 0% (perilaku lama); angka sebenarnya diisi pemilik di Tata Kelola Approval, per principal lewat aturan khusus.
+- Tes: `test_07`–`test_12` (id_approval), `test_free_zone_discount_is_accepted_without_approval` (mobile). Odoo tidak ada lokal; verifikasi lewat CI.
+- Belum: `approval_tiers` di snapshot (BE-18) dan pratinjau tier di PWA (FE-11).
+
 ## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
 
 - P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.

@@ -34,6 +34,34 @@ class FmcgApprovalCategory(models.Model):
         "category_id",
         string="Aturan & Tingkatan Approver (Tiers)",
     )
+    cumulative_scope = fields.Selection([
+        ("order", "Per pesanan"),
+        ("outlet_month", "Akumulasi per outlet per bulan"),
+        ("salesman_day", "Akumulasi per salesman per hari"),
+    ], string="Cakupan Diskon Kumulatif", default="order", required=True,
+        help="Diskon kumulatif (%) dihitung berbobot nilai pada cakupan ini, per principal, "
+             "termasuk diskon program resmi.")
+
+    def _rules_for_principal(self, principal_id=False, free_zone=False):
+        """Aturan kategori untuk zona bebas (free_zone=True) atau tier approver (False).
+
+        Aturan khusus principal menimpa aturan umum, dihitung terpisah untuk zona bebas dan
+        tier approver: principal yang hanya punya zona bebas sendiri tetap memakai tier umum.
+        """
+        self.ensure_one()
+        rules = self.rule_ids.filtered(lambda r: bool(r.is_free_zone) == bool(free_zone))
+        rules = rules.sorted(key=lambda r: (r.tier_sequence, r.id))
+        if principal_id:
+            specific = rules.filtered(lambda r: r.principal_id.id == principal_id)
+            if specific:
+                return specific
+        return rules.filtered(lambda r: not r.principal_id)
+
+    def _free_zone_limit(self, principal_id=False):
+        """Batas diskon (%) zona bebas (Tier 0), atau None bila tidak ada aturan zona bebas."""
+        self.ensure_one()
+        zone = self._rules_for_principal(principal_id, free_zone=True)
+        return max(zone.mapped("max_discount")) if zone else None
     active = fields.Boolean(string="Aktif", default=True)
 
     @api.constrains("code")

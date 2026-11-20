@@ -116,6 +116,23 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             self.assertEqual(self.env["fmcg.approval.request"].sudo().search_count([
                 ("res_model", "=", "sale.order"), ("res_id", "=", order.id)]), 1)
 
+    def test_free_zone_discount_is_accepted_without_approval(self):
+        """BE-15: diskon kumulatif di dalam zona bebas (Tier 0) diterima tanpa pengajuan."""
+        if "fmcg.approval.request" not in self.env:
+            self.skipTest("id_approval tidak terpasang")
+        self.env.ref("id_approval.rule_tactical_tier0").sudo().max_discount = 6.0
+        model = self._command_model()
+        command = {"client_uuid": str(uuid.uuid4()), "type": "sales.order.submit",
+                   "payload": self._valid_order_payload(
+                       discount_request={"percent": 5, "reason": "Customer promotion"})}
+        receipt = model.process_command(command)
+        self.assertEqual(receipt["status"], "accepted")
+        order = self.env["id.mobile.command"].search(
+            [("client_uuid", "=", command["client_uuid"])]).sale_order_ids
+        self.assertFalse(self.env["fmcg.approval.request"].sudo().search_count([
+            ("res_model", "=", "sale.order"), ("res_id", "=", order.id)]))
+        self.assertEqual(model.process_command(command), receipt)
+
     def test_order_without_discount_creates_no_approval_request(self):
         if "fmcg.approval.request" not in self.env:
             self.skipTest("id_approval tidak terpasang")
