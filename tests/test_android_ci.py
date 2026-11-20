@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 import zipfile
 from pathlib import Path
@@ -17,15 +18,40 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         properties = (ANDROID / "gradle" / "wrapper" / "gradle-wrapper.properties").read_text(
             encoding="utf-8"
         )
-        self.assertIn("gradle-8.9-bin.zip", properties)
+        self.assertIn("gradle-9.9.1-bin.zip", properties)
         self.assertIn(
-            "distributionSha256Sum=d725d707bfabd4dfdc958c624003b3c80accc03f7037b5122c4b1d0ef15cecab",
+            "distributionSha256Sum=d8a18a7a841dd5df825d35a685fad6f2d7f12ac0c280e57b67c27b4a520ba228",
             properties,
         )
         self.assertTrue((ANDROID / "gradlew").is_file())
         self.assertTrue((ANDROID / "gradlew.bat").is_file())
         with zipfile.ZipFile(ANDROID / "gradle" / "wrapper" / "gradle-wrapper.jar") as archive:
             self.assertIn("org/gradle/wrapper/GradleWrapperMain.class", archive.namelist())
+
+    def test_workflow_installs_the_platform_matching_compile_sdk(self):
+        jobs = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))["jobs"]
+        platforms = {}
+        for job in ("data-tests", "build", "emulator-smoke"):
+            steps = "\n".join(step.get("run", "") for step in jobs[job]["steps"])
+            installed = re.findall(r"platforms;android-(\d+(?:\.\d+)?)", steps)
+            self.assertEqual(1, len(installed), f"{job}: {installed}")
+            self.assertIn("build-tools;36.0.0", steps, job)
+            platforms[job] = installed[0]
+
+        for module in ("app", "core/data", "core/designsystem"):
+            source = (ANDROID / module / "build.gradle.kts").read_text(encoding="utf-8")
+            match = re.search(r"compileSdk\s*=\s*(\d+)", source)
+            self.assertIsNotNone(match, f"compileSdk missing in {module}")
+            major = match.group(1)
+            # From API 37 AGP resolves the major to the .0 SDK package.
+            expected = f"{major}.0" if int(major) >= 37 else major
+            for job, installed in platforms.items():
+                self.assertEqual(expected, installed, f"{module}: wrong SDK in {job}")
+
+        smoke = (ANDROID / "tools" / "emulator_smoke.sh").read_text(encoding="utf-8")
+        self.assertIn(f"verify_revision platforms/android-{platforms['emulator-smoke']} 2", smoke)
+        self.assertIn("verify_revision build-tools/36.0.0 36.0.0", smoke)
+        self.assertIn("android/gradle/wrapper/gradle-wrapper.properties", smoke)
 
     def test_workflow_uses_wrapper_and_publishes_stable_gate(self):
         workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))

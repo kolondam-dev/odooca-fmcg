@@ -82,9 +82,8 @@ verify_revision() {
     fi
 }
 verify_revision cmdline-tools/19.0 19.0
-verify_revision platforms/android-35 2
-verify_revision build-tools/34.0.0 34.0.0
-verify_revision build-tools/35.0.0 35.0.0
+verify_revision platforms/android-37.0 2
+verify_revision build-tools/36.0.0 36.0.0
 verify_revision platform-tools 37.0.1
 verify_revision emulator 37.2.13
 verify_revision "system-images/android-$api/google_apis/$abi" "$image_revision"
@@ -93,7 +92,10 @@ java_runtime=$(java -XshowSettings:properties -version 2>&1 |
 record java_runtime "$java_runtime"
 test "$java_runtime" = '17.0.17+10'
 command -v javac >/dev/null
-record gradle_wrapper 8.9
+gradle_wrapper=$(sed -nE 's@^distributionUrl=.*gradle-([0-9]+(\.[0-9]+)+)-bin\.zip$@\1@p' \
+    android/gradle/wrapper/gradle-wrapper.properties)
+test -n "$gradle_wrapper"
+record gradle_wrapper "$gradle_wrapper"
 record host_arch "$(uname -m)"
 record toolchain PASS
 

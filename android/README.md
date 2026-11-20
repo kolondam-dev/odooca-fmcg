@@ -24,9 +24,14 @@ Acuan arsitektur: `docs/blueprints/native_android_architecture_blueprint.md`.
 ./gradlew :core:data:testDebugUnitTest
 ```
 
-Gunakan JDK 17. Gradle wrapper 8.9 beserta checksum distribusinya berada di
-repository; jangan memakai instalasi Gradle global. Di Windows gunakan
-`gradlew.bat` dengan argumen yang sama.
+Gunakan JDK 17. Toolchain dipatok bersama: Gradle wrapper 9.9.1 (beserta checksum
+distribusinya), AGP 9.5.1, Kotlin 2.4.21, KSP 2.3.14, dan `compileSdk = 37`.
+Naikkan atau turunkan nilai itu sebagai satu kesatuan karena AGP mensyaratkan
+Gradle minimum, sedangkan AndroidX/OkHttp mensyaratkan `compileSdk` minimum.
+Jangan memakai instalasi Gradle global. Di Windows gunakan `gradlew.bat` dengan
+argumen yang sama. Komponen SDK yang dipasang CI adalah
+`platforms;android-37.0` dan `build-tools;36.0.0`; sejak API 37 paket platform
+memakai versi minor sehingga `platforms;android-37` tidak tersedia.
 
 ## CI dan artifact
 
@@ -89,8 +94,8 @@ regression berdasarkan planner. Lead mengumpulkan full regression dan Android
 pada SHA yang sama.
 
 Untuk runner lokal, siapkan Temurin 17.0.17+10 dan SDK Linux x86_64 terisolasi
-dengan Command-line Tools 19.0, platform Android 35 rev 2, Build Tools 34.0.0
-(bawaan AGP 8.7.3) dan 35.0.0, Platform Tools 37.0.1, emulator 37.2.13, dan kedua image Google APIs x86_64
+dengan Command-line Tools 19.0, platform `android-37.0` rev 2, Build Tools 36.0.0,
+Platform Tools 37.0.1, emulator 37.2.13, dan kedua image Google APIs x86_64
 (API 24 rev 27, API 35 rev 9). SDK Manager mungkin kemudian menawarkan versi
 lebih baru. Skrip berhenti saat revisi terpasang berbeda dari yang dipatok.
 Dengan `ANDROID_HOME` dan `ANDROID_SDK_ROOT` mengarah ke SDK tersebut dan
@@ -106,6 +111,7 @@ bash android/tools/emulator_smoke.sh 35 /tmp/odooca-api35-ui ui
 Pakai direktori bukti baru setiap run. Skrip membuat AVD bersih dengan timeout boot
 300 detik. Laporan TSV mencatat SDK/image, SHA, checksum dan hasil akselerasi,
 build, boot, install, cold start, Login dan instrumentation secara terpisah.
+Versi Gradle dicatat dari wrapper repo yang dipatok pada 9.9.1.
 Screenshot Login diambil pada AVD bersih sebelum kredensial diisi. Mode UI
 menambah ukuran/font perangkat dan laporan test ID, waktu, dan hasil yang
 disanitasi. Dump UI, stack trace, payload HTTP, dan log emulator mentah tidak

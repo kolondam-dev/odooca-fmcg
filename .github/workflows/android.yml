@@ -47,11 +47,11 @@ jobs:
     outputs:
       android: ${{ steps.plan.outputs.android }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: python -m pip install pyyaml
@@ -74,13 +74,13 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Android suite not selected
         if: needs.changes.outputs.android != 'true'
         run: echo "PASS — no Android or shared-contract path changed; see impact plan."
-      - uses: gradle/actions/wrapper-validation@v4
+      - uses: gradle/actions/wrapper-validation@v6
         if: needs.changes.outputs.android == 'true'
       - name: Design tokens match the shared source
         if: needs.changes.outputs.android == 'true'
@@ -105,27 +105,27 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
       - name: Run pure Kotlin domain tests with warnings as errors
         working-directory: android
         run: ./gradlew --no-daemon :core:domain:test
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Validate generated payloads against OpenAPI
         run: |
           python -m pip install jsonschema==4.23.0
           python android/tools/validate_contract.py pwa/contracts/openapi.json android/core/domain/build/contract-samples
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: android-domain-reports-${{ github.sha }}
@@ -142,10 +142,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
@@ -153,14 +153,14 @@ jobs:
         with:
           packages: ""
       - name: Install pinned Android SDK components
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+        run: sdkmanager "platforms;android-37.0" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
       - name: Run Room and session data-layer tests
         working-directory: android
         run: ./gradlew --no-daemon :core:data:testDebugUnitTest
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: android-data-reports-${{ github.sha }}
@@ -176,10 +176,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
@@ -187,8 +187,8 @@ jobs:
         with:
           packages: ""
       - name: Install pinned Android SDK components
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+        run: sdkmanager "platforms;android-37.0" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
       - name: Lint and assemble debug APK
@@ -200,7 +200,7 @@ jobs:
           test -s "$apk"
           sha256sum "$apk" > "$apk.sha256"
           unzip -l "$apk" > android/app/build/outputs/apk/debug/app-debug.manifest.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: odooca-field-debug-${{ github.sha }}
           path: |
@@ -248,7 +248,7 @@ jobs:
     env:
       SMOKE_MODE: ${{ inputs.emulator_ui && 'ui' || 'smoke' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
           persist-credentials: false
@@ -267,11 +267,11 @@ jobs:
             "$(git rev-parse HEAD)" "$API" "$API" > "$EVIDENCE_DIR/runner.tsv"
           printf 'runner_image\t%s\nrunner_revision\t%s\n' \
             "${ImageOS:-unknown}" "${ImageVersion:-unknown}" >> "$EVIDENCE_DIR/runner.tsv"
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17.0.17+10'
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
       - name: Enable KVM for this runner user
@@ -293,13 +293,13 @@ jobs:
           mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/19.0"
           manager="$ANDROID_SDK_ROOT/cmdline-tools/19.0/bin/sdkmanager"
           (set +o pipefail; yes | "$manager" --licenses >/dev/null)
-          "$manager" --channel=0 "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" \
+          "$manager" --channel=0 "platforms;android-37.0" "build-tools;36.0.0" \
             "platform-tools" "emulator" "system-images;android-$API;google_apis;x86_64"
       - name: Boot, install and verify Login
         env:
           API: ${{ matrix.api }}
         run: bash android/tools/emulator_smoke.sh "$API" "$EVIDENCE_DIR" "$SMOKE_MODE"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: odooca-emulator-api-${{ matrix.api }}-${{ github.run_id }}-${{ github.run_attempt }}

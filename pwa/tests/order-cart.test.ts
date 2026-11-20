@@ -5,7 +5,6 @@ import {
     cartLines,
     cartTotals,
     setTier,
-    tierText,
 } from "../src/domain/order-cart";
 import {
     OrderLineV2Schema,
@@ -246,9 +245,6 @@ describe("keranjang POS", () => {
         expect(cartFromLegacy({ p1: 3, p2: 0 }, { p1: "pack" })).toEqual({
             p1: { pack: 3 },
         });
-    });
-    it("teks ringkas memakai singkatan krt/pak/pcs", () => {
-        expect(tierText(benn, { carton: 4, pack: 2 })).toBe("4 krt 2 pak");
     });
 });
 

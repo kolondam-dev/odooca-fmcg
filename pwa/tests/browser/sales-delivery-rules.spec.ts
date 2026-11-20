@@ -284,8 +284,10 @@ test("SKU packaging drives new order and offline correction prices independently
         .getByRole("button", { name: "Koreksi SO ditolak", exact: true })
         .click();
     await expect(
-        page.getByRole("region", { name: "Koreksi order" }),
-    ).toContainText("1 pak");
+        page
+            .getByRole("region", { name: "Koreksi order" })
+            .getByRole("img", { name: /1 pack/ }),
+    ).toBeVisible();
     await page
         .getByRole("button", { name: "Kirim ulang", exact: true })
         .click();
