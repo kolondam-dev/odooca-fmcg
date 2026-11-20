@@ -1,3 +1,17 @@
+## 2026-11-21T06:06:45+07:00 — Agent Codex-Cloud1 — F4/PR #110: Output cache Android dan pajak native Kode 04
+**Berubah:**
+- Gradle mendeklarasikan direktori sampel kontrak sebagai output task tes domain agar ikut dipulihkan dari build cache.
+- Ekstensi Odoo memakai `base_amount` untuk DPP Nilai Lain. Loader menolak baris pajak native yang hilang atau salah; audit membandingkan magnitudo basis jurnal dengan nilai register.
+**Diverifikasi:**
+- [F] Android: kegagalan `FROM-CACHE` di run 44765647691 direproduksi lokal. Setelah patch, tes dari cache memulihkan tiga sampel dan ketiga kasus positif serta empat kontrol negatif OpenAPI lulus.
+- [F] ORM Odoo 19 disposable: regresi faktur gagal pada kode lama (`tax_line_id` kosong) dan lulus setelah patch. Faktur posted membukukan PPN 132, DPP Nilai Lain 1.100, piutang 1.332, dan jurnal seimbang.
+- [F] 98 tes Python, Ruff, 14 manifest, dan diff-check lulus. Run F4 44765647879 menghitung 1.240 DO selesai, lalu gagal pada audit lainnya.
+- [F] Planner memilih full regression karena perubahan workflow dan path seed belum dipetakan. Dampak test **TAMBAH**: regresi posting native masuk suite `id_base`.
+**Belum diuji:**
+- [BU] CI exact-SHA baru dan validasi pajak seluruh pack Agustus. Vendor bill, PPN masukan, stok, piutang-ke-GL, dan digest A/B masih terbuka.
+**Berikutnya:**
+- Pantau validasi OpenAPI dan runtime dua database pada SHA baru. Gunakan hasil F4 untuk diagnosis sisa selisih.
+
 ## 2026-11-20T22:40:22+07:00 — Agent Codex-Cloud1 — F4/PR #110: Sinkronisasi main dan koreksi scope Delivery Order
 **Berubah:**
 - Integrasi `origin/main` (`69c6e05`); kedua sisi konflik `docs/HANDOFF.md` dipertahankan.

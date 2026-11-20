@@ -446,7 +446,8 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                     )
 
             # Strict Tax Code 04 verification: tax_base_amount must match DPP Nilai Lain (fail-closed on 0/missing)
-            tot_tb = sum(_dec(getattr(t_line, "tax_base_amount", 0)) for t_line in t_lines)
+            # Odoo signs the journal base for customer invoices; the register declares its magnitude.
+            tot_tb = abs(sum(_dec(getattr(t_line, "tax_base_amount", 0)) for t_line in t_lines))
             if dpp_c > ZERO:
                 if tot_tb <= ZERO:
                     inv_tax_violations += 1

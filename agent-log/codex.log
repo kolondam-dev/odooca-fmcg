@@ -493,3 +493,9 @@
 - [F] Merge origin/main 69c6e05; kedua sisi konflik HANDOFF dipertahankan.
 - [F] ORM Odoo 19 disposable: filter lama 0, filter patch tepat 1; tiga kontrol negatif dikecualikan. 77 unit test, Ruff, dan 14 manifest lulus.
 - Task managed by codex agent at 2026-11-20T22:40:22+07:00
+
+[2026-11-21T06:06:45+07:00] [INFO] PR #110: cache kontrak Android dan pajak native F4
+- [F] Android: FROM-CACHE sebelumnya menghilangkan check_in.json; deklarasi output memulihkan 3 sampel dan validator OpenAPI lulus.
+- [F] ORM Odoo: test faktur Kode 04 gagal tanpa patch karena tax_line_id kosong dan lulus dengan patch.
+- [BU] CI exact-SHA baru serta vendor bill, stok, AR-to-GL dan digest F4 masih terbuka.
+- Task managed by codex agent at 2026-11-21T06:06:45+07:00

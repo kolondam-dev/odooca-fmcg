@@ -45,79 +45,10 @@ class AccountTax(models.Model):
         return super()._eval_tax_amount_price_included(batch, raw_base, evaluation_context)
 
     def _get_tax_details(self, *args, **kwargs):
-        """Memastikan data dasar pajak (tax_base_amount / base) dan tax_amount disesuaikan ke DPP Nilai Lain (11/12)."""
-        res = super()._get_tax_details(*args, **kwargs)
-        if not isinstance(res, dict):
-            return res
-
-        taxes_data = res.get("taxes_data")
-        has_tax_04 = False
-        if isinstance(taxes_data, list):
-            for t_data in taxes_data:
-                t_rec = t_data.get("tax")
-                if not t_rec and "tax_id" in t_data and hasattr(self, "browse"):
-                    t_rec = self.browse(t_data["tax_id"])
-                if (
-                    t_rec
-                    and hasattr(t_rec, "_is_tax_code_04_dpp_nilai_lain")
-                    and t_rec._is_tax_code_04_dpp_nilai_lain()
-                ):
-                    has_tax_04 = True
-                    if "base" in t_data:
-                        t_data["base"] = t_data["base"] * 11.0 / 12.0
-                    expected_tax = t_data.get("base", 0.0) * (t_rec.amount / 100.0)
-                    t_data["tax_amount"] = expected_tax
-
-        elif isinstance(taxes_data, dict):
-            for t_id, t_data in taxes_data.items():
-                t_rec = t_data.get("tax") or (self.browse(t_id) if hasattr(self, "browse") else None)
-                if (
-                    t_rec
-                    and hasattr(t_rec, "_is_tax_code_04_dpp_nilai_lain")
-                    and t_rec._is_tax_code_04_dpp_nilai_lain()
-                ):
-                    has_tax_04 = True
-                    if "base" in t_data:
-                        t_data["base"] = t_data["base"] * 11.0 / 12.0
-                    expected_tax = t_data.get("base", 0.0) * (t_rec.amount / 100.0)
-                    t_data["tax_amount"] = expected_tax
-
-        if has_tax_04:
-            tot_tax = 0.0
-            if isinstance(taxes_data, list):
-                tot_tax = sum(td.get("tax_amount", 0.0) for td in taxes_data)
-            elif isinstance(taxes_data, dict):
-                tot_tax = sum(td.get("tax_amount", 0.0) for td in taxes_data.values())
-
-            if "total_excluded" in res:
-                res["total_included"] = res["total_excluded"] + tot_tax
-            if "raw_total_excluded" in res and "raw_total_included" in res:
-                res["raw_total_included"] = res["raw_total_excluded"] + tot_tax
-            if "total_excluded_currency" in res and "total_included_currency" in res:
-                res["total_included_currency"] = res["total_excluded_currency"] + tot_tax
-            if "raw_total_excluded_currency" in res and "raw_total_included_currency" in res:
-                res["raw_total_included_currency"] = res["raw_total_excluded_currency"] + tot_tax
-
-        return res
-
-    def compute_all(self, *args, **kwargs):
-        """Override compute_all untuk menjamin integritas DPP Nilai Lain (11/12) dan PPN 12%."""
-        res = super().compute_all(*args, **kwargs)
-        if not isinstance(res, dict) or "taxes" not in res:
-            return res
-
-        has_04 = False
-        for t in res["taxes"]:
-            t_id = t.get("id")
-            t_rec = self.browse(t_id) if (t_id and hasattr(self, "browse")) else None
-            if t_rec and hasattr(t_rec, "_is_tax_code_04_dpp_nilai_lain") and t_rec._is_tax_code_04_dpp_nilai_lain():
-                has_04 = True
-                orig_base = t.get("base", 0.0)
-                t["base"] = orig_base * 11.0 / 12.0
-                t["amount"] = t["base"] * (t_rec.amount / 100.0)
-
-        if has_04:
-            total_tax = sum(t.get("amount", 0.0) for t in res["taxes"])
-            res["total_included"] = res.get("total_excluded", 0.0) + total_tax
-
-        return res
+        """Report DPP Nilai Lain while preserving Odoo's rounded tax amounts."""
+        details = super()._get_tax_details(*args, **kwargs)
+        for tax_data in details["taxes_data"]:
+            tax = tax_data["tax"]
+            if tax.amount_type == "percent" and tax._is_tax_code_04_dpp_nilai_lain():
+                tax_data["base_amount"] *= 11.0 / 12.0
+        return details
