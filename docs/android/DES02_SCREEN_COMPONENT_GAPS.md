@@ -4,18 +4,9 @@
 
 ## 1. Cakupan sumber 62 layar
 
-Artefak asli berisi 62 frame belum ditemukan di jalur input Cloud atau tree repo yang diaudit. [Rekonsiliasi PWA K1–K33](../ui/DS_RECONCILIATION.md) dan source PWA membuktikan nama, kelompok, varian atau implementasi tertentu. **0/62 frame asli dapat diperiksa.** Status ini tetap berlaku untuk file Figma baru. Nama, ID per layar, dan detail visual yang belum didukung bukti menunggu artefak atau ekspor asli.
+**62/62 PNG referensi di arsip pemilik telah diperiksa secara visual melalui enam lembar kontak.** Seluruh ID memiliki padanan HTML. [Inventaris layar sumber](SCREEN_SOURCE_INVENTORY.md) mencatat path dalam ZIP, judul, padanan PWA, pemetaan Android dan gap per layar. Arsip adalah sumber pembandingan visual. Perilaku simulator merupakan hipotesis dan keputusan produk terkini mengatur versi Android.
 
-| ID asli yang disebut | Bukti kelompok | Gap sumber |
-|---|---|---|
-| 04–08 | Absen info, di dalam/luar area, selfie dan pulang dalam K22. | Rujukan kelompok tersedia. Urutan ID per frame perlu artefak asli. |
-| 30–33 dan 52 | Klaster penagihan dalam K20. | Nama dan rentang nomor klaster tersedia. Hubungan per ID dan varian bukti perlu frame asli. |
-| 47 | Ajukan cuti dalam K21. | Implementasi PWA tersedia. Frame asli belum diperiksa. |
-| 48 | K21 menyebut layar ini tidak ditemukan di artefak Design saat itu. | Nama, isi dan padanan belum terverifikasi. |
-| 49–51 | Delivery DO, detail dan hub dalam K19. | Kelompok teridentifikasi. Detail per frame belum diperiksa. |
-| 53–56 | POD semua/sebagian/tolak/TTD dalam K19. | Kelompok teridentifikasi. TTD masih bergantung kontrak B06. |
-| 57 dan 58 | Biaya toko dan Setor uang dalam K18. | ID dan nama didukung dokumentasi. Data resmi dan aksi produksi masih melalui capability. |
-| Nomor lainnya | Dokumen menyebut nama/state lain tanpa nomor stabil yang dapat dicocokkan ke frame. | 41 nomor tidak ditemukan dalam rujukan bernomor di atas. Dengan layar 48, ada 42 posisi tanpa isi bernomor yang bisa dibuktikan. |
+Koreksi atas rekonsiliasi PWA: layar **33** adalah Datepicker janji bayar, **47** adalah beranda HRIS, dan **48** adalah Ajukan cuti. Layar **24** menampilkan PJP kosong dengan Extra call; NOO dan carry-over merupakan perluasan berdasarkan keputusan yang lebih baru. Layar **28** menampilkan slot “Foto lokasi toko” dan “Foto toko”; kebutuhan dua bukti resmi masih perlu kajian bersama Lead/B02.
 
 ## 2. Gap per workflow
 
@@ -33,7 +24,7 @@ Temuan Android membedakan UI native, potongan UI, dan fondasi domain/data. Kompo
 | Delivery DO/detail/hub, POD semua/sebagian/tolak/TTD, Closing_trip · 49–51, 53–56, K17/K19 | `DeliveryWorkspace`, `DeliveryTaskEditor`, `DeliveryApproval`, `TripClosing`, `Segmented`, `RadioRow`. | UI native manifest/POD dan editor serah terima belum ditemukan. Domain/presenter tidak boleh mengisi manifest fiktif di produksi. | DS-C05/C08/C09, baris manifest dan pemilih outcome. B06 untuk manifest, TTD dan efek resmi; B07 untuk ringkasan kas. |
 | Penagihan_toko, Penagihan_bukti, Tidak_tertagih · 30–33, 52, K20 | `PenagihanScreen`, `CollectionWorkspace`, `Checkbox`, `Field`, `RadioRow`. | Belum ada UI Compose untuk memilih faktur, mengalokasikan nilai dan mencatat sisa. | DS-C05/C08/C10, baris alokasi faktur dan ringkasan uang. B07 untuk saldo, ledger dan settlement. |
 | Uang_lapangan, Ajukan_uang, Realisasi, Biaya_toko, Setor_uang · 57–58, K16/K18 | `ExpenseWorkspace`, `AjukanUangScreen`, `BiayaTokoScreen`, `SetorUangScreen`. | Belum ditemukan UI native untuk saldo, formulir dan approval uang lapangan. | DS-C03/C08/C09/C10, ringkasan uang dan baris pengajuan. B07. |
-| Ajukan cuti, HRIS · 47 dan referensi 48, K21 | `AjukanCutiScreen`, `App`, `Field`. Isi layar 48 tidak terbukti. | Tidak ditemukan layar Compose HRIS di tree audit. | DS-C03/C09/C11 dan reuse status pengajuan. Data personel dan capability B08. |
+| HRIS dan Ajukan cuti · 47–48, K21 | `AjukanCutiScreen`, `App`, `Field`. Layar 48 memuat saldo, jenis, tanggal, alasan dan slot lampiran. | Tidak ditemukan layar Compose HRIS di tree audit. | DS-C03/C09/C11 dan reuse status pengajuan. Data personel dan capability B08. |
 | Pilot dan adaptasi · D06 | Galeri dev [PWA](../../pwa/src/ui/Gallery.tsx), unit dan browser test yang disitir K30/K33. | Tema dan font Android ada. Screenshot, ukuran sentuh aktual, font scale, IME, talkback dan kebijakan fokus memerlukan uji runtime. | DS-C01–C11. Cocokkan 320/360/390/600 dp, font scale 100/130/200%, perangkat, focus order dan insets. |
 
 ## 3. Matriks prioritas komponen
@@ -56,7 +47,7 @@ Temuan Android membedakan UI native, potongan UI, dan fondasi domain/data. Kompo
 
 - Dua tier variable Figma merepresentasikan `pwa/design/tokens.json`: primitives, lalu alias Android. Inter mengikuti skala sumber. Gunakan navy untuk shell sebagai usulan review dan target sentuh **48 dp** sebagai target uji sementara. Token bersama **44** dipertahankan. Pastikan fokus yang terlihat, target tidak tumpang tindih, teks panjang dapat membungkus, dan Back mengembalikan fokus.
 - Receipt `accepted`, `needs_approval`, dan `rejected` memerlukan hasil yang sah. HTTP 2xx ber-UUID cocok dengan status asing memakai **Hasil perlu ditinjau**, HTTP 403 tanpa receipt memakai **Akses ditolak**, dan respons gagal parse memakai **Respons tidak dapat dibaca**. Hanya receipt `rejected` yang sah memakai **Ditolak server**. Saat audit, fallback parser Compose masih mengembalikan `REJECTED` untuk status selain `accepted`/`needs_approval`. Lead menugaskan koreksi dan acceptance repository/API serta Compose pada slice Dev D01-05.
-- Waktu kejadian `HH.mm.ss` WITA. Asal waktu lokal, antre dan server diberi konteks berbeda. Jam rencana pada kartu mengikuti data sumber sambil menunggu keputusan pemilik. Semua contoh desain memakai data sintetis.
+- Waktu kejadian `HH.mm.ss` WITA. Asal waktu lokal, antre dan server diberi konteks berbeda. Keputusan pemilik 20 November 2026 menetapkan jam rencana `HH.mm` sesuai presisi jadwal. Contoh yang tidak memiliki jam sah tetap menampilkan asal atau ketidaktersediaan data. Semua contoh desain memakai data sintetis.
 - Gap pola lain yang menunggu review workflow dan data: editor multi-satuan SKU/POD per baris, signature/retensi, rincian alokasi dan sisa faktur, budget/approval per principal, form nominal dan tanggal dengan error, serta bukti foto aktual. Representasi draft untuk pola yang punya source dapat dipakai untuk review. Aktivasi produksi mengikuti B03–B08 dan uji B09.
 
 ## 4. Draft Figma dan bukti review
@@ -68,7 +59,7 @@ Temuan Android membedakan UI native, potongan UI, dan fondasi domain/data. Kompo
 | Foundations | [8:105](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=8-105) | 41 primitive, 36 alias Android, 9 text styles Inter dan contoh pasangan kontras. |
 | Komponen | [2:180](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=2-180) | 13 set inti dan 8 set pola lintas workflow. |
 | Review D01 | [4:2](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=4-2) | Lima contoh D01 dengan 28 instance editable. |
-| Product Map | [4:137](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=4-137) | Enam kelompok workflow dan ringkasan bukti sumber. |
+| Product Map | [4:137](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=4-137) | Enam kelompok workflow dari DES-02-r0. Pembaruan angka 62/62 dan keputusan pemilik tertahan oleh kuota Figma MCP Starter. |
 
 | Set inti | Node | Varian |
 |---|---|---:|
@@ -97,6 +88,13 @@ Temuan Android membedakan UI native, potongan UI, dan fondasi domain/data. Kompo
 | Pola · InvoiceAllocationRow | [5:124](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-124) | 3 | PenagihanScreen/CollectionWorkspace |
 | Pola · ActivityRow | [5:140](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-140) | 3 | ActivityScreens/ProfileScreen |
 
-Node pengguna dapat dikomentari di draft bila akses file memberi izin. Library bersama belum dipublikasikan. Draft ini memuat komponen dan contoh komposisi. Prototipe D01 yang menghubungkan alur, frame asli, serta review visual dan aksesibilitas perangkat tetap menunggu acceptance.
+Node pengguna dapat dikomentari di draft bila akses file memberi izin. Library bersama belum dipublikasikan. Draft ini memuat komponen dan contoh komposisi. Prototipe D01 yang menghubungkan alur, perbandingan detail frame asli, serta review visual dan aksesibilitas perangkat tetap menunggu acceptance.
 
 **Bukti Figma.** Pembacaan balik menemukan 21 set, 87 varian, 36 alias dan 232 layer teks pada varian menggunakan text style Inter. Review board memuat 28 instance dengan layer editable. Tombol primary dan fokus berukuran 56, tombol sekunder 48 dalam desain. Label PJP carry-over dan status receipt dibaca balik dari instance. Pemeriksaan Figma belum membuktikan ukuran sentuh Compose, fokus runtime, TalkBack, keyboard, font scale, atau kontras terhadap foto.
+
+## 5. Keputusan produk · 20 November 2026
+
+| Keputusan | Dampak desain | Acceptance dan dependensi |
+|---|---|---|
+| Jam rencana `HH.mm` | Jadwal pada kartu outlet, Beranda dan rute mengikuti presisi menit. Waktu kejadian tetap `HH.mm.ss` WITA. | Fixture jadwal `08.30`, kejadian `08.30.16 WITA` dan jadwal hilang. Gunakan sumber masing-masing. |
+| NOO menunggu persetujuan mengizinkan survei/foto saja | Bedakan aksi **Survei outlet** dan **Ambil foto** dari **Mulai kunjungan** dan **Buat order**. Saat status Menunggu persetujuan, kunjungan resmi dan order tetap terkunci. | B03 menetapkan scope, capability survei, keterikatan foto ke pengajuan dan keputusan Branch Manager. Uji pending + capability aktif/mati, ditolak, disetujui, dan scope owner salah. Status disetujui tetap mengikuti hak akses kunjungan/order. Aktivasi resmi belum tersedia. |

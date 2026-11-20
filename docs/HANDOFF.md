@@ -1,3 +1,11 @@
+## 2026-11-20T09:36:42+07:00 — Codex-Android-Design — Validasi sumber 62 layar dan keputusan pemilik
+**Basis:** [F] Parent Design `0f2739c`, main acuan Design `39172de`, arahan bersama `6b894ca`. Main `127287a` berlaku untuk kandidat integrasi DEV-01 sebagaimana arahan Lead.
+**Berubah:** [F] [Inventaris sumber](android/SCREEN_SOURCE_INVENTORY.md) menghubungkan 62 referensi PNG/HTML dari ZIP pemilik dengan PWA, alur Android, DS dan gap. Koreksi nomor dari arsip: 33 Datepicker janji bayar, 47 HRIS, 48 Ajukan cuti.
+**Keputusan:** [F] Jam rencana `HH.mm`; kejadian `HH.mm.ss` WITA. NOO menunggu Branch Manager mengizinkan survei/foto saja di bawah B03. Kunjungan resmi dan order tetap terkunci selama pending. Kontrak survei dan binding bukti memerlukan review Lead/maintainer.
+**Diverifikasi:** [F] ZIP CRC lulus; 62 ID PNG/HTML, visual PNG melalui enam lembar kontak, trace dan tautan lokal. Dampak tes **CUKUP** untuk pemetaan dokumentasi.
+**Menunggu:** [BU] Pembaruan Product Map Figma ditolak kuota MCP Starter. Tidak ada perubahan desain terverifikasi di sesi ini. Review visual per layar, policy dua foto pada layar 28 dan acceptance runtime belum selesai.
+**Signature:** Task managed by Agent Codex-Mobile Native at 2026-11-20T09:36:42+07:00
+
 ## 2026-11-20T08:19:54+07:00 — Codex-Android-Design — DES-02-r0 draft Figma dan gap study
 **Basis:** [F] Parent Design `6abeef3`, main acuan `39172de` dan arahan Lead `8836d05`. Ref arahan diperiksa ulang sebelum penyerahan.
 **Berubah:** [F] [Gap study](android/DES02_SCREEN_COMPONENT_GAPS.md) mencocokkan kelompok layar rujukan dengan PWA, Compose dan capability. [Draft review Figma](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=4-2) memuat 21 set dan 87 varian, dua tier variables dan lima contoh D01. Status receipt asing, 403 tanpa receipt, dan parse gagal memiliki label terpisah dari receipt rejected yang valid.
