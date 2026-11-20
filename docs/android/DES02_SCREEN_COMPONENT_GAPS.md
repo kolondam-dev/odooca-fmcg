@@ -1,0 +1,102 @@
+# DES-02-r0 · Gap study layar dan komponen Odooca Field Android
+
+**Basis audit** [D01-r1](DES01_D01_CHECKPOINT.md) pada Design `6abeef3`, main acuan `39172de` dan [arahan Lead](https://github.com/kolondam-dev/odooca-fmcg/blob/8836d05/docs/android/LOCAL_WORKFLOW.md) pada `8836d05`. Bukti kode merujuk tree Design `6abeef3`. Hasil adalah kandidat desain editable. Design QA dan kesiapan produksi mengikuti acceptance masing-masing.
+
+## 1. Cakupan sumber 62 layar
+
+Artefak asli berisi 62 frame belum ditemukan di jalur input Cloud atau tree repo yang diaudit. [Rekonsiliasi PWA K1–K33](../ui/DS_RECONCILIATION.md) dan source PWA membuktikan nama, kelompok, varian atau implementasi tertentu. **0/62 frame asli dapat diperiksa.** Status ini tetap berlaku untuk file Figma baru. Nama, ID per layar, dan detail visual yang belum didukung bukti menunggu artefak atau ekspor asli.
+
+| ID asli yang disebut | Bukti kelompok | Gap sumber |
+|---|---|---|
+| 04–08 | Absen info, di dalam/luar area, selfie dan pulang dalam K22. | Rujukan kelompok tersedia. Urutan ID per frame perlu artefak asli. |
+| 30–33 dan 52 | Klaster penagihan dalam K20. | Nama dan rentang nomor klaster tersedia. Hubungan per ID dan varian bukti perlu frame asli. |
+| 47 | Ajukan cuti dalam K21. | Implementasi PWA tersedia. Frame asli belum diperiksa. |
+| 48 | K21 menyebut layar ini tidak ditemukan di artefak Design saat itu. | Nama, isi dan padanan belum terverifikasi. |
+| 49–51 | Delivery DO, detail dan hub dalam K19. | Kelompok teridentifikasi. Detail per frame belum diperiksa. |
+| 53–56 | POD semua/sebagian/tolak/TTD dalam K19. | Kelompok teridentifikasi. TTD masih bergantung kontrak B06. |
+| 57 dan 58 | Biaya toko dan Setor uang dalam K18. | ID dan nama didukung dokumentasi. Data resmi dan aksi produksi masih melalui capability. |
+| Nomor lainnya | Dokumen menyebut nama/state lain tanpa nomor stabil yang dapat dicocokkan ke frame. | 41 nomor tidak ditemukan dalam rujukan bernomor di atas. Dengan layar 48, ada 42 posisi tanpa isi bernomor yang bisa dibuktikan. |
+
+## 2. Gap per workflow
+
+Temuan Android membedakan UI native, potongan UI, dan fondasi domain/data. Komponen PWA menjadi pembanding implementasi. Kehadiran komponen PWA tidak membuktikan kesiapan Android atau backend. Capability merujuk [register](BACKEND_REGISTER.md).
+
+| Referensi dan layar/state yang terdokumentasi | Bukti PWA | Bukti Compose dan gap | Tindakan desain / capability |
+|---|---|---|---|
+| Login, Login_gagal, Sesi berakhir, Profil dan Lainnya · K23/K29 | `Login`, `ProfileScreen`, `MorePage`, `AppHeader`, `BottomNav`, `Field`, `BottomSheet`. | `LoginScreen`, `AppNav`, `ScreenHeader`, Material 3 field. Session data layer ada. UI status expiry, konfirmasi ganti akun pending dan navigasi role penuh perlu kontrak visual. | DS-C01–C04/C06. B01 menjaga akses dan isolasi owner. |
+| Beranda Sales/Delivery/Canvasser, Sinkron jalan/gagal, Status_offline · K2/K24/K25/K33 | `Home`, `MorningSession`, `SyncProgressCard`, `Progress`, `Callout`. | `HomeScreen` dan `SnapshotRepository` menyediakan tampilan dasar dan cache. Progres tahapan, state scope/expiry, pemulihan offline dan provenance butuh desain. | DS-C04/C11 untuk load/error, plus pola progres. B03/B04 untuk readiness resmi. |
+| Outlet, Outlet_kosong, Kunjungan_hub, Navigasi, Extra_call, Selesai_kunjungan · K15/K27/K28 | `OutletDirectory`, `OutletCard`, `VisitPanel`, `NavigationScreen`, `ExtraCallScreen`, `CloseVisitScreen`, `Tracker`. | Home punya tampilan outlet. `VisitRepository` dan validasi domain ada. Hub/route, jejak progress, filter, dan PJP kosong/carry-over perlu UI. | DS-C05/C07/C11, tracker dan kartu ringkasan. B03 untuk izin carry-over, Extra call dan NOO. B07 untuk piutang yang terverifikasi. |
+| Status_gps/izin, Check-in, Kamera viewfinder/pratinjau/kedaluwarsa/luar · K16/K22/K23/K26/K31 | `LocationNotice`, `CheckinMap`, `Evidence`, `CameraViewfinder`, `OfficialEvidence`. | `CalibrationScreen` dan pengumpul fix ada. Komposisi Settings, state izin/kamera, retake dan bukti resmi belum tersedia sebagai UI Native di tree audit. | DS-C06/C07/C08. App Settings mengikuti state izin. Bukti resmi dan keputusan policy mengikuti B02 dan target B09. |
+| Absen informasi/dalam/luar/selfie/pulang · 04–08, K22 | `AttendanceScreen`, `CameraViewfinder`, `Callout`, `Chip`. | Kalibrasi dapat digunakan untuk pola feedback. UI absen dan ringkasan hari resmi belum ditemukan. | DS-C07/C08, tracker dan ringkasan. B04 untuk absensi resmi. |
+| Antrean, Riwayat aktivitas/pengajuan, Hasil kirim · K13/K29/K33 | `QueueScreen`, `ActivityScreen`, `RequestsScreen`, `OrderResult`. | Outbox dan badge dasar ada. UI detail receipt, perbedaan kegagalan transport/protokol dan keputusan bisnis belum ada. | DS-C09, dengan tiga jalur kendala terpisah untuk status tak dikenal, 403 tanpa receipt, dan respons tak terbaca. B01/B09. |
+| POS, Katalog, Diskon_baris/footer, Ringkasan, Koreksi_so, Display_stok · K13/K14 | `OrderScreen`, `DiscountSheets`, `OrderCorrections`, `DisplayStockScreen`, `Stepper`, `Field`. | Skala nominal/teks tersedia dari tema. Kontrol multi-satuan, baris SKU, tampilkan estimasi dan status pricing masih memerlukan UI. | DS-C10, baris SKU dan ringkasan uang. B05/B07 menahan angka resmi, approval lanjutan dan pricing v2. |
+| Delivery DO/detail/hub, POD semua/sebagian/tolak/TTD, Closing_trip · 49–51, 53–56, K17/K19 | `DeliveryWorkspace`, `DeliveryTaskEditor`, `DeliveryApproval`, `TripClosing`, `Segmented`, `RadioRow`. | UI native manifest/POD dan editor serah terima belum ditemukan. Domain/presenter tidak boleh mengisi manifest fiktif di produksi. | DS-C05/C08/C09, baris manifest dan pemilih outcome. B06 untuk manifest, TTD dan efek resmi; B07 untuk ringkasan kas. |
+| Penagihan_toko, Penagihan_bukti, Tidak_tertagih · 30–33, 52, K20 | `PenagihanScreen`, `CollectionWorkspace`, `Checkbox`, `Field`, `RadioRow`. | Belum ada UI Compose untuk memilih faktur, mengalokasikan nilai dan mencatat sisa. | DS-C05/C08/C10, baris alokasi faktur dan ringkasan uang. B07 untuk saldo, ledger dan settlement. |
+| Uang_lapangan, Ajukan_uang, Realisasi, Biaya_toko, Setor_uang · 57–58, K16/K18 | `ExpenseWorkspace`, `AjukanUangScreen`, `BiayaTokoScreen`, `SetorUangScreen`. | Belum ditemukan UI native untuk saldo, formulir dan approval uang lapangan. | DS-C03/C08/C09/C10, ringkasan uang dan baris pengajuan. B07. |
+| Ajukan cuti, HRIS · 47 dan referensi 48, K21 | `AjukanCutiScreen`, `App`, `Field`. Isi layar 48 tidak terbukti. | Tidak ditemukan layar Compose HRIS di tree audit. | DS-C03/C09/C11 dan reuse status pengajuan. Data personel dan capability B08. |
+| Pilot dan adaptasi · D06 | Galeri dev [PWA](../../pwa/src/ui/Gallery.tsx), unit dan browser test yang disitir K30/K33. | Tema dan font Android ada. Screenshot, ukuran sentuh aktual, font scale, IME, talkback dan kebijakan fokus memerlukan uji runtime. | DS-C01–C11. Cocokkan 320/360/390/600 dp, font scale 100/130/200%, perangkat, focus order dan insets. |
+
+## 3. Matriks prioritas komponen
+
+| ID | PWA | Android saat audit | Usulan yang dibangun untuk review |
+|---|---|---|---|
+| DS-C01 | AppHeader, BottomNav, ScreenHeader | ScreenHeader dan AppNav dasar | FieldTopBar root/back dan item navigasi default/aktif. |
+| DS-C02 | Button, IconButton | PrimaryButton | Primary, secondary, tertiary, destructive, fokus, pressed, busy dan disabled. |
+| DS-C03 | Field, Select, Textarea | OutlinedTextField di Login | Default, fokus, error, password dan read-only. |
+| DS-C04 | Chip, Callout, StatusDot | StatusBadge | StatusChip dan InlineNotice untuk informasi, offline, sesi, dan error. |
+| DS-C05 | ListRow, OutletCard, Card | Kartu outlet dalam Home | Kartu terjadwal, carry-over, selesai dan terbatas. Baris domain memakai struktur yang sama. |
+| DS-C06 | BottomSheet, SheetHeader | Material 3 tersedia; pola khusus belum ditemukan | ConfirmationSheet izin, konfirmasi akun, dan kendala. |
+| DS-C07 | LocationNoticeSheet dan CheckinMap | CalibrationScreen dan data fix | LocationPanel mencari, izin, akurasi rendah, luar radius dan siap. |
+| DS-C08 | CameraViewfinder, Evidence, OfficialEvidence | Fondasi evidence, UI capture belum ditemukan | EvidenceCapture siap, preview, izin, antre, gagal dan kedaluwarsa. |
+| DS-C09 | QueueScreen, OrderResult, RequestsScreen | OutboxRepository dan badge dasar | QueueRow/ReceiptPanel dengan status lokal, protokol, pembatasan akses, dan keputusan bisnis resmi. |
+| DS-C10 | Stepper, Segmented, Stat | Belum ditemukan komponen reusable setara | QuantityStepper dan ringkasan transaksi untuk kebutuhan Sales, POD dan AR. |
+| DS-C11 | Callout, Progress, fallback per layar | Refresh dan error di Home | ScreenState loading, empty, error dan capability unavailable. |
+
+### Kontrak visual dan teknis
+
+- Dua tier variable Figma merepresentasikan `pwa/design/tokens.json`: primitives, lalu alias Android. Inter mengikuti skala sumber. Gunakan navy untuk shell sebagai usulan review dan target sentuh **48 dp** sebagai target uji sementara. Token bersama **44** dipertahankan. Pastikan fokus yang terlihat, target tidak tumpang tindih, teks panjang dapat membungkus, dan Back mengembalikan fokus.
+- Receipt `accepted`, `needs_approval`, dan `rejected` memerlukan hasil yang sah. HTTP 2xx ber-UUID cocok dengan status asing memakai **Hasil perlu ditinjau**, HTTP 403 tanpa receipt memakai **Akses ditolak**, dan respons gagal parse memakai **Respons tidak dapat dibaca**. Hanya receipt `rejected` yang sah memakai **Ditolak server**. Saat audit, fallback parser Compose masih mengembalikan `REJECTED` untuk status selain `accepted`/`needs_approval`. Lead menugaskan koreksi dan acceptance repository/API serta Compose pada slice Dev D01-05.
+- Waktu kejadian `HH.mm.ss` WITA. Asal waktu lokal, antre dan server diberi konteks berbeda. Jam rencana pada kartu mengikuti data sumber sambil menunggu keputusan pemilik. Semua contoh desain memakai data sintetis.
+- Gap pola lain yang menunggu review workflow dan data: editor multi-satuan SKU/POD per baris, signature/retensi, rincian alokasi dan sisa faktur, budget/approval per principal, form nominal dan tanggal dengan error, serta bukti foto aktual. Representasi draft untuk pola yang punya source dapat dipakai untuk review. Aktivasi produksi mengikuti B03–B08 dan uji B09.
+
+## 4. Draft Figma dan bukti review
+
+**Versi desain DES-02-r0.** File dibuat pada akun Figma yang terhubung. Paket Starter membatasi file menjadi tiga halaman, sehingga Product Map dan review D01 berada dalam satu halaman. Versi ini dicatat melalui nama frame dan SHA checkpoint repo. Riwayat versi bernama Figma belum dicatat.
+
+| Keluaran | Node | Isi |
+|---|---|---|
+| Foundations | [8:105](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=8-105) | 41 primitive, 36 alias Android, 9 text styles Inter dan contoh pasangan kontras. |
+| Komponen | [2:180](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=2-180) | 13 set inti dan 8 set pola lintas workflow. |
+| Review D01 | [4:2](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=4-2) | Lima contoh D01 dengan 28 instance editable. |
+| Product Map | [4:137](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=4-137) | Enam kelompok workflow dan ringkasan bukti sumber. |
+
+| Set inti | Node | Varian |
+|---|---|---:|
+| DS-C01 · FieldTopBar | [3:2](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-2) | 2 |
+| DS-C01 · FieldNavigation | [3:9](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-9) | 2 |
+| DS-C02 · FieldButton | [3:14](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-14) | 8 |
+| DS-C03 · FieldInput | [3:31](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-31) | 5 |
+| DS-C04 · StatusChip | [3:54](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-54) | 5 |
+| DS-C04 · InlineNotice | [3:65](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-65) | 4 |
+| DS-C05 · OutletCard | [3:78](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-78) | 4 |
+| DS-C06 · ConfirmationSheet | [3:99](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-99) | 3 |
+| DS-C07 · LocationPanel | [3:115](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-115) | 5 |
+| DS-C08 · EvidenceCapture | [3:141](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-141) | 6 |
+| DS-C09 · QueueRow & ReceiptPanel | [3:172](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-172) | 11 |
+| DS-C10 · QuantityStepper | [3:228](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-228) | 4 |
+| DS-C11 · ScreenState | [3:253](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=3-253) | 4 |
+
+| Pola lintas workflow | Node | Varian | Pijakan |
+|---|---|---:|---|
+| Pola · Tracker | [5:2](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-2) | 3 | Tracker/VisitPanel |
+| Pola · SyncProgress | [5:39](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-39) | 4 | SyncProgressCard |
+| Pola · CatalogItem | [5:60](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-60) | 3 | OrderScreen/DisplayStockScreen |
+| Pola · MoneySummary | [5:76](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-76) | 3 | CustomerSummary/OrderResult/TripClosing |
+| Pola · SegmentedChoice | [5:89](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-89) | 2 | Segmented/DeliveryTaskEditor/PenagihanScreen |
+| Pola · ManifestRow | [5:108](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-108) | 3 | DeliveryWorkspace |
+| Pola · InvoiceAllocationRow | [5:124](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-124) | 3 | PenagihanScreen/CollectionWorkspace |
+| Pola · ActivityRow | [5:140](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=5-140) | 3 | ActivityScreens/ProfileScreen |
+
+Node pengguna dapat dikomentari di draft bila akses file memberi izin. Library bersama belum dipublikasikan. Draft ini memuat komponen dan contoh komposisi. Prototipe D01 yang menghubungkan alur, frame asli, serta review visual dan aksesibilitas perangkat tetap menunggu acceptance.
+
+**Bukti Figma.** Pembacaan balik menemukan 21 set, 87 varian, 36 alias dan 232 layer teks pada varian menggunakan text style Inter. Review board memuat 28 instance dengan layer editable. Tombol primary dan fokus berukuran 56, tombol sekunder 48 dalam desain. Label PJP carry-over dan status receipt dibaca balik dari instance. Pemeriksaan Figma belum membuktikan ukuran sentuh Compose, fokus runtime, TalkBack, keyboard, font scale, atau kontras terhadap foto.

@@ -511,3 +511,9 @@
 - Dokumentasi 22 state D01, opsi C PJP, mapping Compose, kontras dan gate token.
 - Ruff, 14 manifest dan 28 tes kontrak CI lulus. Figma 0/62 dan runtime belum diverifikasi.
 - Task managed by codex agent at 2026-11-19T19:26:17+07:00
+
+[2026-11-20T08:19:55+07:00] [INFO] Codex-Android-Design: DES-02-r0 draft Figma dan gap study
+- Arahan 8836d05, parent Design 6abeef3 dan main acuan 39172de.
+- Gap study PWA/Compose dan draft 21 set/87 varian. Figma review node 4:2. Frame sumber 0/62.
+- Node, alias, komposisi review, Ruff, 14 manifest dan 28 tes kontrak CI diverifikasi.
+- Task managed by codex agent at 2026-11-20T08:19:55+07:00

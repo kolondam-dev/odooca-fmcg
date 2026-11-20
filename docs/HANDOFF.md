@@ -1,3 +1,11 @@
+## 2026-11-20T08:19:54+07:00 — Codex-Android-Design — DES-02-r0 draft Figma dan gap study
+**Basis:** [F] Parent Design `6abeef3`, main acuan `39172de` dan arahan Lead `8836d05`. Ref arahan diperiksa ulang sebelum penyerahan.
+**Berubah:** [F] [Gap study](android/DES02_SCREEN_COMPONENT_GAPS.md) mencocokkan kelompok layar rujukan dengan PWA, Compose dan capability. [Draft review Figma](https://www.figma.com/design/16gvzHRHxERodxxVsQJe8y?node-id=4-2) memuat 21 set dan 87 varian, dua tier variables dan lima contoh D01. Status receipt asing, 403 tanpa receipt, dan parse gagal memiliki label terpisah dari receipt rejected yang valid.
+**Diverifikasi:** [F] Node, 77 variables, 36 alias, 9 text styles Inter, 28 instance review, ukuran contoh tombol 48/56 dan komposisi review. Ruff, 14 manifest dan 28 tes kontrak CI lulus. Dampak tes **CUKUP** untuk dokumen dan draft. Uji runtime tetap mengikuti slice Dev.
+**Belum diuji:** [BU] Artefak asli 62 frame belum ditemukan, sehingga 0/62 frame asli diperiksa. Rujukan dokumen mendukung 20 posisi dalam kelompok bernomor. Library belum dipublikasikan. Versi draft DES-02-r0 tercatat melalui node dan commit. Validasi TalkBack, fokus native, 48 dp runtime dan prototype D01 lengkap menunggu tahap berikut.
+**Menunggu:** Pemilik meninjau draft dan menyerahkan ekspor mockup asli bila tersedia. Lead/Dev meninjau mapping baru dan acceptance D01-05 sebelum implementasi visual.
+**Signature:** Task managed by Agent Codex-Mobile Native at 2026-11-20T08:19:54+07:00
+
 ## 2026-11-19T19:26:17+07:00 — Codex-Android-Design — Checkpoint DES-00/DES-01 D01-r1
 **Basis:** [F] Main acuan `39172de900668263676577d843a095bf90065ec2`, parent dan arahan tim `92da15d64228b6c3da961115555c51c546e17a23`. Branch `agen/android-design-Codex-Mobile-Native`. Fetch ulang ref bersama sebelum penyerahan menunjukkan arahan yang sama.
 **Berubah:** [F] [Checkpoint D01-r1](android/DES01_D01_CHECKPOINT.md) mempertahankan audit D01-r0, menelusuri sumber PWA/Android/Odoo dan mencatat 22 state D01-01–05 dengan Rxx/Bxx/DS-Cxx, rute/Back, fallback, dan acceptance. PJP opsi C memisahkan kosong sah, carry-over dengan izin Supervisor dan paket yang tidak sah. Mapping Compose mencatat kontras, 48 dp sebagai target uji sementara, serta status lokal dan receipt resmi.
