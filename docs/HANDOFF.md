@@ -1,3 +1,10 @@
+## 2026-11-20 — [BU] BE-15 perbaikan review PR #176: jendela WITA, company, multi-principal (claude-design)
+
+- P1 jendela: hari/bulan akumulasi memakai batas WITA (Asia/Makassar → UTC), bukan hari UTC; filter `company_id` sama.
+- P1 multi-principal: diskon kumulatif dihitung terpisah per principal (`_approval_cumulative_by_principal`); zona bebas hanya bila setiap principal berdiskon berada di dalam batasnya; principal penentu = rantai tier terpanjang lalu % tertinggi, disimpan di `fmcg.approval.request.principal_id`; reward diatribusikan ke principal programnya (`promo_principal_id` bila ada, jika tidak principal produk), juga untuk pesanan historis.
+- Refactor: `category._applicable_tier_rules` dipakai bersama mesin dan keputusan.
+- Tes baru `test_13`–`test_18`. Pengecualian approval untuk pesanan murni promo resmi tetap menunggu keputusan pemilik.
+
 ## 2026-11-20 — [BU] BE-15: Tier 0 dan approval diskon kumulatif per principal (claude-design)
 
 - Aturan: `principal_id` (aturan khusus principal menimpa umum, terpisah untuk zona bebas dan tier approver) dan `is_free_zone` (Tier 0; batas = `max_discount`). Kategori: `cumulative_scope` (order / outlet_month / salesman_day).

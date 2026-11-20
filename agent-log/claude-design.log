@@ -384,3 +384,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-20T12:15:38+07:00] [INFO] BE-15 Tier 0 + kumulatif per principal
 - free zone, principal_id, cumulative_scope, diskon program ikut, tes Odoo via CI
 - Task managed by claude-design agent at 2026-11-20T12:15:38+07:00
+
+[2026-11-20T17:54:45+07:00] [INFO] BE-15 fix review #176
+- jendela WITA+company, kumulatif per principal, tes 13-18
+- Task managed by claude-design agent at 2026-11-20T17:54:45+07:00

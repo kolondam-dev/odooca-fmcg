@@ -315,6 +315,127 @@ class TestApprovalEngine(TransactionCase):
         self._free_zone_rule().max_discount = 2.0
         self.assertFalse(order._mobile_auto_request_approvals())  # kumulatif 1,67% <= 2%
 
+    def _principal_product(self, code):
+        principal = self.env["id.principal"].create({"name": f"Principal {code}", "code": code})
+        product = self.env["product.product"].create({
+            "name": f"Produk {code}", "standard_price": 10_000.0,
+            "list_price": 12_000.0, "principal_id": principal.id,
+        })
+        return principal, product
+
+    def _dated_order(self, date_order, **kwargs):
+        order = self._tactical_order(**kwargs)
+        order.date_order = date_order
+        return order
+
+    def test_13_window_boundaries_follow_wita_not_utc(self):
+        """Review PR #176: hari/bulan kerja WITA (UTC+8), bukan batas UTC."""
+        category = self._free_zone_rule().category_id
+        category.cumulative_scope = "salesman_day"
+        # 20 Nov 2026 pukul 10.00 WITA
+        order = self._dated_order("2026-11-20 02:00:00", qty=5.0, discount=5.0)
+        # 20 Nov 04.00 WITA (UTC 19 Nov 20.00): hari WITA yang sama -> ikut
+        self._dated_order("2026-11-19 20:00:00", qty=10.0, discount=0.0)
+        # 19 Nov 20.00 WITA (UTC 19 Nov 12.00): hari WITA sebelumnya -> tidak ikut
+        self._dated_order("2026-11-19 12:00:00", qty=100.0, discount=0.0)
+        # gross 60.000 + 120.000; diskon 3.000 -> 1,6667% (bukan ~0,2% bila hari sebelumnya ikut)
+        self.assertAlmostEqual(order._approval_cumulative_discount_pct("salesman_day"), 1.6667, places=3)
+
+        category.cumulative_scope = "outlet_month"
+        dec = self._dated_order("2026-12-01 05:00:00", qty=5.0, discount=5.0)
+        self._dated_order("2026-11-30 17:00:00", qty=10.0, discount=0.0)   # 1 Des 01.00 WITA -> ikut
+        self._dated_order("2026-11-30 10:00:00", qty=100.0, discount=0.0)  # 30 Nov 18.00 WITA -> tidak
+        self.assertAlmostEqual(dec._approval_cumulative_discount_pct("outlet_month"), 1.6667, places=3)
+
+    def test_14_window_excludes_other_company(self):
+        category = self._free_zone_rule().category_id
+        category.cumulative_scope = "outlet_month"
+        order = self._tactical_order(qty=5.0, discount=5.0)
+        other_company = self.env["res.company"].create({"name": "Perusahaan Lain Uji"})
+        warehouse = self.env["stock.warehouse"].search([("company_id", "=", other_company.id)], limit=1)
+        other = self.env["sale.order"].with_company(other_company).create({
+            "partner_id": self.partner_tempo.id,
+            "company_id": other_company.id,
+            "warehouse_id": warehouse.id,
+            "order_line": [(0, 0, {"product_id": self.product.id, "product_uom_qty": 100.0,
+                                   "price_unit": 12_000.0, "discount": 0.0})],
+        })
+        self.assertNotEqual(order.company_id, other.company_id)
+        self.assertAlmostEqual(order._approval_cumulative_discount_pct("outlet_month"), 5.0, places=3)
+
+    def test_15_multi_principal_evaluated_per_principal(self):
+        """10% pada principal A tidak boleh larut oleh penjualan principal B tanpa diskon."""
+        principal_a, product_a = self._principal_product("PRA")
+        principal_b, product_b = self._principal_product("PRB")
+        self._free_zone_rule().max_discount = 2.0
+        order = self.env["sale.order"].create({
+            "partner_id": self.partner_tempo.id,
+            "order_line": [
+                (0, 0, {"product_id": product_a.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 10.0}),
+                (0, 0, {"product_id": product_b.id, "product_uom_qty": 50.0,
+                        "price_unit": 12_000.0, "discount": 0.0}),
+            ],
+        })
+        by_principal = order._approval_cumulative_by_principal("order")
+        self.assertAlmostEqual(by_principal[principal_a.id], 10.0, places=3)
+        self.assertAlmostEqual(by_principal[principal_b.id], 0.0, places=3)
+        reqs = order._mobile_auto_request_approvals()
+        self.assertEqual(reqs.principal_id, principal_a)
+        self.assertAlmostEqual(reqs.discount_percent, 10.0, places=3)
+        self.assertEqual(len(reqs.line_ids), 3)  # 10% > 7%: SPV, Branch Manager, Direksi
+
+    def test_16_multi_principal_chain_follows_highest_tier(self):
+        principal_a, product_a = self._principal_product("PRC")
+        principal_b, product_b = self._principal_product("PRD")
+        order = self.env["sale.order"].create({
+            "partner_id": self.partner_tempo.id,
+            "order_line": [
+                (0, 0, {"product_id": product_a.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 2.0}),
+                (0, 0, {"product_id": product_b.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 8.0}),
+            ],
+        })
+        reqs = order._mobile_auto_request_approvals()
+        self.assertEqual(reqs.principal_id, principal_b)
+        self.assertEqual(len(reqs.line_ids), 3)
+
+    def test_17_free_zone_requires_every_principal_within_limit(self):
+        principal_a, product_a = self._principal_product("PRE")
+        principal_b, product_b = self._principal_product("PRF")
+        self._free_zone_rule().max_discount = 4.0
+        order = self.env["sale.order"].create({
+            "partner_id": self.partner_tempo.id,
+            "order_line": [
+                (0, 0, {"product_id": product_a.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 3.0}),
+                (0, 0, {"product_id": product_b.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 5.0}),
+            ],
+        })
+        reqs = order._mobile_auto_request_approvals()
+        self.assertTrue(reqs, "principal B (5%) melewati zona bebas 4%")
+        self.assertEqual(reqs.principal_id, principal_b)
+
+    def test_18_reward_line_attributed_to_its_own_principal(self):
+        principal_a, product_a = self._principal_product("PRG")
+        principal_b, product_b = self._principal_product("PRH")
+        order = self.env["sale.order"].create({
+            "partner_id": self.partner_tempo.id,
+            "order_line": [
+                (0, 0, {"product_id": product_a.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 0.0}),
+                (0, 0, {"product_id": product_b.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 0.0}),
+                (0, 0, {"product_id": product_b.id, "product_uom_qty": 1.0,
+                        "price_unit": -6_000.0}),
+            ],
+        })
+        by_principal = order._approval_cumulative_by_principal("order")
+        self.assertAlmostEqual(by_principal[principal_a.id], 0.0, places=3)
+        self.assertAlmostEqual(by_principal[principal_b.id], 10.0, places=3)
+
     def test_04_new_sku_activation_workflow(self):
         """SKU baru tidak aktif jual hingga disetujui manajemen."""
         prod_tmpl = self.env["product.template"].create({

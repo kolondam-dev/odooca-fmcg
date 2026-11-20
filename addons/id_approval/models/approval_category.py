@@ -57,6 +57,19 @@ class FmcgApprovalCategory(models.Model):
                 return specific
         return rules.filtered(lambda r: not r.principal_id)
 
+    def _applicable_tier_rules(self, principal_id, discount_percent, amount=0.0):
+        """Tier approver berjenjang yang berlaku untuk diskon (%) dan nominal tertentu."""
+        self.ensure_one()
+        rules = self._rules_for_principal(principal_id)
+        applicable = []
+        for r in rules:
+            if self.has_amount_tiers and r.min_amount > 0 and amount < r.min_amount:
+                continue
+            if self.has_discount_tiers and r.min_discount > 0 and discount_percent < r.min_discount:
+                continue
+            applicable.append(r)
+        return applicable or list(rules[:1])
+
     def _free_zone_limit(self, principal_id=False):
         """Batas diskon (%) zona bebas (Tier 0), atau None bila tidak ada aturan zona bebas."""
         self.ensure_one()

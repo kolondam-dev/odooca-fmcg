@@ -1,7 +1,12 @@
-from datetime import timedelta
+from datetime import datetime, time, timedelta
+
+import pytz
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+
+APPROVAL_WORK_TZ = "Asia/Makassar"  # hari/bulan kerja WITA, selaras PWA (WORK_TZ)
 
 
 class SaleOrder(models.Model):
@@ -145,13 +150,15 @@ class SaleOrder(models.Model):
         if not category:
             raise UserError("Kategori persetujuan 'tactical_discount' tidak ditemukan.")
 
+        decision = self._approval_discount_decision(category)
         req = self.env["fmcg.approval.request"].create({
             "category_id": category.id,
             "res_model": "sale.order",
             "res_id": self.id,
             "reference_document": f"{self.name} - {self.partner_id.name}",
             "amount": self.amount_total,
-            "discount_percent": self._approval_cumulative_discount_pct(category.cumulative_scope),
+            "discount_percent": decision["pct"],
+            "principal_id": decision["principal_id"] or False,
             "analytic_account_id": self.tactical_analytic_account_id.id,
             "reason": reason or f"Pengajuan diskon taktikal untuk pesanan {self.name}",
         })
@@ -172,60 +179,115 @@ class SaleOrder(models.Model):
         }
 
     def _approval_principal_id(self):
-        """Principal pesanan (pesanan lapangan dipecah per principal; ambil dari baris produk)."""
+        """Principal pertama pada baris produk (kompatibilitas pesanan satu principal)."""
         self.ensure_one()
         for line in self.order_line:
-            if line.product_id.principal_id:
-                return line.product_id.principal_id.id
+            pid = self._approval_line_principal(line)
+            if pid:
+                return pid
         return False
 
     @staticmethod
-    def _discount_stats(lines):
-        """(nilai diskon Rp, nilai bruto Rp) dari baris: diskon baris + baris reward program resmi."""
-        gross = disc = 0.0
+    def _approval_line_principal(line):
+        """Principal sebuah baris: baris reward memakai principal program promo (bila ada),
+        selain itu principal produk. 0/False = tanpa principal."""
+        if line.price_subtotal < 0:
+            promo_principal = getattr(line, "promo_principal_id", False)
+            if promo_principal:
+                return promo_principal.id
+        return line.product_id.principal_id.id or False
+
+    @api.model
+    def _approval_tz_bounds(self, anchor, scope):
+        """Awal/akhir jendela (UTC naif) menurut hari/bulan kerja WITA, bukan hari UTC."""
+        tz = pytz.timezone(APPROVAL_WORK_TZ)
+        local = pytz.utc.localize(anchor).astimezone(tz)
+        day = local.date()
+        if scope == "outlet_month":
+            first = day.replace(day=1)
+            nxt = (first + timedelta(days=32)).replace(day=1)
+        else:
+            first, nxt = day, day + timedelta(days=1)
+
+        def to_utc(d):
+            return tz.localize(datetime.combine(d, time.min)).astimezone(pytz.utc).replace(tzinfo=None)
+
+        return to_utc(first), to_utc(nxt)
+
+    @classmethod
+    def _stats_by_principal(cls, lines, into=None):
+        """{principal_id: [nilai diskon Rp, nilai bruto Rp]}: diskon baris + reward program resmi."""
+        stats = into if into is not None else {}
         for line in lines:
             if line.display_type:
                 continue
+            bucket = stats.setdefault(cls._approval_line_principal(line), [0.0, 0.0])
             if line.price_subtotal < 0:  # baris reward/program bernilai negatif
-                disc += abs(line.price_subtotal)
+                bucket[0] += abs(line.price_subtotal)
                 continue
             line_gross = line.price_unit * line.product_uom_qty
-            gross += line_gross
-            disc += line_gross * (line.discount or 0.0) / 100.0
-        return disc, gross
+            bucket[1] += line_gross
+            bucket[0] += line_gross * (line.discount or 0.0) / 100.0
+        return stats
 
-    def _approval_cumulative_discount_pct(self, scope="order"):
-        """Diskon kumulatif (%), berbobot nilai, per principal pesanan.
+    def _approval_cumulative_by_principal(self, scope="order"):
+        """{principal_id: diskon kumulatif %} berbobot nilai, dihitung terpisah per principal.
 
-        Menggabungkan diskon baris + diskon program resmi (reward). Untuk cakupan
-        outlet_month / salesman_day, pesanan lain pada jendela yang sama (principal sama,
-        tidak batal, tidak ditolak) ikut dihitung bersama pesanan ini.
+        Pada cakupan outlet_month / salesman_day, pesanan lain pada jendela WITA yang sama
+        (company sama, tidak batal, tidak ditolak) ikut dihitung per principal.
         """
         self.ensure_one()
-        disc, gross = self._discount_stats(self.order_line)
+        stats = self._stats_by_principal(self.order_line)
         if scope in ("outlet_month", "salesman_day"):
-            principal = self._approval_principal_id()
-            day = (self.date_order or fields.Datetime.now()).date()
-            if scope == "outlet_month":
-                start = day.replace(day=1)
-                end = (start + timedelta(days=32)).replace(day=1)
-                owner = [("order_id.partner_id", "=", self.partner_id.id)]
-            else:
-                start, end = day, day + timedelta(days=1)
-                owner = [("order_id.user_id", "=", self.user_id.id)]
-            domain = owner + [
+            start, end = self._approval_tz_bounds(self.date_order or fields.Datetime.now(), scope)
+            owner = ("order_id.partner_id", "=", self.partner_id.id) if scope == "outlet_month" \
+                else ("order_id.user_id", "=", self.user_id.id)
+            others = self.env["sale.order.line"].sudo().search([
+                owner,
                 ("order_id", "!=", self.id),
+                ("order_id.company_id", "=", self.company_id.id),
                 ("order_id.state", "!=", "cancel"),
                 ("order_id.discount_approval_state", "!=", "rejected"),
-                ("order_id.date_order", ">=", fields.Datetime.to_datetime(start)),
-                ("order_id.date_order", "<", fields.Datetime.to_datetime(end)),
-                ("product_id.principal_id", "=", principal or False),
-            ]
-            other_disc, other_gross = self._discount_stats(
-                self.env["sale.order.line"].sudo().search(domain))
-            disc += other_disc
-            gross += other_gross
-        return round(disc / gross * 100.0, 4) if gross > 0 else 0.0
+                ("order_id.date_order", ">=", start),
+                ("order_id.date_order", "<", end),
+            ])
+            self._stats_by_principal(others, into=stats)
+        return {pid: round(d / g * 100.0, 4) for pid, (d, g) in stats.items() if g > 0}
+
+    def _approval_cumulative_discount_pct(self, scope="order"):
+        """Diskon kumulatif tertinggi (%) di antara principal pada pesanan."""
+        self.ensure_one()
+        by_principal = self._approval_cumulative_by_principal(scope)
+        return max(by_principal.values()) if by_principal else 0.0
+
+    def _approval_discount_decision(self, category):
+        """Keputusan approval diskon per principal.
+
+        Mengembalikan dict: within_free_zone (semua principal berdiskon di dalam zona bebasnya),
+        principal_id dan pct (principal penentu: rantai tier terpanjang, lalu % tertinggi),
+        free_limit (batas principal penentu, bila ada).
+        """
+        self.ensure_one()
+        by_principal = {
+            pid: pct for pid, pct in self._approval_cumulative_by_principal(category.cumulative_scope).items()
+            if pct > 0.0
+        }
+        if not by_principal:
+            return {"within_free_zone": False, "principal_id": False, "pct": 0.0, "free_limit": None}
+        exceeding = []
+        for pid, pct in by_principal.items():
+            limit = category._free_zone_limit(pid)
+            if limit is None or pct > limit:
+                exceeding.append((pid, pct, limit))
+        if not exceeding:
+            pid = max(by_principal, key=by_principal.get)
+            return {"within_free_zone": True, "principal_id": pid, "pct": by_principal[pid],
+                    "free_limit": category._free_zone_limit(pid)}
+        pid, pct, limit = max(
+            exceeding,
+            key=lambda e: (len(category._applicable_tier_rules(e[0], e[1], self.amount_total)), e[1]),
+        )
+        return {"within_free_zone": False, "principal_id": pid, "pct": pct, "free_limit": limit}
 
     def _open_approval_request(self, category_code):
         """Permintaan approval yang masih berjalan (draf/pending) untuk SO ini dan kategori tertentu."""
@@ -251,13 +313,11 @@ class SaleOrder(models.Model):
         for order in self:
             if order.has_tactical_discount and not order._open_approval_request("tactical_discount"):
                 category = Category.search([("code", "=", "tactical_discount")], limit=1)
-                cumulative = order._approval_cumulative_discount_pct(
-                    category.cumulative_scope if category else "order")
-                free_limit = category._free_zone_limit(order._approval_principal_id()) if category else None
-                if category and free_limit is not None and cumulative <= free_limit:
+                decision = order._approval_discount_decision(category) if category else {}
+                if category and decision["within_free_zone"]:
                     order.message_post(
-                        body=f"Diskon kumulatif {cumulative:.2f}% berada dalam zona bebas "
-                             f"(&le; {free_limit:.2f}%): tanpa persetujuan.",
+                        body=f"Diskon kumulatif {decision['pct']:.2f}% berada dalam zona bebas "
+                             f"(&le; {decision['free_limit']:.2f}%): tanpa persetujuan.",
                         subtype_xmlid="mail.mt_note",
                     )
                 elif category:
@@ -267,7 +327,8 @@ class SaleOrder(models.Model):
                         "res_id": order.id,
                         "reference_document": f"{order.name} - {order.partner_id.name}",
                         "amount": order.amount_total,
-                        "discount_percent": cumulative,
+                        "discount_percent": decision["pct"],
+                        "principal_id": decision["principal_id"] or False,
                         "analytic_account_id": order.tactical_analytic_account_id.id or False,
                         "reason": (discount_reason or order.discount_approval_note
                                    or f"Diskon taktikal dari aplikasi lapangan untuk pesanan {order.name}"),

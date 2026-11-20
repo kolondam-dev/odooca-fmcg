@@ -68,6 +68,9 @@ class FmcgApprovalRequest(models.Model):
         ("cancelled", "Dibatalkan"),
     ], string="Status Persetujuan", default="draft", tracking=True, index=True)
 
+    principal_id = fields.Many2one(
+        "id.principal", string="Principal Penentu", index=True,
+        help="Principal yang aturannya (zona bebas/tier) menentukan rantai approver pada pengajuan ini.")
     current_tier_sequence = fields.Integer(string="Tingkat Saat Ini (Tier)", default=1, tracking=True)
     total_tiers = fields.Integer(string="Total Tingkatan (Tiers)", compute="_compute_tier_summary", store=True)
 
@@ -161,8 +164,8 @@ class FmcgApprovalRequest(models.Model):
 
             # Cari aturan tier yang sesuai dari kategori
             target = self.env[rec.res_model].sudo().browse(rec.res_id).exists()
-            principal_id = target._approval_principal_id() if target and hasattr(
-                target, "_approval_principal_id") else False
+            principal_id = rec.principal_id.id or (
+                target._approval_principal_id() if target and hasattr(target, "_approval_principal_id") else False)
             # Zona bebas (Tier 0): diskon kumulatif di bawah batas tidak perlu approver.
             free_limit = rec.category_id._free_zone_limit(principal_id) \
                 if rec.category_id.has_discount_tiers else None
@@ -175,21 +178,7 @@ class FmcgApprovalRequest(models.Model):
                 )
                 rec._notify_target_record("approved")
                 continue
-            rules = rec.category_id._rules_for_principal(principal_id)
-            applicable_rules = []
-            for r in rules:
-                # Filter nominal jika kategori bertingkat nominal
-                if rec.category_id.has_amount_tiers and r.min_amount > 0 and rec.amount < r.min_amount:
-                    continue
-                # Filter diskon jika kategori bertingkat diskon
-                if rec.category_id.has_discount_tiers and r.min_discount > 0 and rec.discount_percent < r.min_discount:
-                    continue
-                applicable_rules.append(r)
-
-            if not applicable_rules:
-                # Fallback ke rule standar pertama
-                applicable_rules = list(rules[:1])
-
+            applicable_rules = rec.category_id._applicable_tier_rules(principal_id, rec.discount_percent, rec.amount)
             # Buat approval request lines
             lines_vals = []
             for idx, r in enumerate(applicable_rules):
