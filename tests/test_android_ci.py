@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 import zipfile
 from pathlib import Path
@@ -26,6 +27,27 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         self.assertTrue((ANDROID / "gradlew.bat").is_file())
         with zipfile.ZipFile(ANDROID / "gradle" / "wrapper" / "gradle-wrapper.jar") as archive:
             self.assertIn("org/gradle/wrapper/GradleWrapperMain.class", archive.namelist())
+
+    def test_workflow_installs_the_platform_matching_compile_sdk(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        installed = re.findall(r"platforms;android-(\d+(?:\.\d+)?)", workflow)
+        self.assertEqual(2, len(installed), installed)
+
+        for module in ("app", "core/data", "core/designsystem"):
+            source = (ANDROID / module / "build.gradle.kts").read_text(encoding="utf-8")
+            match = re.search(r"compileSdk\s*=\s*(\d+)", source)
+            self.assertIsNotNone(match, f"compileSdk missing in {module}")
+            major = match.group(1)
+            for package in installed:
+                self.assertEqual(
+                    major,
+                    package.split(".")[0],
+                    f"{module} compiles against android-{major} but CI installs {package}",
+                )
+            # Since API 37 the platform package carries a minor version and
+            # AGP resolves compileSdk = 37 to android-37.0; android-37 does not exist.
+            if int(major) >= 37:
+                self.assertIn(f"platforms;android-{major}.0", workflow)
 
     def test_workflow_uses_wrapper_and_publishes_stable_gate(self):
         workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))

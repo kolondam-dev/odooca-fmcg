@@ -29,7 +29,9 @@ distribusinya), AGP 9.5.1, Kotlin 2.4.21, KSP 2.3.14, dan `compileSdk = 37`.
 Naikkan atau turunkan nilai itu sebagai satu kesatuan karena AGP mensyaratkan
 Gradle minimum, sedangkan AndroidX/OkHttp mensyaratkan `compileSdk` minimum.
 Jangan memakai instalasi Gradle global. Di Windows gunakan `gradlew.bat` dengan
-argumen yang sama.
+argumen yang sama. Komponen SDK yang dipasang CI adalah
+`platforms;android-37.0` dan `build-tools;36.0.0`; sejak API 37 paket platform
+memakai versi minor sehingga `platforms;android-37` tidak tersedia.
 
 ## CI dan artifact
 
