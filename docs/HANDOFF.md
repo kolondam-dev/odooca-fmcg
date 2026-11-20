@@ -1,3 +1,7 @@
+## 2026-11-20T22:43:29+07:00 — Codex — Review kandidat Android DEV-01 setelah PR #173
+**Diverifikasi:** [F] `7bcd5aa` memuat main `69c6e05` dan checkpoint `dcad215`. Gate statis lulus, job Android wajib identik, full regression 11 suite. Dampak test **TAMBAH**.
+**Menunggu:** [BU] `Actions: write`, smoke dan instrumentation API 24/35, android-gate dan full regression pada SHA kandidat. [Handoff](android/LOCAL_WORKFLOW.md) memuat ref dan urutan dispatch. Design dapat lanjut DES-02.
+
 ## 2026-11-19T20:00:04+07:00 — Codex — Review Android DEV-01
 **Verdict:** [F] Gate statis `dcad215` lulus. Planner full regression 11 suite. Dampak test **TAMBAH**. [BU] Acceptance runtime HOLD: GitHub Actions belum berjalan dan bukti emulator API 24/35 belum ada.
 **Tindak lanjut:** [F] [Handoff bersama](android/LOCAL_WORKFLOW.md) mencatat arahan Dev dan Design. Desain dapat berjalan paralel.
@@ -31,6 +35,18 @@
 **Berubah:** [F] SSOT dan register blocker di `docs/android/ARCHITECTURE.md`, spec Design/Dev dan operasi branch, plus `android/tools/integration_gate.sh`.
 **Diverifikasi:** [F] Basis `e28e655`. Ruff, 14 manifest serta tes kontrak selector, workflow dan Android lulus.
 **Belum diuji:** [BU] Mode Gradle lokal, emulator, perangkat fisik, konektivitas Odoo Android dan integrasi workspace desain.
+
+## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
+
+- P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.
+- Tes baru `test_line_discount_without_header_discount_needs_approval` (status, pengajuan, replay). Tes split-principal lama yang mengunci `accepted` untuk diskon baris diubah ke `needs_approval`.
+- Tes Odoo diverifikasi lewat CI (tanpa Odoo lokal).
+
+## 2026-11-20 — [BU] BE-14: order lapangan membuat permintaan approval otomatis (claude-design)
+
+- `sale.order._mobile_auto_request_approvals()` (id_approval): diskon taktikal dan harga di bawah HPP membuat `fmcg.approval.request` + `action_submit`, tanpa wajib akun analitik; idempoten (kategori yang sudah berjalan dilewati); limit kredit memakai `action_request_credit_approval` id_base.
+- `_handle_sales_order_submit` memanggilnya bila `needs_approval` (pemanggilan lunak via `hasattr`, tanpa dependensi manifest baru); pesan receipt memuat nomor pengajuan.
+- Tier masih per permintaan tunggal (BE-15 menyusul). Tes Odoo: `test_03b/c/d` (id_approval) dan dua tes di `test_commands_api.py`; tidak dapat dijalankan lokal (tanpa Odoo), diverifikasi lewat CI.
 
 ## 2026-11-20T08:41:39+07:00 — Codex — PR #173: toolchain Android AGP 9.5.1 / Gradle 9.9.1 / Kotlin 2.4.21 (menggantikan #164–#168)
 **Keputusan:** [A] Lima PR Dependabot Gradle tidak mungkin hijau sendiri-sendiri karena saling mengunci: AGP 9.5.1 menuntut Gradle ≥9.6, `core-ktx` 1.19.1 dan OkHttp 5.5.1 menuntut `compileSdk ≥37` dan AGP ≥9.1, KSP harus sepasang dengan Kotlin, dan Gradle 9.9.1 saja melanggar oracle wrapper 8.9. Kelimanya digabung menjadi PR #173 di atas `main` (bukan di atas cabang Dependabot).

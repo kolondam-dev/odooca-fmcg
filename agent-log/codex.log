@@ -537,3 +537,8 @@
 - [F] Main 127287a memuat AGP 9.5.1, Gradle 9.9.1, Kotlin 2.4.21 dan compileSdk 37.
 - [BU] Dev menyiapkan kandidat DEV-01 di atas toolchain baru; Design lanjut review paralel.
 - Task managed by codex agent at 2026-11-20T09:20:40+07:00
+
+[2026-11-20T22:43:29+07:00] [INFO] Review DEV-01 setelah migrasi toolchain
+- [F] Gate statis 7bcd5aa lulus dan job Android wajib identik dengan main 69c6e05.
+- [BU] HOLD hingga smoke dan instrumentation API 24/35, Android gate, dan full regression exact SHA terbukti; izin dispatch belum terverifikasi.
+- Task managed by codex agent at 2026-11-20T22:43:29+07:00

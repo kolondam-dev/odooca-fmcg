@@ -67,6 +67,17 @@ Main acuan untuk **kandidat integrasi DEV-01 berikutnya** adalah `127287a`, yang
 - **Design:** checkpoint draft DES-02-r0 pada `0f2739c7904fc4674b0e66ec83f78aefba2f60b0` sudah terlihat. Lanjut review visual dan dokumentasikan keputusan Figma. Upgrade toolchain tidak menghentikan alur ini. Approval visual dan inventaris frame sumber tetap mengikuti review pemilik.
 - **Akses Actions:** pada pemeriksaan Lead, whitelist `api.github.com` belum efektif pada instance yang sedang berjalan dan koneksi HTTPS ditolak proxy dengan 403. Lead memverifikasi jaringan dan akses Actions setelah pengaturan instance aktif.
 
+### Review Lead — DEV-01 pada toolchain PR #173
+
+**HOLD untuk runtime** pada kandidat `7bcd5aab839092b96de862be1b2b045fb0ceab2f`, `refs/heads/agen/android-dev-Codex-Mobile-Native`. Parent kandidat adalah checkpoint Dev `dcad215` dan main `69c6e053a02870fa28ee4d8e45bfebbda125e588`. [Definisi workflow pada SHA kandidat](https://github.com/kolondam-dev/odooca-fmcg/blob/7bcd5aab839092b96de862be1b2b045fb0ceab2f/.github/workflows/android.yml). Lead menjalankan gate statis pada SHA penuh: Ruff, 14 manifest, 30 tes kontrak CI, Bash syntax dan token lulus; semua job Android yang dimiliki main identik pada kandidat. Job tambahan hanya smoke opt-in API 24/35. Planner memilih full regression (11 suite).
+
+**Dampak test: TAMBAH.** Instalasi yang berhasil dapat terjadi tanpa tampilnya Login. Matriks harus membuktikan boot, instalasi, cold start dan Login pada kedua API serta menyimpan bukti SHA, hash APK dan image. Instrumentation menyusul setelah dua smoke lulus. Gate statis dan build lokal belum membuktikan runtime atau lint/Robolectric yang tertahan mirror Maven.
+
+Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: write`, status workflow aktif, dan ref Dev menunjuk SHA di atas sebelum dispatch. `main` memiliki `android.yml` tetapi belum memuat input emulator, jadi gunakan **ref workflow branch Dev** dan pin checkout ke SHA kandidat. Jalankan Android dengan `force_all=true`, `emulator_smoke=true`, `emulator_ui=false`. Setelah kedua API lulus, ulangi dengan `emulator_ui=true`. Verifikasi `android-gate` pada run Android dan jalankan `full-regression.yml` dengan input `ref` SHA yang sama, `purpose=audit`. Full Regression Gate tidak memanggil suite Android, sehingga bukti Android harus diverifikasi tersendiri. Catat run ID, SHA checkout dan hasil per job; status penerimaan hanya berubah setelah bukti sah. Sesi Lead ini masih menerima 403 dari proxy pada `api.github.com`; akses metadata Lead lain belum membuktikan izin dispatch. Belum ada dispatch yang terverifikasi dari sesi ini.
+
+- **Dev:** checkpoint sudah diterima untuk penjadwalan pengujian. Pertahankan SHA dan scope DEV-01 selama penerimaan. DEV-02A dan perluasan visual D01 menunggu checkpoint berikutnya.
+- **Design:** lanjutkan DES-02 dan review desain secara paralel. Referensi Penpot dan dua foto check-in tetap di jalur desain; pekerjaan kontrak bukti dan implementasi visual berada di luar DEV-01.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
