@@ -1,3 +1,8 @@
+## 2026-11-20 — [F] FE-1 perbaikan review PR #172: subtotal kartu SKU (claude-design)
+
+- P2: subtotal kartu SKU di POS masih "12 pcs · 0.5 box"; kini `UnitQty` bernada ink (mis. "2 pack"), harga tetap.
+- Tes e2e `unit-qty.spec.ts` diperluas: kuantitas badge + harga Rp 26.400 (2 pack Wafer) di phone dan tablet. Gerbang penuh hijau (264 e2e).
+
 ## 2026-11-19 — [F] FE-1 UnitQty: badge satuan karton/pack/pcs (claude-design)
 
 - Komponen `UnitQty` + `UnitLegend` (`components/UnitQty.tsx`), logika `splitUnits`/`stockUnits`/`unitLabel` (`domain/unit-qty.ts`), ikon `carton` (package) dan `pack` (stack), glyph `@` untuk pcs.

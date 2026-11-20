@@ -30,4 +30,15 @@ test("POS menampilkan stok sebagai badge satuan, bukan teks krt/pak", async ({
     await expect(badge).toHaveAttribute("aria-label", /\d+ (karton|pack|pcs)/);
     await expect(card).not.toContainText(/\bkrt\b|\bpak\b/);
     await expect(page.locator(".ui-unitlegend")).toHaveCount(1);
+    // Subtotal kartu: jumlah sebagai badge, harga tetap benar.
+    const wafer = page
+        .locator(".pos-card")
+        .filter({ hasText: "Wafer Cokelat 24 g" });
+    await wafer
+        .getByLabel("Kuantitas Wafer Cokelat 24 g Pack", { exact: true })
+        .fill("2");
+    const sum = wafer.locator(".pos-card__sum");
+    await expect(sum.getByRole("img", { name: "2 pack" })).toBeVisible();
+    await expect(sum).toContainText(/Rp\s*26\.400/);
+    await expect(sum).not.toContainText(/pcs ·|box|karton/i);
 });

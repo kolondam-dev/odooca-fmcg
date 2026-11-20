@@ -148,9 +148,7 @@ export function ProductCard({
             ))}
             {pcs > 0 ? (
                 <div class="pos-card__sum">
-                    <span class="ui-row__sub">
-                        {pcs} pcs · {Number(cartons.toFixed(2))} {labels.carton}
-                    </span>
+                    <UnitQty tone="ink" {...tiers} />
                     <strong>{money(subtotal)}</strong>
                 </div>
             ) : null}
