@@ -68,6 +68,10 @@ class FmcgApprovalRequest(models.Model):
         ("cancelled", "Dibatalkan"),
     ], string="Status Persetujuan", default="draft", tracking=True, index=True)
 
+    principal_decided = fields.Boolean(
+        string="Principal Sudah Ditetapkan",
+        help="True bila principal penentu sudah dipilih oleh perhitungan per principal; "
+             "principal kosong berarti kelompok tanpa principal (aturan umum).")
     principal_id = fields.Many2one(
         "id.principal", string="Principal Penentu", index=True,
         help="Principal yang aturannya (zona bebas/tier) menentukan rantai approver pada pengajuan ini.")
@@ -164,8 +168,13 @@ class FmcgApprovalRequest(models.Model):
 
             # Cari aturan tier yang sesuai dari kategori
             target = self.env[rec.res_model].sudo().browse(rec.res_id).exists()
-            principal_id = rec.principal_id.id or (
-                target._approval_principal_id() if target and hasattr(target, "_approval_principal_id") else False)
+            if rec.principal_decided:
+                # Keputusan per principal sudah final (False = kelompok tanpa principal, aturan umum):
+                # jangan diganti principal pertama pesanan.
+                principal_id = rec.principal_id.id
+            else:
+                principal_id = target._approval_principal_id() if target and hasattr(
+                    target, "_approval_principal_id") else False
             # Zona bebas (Tier 0): diskon kumulatif di bawah batas tidak perlu approver.
             free_limit = rec.category_id._free_zone_limit(principal_id) \
                 if rec.category_id.has_discount_tiers else None

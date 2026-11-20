@@ -329,6 +329,7 @@ class MobileCommand(models.Model):
                 or getattr(so, "has_below_hpp", False)
                 or discount_pct > 0
                 or has_line_discount
+                or (hasattr(so, "_has_program_discount") and so._has_program_discount())
             ):
                 needs_approval = True
 

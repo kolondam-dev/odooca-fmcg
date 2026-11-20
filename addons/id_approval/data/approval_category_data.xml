@@ -266,5 +266,24 @@
         <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
         <field name="sla_hours">2</field>
     </record>
-</odoo>
 
+    <!-- 11. Pemantauan penggunaan promo resmi (keputusan pemilik 2026-11-20):
+         pesanan dengan diskon program resmi tetap melalui approval, hanya sampai Supervisor,
+         agar Supervisor memantau penggunaan, alokasi, dan distribusi promo ke sales. -->
+    <record id="cat_promo_program_usage" model="fmcg.approval.category">
+        <field name="name">Pemantauan Penggunaan Promo Resmi</field>
+        <field name="code">promo_program_usage</field>
+        <field name="sequence">110</field>
+        <field name="res_model">sale.order</field>
+        <field name="description">Pesanan yang memakai diskon program resmi disetujui hingga level Supervisor untuk memantau penggunaan, alokasi, dan distribusi promo ke salesman sesuai strategi.</field>
+    </record>
+
+    <record id="rule_promo_program_usage_tier1" model="fmcg.approval.rule">
+        <field name="category_id" ref="cat_promo_program_usage"/>
+        <field name="tier_sequence">1</field>
+        <field name="name">Tier 1: Pemantauan Promo - Field Sales Supervisor</field>
+        <field name="approver_type">group</field>
+        <field name="group_id" ref="id_approval.group_fmcg_approval_supervisor"/>
+        <field name="sla_hours">4</field>
+    </record>
+</odoo>

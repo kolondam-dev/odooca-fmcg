@@ -1,3 +1,9 @@
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 3) + keputusan promo resmi (claude-design)
+
+- P1: kelompok tanpa principal tidak lagi memakai batas principal pertama saat submit: `request.principal_decided` membuat principal kosong tetap berarti aturan umum. Tes `test_19` (urutan baris dibalik).
+- Keputusan pemilik: pesanan murni promo resmi tetap melalui approval, hanya hingga Supervisor, agar Supervisor memantau penggunaan/alokasi/distribusi promo. Kategori baru `promo_program_usage` (Tier 1 Supervisor, SLA 4 jam); `_has_program_discount()`; pesanan dengan diskon manual memakai satu rantai taktikal. Tes `test_20`–`test_21`.
+- Catatan proses: perubahan ini sudah ada di working tree sebagai modifikasi tak ber-komit dari sesi lain; saya meninjau seluruh diff, memperbaiki tes yang memicu pengajuan HPP tak sengaja (`_reward_line` tanpa HPP), lalu meng-komit.
+
 ## 2026-11-20 — [BU] BE-15 perbaikan review PR #176: jendela WITA, company, multi-principal (claude-design)
 
 - P1 jendela: hari/bulan akumulasi memakai batas WITA (Asia/Makassar → UTC), bukan hari UTC; filter `company_id` sama.

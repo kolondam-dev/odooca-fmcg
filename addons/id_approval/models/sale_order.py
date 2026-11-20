@@ -159,6 +159,7 @@ class SaleOrder(models.Model):
             "amount": self.amount_total,
             "discount_percent": decision["pct"],
             "principal_id": decision["principal_id"] or False,
+            "principal_decided": True,
             "analytic_account_id": self.tactical_analytic_account_id.id,
             "reason": reason or f"Pengajuan diskon taktikal untuk pesanan {self.name}",
         })
@@ -289,6 +290,15 @@ class SaleOrder(models.Model):
         )
         return {"within_free_zone": False, "principal_id": pid, "pct": pct, "free_limit": limit}
 
+    def _has_program_discount(self):
+        """True bila pesanan memuat diskon program resmi (baris program atau baris reward negatif)."""
+        self.ensure_one()
+        return any(
+            (not line.display_type)
+            and (getattr(line, "promo_program_id", False) or line.price_subtotal < 0)
+            for line in self.order_line
+        )
+
     def _open_approval_request(self, category_code):
         """Permintaan approval yang masih berjalan (draf/pending) untuk SO ini dan kategori tertentu."""
         self.ensure_one()
@@ -329,6 +339,7 @@ class SaleOrder(models.Model):
                         "amount": order.amount_total,
                         "discount_percent": decision["pct"],
                         "principal_id": decision["principal_id"] or False,
+                        "principal_decided": True,
                         "analytic_account_id": order.tactical_analytic_account_id.id or False,
                         "reason": (discount_reason or order.discount_approval_note
                                    or f"Diskon taktikal dari aplikasi lapangan untuk pesanan {order.name}"),
@@ -338,6 +349,27 @@ class SaleOrder(models.Model):
                         order.write({"discount_approval_state": "pending"})
                     order.message_post(
                         body=f"Pengajuan diskon taktikal <b>{req.name}</b> dibuat otomatis dari aplikasi lapangan.",
+                        subtype_xmlid="mail.mt_note",
+                    )
+                    created |= req
+            # Pemantauan promo resmi: tetap approval, hanya hingga Supervisor (keputusan pemilik).
+            # Bila pengajuan diskon taktikal sudah ada/baru dibuat, rantainya sudah memuat Supervisor.
+            if order._has_program_discount() and not order._open_approval_request("tactical_discount") \
+                    and not order._open_approval_request("promo_program_usage"):
+                category = Category.search([("code", "=", "promo_program_usage")], limit=1)
+                if category:
+                    req = Request.create({
+                        "category_id": category.id,
+                        "res_model": "sale.order",
+                        "res_id": order.id,
+                        "reference_document": f"{order.name} - {order.partner_id.name}",
+                        "amount": order.amount_total,
+                        "discount_percent": order._approval_cumulative_discount_pct(category.cumulative_scope),
+                        "reason": f"Pemantauan penggunaan promo resmi untuk pesanan {order.name}",
+                    })
+                    req.action_submit()
+                    order.message_post(
+                        body=f"Pemantauan promo resmi <b>{req.name}</b> diajukan ke Supervisor.",
                         subtype_xmlid="mail.mt_note",
                     )
                     created |= req

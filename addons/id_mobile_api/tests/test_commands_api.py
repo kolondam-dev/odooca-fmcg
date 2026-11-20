@@ -133,6 +133,20 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             ("res_model", "=", "sale.order"), ("res_id", "=", order.id)]))
         self.assertEqual(model.process_command(command), receipt)
 
+    def test_order_without_discount_not_flagged_by_promo_check(self):
+        """Pesanan biasa tanpa promo tidak boleh terkena pemantauan promo."""
+        if "fmcg.approval.request" not in self.env:
+            self.skipTest("id_approval tidak terpasang")
+        model = self._command_model()
+        command = {"client_uuid": str(uuid.uuid4()), "type": "sales.order.submit",
+                   "payload": self._valid_order_payload()}
+        model.process_command(command)
+        order = self.env["id.mobile.command"].search(
+            [("client_uuid", "=", command["client_uuid"])]).sale_order_ids
+        self.assertFalse(self.env["fmcg.approval.request"].sudo().search([
+            ("res_model", "=", "sale.order"), ("res_id", "=", order.id),
+            ("category_id.code", "=", "promo_program_usage")]))
+
     def test_order_without_discount_creates_no_approval_request(self):
         if "fmcg.approval.request" not in self.env:
             self.skipTest("id_approval tidak terpasang")

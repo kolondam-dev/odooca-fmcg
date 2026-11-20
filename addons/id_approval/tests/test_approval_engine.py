@@ -436,6 +436,58 @@ class TestApprovalEngine(TransactionCase):
         self.assertAlmostEqual(by_principal[principal_a.id], 0.0, places=3)
         self.assertAlmostEqual(by_principal[principal_b.id], 10.0, places=3)
 
+    def _reward_line(self):
+        """Baris reward program (bernilai negatif) pada produk tanpa HPP agar tidak memicu 'di bawah HPP'."""
+        reward = self.env["product.product"].create({
+            "name": "Reward Program Uji", "standard_price": 0.0, "list_price": 0.0})
+        return (0, 0, {"product_id": reward.id, "product_uom_qty": 1.0, "price_unit": -3_000.0})
+
+    def test_19_no_principal_group_keeps_general_rules_on_submit(self):
+        """Review PR #176 (P1): kelompok tanpa principal tidak boleh memakai batas principal pertama."""
+        principal, product_p = self._principal_product("PRI")
+        category = self._free_zone_rule().category_id
+        self.env["fmcg.approval.rule"].create({
+            "category_id": category.id, "tier_sequence": 0, "name": "Zona bebas Principal Uji",
+            "approver_type": "group", "group_id": self.grp_spv.id,
+            "is_free_zone": True, "max_discount": 6.0, "principal_id": principal.id,
+        })
+        for lines_reversed in (False, True):
+            lines = [
+                (0, 0, {"product_id": product_p.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 0.0}),   # principal berbatas 6%
+                (0, 0, {"product_id": self.product.id, "product_uom_qty": 5.0,
+                        "price_unit": 12_000.0, "discount": 5.0}),   # tanpa principal, batas umum 0%
+            ]
+            if lines_reversed:
+                lines.reverse()
+            order = self.env["sale.order"].create({"partner_id": self.partner_tempo.id, "order_line": lines})
+            reqs = order._mobile_auto_request_approvals()
+            self.assertEqual(len(reqs), 1, f"reversed={lines_reversed}")
+            self.assertEqual(reqs.state, "pending", f"reversed={lines_reversed}")
+            self.assertTrue(reqs.principal_decided)
+            self.assertFalse(reqs.principal_id)
+            self.assertEqual(len(reqs.line_ids), 2)  # tier umum: SPV lalu Branch Manager
+
+    def test_20_pure_official_promo_goes_to_supervisor_only(self):
+        """Keputusan pemilik: pesanan murni promo resmi tetap approval, hanya hingga Supervisor."""
+        category = self.env.ref("id_approval.cat_promo_program_usage")
+        self.assertEqual(len(category.rule_ids), 1)
+        order = self._tactical_order(discount=0.0, extra_lines=[self._reward_line()])
+        self.assertFalse(order.has_tactical_discount)
+        self.assertTrue(order._has_program_discount())
+        reqs = order._mobile_auto_request_approvals()
+        self.assertEqual(reqs.category_id.code, "promo_program_usage")
+        self.assertEqual(reqs.state, "pending")
+        self.assertEqual(len(reqs.line_ids), 1)
+        self.assertEqual(reqs.line_ids.rule_id.group_id, self.env.ref("id_approval.group_fmcg_approval_supervisor"))
+        # idempoten
+        self.assertFalse(order._mobile_auto_request_approvals())
+
+    def test_21_promo_with_manual_discount_uses_single_tactical_chain(self):
+        order = self._tactical_order(discount=5.0, extra_lines=[self._reward_line()])
+        reqs = order._mobile_auto_request_approvals()
+        self.assertEqual(reqs.mapped("category_id.code"), ["tactical_discount"])
+
     def test_04_new_sku_activation_workflow(self):
         """SKU baru tidak aktif jual hingga disetujui manajemen."""
         prod_tmpl = self.env["product.template"].create({
