@@ -168,6 +168,62 @@ class TestApprovalEngine(TransactionCase):
         self.assertEqual(req.state, "pending")
         self.assertEqual(req.analytic_account_id, self.analytic_account)
 
+    def test_03b_mobile_auto_request_tactical_without_analytic(self):
+        """BE-14: jalur lapangan membuat permintaan tanpa akun analitik, berjenjang, dan idempoten."""
+        order = self.env["sale.order"].create({
+            "partner_id": self.partner_tempo.id,
+            "order_line": [
+                (0, 0, {
+                    "product_id": self.product.id,
+                    "product_uom_qty": 5.0,
+                    "price_unit": 12_000.0,
+                    "discount": 5.0,
+                }),
+            ],
+        })
+        self.assertFalse(order.tactical_analytic_account_id)
+        reqs = order._mobile_auto_request_approvals("Pesaing memberi harga serupa")
+        self.assertEqual(len(reqs), 1)
+        self.assertEqual(reqs.category_id.code, "tactical_discount")
+        self.assertEqual(reqs.state, "pending")
+        self.assertEqual(reqs.discount_percent, 5.0)
+        self.assertEqual(reqs.reason, "Pesaing memberi harga serupa")
+        self.assertGreaterEqual(len(reqs.line_ids), 2)  # 5% > 3%: SPV lalu Branch Manager
+        self.assertEqual(order.discount_approval_state, "pending")
+        # Idempoten: panggilan kedua tidak membuat permintaan baru
+        self.assertFalse(order._mobile_auto_request_approvals("ulang"))
+        self.assertEqual(
+            self.env["fmcg.approval.request"].search_count([
+                ("res_model", "=", "sale.order"), ("res_id", "=", order.id)]), 1)
+
+    def test_03c_mobile_auto_request_below_hpp(self):
+        order = self.env["sale.order"].create({
+            "partner_id": self.partner_tempo.id,
+            "order_line": [
+                (0, 0, {
+                    "product_id": self.product.id,
+                    "product_uom_qty": 10.0,
+                    "price_unit": 8_000.0,
+                }),
+            ],
+        })
+        reqs = order._mobile_auto_request_approvals()
+        self.assertIn("discount_below_hpp", reqs.mapped("category_id.code"))
+        self.assertEqual(order.below_hpp_approval_state, "pending")
+
+    def test_03d_mobile_auto_request_noop_without_discount(self):
+        order = self.env["sale.order"].create({
+            "partner_id": self.partner_cash.id,
+            "order_line": [
+                (0, 0, {
+                    "product_id": self.product.id,
+                    "product_uom_qty": 1.0,
+                    "price_unit": 12_000.0,
+                }),
+            ],
+        })
+        self.assertFalse(order._mobile_auto_request_approvals())
+
     def test_04_new_sku_activation_workflow(self):
         """SKU baru tidak aktif jual hingga disetujui manajemen."""
         prod_tmpl = self.env["product.template"].create({

@@ -327,7 +327,17 @@ class MobileCommand(models.Model):
 
         so_names = ", ".join(so.name for so in created_orders)
         if needs_approval:
+            # BE-14: id_approval opsional (tidak ada dependensi manifest); bila terpasang,
+            # permintaan approval dibuat di sini agar penyetuju mendapat antrean.
+            approval_refs = []
+            for so in created_orders:
+                if hasattr(so, "_mobile_auto_request_approvals"):
+                    approval_refs += so._mobile_auto_request_approvals(discount_reason).mapped("name")
+                elif getattr(so, "credit_limit_exceeded", False) and hasattr(so, "action_request_credit_approval"):
+                    so.action_request_credit_approval()
             msg = f"Pesanan {so_names} dibuat, menunggu approval kredit/diskon."
+            if approval_refs:
+                msg += f" Pengajuan: {', '.join(approval_refs)}."
             return [so.id for so in created_orders], "needs_approval", msg, so_names
         return [so.id for so in created_orders], "accepted", f"Pesanan {so_names} berhasil diajukan.", so_names
 

@@ -169,6 +169,74 @@ class SaleOrder(models.Model):
             "target": "current",
         }
 
+    def _open_approval_request(self, category_code):
+        """Permintaan approval yang masih berjalan (draf/pending) untuk SO ini dan kategori tertentu."""
+        self.ensure_one()
+        return self.env["fmcg.approval.request"].sudo().search([
+            ("res_model", "=", "sale.order"),
+            ("res_id", "=", self.id),
+            ("category_id.code", "=", category_code),
+            ("state", "in", ("draft", "pending")),
+        ], limit=1)
+
+    def _mobile_auto_request_approvals(self, discount_reason=""):
+        """Membuat permintaan approval otomatis untuk SO dari aplikasi lapangan (BE-14).
+
+        Berbeda dengan tombol di form SO, jalur ini tidak mewajibkan akun analitik
+        (akun diisi bila SO sudah memilikinya) karena salesman tidak mengisinya.
+        Idempoten: kategori yang sudah punya permintaan berjalan dilewati.
+        Mengembalikan recordset fmcg.approval.request yang baru dibuat.
+        """
+        Request = self.env["fmcg.approval.request"].sudo()
+        Category = self.env["fmcg.approval.category"].sudo()
+        created = Request
+        for order in self:
+            if order.has_tactical_discount and not order._open_approval_request("tactical_discount"):
+                category = Category.search([("code", "=", "tactical_discount")], limit=1)
+                if category:
+                    req = Request.create({
+                        "category_id": category.id,
+                        "res_model": "sale.order",
+                        "res_id": order.id,
+                        "reference_document": f"{order.name} - {order.partner_id.name}",
+                        "amount": order.amount_total,
+                        "discount_percent": order.max_line_discount,
+                        "analytic_account_id": order.tactical_analytic_account_id.id or False,
+                        "reason": (discount_reason or order.discount_approval_note
+                                   or f"Diskon taktikal dari aplikasi lapangan untuk pesanan {order.name}"),
+                    })
+                    req.action_submit()
+                    order.write({"discount_approval_state": "pending"})
+                    order.message_post(
+                        body=f"Pengajuan diskon taktikal <b>{req.name}</b> dibuat otomatis dari aplikasi lapangan.",
+                        subtype_xmlid="mail.mt_note",
+                    )
+                    created |= req
+            if order.has_below_hpp and order.below_hpp_approval_state in ("none", False) \
+                    and not order._open_approval_request("discount_below_hpp"):
+                category = Category.search([("code", "=", "discount_below_hpp")], limit=1)
+                if category:
+                    req = Request.create({
+                        "category_id": category.id,
+                        "res_model": "sale.order",
+                        "res_id": order.id,
+                        "reference_document": f"{order.name} - {order.partner_id.name}",
+                        "amount": order.amount_total,
+                        "analytic_account_id": order.tactical_analytic_account_id.id or False,
+                        "reason": f"Persetujuan harga di bawah HPP:\n{order.below_hpp_summary}",
+                    })
+                    req.action_submit()
+                    order.write({"below_hpp_approval_state": "pending"})
+                    order.message_post(
+                        body=f"Pengajuan harga di bawah HPP <b>{req.name}</b> dibuat otomatis dari aplikasi lapangan.",
+                        subtype_xmlid="mail.mt_note",
+                    )
+                    created |= req
+            if getattr(order, "credit_limit_exceeded", False) \
+                    and getattr(order, "credit_approval_state", False) in ("none", False):
+                order.action_request_credit_approval()
+        return created
+
     def action_confirm(self):
         """Guard konfirmasi penjualan untuk harga < HPP dan diskon taktikal."""
         is_seed_load = (

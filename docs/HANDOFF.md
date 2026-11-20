@@ -1,3 +1,9 @@
+## 2026-11-20 — [BU] BE-14: order lapangan membuat permintaan approval otomatis (claude-design)
+
+- `sale.order._mobile_auto_request_approvals()` (id_approval): diskon taktikal dan harga di bawah HPP membuat `fmcg.approval.request` + `action_submit`, tanpa wajib akun analitik; idempoten (kategori yang sudah berjalan dilewati); limit kredit memakai `action_request_credit_approval` id_base.
+- `_handle_sales_order_submit` memanggilnya bila `needs_approval` (pemanggilan lunak via `hasattr`, tanpa dependensi manifest baru); pesan receipt memuat nomor pengajuan.
+- Tier masih per permintaan tunggal (BE-15 menyusul). Tes Odoo: `test_03b/c/d` (id_approval) dan dua tes di `test_commands_api.py`; tidak dapat dijalankan lokal (tanpa Odoo), diverifikasi lewat CI.
+
 ## 2026-11-20 — [F] FE-1 perbaikan review PR #172: subtotal kartu SKU (claude-design)
 
 - P2: subtotal kartu SKU di POS masih "12 pcs · 0.5 box"; kini `UnitQty` bernada ink (mis. "2 pack"), harga tetap.
