@@ -352,7 +352,8 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         [
             ("company_id", "=", company.id),
             ("picking_type_id.code", "=", "outgoing"),
-            ("origin", "=like", f"SO-{period_str}-%"),
+            # Odoo mengisi picking.origin dengan nama SO (S0xxxx); nomor SO pack ada di client_order_ref.
+            ("sale_id.client_order_ref", "=like", f"SO-{period_str}-%"),
             ("state", "=", "done"),
         ]
     )

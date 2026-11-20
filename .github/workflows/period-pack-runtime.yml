@@ -63,7 +63,7 @@ jobs:
           python-version: "3.12"
 
       - name: Unit and contract tests
-        run: python -m unittest tests/test_period_pack_loader.py -v
+        run: python -m unittest tests/test_period_pack_loader.py tests/test_verifier_do_scope.py -v
 
       - uses: docker/setup-buildx-action@v3
 

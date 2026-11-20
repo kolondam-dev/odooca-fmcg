@@ -1,3 +1,15 @@
+## 2026-11-20T22:40:22+07:00 — Agent Codex-Cloud1 — F4/PR #110: Sinkronisasi main dan koreksi scope Delivery Order
+**Berubah:**
+- Integrasi `origin/main` (`69c6e05`); kedua sisi konflik `docs/HANDOFF.md` dipertahankan.
+- Verifier F4 mencari DO melalui `sale_id.client_order_ref`. Workflow F4 menjalankan tes regresi scope dari patch Claude.
+**Diverifikasi:**
+- [F] Uji ORM Odoo 19 disposable: filter lama mendapat 0; patch mendapat tepat satu DO done Agustus. DO Juli, DO belum done, dan DO perusahaan lain dikecualikan.
+- [F] 77 unit test, Ruff, dan pemeriksaan 14 manifest lulus.
+**Belum diuji:**
+- [BU] Hitungan 1.240 DO dari pack Agustus serta hasil audit F4 A/B pada SHA baru.
+**Berikutnya:**
+- Push ke branch PR #110 dan pantau CI pada SHA baru.
+
 ## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
 
 - P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.
