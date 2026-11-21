@@ -489,3 +489,13 @@
 - [F] No merge, deployment, or server-data change was performed by this work.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-20T08:41:39+07:00
+
+[2026-11-16 00:25:00+07:00] [INFO] PR #135 sync main 4cb81ce + PO/model_terms id_ID
+- Main CI impact planner/targeted workflows retained; WMS report files overlaid without reverting newer main changes.
+- Added model_terms occurrences per QWeb report template and id_ID HTML assertions; exact-SHA CI pending, no merge/deploy.
+- Task managed by Codex supervisor.
+
+[2026-11-21] [INFO] Supervisor sync PR #135 with latest main
+- Main 34ba18e83aa7470cde601b742d2510ba411f7e92; pre-sync PR HEAD a71d79002f27e5983283a2f9a27289796473c749; backup branch backup/pr-135-before-main-sync-20261121.
+- Preserved WMS addon/report/i18n/test/PDF-smoke changes and merged CI changes three-way; main's newer PWA, DS, HANDOFF and Claude log history retained.
+- Exact-SHA CI and report rendering remain pending; no PR merge or deployment.

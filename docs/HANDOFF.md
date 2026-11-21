@@ -1,3 +1,8 @@
+## 2026-11-21 — Supervisor — PR #135 disinkronkan ke main terbaru
+**Konteks:** Main diverifikasi pada `34ba18e83aa7470cde601b742d2510ba411f7e92`; HEAD PR sebelum sync `a71d79002f27e5983283a2f9a27289796473c749`. Backup dibuat pada `backup/pr-135-before-main-sync-20261121`.
+**Berubah:** Integrasi mempertahankan kedua parent commit. HANDOFF dan log agen main yang lebih baru dipertahankan; catatan PR #135 Codex dibawa masuk. Perubahan WMS (report templates, Indonesian translations, tests, PDF smoke) dipertahankan. File PWA yang sudah identik/lebih baru di main tidak di-revert.
+**Verifikasi:** Sinkronisasi source saja; seluruh CI exact-SHA wajib dijalankan ulang. Belum ada klaim tes/PDF smoke lulus, merge PR, atau deployment.
+
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 7): perubahan setelah disetujui (claude-design)
 
 - P1: persetujuan hanya berlaku untuk isi pesanan saat diajukan. Pengajuan menyimpan snapshot (`snapshot_taken`, `manual_discount_amount`, `program_discount_amount`). Guard memblokir bila diskon manual bertambah setelah pengajuan taktikal, bila promo ditambahkan/bertambah setelah persetujuan (butuh pemantauan promo Supervisor sendiri), dan bila nilai promo bertambah setelah pengajuan promo. Pengajuan lama tanpa snapshot dianggap berlaku.
