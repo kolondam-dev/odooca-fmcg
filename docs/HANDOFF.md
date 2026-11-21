@@ -1,3 +1,7 @@
+## 2026-11-21T09:52:31+07:00 — Codex — Tindak lanjut CI Android PR #177
+**Temuan:** `domain-tests` gagal setelah cache hit Gradle karena sampel kontrak hilang. `data-tests` lulus, `build` dilewati dan `android-gate` gagal.
+**Menunggu Dev:** perbaikan output Gradle dan bukti cold run/cache hit sesuai [arahan bersama](android/LOCAL_WORKFLOW.md). Design melanjutkan DES-02-r1.
+
 ## 2026-11-21T09:48:39+07:00 — Codex — Arahan Dev dan Design setelah pembukaan PR #177
 **Berubah:** [Arahan bersama](android/LOCAL_WORKFLOW.md) memuat kandidat integrasi DEV-01 `27d7428`, tindak lanjut Dev saat ada temuan, dan review DES-02-r1 untuk Design.
 **Diverifikasi:** gate statis Lead lulus dan planner memilih 11 suite. [Draft PR #177](https://github.com/kolondam-dev/odooca-fmcg/pull/177) menunggu CI dan review independen. Runtime API 24/35 tetap HOLD.

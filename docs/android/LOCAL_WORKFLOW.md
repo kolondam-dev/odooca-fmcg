@@ -84,6 +84,12 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** Handoff diterima dan Lead mengambil alih integrasi. Pertahankan checkpoint; tindak lanjut implementasi menunggu temuan yang spesifik dari CI atau pengujian runtime. DEV-02A dan implementasi visual D01 berada di luar PR ini.
 - **Design:** Lanjutkan review DES-02-r1 pada checkpoint `46788ad0b0fdded5f8c0c1107e7058ac6ffcf1d0` dan catat versi/node serta hasil review visual. Dua foto check-in tetap memerlukan review binding B02/B09 dengan Lead dan maintainer. Pekerjaan DES-02 berjalan paralel; checkpoint desain belum masuk PR DEV-01.
 
+### Tindak lanjut CI — PR #177
+
+- **Dev:** Tindak lanjuti kegagalan [domain-tests](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44857861509/job/136704210173) pada kandidat Lead `27d7428`. Gradle melaporkan `:core:domain:test FROM-CACHE`, lalu validator gagal karena `contract-samples/check_in.json` hilang. Task saat ini memasok lokasi lewat `contract.out` tanpa mendeklarasikan direktori sampel sebagai output. Buktikan reproduksi cache hit pada checkout bersih dan bahwa tiga sampel dipulihkan serta validator OpenAPI lulus setelah perbaikan. Pertahankan assertion, gate dan scope. Serahkan SHA perbaikan di branch Dev dengan bukti cold run dan cache hit.
+- **Design:** Lanjutkan DES-02-r1 sesuai arahan di atas. Temuan Gradle tidak mengubah checkpoint desain.
+- **Lead:** PR tetap draft. Data tests lulus, build dilewati, dan android-gate gagal karena domain-tests. Lead mengintegrasikan SHA perbaikan dan memeriksa ulang CI. Bukti emulator tetap HOLD.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
