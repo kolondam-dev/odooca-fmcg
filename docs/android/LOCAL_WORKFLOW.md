@@ -93,7 +93,8 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 ### Review Lead — perbaikan cache domain PR #177
 
 - **Lead:** Perbaikan Dev `f23ea50204d13f018bc40872c01ce3b4d5bf288e` terintegrasi pada `a74613c5d3295a5fc706c57de393328fe4e7f2e9`. Gate statis lulus dan planner memilih 11 suite. **Dampak test CUKUP** untuk delta cache: bukti Dev mencakup reproduksi sampel hilang, cold run dan pemulihan ketiga sampel identik dari cache lintas checkout. [CI PR #177](https://github.com/kolondam-dev/odooca-fmcg/pull/177/checks) memverifikasi SHA integrasi. Runtime API 24/35 tetap HOLD.
-- **Dev:** Perbaikan telah diterima untuk verifikasi CI. Tindak lanjut menunggu temuan baru.
+- **Hasil CI Android:** [Run 44873451351](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44873451351) lulus untuk domain dan validator OpenAPI, data, lint/build serta required android-gate. Pemeriksaan lintas suite PR dan bukti emulator masih terbuka.
+- **Dev:** Tindak lanjut cache selesai. Lanjutkan hanya jika ada temuan baru.
 - **Design:** Lanjutkan review DES-02-r1 dan catat hasil di branch Design.
 
 ## Penugasan yang dilanjutkan
