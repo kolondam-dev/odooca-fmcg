@@ -165,7 +165,7 @@ class MobileWorkday(models.Model):
         return result
 
     @api.model
-    def _snapshot_payload(self):
+    def _snapshot_payload(self, include_approval_tiers=True):
         assignment, day = self._current_assignment()
         assignment = assignment.with_company(assignment.company_id)
         company = assignment.company_id
@@ -261,5 +261,18 @@ class MobileWorkday(models.Model):
             version=f"odoo-read-v1:{digest}",
             updatedAt=datetime.now(ZoneInfo("UTC")).isoformat().replace("+00:00", "Z"),
         )
+        # BE-18: id_approval opsional (tanpa dependensi manifest); tier dipakai PWA hanya untuk pratinjau.
+        # Sengaja DI LUAR digest versi: pemakaian berubah setiap order dan konfigurasi bisa berubah kapan
+        # saja; bila ikut digest, command offline berikutnya ditolak 'Stale catalog snapshot version'.
+        category_model = self.env.registry.get("fmcg.approval.category")
+        if include_approval_tiers and category_model is not None \
+                and hasattr(category_model, "_mobile_snapshot_payload"):
+            tiers = self.env["fmcg.approval.category"]._mobile_snapshot_payload(
+                principal_ids=products.mapped("principal_id").ids,
+                partner_ids=partners.ids, user=self.env.user, company=company,
+                anchor=datetime.now(ZoneInfo("UTC")).replace(tzinfo=None),
+            )
+            if tiers:
+                result["approval_tiers"] = {"discount": tiers}
         assignment._assert_day(day)
         return result

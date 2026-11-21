@@ -192,6 +192,21 @@ class TestMobileRead(MobileFixture, TransactionCase):
         self.assertTrue(tiers["default"]["tiers"])
         self.assertIsInstance(tiers["usage"], list)
 
+    def test_approval_tiers_do_not_change_snapshot_version(self):
+        """Regresi CI PR #179: konfigurasi/pemakaian tier di luar digest, agar command offline tidak 'stale'."""
+        if "fmcg.approval.category" not in self.env:
+            self.skipTest("id_approval tidak terpasang")
+        before = self.service()._snapshot_payload()
+        self.assertIn("approval_tiers", before)
+        self.assertNotIn("approval_tiers", self.service()._snapshot_payload(include_approval_tiers=False))
+        self.env.ref("id_approval.rule_tactical_tier0").sudo().max_discount = 9.0
+        after = self.service()._snapshot_payload()
+        self.assertNotEqual(before["approval_tiers"], after["approval_tiers"])
+        self.assertEqual(before["version"], after["version"])
+        self.assertEqual(
+            before["version"],
+            self.service()._snapshot_payload(include_approval_tiers=False)["version"])
+
     def test_outlet_summary_respects_native_sales_acl_and_assigned_scope(self):
         self.outlet.pic_name = "Outlet contact"
         self.outlet.with_company(self.company).credit_limit = 1000000
