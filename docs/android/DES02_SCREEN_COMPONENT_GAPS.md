@@ -122,3 +122,24 @@ Pemilik mengotorisasi penambahan gap yang diaudit pada halaman [02 · Components
 - `Button` yang sudah ada menerima enam varian baru: `Focused` pada empat tipe ukuran Md, dan `Busy` pada Primary ukuran Md dan Lg. Sampel sinkron terakhir memakai `08.02.15 WITA`.
 - `CheckInEvidence` memakai dua instance `PhotoSlot`, dengan state kosong, satu slot siap dari masing-masing sisi, keduanya siap, dan retake per slot. `ReceiptPanel` memisahkan status resmi dari hasil protokol, pemblokiran akses dan respons yang tidak terbaca.
 - Pembacaan balik Penpot memverifikasi 23 keluarga baru, 83 varian baru, enam varian tombol, tanpa error varian dan tanpa board varian keluar dari kontainer masing-masing. Contoh layout dan data tetap berada dalam lingkup design system. Binding dua bukti, acceptance runtime dan prototipe alur penuh tetap mengikuti milestone dan kontrak.
+
+## 8. Review Penpot menjelang alih kerja · 21 November 2026
+
+Pembacaan melalui MCP menemukan 54 root di `02 · Components`, 22 gaya tipografi, 5 set token aktif dan 5 template di `03 · Patterns`: Tab root, Detail sticky action, Bottom sheet, Loading, dan Offline. `01 · Foundations` memuat contoh warna, tipografi, spasi/radius/elevation, perangkat, dan ikon. `05 · Motion & Haptics` memuat aturan serta contoh interaksi. `04 · Screens` masih kosong saat dibaca. Template dan library dapat menjadi titik mulai penyusunan layar setelah giliran Claude selesai.
+
+| Area | Library Claude Design | Komponen r1 | Arah integrasi yang diusulkan |
+|---|---|---|---|
+| Tanggal | `Calendar` punya angka hari per layer dalam komponen flex. | `PromiseDate` menyimpan state Empty/Selected; kisi contoh memakai teks per pekan. | Gunakan Calendar untuk tampilan tanggal dan pertahankan konteks janji bayar, pemilihan, serta aksi konfirmasi. |
+| Sheet dan kamera | `BottomSheet` memakai slot satu/dua aksi. `CameraControls` punya Ready, Out of area, Review. | `RecoverySheet` memuat lima sebab pemulihan. `CameraEvidence` memuat Capture/Outside/Preview/Expired. `CheckInEvidence` merangkai dua PhotoSlot. | Instance pola dasar Claude untuk presentasi. Pertahankan aturan pemulihan, metadata bukti, kedaluwarsa, dan dua foto wajib pada pola domain. |
+| Antrean dan hasil | `ListItem` memiliki pilihan trailing; `SuccessHero` memiliki tone Success/Pending/Failed. | `QueueRow` memiliki 7 state. `ReceiptPanel` membedakan keputusan bisnis resmi dari kendala respons/protokol. | Gunakan ListItem untuk ringkasan antrean. Hero mengikuti state yang sudah diverifikasi; detail hasil tetap mendapat provenance, referensi, dan waktu server bila ada. |
+| Progres | `ChecklistStep` berisi Done/Current/Locked. `ProgressSteps` adalah tracker horizontal empat tahap Sales. | `DeliveryProgressSteps` adalah daftar vertikal lima tahap dengan detail per langkah. | Evaluasi satu blok langkah reusable dan komposisi Sales/Delivery. Pertahankan urutan domain dan uji tangkapan layar lebar kecil. |
+| Harga dan stok | `ProductCard` punya 2/3 baris UOM. Contoh header menyatukan SKU dan stok, misalnya `MYR-RMA-01 · 84 krt`. `KeyValueRow` menyediakan varian emphasis. | Ringkasan order dan faktur punya baris label/nominal buatan lokal. | Gunakan ProductCard untuk konteks SKU, stok badge untuk kuantitas, dan KeyValueRow untuk ringkasan uang. |
+| Fondasi | Banyak komponen inti memakai token `color.*`/`spacing.*` dan Inter Tight. Komponen baru seperti Calendar/SuccessHero juga memakai Inter. | Banyak komponen domain memakai `android.*` dan Inter. | Setelah handoff, petakan alias peran dan tipografi yang duplikat sebelum migrasi instances. Tetapkan contoh pemakaian untuk mencegah perubahan global tanpa uji. |
+
+### StockQuantityBadge · kontrak desain
+
+Horizontal, dalam urutan **ikon karton + qty terbesar** | **ikon inner + qty inner** | **@ + qty eaches**. Pilihan inner yang disiapkan: Pack, Lusin, Lainnya, dan Tanpa inner untuk SKU tanpa tier tengah. Kuantitas adalah teks editable. `0` adalah angka yang sah. Varian tanpa inner hanya untuk SKU yang tidak memiliki tier itu. Stok yang tidak diketahui memakai label terpisah. Deskripsi Android kelak menyebut satuan lengkap sesuai `productUnitLabels`; perhitungan jumlah mengikuti `productPackaging` dan stok terverifikasi. Representasi sumber PWA `stockText()` memecah stok karton ke unit dasar dan label singkat. Pemilihan ikon tidak mengubah konversi.
+
+Penerapan yang disarankan: baris metadata `ProductCard`, kolom **stok sistem** dan **stok display** dengan judul yang jelas, serta ringkasan **dipesan/diterima/selisih** pada baris POD. Simbol `@` dipakai untuk satuan eceran. Nilai Rupiah, status transaksi, dan count notifikasi mempertahankan pola masing-masing.
+
+Status saat checkpoint review: [BU] pembuatan node badge menunggu tab Penpot aktif. MCP berhasil membaca library dan struktur terbaru, lalu tab editor tersuspensi sebelum penulisan dapat diverifikasi.
