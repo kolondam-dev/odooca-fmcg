@@ -545,3 +545,12 @@
 - Base 69c6e05, checkpoint Dev 7bcd5aa. PR memicu CI wajib.
 - Bukti runtime API 24/35 masih HOLD. Arahan Dev dan Design di LOCAL_WORKFLOW.
 - Task managed by codex agent at 2026-11-21T09:48:00+07:00
+[2026-11-21T10:22:32+07:00] [INFO] DEV-01 deklarasikan output sampel kontrak pada Gradle
+- [F] Tindak lanjut arahan 79f41bb untuk PR #177 pada 27d7428. Cache task tes harus memulihkan tiga sampel kontrak untuk validator.
+- [F] Path lokal dipasok lewat argument provider dan direktori diberi anotasi OutputDirectory.
+- [F] Baseline mereproduksi sampel hilang pada cache hit. Cold run dan cache hit lintas path kandidat memulihkan tiga file dengan checksum identik; validator lulus.
+- Task managed by codex agent at 2026-11-21T10:22:32+07:00
+
+[2026-11-21T13:00:02+07:00] [INFO] Integrasi perbaikan cache domain PR #177
+- Perbaikan Dev f23ea50; kedua entri konflik dipertahankan. CI PR memverifikasi domain-tests.
+- Task managed by codex agent at 2026-11-21T13:00:02+07:00
