@@ -97,6 +97,12 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** Tindak lanjut cache selesai. Lanjutkan hanya jika ada temuan baru.
 - **Design:** Lanjutkan review DES-02-r1 dan catat hasil di branch Design.
 
+### Tindak lanjut Lead — smoke API 24/35 pada PR #177
+
+- **Lead:** Dispatch GitHub berhasil pada `a74613c5d3295a5fc706c57de393328fe4e7f2e9`. [Run 44881381326](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44881381326) membuktikan akses KVM dan instalasi SDK pada kedua runner. Kedua job berhenti sebelum boot: `sdkmanager` memasang platform-tools 37.0.3 sedangkan skrip mensyaratkan 37.0.1. Artefak diagnostik tersedia untuk API 24 dan 35. Runtime HOLD; instrumentation menyusul setelah kedua smoke lulus.
+- **Dev:** Selaraskan provisioning dan pin toolchain. Periksa juga revisi emulator dan image kedua API yang belum dicapai pemeriksaan. Pertahankan validasi revisi dan bukti per tahap, lalu serahkan SHA dan hasil verifikasi.
+- **Design:** Lanjutkan DES-02-r1 secara paralel.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

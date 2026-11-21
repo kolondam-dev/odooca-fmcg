@@ -559,3 +559,7 @@
 [2026-11-21T13:05:10+07:00] [INFO] Gate Android PR #177 lulus
 - Run 44873451351 pada a74613c. Tindak lanjut cache Dev selesai; runtime tetap HOLD.
 - Task managed by codex agent at 2026-11-21T13:05:10+07:00
+
+[2026-11-21T14:43:56+07:00] [WARN] Smoke DEV-01 tertahan pin platform-tools
+- Run 44881381326: KVM lulus, platform-tools aktual 37.0.3 vs pin 37.0.1 pada kedua API.
+- Task managed by codex agent at 2026-11-21T14:43:56+07:00

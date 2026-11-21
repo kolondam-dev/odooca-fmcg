@@ -1,3 +1,7 @@
+## 2026-11-21T14:43:56+07:00 — Codex — Hasil smoke DEV-01 PR #177
+**Bukti:** Run 44881381326 pada `a74613c`. KVM lulus untuk API 24/35. Pin platform-tools 37.0.1 menolak versi 37.0.3 yang dipasang SDK Manager sebelum boot. Kedua artefak diagnostik tersedia.
+**Menunggu Dev:** selaraskan provisioning dan pin sesuai [arahan bersama](android/LOCAL_WORKFLOW.md). Smoke dan instrumentation tetap HOLD.
+
 ## 2026-11-21T13:05:10+07:00 — Codex — Gate Android PR #177 lulus
 **Bukti:** [Run 44873451351](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44873451351) pada integrasi `a74613c`: domain/OpenAPI, data, lint/build dan android-gate lulus. Pemeriksaan lintas suite PR dan emulator masih terbuka.
 
