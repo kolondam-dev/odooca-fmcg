@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_fmcg_picklist" model="ir.actions.report">
+        <field name="name">FMCG Picklist</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">id_base.report_fmcg_picklist</field>
+        <field name="report_file">id_base.report_fmcg_picklist</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+    <record id="action_report_fmcg_packlist" model="ir.actions.report">
+        <field name="name">FMCG Packlist</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">id_base.report_fmcg_packlist</field>
+        <field name="report_file">id_base.report_fmcg_packlist</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+    <record id="action_report_fmcg_delivery_order" model="ir.actions.report">
+        <field name="name">FMCG Delivery Order</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">id_base.report_fmcg_delivery_order</field>
+        <field name="report_file">id_base.report_fmcg_delivery_order</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_fmcg_picklist">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Picklist <span t-field="o.name"/></h2>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong t-translation="on">Customer / Destination</strong>
+                                <div t-field="o.partner_id"/>
+                            </div>
+                            <div class="col-3">
+                                <strong t-translation="on">Source Document</strong>
+                                <div t-field="o.origin"/>
+                            </div>
+                            <div class="col-3">
+                                <strong t-translation="on">Scheduled</strong>
+                                <div t-field="o.scheduled_date"/>
+                            </div>
+                        </div>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th t-translation="on">Product</th>
+                                    <th t-translation="on">Source Location</th>
+                                    <th t-translation="on">Lot / Serial</th>
+                                    <th t-translation="on" class="text-end">Reserved / Planned</th>
+                                    <th t-translation="on">Packaging Breakdown</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.move_ids.filtered(lambda move: move.state != 'cancel')" t-as="move">
+                                    <t t-if="move.move_line_ids">
+                                        <tr t-foreach="move.move_line_ids" t-as="line">
+                                            <td><span t-field="line.product_id"/></td>
+                                            <td><span t-field="line.location_id"/></td>
+                                            <td><span t-field="line.lot_id"/></td>
+                                            <td class="text-end">
+                                                <span t-field="line.quantity"/>
+                                                <span t-field="line.product_uom_id"/>
+                                            </td>
+                                            <td><span t-field="line.fmcg_qty_breakdown"/></td>
+                                        </tr>
+                                    </t>
+                                    <t t-else="">
+                                        <tr>
+                                            <td><span t-field="move.product_id"/></td>
+                                            <td><span t-field="move.location_id"/></td>
+                                            <td>—</td>
+                                            <td class="text-end">
+                                                <span t-field="move.product_uom_qty"/>
+                                                <span t-field="move.product_uom"/>
+                                            </td>
+                                            <td><span t-field="move.fmcg_qty_breakdown"/></td>
+                                        </tr>
+                                    </t>
+                                </t>
+                            </tbody>
+                        </table>
+                        <p class="text-muted">This picklist reads native Odoo demand and reservation lines. The report does not create or change lot or location assignments.</p>
+                        <div class="row mt-5">
+                            <div class="col-4 text-center"><span t-translation="on">Prepared by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Checked by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Approved by</span><br/><br/><br/>____________________</div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_fmcg_packlist">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Packlist <span t-field="o.name"/></h2>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong t-translation="on">Customer / Destination</strong>
+                                <div t-field="o.partner_id"/>
+                            </div>
+                            <div class="col-3">
+                                <strong t-translation="on">Source Document</strong>
+                                <div t-field="o.origin"/>
+                            </div>
+                            <div class="col-3">
+                                <strong t-translation="on">Scheduled</strong>
+                                <div t-field="o.scheduled_date"/>
+                            </div>
+                        </div>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th t-translation="on">Product</th>
+                                    <th t-translation="on">Lot / Serial Number</th>
+                                    <th t-translation="on">Source Location</th>
+                                    <th t-translation="on" class="text-end">Quantity</th>
+                                    <th t-translation="on">Packaging Breakdown</th>
+                                    <th t-translation="on">Destination Package</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.move_ids.move_line_ids" t-as="line">
+                                    <td><span t-field="line.product_id"/></td>
+                                    <td><span t-field="line.lot_id"/></td>
+                                    <td><span t-field="line.location_id"/></td>
+                                    <td class="text-end">
+                                        <span t-field="line.quantity"/>
+                                        <span t-field="line.product_uom_id"/>
+                                    </td>
+                                    <td><span t-field="line.fmcg_qty_breakdown"/></td>
+                                    <td><span t-field="line.result_package_id"/></td>
+                                </tr>
+                                <tr t-if="not o.move_ids.move_line_ids">
+                                    <td colspan="6" class="text-center text-muted">No native operation or reservation lines are available. Print the packlist after the picking has native operation details.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="row mt-5">
+                            <div class="col-6 text-center"><span t-translation="on">Packing staff</span><br/><br/><br/>____________________</div>
+                            <div class="col-6 text-center"><span t-translation="on">Inspector</span><br/><br/><br/>____________________</div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_fmcg_delivery_order">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Delivery Order <span t-field="o.name"/></h2>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong t-translation="on">Ship To</strong>
+                                <div t-field="o.partner_id"/>
+                            </div>
+                            <div class="col-3">
+                                <strong t-translation="on">Sales / Source Order</strong>
+                                <div t-field="o.origin"/>
+                            </div>
+                            <div class="col-3">
+                                <strong t-translation="on">Delivery Date</strong>
+                                <div t-if="o.state == 'done'" t-field="o.date_done"/>
+                                <div t-else="" t-field="o.scheduled_date"/>
+                            </div>
+                        </div>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th t-translation="on">Product</th>
+                                    <th t-translation="on">Lot / Serial Number</th>
+                                    <th t-translation="on" class="text-end">Quantity</th>
+                                    <th t-translation="on">Packaging Breakdown</th>
+                                    <th t-translation="on">Package</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="o.state == 'done'">
+                                    <tr t-foreach="o.move_ids.move_line_ids" t-as="line">
+                                        <td><span t-field="line.product_id"/></td>
+                                        <td><span t-field="line.lot_id"/></td>
+                                        <td class="text-end">
+                                            <span t-field="line.quantity"/>
+                                            <span t-field="line.product_uom_id"/>
+                                        </td>
+                                        <td><span t-field="line.fmcg_qty_breakdown"/></td>
+                                        <td><span t-field="line.result_package_id"/></td>
+                                    </tr>
+                                </t>
+                                <t t-else="">
+                                    <tr t-foreach="o.move_ids.filtered(lambda move: move.state != 'cancel')" t-as="move">
+                                        <td><span t-field="move.product_id"/></td>
+                                        <td>—</td>
+                                        <td class="text-end">
+                                            <span t-field="move.product_uom_qty"/>
+                                            <span t-field="move.product_uom"/>
+                                        </td>
+                                        <td><span t-field="move.fmcg_qty_breakdown"/></td>
+                                        <td>—</td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <div class="row mt-5">
+                            <div class="col-4 text-center"><span t-translation="on">Handed over by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Received by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Date / Stamp</span><br/><br/><br/>____________________</div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
