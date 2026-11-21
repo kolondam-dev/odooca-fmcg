@@ -138,8 +138,15 @@ Pembacaan melalui MCP menemukan 54 root di `02 · Components`, 22 gaya tipografi
 
 ### StockQuantityBadge · kontrak desain
 
-Horizontal, dalam urutan **ikon karton + qty terbesar** | **ikon inner + qty inner** | **@ + qty eaches**. Pilihan inner yang disiapkan: Pack, Lusin, Lainnya, dan Tanpa inner untuk SKU tanpa tier tengah. Kuantitas adalah teks editable. `0` adalah angka yang sah. Varian tanpa inner hanya untuk SKU yang tidak memiliki tier itu. Stok yang tidak diketahui memakai label terpisah. Deskripsi Android kelak menyebut satuan lengkap sesuai `productUnitLabels`; perhitungan jumlah mengikuti `productPackaging` dan stok terverifikasi. Representasi sumber PWA `stockText()` memecah stok karton ke unit dasar dan label singkat. Pemilihan ikon tidak mengubah konversi.
+Keputusan pemilik menetapkan tepat dua varian horizontal berdasarkan tingkat kemasan SKU.
+
+| Varian | Urutan segmen |
+|---|---|
+| `Tier=3-tier` | Karton, inner (pack/renceng), pcs |
+| `Tier=2-tier` | Karton, pcs |
+
+Gunakan `Icon/box` dari Foundation untuk karton, satu `Icon/tag` untuk semua inner, dan simbol `@` untuk pcs. Sejajarkan ketiganya di tengah slot 16 × 16 dengan bobot visual seimbang. Gunakan divider vertikal native 1 × 12 dengan token `color.base.line`. Teks kuantitas dapat diedit per segmen. Tier yang tersedia tetap tampil saat kuantitasnya `0`. Stok yang belum diketahui memakai label terpisah. TalkBack membacakan angka dan nama satuan lengkap dari `productUnitLabels`. Perhitungan jumlah mengikuti `productPackaging` dan stok terverifikasi.
 
 Penerapan yang disarankan: baris metadata `ProductCard`, kolom **stok sistem** dan **stok display** dengan judul yang jelas, serta ringkasan **dipesan/diterima/selisih** pada baris POD. Simbol `@` dipakai untuk satuan eceran. Nilai Rupiah, status transaksi, dan count notifikasi mempertahankan pola masing-masing.
 
-Status saat checkpoint review: [BU] pembuatan node badge menunggu tab Penpot aktif. MCP berhasil membaca library dan struktur terbaru, lalu tab editor tersuspensi sebelum penulisan dapat diverifikasi.
+Status revisi: [F] [StockQuantityBadge di 02 · Components](https://design.penpot.app/#/view?file-id=42288968-6e5e-808d-8008-f9456c20a1f7&page-id=d1ec018c-c393-80c4-8008-f94a84b178e0&section=interactions&index=0&shape-id=5c397ebd-41b0-8032-8008-fa4aa5caf612) memiliki dua varian `Tier` tanpa error pada pembacaan balik. Slot ikon 16 × 16 dan divider native 1 × 12 terukur pada kedua varian. Ekspor kedua varian diperiksa secara visual. [BU] Implementasi dan pengujian TalkBack pada Android mengikuti handoff ke Dev.

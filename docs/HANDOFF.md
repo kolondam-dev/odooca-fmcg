@@ -1,3 +1,10 @@
+## 2026-11-21T10:17:20+07:00 — Codex-Android-Design — Revisi StockQuantityBadge
+**Basis:** [F] Parent Design `9131854`, main acuan Design `39172de`, arahan Lead lokal `79f41bb`.
+**Berubah:** [F] Pemilik menetapkan dua varian berdasarkan jumlah tier. Badge Penpot memakai `Icon/box`, `Icon/tag` untuk semua inner, dan `@` pada slot 16 × 16. Divider native 1 × 12 terikat ke `color.base.line`. Dua draf lama tanpa pemakaian di file dihapus.
+**Diverifikasi:** [F] Kedua varian dibaca balik tanpa error. Node keluarga `5c397ebd-41b0-8032-8008-fa4aa5caf612` pada halaman `02 · Components`. Dampak test **CUKUP** untuk perubahan desain dan dokumentasi.
+**Menunggu:** [BU] Implementasi Android dan verifikasi TalkBack.
+**Signature:** Task managed by Agent Codex-Mobile Native at 2026-11-21T10:17:20+07:00
+
 ## 2026-11-21T09:56:55+07:00 — Codex-Android-Design — Review lanjutan Penpot dan badge stok
 **Basis:** [F] Parent Design `46788ad`, main acuan Design `39172de`, arahan Lead `79f41bb`.
 **Berubah:** [F] [Review Penpot](android/DES02_SCREEN_COMPONENT_GAPS.md#8-review-penpot-menjelang-alih-kerja--21-november-2026) mencatat pola library Claude, overlap dengan komponen r1 dan usulan integrasi setelah giliran Claude. Desain badge mendokumentasikan hierarki terbesar/inner/eaches, pilihan inner dan pemetaan ke data PWA.

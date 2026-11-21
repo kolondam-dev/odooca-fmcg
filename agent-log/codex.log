@@ -537,3 +537,8 @@
 [2026-11-21T09:56:55+07:00] [INFO] Codex-Android-Design: review Penpot dan spesifikasi badge stok
 - Pemetaan overlap Claude dan desain r1 terdokumentasi. Badge karton, inner, eaches menunggu koneksi editor.
 - Task managed by codex agent at 2026-11-21T09:56:55+07:00
+
+[2026-11-21T10:17:20+07:00] [INFO] Codex-Android-Design: revisi StockQuantityBadge
+- Dua varian berdasarkan tier kemasan, satu ikon inner dari Foundation dan divider native.
+- Kedua varian Penpot dibaca balik tanpa error.
+- Task managed by codex agent at 2026-11-21T10:17:20+07:00
