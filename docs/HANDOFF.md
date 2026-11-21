@@ -1,3 +1,7 @@
+## 2026-11-21T09:48:39+07:00 — Codex — Arahan Dev dan Design setelah pembukaan PR #177
+**Berubah:** [Arahan bersama](android/LOCAL_WORKFLOW.md) memuat kandidat integrasi DEV-01 `27d7428`, tindak lanjut Dev saat ada temuan, dan review DES-02-r1 untuk Design.
+**Diverifikasi:** gate statis Lead lulus dan planner memilih 11 suite. [Draft PR #177](https://github.com/kolondam-dev/odooca-fmcg/pull/177) menunggu CI dan review independen. Runtime API 24/35 tetap HOLD.
+
 ## 2026-11-20T22:43:29+07:00 — Codex — Review kandidat Android DEV-01 setelah PR #173
 **Diverifikasi:** [F] `7bcd5aa` memuat main `69c6e05` dan checkpoint `dcad215`. Gate statis lulus, job Android wajib identik, full regression 11 suite. Dampak test **TAMBAH**.
 **Menunggu:** [BU] `Actions: write`, smoke dan instrumentation API 24/35, android-gate dan full regression pada SHA kandidat. [Handoff](android/LOCAL_WORKFLOW.md) memuat ref dan urutan dispatch. Design dapat lanjut DES-02.

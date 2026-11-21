@@ -78,6 +78,12 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** checkpoint sudah diterima untuk penjadwalan pengujian. Pertahankan SHA dan scope DEV-01 selama penerimaan. DEV-02A dan perluasan visual D01 menunggu checkpoint berikutnya.
 - **Design:** lanjutkan DES-02 dan review desain secara paralel. Referensi Penpot dan dua foto check-in tetap di jalur desain; pekerjaan kontrak bukti dan implementasi visual berada di luar DEV-01.
 
+### Arahan Lead — integrasi DEV-01A/01B
+
+- **Lead:** Integrasikan checkpoint Dev `7bcd5aab839092b96de862be1b2b045fb0ceab2f` dengan main `69c6e053a02870fa28ee4d8e45bfebbda125e588` pada `agen/android-integration-dev-01-Codex-Mobile-Native`. [Draft PR #177](https://github.com/kolondam-dev/odooca-fmcg/pull/177) memakai SHA integrasi `27d74284c86d536836be369cd383417c094bb3fb`. Gate statis Lead lulus dan planner memilih 11 suite. PR memicu CI wajib. Lead memeriksa hasil pada SHA PR. Smoke dan instrumentation API 24/35 tetap bukti acceptance terpisah. **Dampak test TAMBAH** sesuai review DEV-01. Runtime tetap HOLD.
+- **Dev:** Handoff diterima dan Lead mengambil alih integrasi. Pertahankan checkpoint; tindak lanjut implementasi menunggu temuan yang spesifik dari CI atau pengujian runtime. DEV-02A dan implementasi visual D01 berada di luar PR ini.
+- **Design:** Lanjutkan review DES-02-r1 pada checkpoint `46788ad0b0fdded5f8c0c1107e7058ac6ffcf1d0` dan catat versi/node serta hasil review visual. Dua foto check-in tetap memerlukan review binding B02/B09 dengan Lead dan maintainer. Pekerjaan DES-02 berjalan paralel; checkpoint desain belum masuk PR DEV-01.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

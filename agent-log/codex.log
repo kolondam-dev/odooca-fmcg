@@ -542,3 +542,7 @@
 - [F] Gate statis 7bcd5aa lulus dan job Android wajib identik dengan main 69c6e05.
 - [BU] HOLD hingga smoke dan instrumentation API 24/35, Android gate, dan full regression exact SHA terbukti; izin dispatch belum terverifikasi.
 - Task managed by codex agent at 2026-11-20T22:43:29+07:00
+
+[2026-11-21T09:48:39+07:00] [INFO] Arahan Dev dan Design setelah pembukaan PR #177
+- Integrasi DEV-01 pada 27d7428. Dev menunggu temuan spesifik; Design lanjut DES-02-r1.
+- Task managed by codex agent at 2026-11-21T09:48:39+07:00
