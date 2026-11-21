@@ -550,3 +550,8 @@
 [2026-11-21T09:52:31+07:00] [WARN] CI Android PR #177 gagal pada validator kontrak
 - Tes domain FROM-CACHE tanpa sampel JSON. Tindak lanjut Dev dicatat; Design lanjut.
 - Task managed by codex agent at 2026-11-21T09:52:31+07:00
+
+[2026-11-21T13:00:38+07:00] [INFO] Perbaikan cache domain terintegrasi pada PR #177
+- Dev f23ea50 terintegrasi pada a74613c; gate statis lulus; CI berjalan.
+- Design lanjut DES-02-r1.
+- Task managed by codex agent at 2026-11-21T13:00:38+07:00

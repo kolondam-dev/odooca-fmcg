@@ -1,3 +1,7 @@
+## 2026-11-21T13:00:38+07:00 — Codex — Perbaikan cache domain terintegrasi pada PR #177
+**Basis:** Dev `f23ea50`, integrasi `a74613c`. Gate statis lulus, planner 11 suite. [Arahan Dev dan Design](android/LOCAL_WORKFLOW.md) diperbarui.
+**Menunggu:** hasil CI pada SHA integrasi dan bukti emulator API 24/35.
+
 ## 2026-11-21T09:52:31+07:00 — Codex — Tindak lanjut CI Android PR #177
 **Temuan:** `domain-tests` gagal setelah cache hit Gradle karena sampel kontrak hilang. `data-tests` lulus, `build` dilewati dan `android-gate` gagal.
 **Menunggu Dev:** perbaikan output Gradle dan bukti cold run/cache hit sesuai [arahan bersama](android/LOCAL_WORKFLOW.md). Design melanjutkan DES-02-r1.
