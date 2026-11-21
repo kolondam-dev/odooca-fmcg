@@ -169,6 +169,7 @@ class SaleOrder(models.Model):
             "principal_decided": True,
             "analytic_account_id": self.tactical_analytic_account_id.id,
             "reason": reason or f"Pengajuan diskon taktikal untuk pesanan {self.name}",
+            **self._approval_snapshot_vals(),
         })
         req.action_submit()
         if hasattr(self, "discount_approval_state") and req.state == "pending":
@@ -297,6 +298,29 @@ class SaleOrder(models.Model):
         )
         return {"within_free_zone": False, "principal_id": pid, "pct": pct, "free_limit": limit}
 
+    def _approval_discount_amounts(self):
+        """(diskon manual Rp, diskon program Rp) pada pesanan saat ini."""
+        self.ensure_one()
+        manual = program = 0.0
+        for line in self.order_line:
+            if line.display_type:
+                continue
+            if line.price_subtotal < 0:
+                program += abs(line.price_subtotal)
+            else:
+                manual += line.price_unit * line.product_uom_qty * (line.discount or 0.0) / 100.0
+        return manual, program
+
+    def _approval_snapshot_vals(self):
+        """Nilai diskon saat pengajuan dibuat, untuk mendeteksi perubahan setelah disetujui."""
+        self.ensure_one()
+        manual, program = self._approval_discount_amounts()
+        return {
+            "snapshot_taken": True,
+            "manual_discount_amount": manual,
+            "program_discount_amount": program,
+        }
+
     def _has_program_discount(self):
         """True bila pesanan memuat diskon program resmi (baris program atau baris reward negatif)."""
         self.ensure_one()
@@ -348,6 +372,7 @@ class SaleOrder(models.Model):
                         "principal_id": decision["principal_id"] or False,
                         "principal_decided": True,
                         "analytic_account_id": order.tactical_analytic_account_id.id or False,
+                        **order._approval_snapshot_vals(),
                         "reason": (discount_reason or order.discount_approval_note
                                    or f"Diskon taktikal dari aplikasi lapangan untuk pesanan {order.name}"),
                     })
@@ -432,15 +457,33 @@ class SaleOrder(models.Model):
         """
         self.ensure_one()
         tactical = self._approval_effective_request("tactical_discount")
+        manual_now, program_now = self._approval_discount_amounts()
+        eps = 0.5  # toleransi pembulatan (Rp)
+        # Pengajuan yang sudah disetujui hanya berlaku untuk isi pesanan saat diajukan.
+        if tactical and tactical.snapshot_taken and manual_now > tactical.manual_discount_amount + eps:
+            raise UserError(
+                f"Pesanan {self.name} tidak dapat dikonfirmasi: diskon manual bertambah setelah pengajuan "
+                f"{tactical.name}. Ajukan ulang persetujuan diskon."
+            )
         # Pesanan campuran (promo resmi + diskon manual) mengikuti satu rantai taktikal yang sudah
-        # memuat Supervisor: pengajuan promo terpisah tidak diwajibkan bila rantai taktikal ada
-        # (pengajuan zona bebas tanpa approver tidak dihitung, agar pemantauan Supervisor tetap berjalan).
-        if self._has_program_discount() and not (self.has_tactical_discount and tactical.line_ids):
+        # memuat Supervisor, selama rantai itu sudah mencakup promo yang ada sekarang. Promo yang
+        # ditambahkan setelah pengajuan, atau pengajuan zona bebas tanpa approver, tetap butuh
+        # pemantauan promo Supervisor sendiri.
+        tactical_covers_program = bool(
+            self.has_tactical_discount and tactical.line_ids
+            and (not tactical.snapshot_taken or program_now <= tactical.program_discount_amount + eps)
+        )
+        if self._has_program_discount() and not tactical_covers_program:
             req = self._approval_effective_request("promo_program_usage")
             if not req:
                 raise UserError(
                     f"Pesanan {self.name} memakai promo resmi dan belum diajukan untuk pemantauan Supervisor. "
                     f"Gunakan tombol 'Ajukan Pemantauan Promo' sebelum konfirmasi."
+                )
+            if req.snapshot_taken and program_now > req.program_discount_amount + eps:
+                raise UserError(
+                    f"Pesanan {self.name} tidak dapat dikonfirmasi: nilai promo bertambah setelah pengajuan "
+                    f"{req.name}. Ajukan ulang pemantauan promo."
                 )
             self._raise_unless_approved(req, "pemantauan promo resmi")
         if tactical:
@@ -476,6 +519,7 @@ class SaleOrder(models.Model):
             "amount": self.amount_total,
             "discount_percent": self._approval_cumulative_discount_pct(category.cumulative_scope),
             "reason": f"Pemantauan penggunaan promo resmi untuk pesanan {self.name}",
+            **self._approval_snapshot_vals(),
         })
         req.action_submit()
         self.message_post(

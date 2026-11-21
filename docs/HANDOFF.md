@@ -1,3 +1,8 @@
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 7): perubahan setelah disetujui (claude-design)
+
+- P1: persetujuan hanya berlaku untuk isi pesanan saat diajukan. Pengajuan menyimpan snapshot (`snapshot_taken`, `manual_discount_amount`, `program_discount_amount`). Guard memblokir bila diskon manual bertambah setelah pengajuan taktikal, bila promo ditambahkan/bertambah setelah persetujuan (butuh pemantauan promo Supervisor sendiri), dan bila nilai promo bertambah setelah pengajuan promo. Pengajuan lama tanpa snapshot dianggap berlaku.
+- Tes `test_30`–`test_33` (setujui → tambah promo → konfirmasi ditolak → ajukan promo → disetujui → berhasil; diskon manual dinaikkan; nilai promo dinaikkan; kontrol tanpa perubahan).
+
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 6): pesanan campuran satu rantai (claude-design)
 
 - P1: pesanan campuran (promo resmi + diskon manual) kini cukup satu rantai taktikal; pengajuan promo terpisah tidak diwajibkan bila pengajuan taktikal berlaku. Bila tidak ada pengajuan taktikal, promo tetap wajib disetujui Supervisor. Penolakan taktikal tetap memblokir. Rantai taktikal yang dihitung hanya yang punya langkah approver; pengajuan zona bebas (tanpa approver) tidak menggugurkan pemantauan promo Supervisor (`test_21c`).

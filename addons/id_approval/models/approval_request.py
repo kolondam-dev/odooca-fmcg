@@ -68,6 +68,12 @@ class FmcgApprovalRequest(models.Model):
         ("cancelled", "Dibatalkan"),
     ], string="Status Persetujuan", default="draft", tracking=True, index=True)
 
+    snapshot_taken = fields.Boolean(
+        string="Snapshot Diskon Tersimpan",
+        help="True bila nilai diskon pesanan saat pengajuan dicatat; dipakai untuk mendeteksi perubahan "
+             "pesanan setelah disetujui. Pengajuan lama (False) dianggap masih berlaku.")
+    manual_discount_amount = fields.Float(string="Diskon Manual saat Pengajuan (Rp)")
+    program_discount_amount = fields.Float(string="Diskon Program saat Pengajuan (Rp)")
     principal_decided = fields.Boolean(
         string="Principal Sudah Ditetapkan",
         help="True bila principal penentu sudah dipilih oleh perhitungan per principal; "

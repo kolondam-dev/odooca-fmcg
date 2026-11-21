@@ -408,3 +408,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-21T10:50:57+07:00] [INFO] Fix tes test_21 (CI install-test)
 - rantai 3 tier untuk kumulatif 10%; kode produksi tidak berubah
 - Task managed by claude-design agent at 2026-11-21T10:50:57+07:00
+
+[2026-11-21T13:01:38+07:00] [INFO] BE-15 fix review #176 r7
+- snapshot diskon pada pengajuan; guard memblokir perubahan setelah disetujui; tes 30-33
+- Task managed by claude-design agent at 2026-11-21T13:01:38+07:00

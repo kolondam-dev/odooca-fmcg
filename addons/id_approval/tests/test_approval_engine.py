@@ -520,6 +520,67 @@ class TestApprovalEngine(TransactionCase):
         order.action_confirm()
         self.assertEqual(order.state, "sale")
 
+    def _approve_chain(self, req):
+        for user in (self.user_spv, self.user_mgr, self.user_dir):
+            if req.state != "pending":
+                break
+            req.with_user(user).action_approve(notes="ok")
+        self.assertEqual(req.state, "approved")
+
+    def test_30_promo_added_after_tactical_approval_needs_supervisor_review(self):
+        """Review PR #176: persetujuan taktikal lama tidak boleh meloloskan promo yang baru ditambahkan."""
+        order = self._tactical_order(discount=5.0)
+        req = order._mobile_auto_request_approvals()
+        self._approve_chain(req)
+        with self.assertRaises(UserError):
+            order.action_request_promo_usage_approval()
+        order.write({"order_line": [self._reward_line()]})
+        self.assertTrue(order._has_program_discount())
+        with self.assertRaises(UserError):  # promo baru belum ditinjau Supervisor
+            order.action_confirm()
+        order.action_request_promo_usage_approval()
+        with self.assertRaises(UserError):  # pengajuan promo menunggu
+            order.action_confirm()
+        promo = order._approval_effective_request("promo_program_usage")
+        promo.with_user(self.user_spv).action_approve(notes="Sesuai alokasi")
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+
+    def test_31_manual_discount_raised_after_approval_blocks_confirmation(self):
+        order = self._tactical_order(discount=5.0)
+        req = order._mobile_auto_request_approvals()
+        self._approve_chain(req)
+        order.order_line.discount = 9.0
+        with self.assertRaises(UserError):
+            order.action_confirm()
+        # ajukan ulang -> pengajuan baru -> disetujui -> konfirmasi
+        new_req = order._mobile_auto_request_approvals()
+        self.assertTrue(new_req)
+        self._approve_chain(new_req)
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+
+    def test_32_promo_amount_raised_after_approval_blocks_confirmation(self):
+        order, req = self._promo_order()
+        req.with_user(self.user_spv).action_approve(notes="ok")
+        reward = order.order_line.filtered(lambda line: line.price_subtotal < 0)
+        reward.price_unit = -9_000.0
+        with self.assertRaises(UserError):
+            order.action_confirm()
+        second = order._create_promo_usage_request()
+        self.assertTrue(second)
+        second.with_user(self.user_spv).action_approve(notes="ok")
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+
+    def test_33_unchanged_order_after_approval_still_confirms(self):
+        """Kontrol: tanpa perubahan setelah disetujui, konfirmasi tetap berhasil (satu pengajuan)."""
+        order = self._tactical_order(discount=5.0, extra_lines=[self._reward_line()])
+        req = order._mobile_auto_request_approvals()
+        self._approve_chain(req)
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+
     def test_21b_mixed_order_rejected_tactical_blocks_without_promo_fallback(self):
         order = self._tactical_order(discount=5.0, extra_lines=[self._reward_line()])
         reqs = order._mobile_auto_request_approvals()
