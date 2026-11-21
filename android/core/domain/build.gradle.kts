@@ -1,3 +1,5 @@
+import org.gradle.process.CommandLineArgumentProvider
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
 }
@@ -12,8 +14,18 @@ dependencies {
     testImplementation(libs.kotlin.test.junit)
 }
 
+abstract class ContractSamplesArguments : CommandLineArgumentProvider {
+    @get:OutputDirectory
+    abstract val directory: DirectoryProperty
+
+    override fun asArguments(): Iterable<String> =
+        listOf("-Dcontract.out=${directory.get().asFile.absolutePath}")
+}
+
 tasks.test {
     useJUnit()
-    // Tes mengeluarkan contoh payload ke sini untuk divalidasi terhadap skema OpenAPI (tools/validate_contract.py).
-    systemProperty("contract.out", layout.buildDirectory.dir("contract-samples").get().asFile.absolutePath)
+    // Cache the payloads alongside the test results without putting the checkout path in the cache key.
+    jvmArgumentProviders.add(objects.newInstance<ContractSamplesArguments>().apply {
+        directory.set(layout.buildDirectory.dir("contract-samples"))
+    })
 }

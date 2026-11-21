@@ -1,3 +1,10 @@
+## 2026-11-21T10:22:32+07:00 — Codex Android Dev — Perbaiki cache sampel kontrak DEV-01
+**Basis:** [F] Branch Dev `7bcd5aa`; arahan `79f41bb` untuk CI PR #177 pada `27d7428`.
+**Berubah:** [F] Task `:core:domain:test` mendeklarasikan `build/contract-samples` sebagai output. Argument provider memasok lokasi checkout ke JVM tanpa mengikat cache ke path absolut. Assertion dan validator yang ada dipakai untuk pembuktian.
+**Verifikasi:** [F] Baseline Dev `7bcd5aa`: cold run dan validator lulus. Checkout bersih di path yang sama mendapat `:core:domain:test FROM-CACHE` dan validator gagal karena `check_in.json` hilang. Kandidat: cache awal kosong, 72 tes lulus. Checkout bersih di path berbeda dengan cache yang sama mendapat `:core:domain:test FROM-CACHE`; tiga sampel dipulihkan dengan SHA-256 identik dan tiga kontrol positif serta empat kontrol negatif OpenAPI lulus di kedua run.
+**Gate dan planner:** [F] Gate statis terhadap main `69c6e05` lulus (Ruff, 14 manifest, 30 tes kontrak, token). Delta perbaikan dari `7bcd5aa` hanya memilih `android`. Kandidat DEV-01 secara keseluruhan tetap memilih full regression 11 suite.
+**Dampak test:** **SESUAIKAN** — pertahankan assertion dan validator; tambahkan bukti bahwa validator tetap dapat membaca ketiga sampel saat Gradle memulihkan hasil dari cache. CI pada SHA integrasi PR #177 menunggu Lead. Runtime emulator tetap HOLD.
+
 ## 2026-11-20T22:27:23+07:00 — Codex Android Dev — Selaraskan DEV-01 dengan PR #173
 **Basis:** [F] Main `69c6e053a02870fa28ee4d8e45bfebbda125e588`, arahan `6b894ca`. `dcad215` merupakan checkpoint historis yang dipertahankan sebagai ancestor.
 **Berubah:** [F] Job smoke API 24/35 memakai SDK `platforms;android-37.0` rev 2 dan Build Tools 36.0.0. Versi Gradle dalam bukti dibaca dari wrapper PR #173. Versi Actions diselaraskan dengan main. Seluruh job wajib Android identik dengan main.
