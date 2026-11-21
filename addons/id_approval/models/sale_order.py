@@ -425,12 +425,17 @@ class SaleOrder(models.Model):
         """Guard konfirmasi berdasarkan pengajuan yang berlaku (terbaru, tidak dibatalkan).
 
         - Promo resmi (wajib): tanpa pengajuan, menunggu, atau ditolak -> diblokir; hanya disetujui yang lolos.
+          Pesanan campuran dengan pengajuan taktikal cukup satu rantai taktikal (tanpa pengajuan promo kedua).
         - Diskon taktikal: bila sudah ada pengajuan yang berlaku, harus disetujui (zona bebas Tier 0
           menghasilkan pengajuan yang langsung disetujui). SO lama tanpa pengajuan tidak diblokir.
         Penolakan lama tidak memblokir bila pengajuan pengganti yang berlaku sudah disetujui.
         """
         self.ensure_one()
-        if self._has_program_discount():
+        tactical = self._approval_effective_request("tactical_discount")
+        # Pesanan campuran (promo resmi + diskon manual) mengikuti satu rantai taktikal yang sudah
+        # memuat Supervisor: pengajuan promo terpisah tidak diwajibkan bila rantai taktikal ada
+        # (pengajuan zona bebas tanpa approver tidak dihitung, agar pemantauan Supervisor tetap berjalan).
+        if self._has_program_discount() and not (self.has_tactical_discount and tactical.line_ids):
             req = self._approval_effective_request("promo_program_usage")
             if not req:
                 raise UserError(
@@ -438,9 +443,8 @@ class SaleOrder(models.Model):
                     f"Gunakan tombol 'Ajukan Pemantauan Promo' sebelum konfirmasi."
                 )
             self._raise_unless_approved(req, "pemantauan promo resmi")
-        req = self._approval_effective_request("tactical_discount")
-        if req:
-            self._raise_unless_approved(req, "diskon taktikal")
+        if tactical:
+            self._raise_unless_approved(tactical, "diskon taktikal")
 
     def _raise_unless_approved(self, req, label):
         if req.state == "approved":

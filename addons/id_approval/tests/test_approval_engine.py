@@ -487,6 +487,40 @@ class TestApprovalEngine(TransactionCase):
         order = self._tactical_order(discount=5.0, extra_lines=[self._reward_line()])
         reqs = order._mobile_auto_request_approvals()
         self.assertEqual(reqs.mapped("category_id.code"), ["tactical_discount"])
+        self.assertTrue(order.has_tactical_discount and order._has_program_discount())
+        # Konfirmasi terblokir selama rantai taktikal menunggu
+        with self.assertRaises(UserError):
+            order.action_confirm()
+        reqs.with_user(self.user_spv).action_approve(notes="SPV")
+        with self.assertRaises(UserError):
+            order.action_confirm()  # tier Branch Manager masih menunggu
+        reqs.with_user(self.user_mgr).action_approve(notes="Manager")
+        self.assertEqual(reqs.state, "approved")
+        # Berhasil tanpa pengajuan promo kedua
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+        self.assertFalse(self.env["fmcg.approval.request"].search_count([
+            ("res_model", "=", "sale.order"), ("res_id", "=", order.id),
+            ("category_id.code", "=", "promo_program_usage")]))
+
+    def test_21c_mixed_order_in_free_zone_still_needs_supervisor_promo_monitoring(self):
+        self._free_zone_rule().max_discount = 12.0  # kumulatif: 5% manual + reward 5% = 10%
+        order = self._tactical_order(discount=5.0, extra_lines=[self._reward_line()])
+        reqs = order._mobile_auto_request_approvals()
+        # diskon manual dalam zona bebas: tidak ada rantai taktikal; promo tetap dipantau Supervisor
+        self.assertEqual(reqs.mapped("category_id.code"), ["promo_program_usage"])
+        with self.assertRaises(UserError):
+            order.action_confirm()
+        reqs.with_user(self.user_spv).action_approve(notes="Sesuai alokasi")
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+
+    def test_21b_mixed_order_rejected_tactical_blocks_without_promo_fallback(self):
+        order = self._tactical_order(discount=5.0, extra_lines=[self._reward_line()])
+        reqs = order._mobile_auto_request_approvals()
+        reqs.with_user(self.user_spv).action_reject(notes="Terlalu besar")
+        with self.assertRaises(UserError):
+            order.action_confirm()
 
     def _promo_order(self):
         order = self._tactical_order(discount=0.0, extra_lines=[self._reward_line()])
