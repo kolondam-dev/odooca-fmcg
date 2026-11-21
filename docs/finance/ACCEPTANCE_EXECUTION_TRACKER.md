@@ -128,6 +128,31 @@ native dan workbook custom pada DB disposable hanya dijalankan oleh Finance I0
 CI; hasil belum boleh disebut PASS sebelum check exact-SHA hijau. Tidak ada
 workbook bisnis, AML live, atau status katalog yang berubah.
 
+### I2b: tie-out XLSX AR/AP pada fixture disposable (bukan bukti live)
+
+`verify_finance_i2_arap_subledger.py` mengekspor workbook wizard nyata untuk
+FIN05/FIN06 (dua periode × customer/supplier, ditambah satu `all`), FIN07 (empat
+as-of × dua tipe) dan FIN08/FIN09 (tiga as-of × dua tipe) pada dua company
+sintetis. `verify_finance_i2_xlsx.py` membandingkan setiap sel terpilih dengan
+oracle AML/partial independen:
+
+- FIN05/FIN06: coverage unik `(partner, tipe akun)`, opening/debit/credit/
+  closing per baris, identitas movement dan closing, totals + `partner_count`,
+  split `by_account_type`, serta subledger↔GL tie-out;
+- FIN07: coverage line unik, move/account/partner/tipe/tanggal/balance/matched/
+  residual per line, grup `line_ids` per partner, total akun, dan tie-out GL;
+  ekspor kosong hanya diterima sebagai placeholder resmi dengan GL nol;
+- FIN08/FIN09: urutan bucket dan edges, total per bucket, bucket per partner,
+  residual per partner, detail line per bucket, total akun dan tie-out GL.
+
+Filter `date_from`/`partner_ids` FIN07 belum tersedia di jalur export wizard,
+jadi slice terfilter tetap diverifikasi pada oracle native dan tidak diklaim
+tercakup XLSX. Field snapshot skalar (mis. `total_residual`) tidak ditulis ke
+workbook; nilainya diturunkan dari baris dan dipatok ke oracle. Unit offline
+menutup 24 kasus I2b (52 total pada berkas XLSX); [BU] render native hanya
+dijalankan Finance I0 CI pada exact SHA. Tidak ada workbook bisnis, AML live,
+atau status katalog yang berubah.
+
 ### FIN04: pembanding XLSX ↔ AML independen (belum dijalankan pada live)
 
 `scripts/ops/verify_finance_fin04_workbook.py` membandingkan **semua** `aml_id`, debit,
