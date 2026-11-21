@@ -491,10 +491,15 @@ class TestApprovalEngine(TransactionCase):
         # Konfirmasi terblokir selama rantai taktikal menunggu
         with self.assertRaises(UserError):
             order.action_confirm()
+        # kumulatif 5% manual + 5% reward = 10% > 7%: rantai SPV -> Branch Manager -> Direksi
+        self.assertEqual(len(reqs.line_ids), 3)
         reqs.with_user(self.user_spv).action_approve(notes="SPV")
         with self.assertRaises(UserError):
             order.action_confirm()  # tier Branch Manager masih menunggu
         reqs.with_user(self.user_mgr).action_approve(notes="Manager")
+        with self.assertRaises(UserError):
+            order.action_confirm()  # tier Direksi masih menunggu
+        reqs.with_user(self.user_dir).action_approve(notes="Direksi")
         self.assertEqual(reqs.state, "approved")
         # Berhasil tanpa pengajuan promo kedua
         order.action_confirm()

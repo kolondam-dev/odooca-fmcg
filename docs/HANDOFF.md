@@ -1,7 +1,7 @@
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 6): pesanan campuran satu rantai (claude-design)
 
 - P1: pesanan campuran (promo resmi + diskon manual) kini cukup satu rantai taktikal; pengajuan promo terpisah tidak diwajibkan bila pengajuan taktikal berlaku. Bila tidak ada pengajuan taktikal, promo tetap wajib disetujui Supervisor. Penolakan taktikal tetap memblokir. Rantai taktikal yang dihitung hanya yang punya langkah approver; pengajuan zona bebas (tanpa approver) tidak menggugurkan pemantauan promo Supervisor (`test_21c`).
-- Tes `test_21` diperluas sampai konfirmasi (blokir saat SPV/Branch Manager menunggu, berhasil setelah semua setuju, tanpa pengajuan promo kedua); `test_21b` untuk taktikal ditolak.
+- Tes `test_21` diperluas sampai konfirmasi (kumulatif 10% → rantai SPV/Branch Manager/Direksi; blokir saat tier menunggu, berhasil setelah semua setuju, tanpa pengajuan promo kedua); `test_21b` untuk taktikal ditolak.
 
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 5): siklus approval pada guard konfirmasi (claude-design)
 
