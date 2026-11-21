@@ -448,3 +448,65 @@ it.each(["401", "network", "malformed"] as const)(
         });
     },
 );
+
+it("snapshot menerima approval_tiers opsional (BE-18) dan tetap valid tanpanya", () => {
+    const base = catalog();
+    expect(base.approval_tiers).toBeUndefined();
+    const block = {
+        free_zone_max: 6,
+        tiers: [
+            { min_discount: 0.01, approver: "Tier 1: Supervisor" },
+            { min_discount: 3.01, approver: "Tier 2: Branch Manager" },
+        ],
+    };
+    const parsed = SnapshotSchema.parse({
+        ...base,
+        approval_tiers: {
+            discount: {
+                scope: "salesman_day",
+                default: { free_zone_max: null, tiers: block.tiers },
+                principals: { "7": block },
+                usage: [
+                    {
+                        outlet_id: null,
+                        principal: "7",
+                        discount_amount: 3000,
+                        gross_amount: 60000,
+                    },
+                ],
+            },
+        },
+    });
+    expect(parsed.approval_tiers?.discount.principals["7"].free_zone_max).toBe(
+        6,
+    );
+    expect(parsed.approval_tiers?.discount.default.free_zone_max).toBeNull();
+});
+
+it("approval_tiers dengan scope tak dikenal atau usage tanpa bruto ditolak", () => {
+    const base = catalog();
+    const block = { free_zone_max: 0, tiers: [] };
+    const bad = (discount: object) =>
+        SnapshotSchema.safeParse({
+            ...base,
+            approval_tiers: { discount },
+        }).success;
+    expect(
+        bad({ scope: "year", default: block, principals: {}, usage: [] }),
+    ).toBe(false);
+    expect(
+        bad({
+            scope: "order",
+            default: block,
+            principals: {},
+            usage: [
+                {
+                    outlet_id: null,
+                    principal: null,
+                    discount_amount: 1,
+                    gross_amount: 0,
+                },
+            ],
+        }),
+    ).toBe(false);
+});

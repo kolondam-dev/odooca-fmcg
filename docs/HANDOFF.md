@@ -1,3 +1,20 @@
+## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (putaran 2): blok tier ganda (claude-design)
+
+- install-test masih gagal karena `git checkout` pada putaran sebelumnya mengembalikan versi komit yang sudah memuat blok tier SEBELUM digest; blok baru ditambahkan di bawahnya sehingga ada dua blok dan yang lama tetap ikut digest (`include_approval_tiers=False` pun tidak berpengaruh). Blok lama dihapus; sisa satu blok SETELAH digest. Pelajaran: setelah `git checkout <file>` selalu diff ulang terhadap HEAD sebelum menambah perubahan.
+
+## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (claude-design)
+
+- install-test: `approval_tiers` ikut digest versi snapshot, sehingga konfigurasi atau pemakaian yang berubah (setiap order) membuat command offline berikutnya ditolak "Stale catalog snapshot version" (regresi nyata, bukan hanya tes). Kini `approval_tiers` ditambahkan SETELAH digest; jalur cek versi command dan evidence memanggil `_snapshot_payload(include_approval_tiers=False)` (juga menghemat query pemakaian). Tes regresi `test_approval_tiers_do_not_change_snapshot_version`. Koreksi catatan PR: digest TIDAK berubah karena tier.
+- domain-tests Android: `core:domain:test` terpulihkan dari build cache (FROM-CACHE) sehingga `contract-samples` tidak ditulis dan `validate_contract.py` gagal. Muncul kini karena `openapi.json` berubah memicu suite android tanpa perubahan sumber domain. `outputs.dir(contract-samples)` dideklarasikan pada tugas test agar ikut tersimpan di cache.
+- android-gate gagal hanya sebagai akibat domain-tests.
+
+## 2026-11-21 — [BU] BE-18: `approval_tiers` pada snapshot (claude-design)
+
+- Snapshot memuat `approval_tiers.discount`: `scope`, `default` dan `principals` (`free_zone_max` + `tiers[{min_discount, approver}]`, khusus principal hanya bila ada aturan khusus), serta `usage` (pemakaian diskon pada jendela WITA berjalan: per salesman-hari atau per outlet-bulan × principal). Opsional dan lunak (tanpa dependensi manifest `id_mobile_api` → `id_approval`); angka pemakaian dibaca lewat ACL pengguna sehingga bisa lebih rendah dari server; hanya pratinjau, server tetap otoritatif.
+- PWA: `SnapshotSchema.approval_tiers` opsional; `contracts/openapi.json` diekspor ulang. Klien lama tanpa field tetap valid.
+- Tes: vitest catalog (parse valid/ditolak), `test_34`/`test_35` (id_approval), satu tes di `test_read_api`.
+- Belum: FE-11 (pratinjau tier di POS dan status approval di Riwayat/Hasil kirim).
+
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 7): perubahan setelah disetujui (claude-design)
 
 - P1: persetujuan hanya berlaku untuk isi pesanan saat diajukan. Pengajuan menyimpan snapshot (`snapshot_taken`, `manual_discount_amount`, `program_discount_amount`). Guard memblokir bila diskon manual bertambah setelah pengajuan taktikal, bila promo ditambahkan/bertambah setelah persetujuan (butuh pemantauan promo Supervisor sendiri), dan bila nilai promo bertambah setelah pengajuan promo. Pengajuan lama tanpa snapshot dianggap berlaku.
