@@ -1,6 +1,7 @@
-"""Offline counterexamples for the I2a XLSX value tie-out module."""
+﻿"""Offline counterexamples for the I2a XLSX value tie-out module."""
 
 import importlib.util
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -394,3 +395,400 @@ class I2XlsxOracleTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class I2BXlsxOracleTest(unittest.TestCase):
+    """FIN05-FIN09 exported cells must match the independent subledger oracle."""
+
+    def setUp(self):
+        self.temp = TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.xlsx = Path(self.temp.name) / "arap.xlsx"
+
+    def verify(self, verifier, *args):
+        return verifier(self.xlsx.read_bytes(), *args)
+
+    # ------------------------------------------------------------- FIN05/FIN06
+    def ledger_sheets(self, rows=None, totals=None, by_type=None, gl=None):
+        rows = rows if rows is not None else [
+            (7, "asset_receivable", 0, 110, 82, 28, 28),
+            (0, "liability_payable", 0, 53, 100, -47, -47),
+        ]
+        totals = totals if totals is not None else {
+            "opening_balance": 0, "debit": 163, "credit": 182,
+            "movement_balance": -19, "closing_balance": -19, "partner_count": 2,
+        }
+        by_type = by_type if by_type is not None else [
+            ("asset_receivable", 0, 110, 82, 28),
+            ("liability_payable", 0, 53, 100, -47),
+        ]
+        gl = gl if gl is not None else (None, -19, -19)
+        return [
+            ("Summary", [{"A": "Finance report export"}]),
+            ("rows", [
+                {"A": "partner_id", "B": "account_type", "C": "opening_balance",
+                 "D": "debit", "E": "credit", "F": "movement_balance",
+                 "G": "closing_balance"},
+                *({"A": partner, "B": account, "C": opening, "D": debit,
+                   "E": credit, "F": movement, "G": closing}
+                  for partner, account, opening, debit, credit, movement, closing in rows),
+            ]),
+            ("totals", [
+                {"A": "key", "B": "value"},
+                *({"A": key, "B": value} for key, value in totals.items()),
+            ]),
+            ("by_account_type", [
+                {"A": "key", "B": "value"},
+                *({"A": account,
+                   "B": json.dumps({
+                       "opening_balance": opening, "debit": debit,
+                       "credit": credit, "closing_balance": closing,
+                   })}
+                  for account, opening, debit, credit, closing in by_type),
+            ]),
+            ("gl_tie_out", [
+                {"A": "key", "B": "value"},
+                {"A": "subledger_total", "B": gl[1]},
+                {"A": "gl_control_total", "B": gl[2]},
+                {"A": "difference", "B": gl[1] - gl[2]},
+                {"A": "balanced", "B": "Yes" if gl[1] == gl[2] else "No"},
+            ]),
+        ]
+
+    def verify_ledger(self):
+        return self.verify(
+            oracle.verify_partner_ledger,
+            {(7, "asset_receivable"): (0, 110, 82, 28),
+             (0, "liability_payable"): (0, 53, 100, -47)},
+            {"opening_balance": 0, "debit": 163, "credit": 182, "closing_balance": -19},
+            {"asset_receivable": (0, 110, 82, 28),
+             "liability_payable": (0, 53, 100, -47)},
+            (-19, -19),
+        )
+
+    def test_partner_ledger_matches(self):
+        write_workbook(self.xlsx, self.ledger_sheets())
+        self.assertEqual(self.verify_ledger()["partners"], 2)
+
+    def test_partner_ledger_row_mutation_detected(self):
+        sheets = self.ledger_sheets()
+        sheets[1][1][1].update({"D": 111})
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "movement differs from debit minus credit"):
+            self.verify_ledger()
+
+    def test_partner_ledger_consistent_offset_detected(self):
+        sheets = self.ledger_sheets()
+        row = sheets[1][1][1]
+        row.update({"D": 111, "F": 29, "G": 29})
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "expected"):
+            self.verify_ledger()
+
+    def test_partner_ledger_duplicate_partner_detected(self):
+        sheets = self.ledger_sheets()
+        sheets[1][1].append(dict(sheets[1][1][1]))
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "repeats partner"):
+            self.verify_ledger()
+
+    def test_partner_ledger_partner_count_detected(self):
+        sheets = self.ledger_sheets(totals={
+            "opening_balance": 0, "debit": 163, "credit": 182,
+            "movement_balance": -19, "closing_balance": -19, "partner_count": 1,
+        })
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "partner_count"):
+            self.verify_ledger()
+
+    def test_partner_ledger_type_split_detected(self):
+        sheets = self.ledger_sheets(by_type=[
+            ("asset_receivable", 0, 110, 81, 29),
+            ("liability_payable", 0, 53, 100, -47),
+        ])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "asset_receivable"):
+            self.verify_ledger()
+
+    def test_partner_ledger_gl_control_detected(self):
+        sheets = self.ledger_sheets(gl=(None, -19, -20))
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "GL tie-out"):
+            self.verify_ledger()
+
+    # ------------------------------------------------------------------ FIN07
+    def open_item_sheets(self, rows=None, partners=None, totals=None, gl=None):
+        rows = rows if rows is not None else [
+            (11, 101, 5, 7, "asset_receivable", "2026-07-01", "2026-07-31", 110, -82, 28),
+            (12, 102, 5, 0, "asset_receivable", "2026-07-05", "2026-07-05", 12, 0, 12),
+        ]
+        partners = partners if partners is not None else [
+            (7, "asset_receivable", 28, [11]),
+            (0, "asset_receivable", 12, [12]),
+        ]
+        totals = totals if totals is not None else [("asset_receivable", 40)]
+        gl = gl if gl is not None else (40, 40)
+        return [
+            ("Summary", [{"A": "Finance report export"}]),
+            ("rows", [
+                {"A": "line_id", "B": "move_id", "C": "account_id", "D": "partner_id",
+                 "E": "account_type", "F": "date", "G": "due_date", "H": "balance",
+                 "I": "matched_amount", "J": "residual"},
+                *({"A": line, "B": move, "C": account, "D": partner, "E": account_type,
+                   "F": date, "G": due, "H": balance, "I": matched, "J": residual}
+                  for line, move, account, partner, account_type, date, due, balance,
+                  matched, residual in rows),
+            ]),
+            ("partners", [
+                {"A": "partner_id", "B": "account_type", "C": "residual", "D": "__nested"},
+                *({"A": partner, "B": account_type, "C": residual,
+                   "D": f'{{"line_ids": {line_ids}}}'}
+                  for partner, account_type, residual, line_ids in partners),
+            ]),
+            ("account_totals", [
+                {"A": "account_type", "B": "residual"},
+                *({"A": account_type, "B": residual}
+                  for account_type, residual in totals),
+            ]),
+            ("gl_tie_out", [
+                {"A": "key", "B": "value"},
+                {"A": "subledger_total", "B": gl[0]},
+                {"A": "gl_control_total", "B": gl[1]},
+                {"A": "difference", "B": gl[0] - gl[1]},
+                {"A": "balanced", "B": "Yes" if gl[0] == gl[1] else "No"},
+            ]),
+        ]
+
+    def verify_open_items(self):
+        return self.verify(
+            oracle.verify_open_items,
+            {
+                11: (101, 5, 7, "asset_receivable", "2026-07-01", "2026-07-31",
+                     110, -82, 28),
+                12: (102, 5, 0, "asset_receivable", "2026-07-05", "2026-07-05",
+                     12, 0, 12),
+            },
+            {(7, "asset_receivable"): 28, (0, "asset_receivable"): 12},
+            {"asset_receivable": 40},
+            (40, 40),
+        )
+
+    def test_open_items_matches(self):
+        write_workbook(self.xlsx, self.open_item_sheets())
+        self.assertEqual(self.verify_open_items()["lines"], 2)
+
+    def test_open_items_residual_arithmetic_detected(self):
+        sheets = self.open_item_sheets()
+        sheets[1][1][1].update({"J": 29})
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "residual differs"):
+            self.verify_open_items()
+
+    def test_open_items_balanced_mutation_detected(self):
+        sheets = self.open_item_sheets()
+        sheets[1][1][1].update({"H": 111, "J": 29})
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "line 11"):
+            self.verify_open_items()
+
+    def test_open_items_duplicate_line_detected(self):
+        sheets = self.open_item_sheets()
+        sheets[1][1].append(dict(sheets[1][1][1]))
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "repeats line id"):
+            self.verify_open_items()
+
+    def test_open_items_partner_lines_detected(self):
+        sheets = self.open_item_sheets(partners=[
+            (7, "asset_receivable", 28, []),
+            (0, "asset_receivable", 12, [12]),
+        ])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "line ids"):
+            self.verify_open_items()
+
+    def test_open_items_partner_total_detected(self):
+        sheets = self.open_item_sheets(partners=[
+            (7, "asset_receivable", 27, [11]),
+            (0, "asset_receivable", 12, [12]),
+        ])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "partner"):
+            self.verify_open_items()
+
+    def test_open_items_account_total_detected(self):
+        sheets = self.open_item_sheets(totals=[("asset_receivable", 39)])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "total asset_receivable"):
+            self.verify_open_items()
+
+    def test_open_items_gl_control_detected(self):
+        sheets = self.open_item_sheets(gl=(40, 39))
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "GL tie-out"):
+            self.verify_open_items()
+
+    def test_open_items_empty_export_allowed(self):
+        sheets = [
+            ("Summary", [{"A": "Finance report export"}]),
+            ("rows", [{"A": "No rows."}]),
+            ("partners", [{"A": "Tidak ada baris."}]),
+            ("account_totals", [{"A": "No rows."}]),
+            ("gl_tie_out", [
+                {"A": "key", "B": "value"},
+                {"A": "subledger_total", "B": 0},
+                {"A": "gl_control_total", "B": 0},
+                {"A": "difference", "B": 0},
+                {"A": "balanced", "B": "Yes"},
+            ]),
+        ]
+        write_workbook(self.xlsx, sheets)
+        result = oracle.verify_open_items(
+            self.xlsx.read_bytes(), {}, {}, {}, (0, 0),
+        )
+        self.assertEqual(result["lines"], 0)
+
+    def test_open_items_empty_export_nonzero_gl_detected(self):
+        sheets = [
+            ("Summary", [{"A": "Finance report export"}]),
+            ("rows", [{"A": "No rows."}]),
+            ("partners", [{"A": "No rows."}]),
+            ("account_totals", [{"A": "No rows."}]),
+            ("gl_tie_out", [
+                {"A": "key", "B": "value"},
+                {"A": "subledger_total", "B": 0},
+                {"A": "gl_control_total", "B": 5},
+                {"A": "difference", "B": 5},
+                {"A": "balanced", "B": "No"},
+            ]),
+        ]
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "empty GL tie-out"):
+            oracle.verify_open_items(self.xlsx.read_bytes(), {}, {}, {}, (0, 0))
+
+    # ------------------------------------------------------------- FIN08/FIN09
+    def aged_sheets(self, buckets=None, partners=None, totals=None, details=None,
+                    edges=None, gl=None):
+        names = ["current", "days_1_30", "days_31_60", "days_61_90",
+                 "days_91_120", "older"]
+        buckets = buckets if buckets is not None else {
+            "current": 12, "days_1_30": 28, "days_31_60": 0,
+            "days_61_90": 0, "days_91_120": 0, "older": 0,
+        }
+        partners = partners if partners is not None else [
+            (7, "asset_receivable", 28, {**{name: 0 for name in names},
+                                         "days_1_30": 28}, [11]),
+            (0, "asset_receivable", 12, {**{name: 0 for name in names},
+                                         "current": 12}, [12]),
+        ]
+        totals = totals if totals is not None else [("asset_receivable", 40)]
+        details = details if details is not None else [
+            (11, "asset_receivable", "days_1_30", "2026-07-01", 28),
+            (12, "asset_receivable", "current", "2026-07-31", 12),
+        ]
+        edges = edges if edges is not None else [30, 60, 90, 120]
+        gl = gl if gl is not None else (40, 40)
+        import json as _json
+        return [
+            ("Summary", [{"A": "Finance report export"}]),
+            ("bucket_order", [{"A": "value"}, *({"A": name} for name in names)]),
+            ("edges", [{"A": "value"}, *({"A": edge} for edge in edges)]),
+            ("buckets", [{"A": "key", "B": "value"},
+                         *({"A": key, "B": value} for key, value in buckets.items())]),
+            ("partners", [
+                {"A": "partner_id", "B": "account_type", "C": "residual", "D": "__nested"},
+                *({"A": partner, "B": account_type, "C": residual,
+                   "D": _json.dumps({"buckets": partner_buckets, "line_ids": line_ids})}
+                  for partner, account_type, residual, partner_buckets, line_ids
+                  in partners),
+            ]),
+            ("account_totals", [
+                {"A": "account_type", "B": "residual"},
+                *({"A": account_type, "B": residual}
+                  for account_type, residual in totals),
+            ]),
+            ("rows", [
+                {"A": "line_id", "B": "account_type", "C": "bucket", "D": "due_date",
+                 "E": "residual"},
+                *({"A": line, "B": account_type, "C": bucket, "D": due, "E": residual}
+                  for line, account_type, bucket, due, residual in details),
+            ]),
+            ("gl_tie_out", [
+                {"A": "key", "B": "value"},
+                {"A": "subledger_total", "B": gl[0]},
+                {"A": "gl_control_total", "B": gl[1]},
+                {"A": "difference", "B": gl[0] - gl[1]},
+                {"A": "balanced", "B": "Yes" if gl[0] == gl[1] else "No"},
+            ]),
+        ]
+
+    def verify_aged(self):
+        names = ["current", "days_1_30", "days_31_60", "days_61_90",
+                 "days_91_120", "older"]
+        return self.verify(
+            oracle.verify_aged_partner_balance,
+            {"current": 12, "days_1_30": 28, "days_31_60": 0,
+             "days_61_90": 0, "days_91_120": 0, "older": 0},
+            {(7, "asset_receivable"): {name: (28 if name == "days_1_30" else 0)
+                                       for name in names},
+             (0, "asset_receivable"): {name: (12 if name == "current" else 0)
+                                       for name in names}},
+            {"asset_receivable": 40},
+            {11: ("asset_receivable", "2026-07-01", "days_1_30", 28),
+             12: ("asset_receivable", "2026-07-31", "current", 12)},
+            (40, 40),
+            (30, 60, 90, 120),
+        )
+
+    def test_aged_partner_balance_matches(self):
+        write_workbook(self.xlsx, self.aged_sheets())
+        self.assertEqual(self.verify_aged()["lines"], 2)
+
+    def test_aged_bucket_mutation_detected(self):
+        sheets = self.aged_sheets()
+        for row in sheets[3][1]:
+            if row.get("A") == "days_1_30":
+                row["B"] = 29
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "bucket days_1_30"):
+            self.verify_aged()
+
+    def test_aged_partner_bucket_mutation_detected(self):
+        sheets = self.aged_sheets()
+        import json as _json
+        row = sheets[4][1][1]
+        data = _json.loads(row["D"])
+        data["buckets"]["days_1_30"] = 29
+        row["D"] = _json.dumps(data)
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "residual differs from its buckets"):
+            self.verify_aged()
+
+    def test_aged_missing_detail_detected(self):
+        sheets = self.aged_sheets(details=[
+            (11, "asset_receivable", "days_1_30", "2026-07-01", 28),
+        ])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "detail coverage"):
+            self.verify_aged()
+
+    def test_aged_detail_bucket_mutation_detected(self):
+        sheets = self.aged_sheets(details=[
+            (11, "asset_receivable", "current", "2026-07-01", 28),
+            (12, "asset_receivable", "current", "2026-07-31", 12),
+        ])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "line 11"):
+            self.verify_aged()
+
+    def test_aged_edge_mutation_detected(self):
+        sheets = self.aged_sheets(edges=[31, 60, 90, 120])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "bucket edges"):
+            self.verify_aged()
+
+    def test_aged_gl_control_detected(self):
+        sheets = self.aged_sheets(gl=(40, 39))
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "GL tie-out"):
+            self.verify_aged()

@@ -1,3 +1,16 @@
+## 2026-11-21 — [BU] I2b XLSX tie-out FIN05–FIN09 pada fixture disposable (opencode)
+
+- Wizard nyata mengekspor FIN05/FIN06 (2 periode × customer/supplier + `all`), FIN07 (4 as-of × 2 tipe), FIN08/FIN09 (3 as-of × 2 tipe) pada 2 company sintetis; sel dibandingkan dengan oracle AML/partial independen: coverage uniqueness, nilai per partner/line, bucket aging, totals, `partner_count`, split tipe akun, dan tie-out GL.
+- Comparator FIN05–FIN09 ditambahkan ke `scripts/ops/verify_finance_i2_xlsx.py`; 24 kasus unit baru (52 total) termasuk offset konsisten, duplikat, grup `line_ids`, bucket/edge, dan ekspor FIN07 kosong (hanya placeholder resmi + GL nol).
+- [BU] Exact-SHA Finance I0 belum berjalan; PR menunggu review. Live FIN05–FIN09 tetap HOLD: control account disetujui, periode beku, kasus parsial/unreconcile, dan sign-off Controller+QA belum tersedia. `REPORT_CATALOG.csv` tidak berubah.
+
+## 2026-11-20 — [F] PR #169 merged: oracle FIN57 independen (opencode)
+
+- PR #169 di-merge pemilik pada 2026-11-19T10:36:33Z; head `6f45f66d6784ff9836a90ebf9f1c15822869fb19`, merge commit `918fd3e6b4d3d0dfc86aefa406e55cf463ce993d`. Exact-SHA: 22 PASS, 6 skipped impact plan, 0 gagal/pending; `candidate-install-upgrade`, `finance-gate`, `install-test`, `init-test`, `invariant-tests`, `seed-invariants`, upgrade + `upgrade-gate` hijau.
+- Oracle `FINANCE_I2A_LEDGERS_CORE` pada dua company disposable (scale 1 dan 7) mencatat `FIN57_xlsx_vs_expected_table`: 4 dokumen, 3 non-register move/row, **4 akun tie-out unik**, dibandingkan ke posted AML langsung; FIN01/02/03/04/51 PASS; rollback PASS.
+- [BU] Penerimaan live FIN01/02/03/04/51/57 tetap HOLD: workbook/AML privat, mapping/perimeter, periode beku, penolakan role Sales, dan sign-off Controller+QA belum ada; `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA`.
+- Bukti CI: https://github.com/kolondam-dev/odooca-fmcg/pull/169#issuecomment-7027841475
+
 ## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (putaran 2): blok tier ganda (claude-design)
 
 - install-test masih gagal karena `git checkout` pada putaran sebelumnya mengembalikan versi komit yang sudah memuat blok tier SEBELUM digest; blok baru ditambahkan di bawahnya sehingga ada dua blok dan yang lama tetap ikut digest (`include_approval_tiers=False` pun tidak berpengaruh). Blok lama dihapus; sisa satu blok SETELAH digest. Pelajaran: setelah `git checkout <file>` selalu diff ulang terhadap HEAD sebelum menambah perubahan.
