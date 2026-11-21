@@ -1802,6 +1802,10 @@ class GenericPeriodPackLoader:
         for line in self.reader.po_lines:
             po_lines_by_po.setdefault(line["po_number"], []).append(line)
 
+        native_accounting = bool(getattr(getattr(self.env, "cr", None), "dbname", None))
+        if native_accounting:
+            input_tax, payable = self._resolve_purchase_bill_accounts()
+
         processed = 0
         for po_row in po_headers:
             po_num = po_row["po_number"]
@@ -1823,6 +1827,8 @@ class GenericPeriodPackLoader:
                             self._validate_picking_safely(
                                 pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
                             )
+                if native_accounting:
+                    self._ensure_purchase_bill(existing, po_row, input_tax, payable)
                 continue
 
             prin_code = po_row["principal_code"]
@@ -1874,9 +1880,107 @@ class GenericPeriodPackLoader:
                         self._validate_picking_safely(
                             pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
                         )
+            if native_accounting:
+                self._ensure_purchase_bill(po_rec, po_row, input_tax, payable)
             processed += 1
 
         return processed
+
+    def _resolve_purchase_bill_accounts(self):
+        """Resolve the dedicated seed input tax and payable control account."""
+        input_account = self._resolve_account("114100")
+        payable = self._resolve_account("211000")
+        if not input_account or not payable or payable.account_type != "liability_payable" or not payable.reconcile:
+            raise StateInconsistencyError("Period purchase bills require input tax account 114100 and payable 211000.")
+
+        Tax = self.env["account.tax"].sudo().with_company(self.company)
+        name = "PPN Masukan 12% (DPP Nilai Lain - Kode 04)"
+        taxes = Tax.search([("company_id", "=", self.company.id), ("name", "=", name)])
+        if not taxes:
+            sales_tax = self._resolve_canonical_tax_code_04()
+            repartition = [
+                (0, 0, {"repartition_type": "base"}),
+                (0, 0, {"repartition_type": "tax", "account_id": input_account.id}),
+            ]
+            taxes = Tax.create({
+                "name": name,
+                "company_id": self.company.id,
+                "type_tax_use": "purchase",
+                "amount_type": "percent",
+                "amount": 12,
+                "price_include_override": "tax_excluded",
+                "tax_group_id": sales_tax.tax_group_id.id,
+                "invoice_repartition_line_ids": repartition,
+                "refund_repartition_line_ids": repartition,
+            })
+        if len(taxes) != 1 or taxes.type_tax_use != "purchase" or taxes.amount_type != "percent" or taxes.amount != 12:
+            raise StateInconsistencyError("Invalid or ambiguous seed purchase tax Code 04.")
+        return taxes, payable
+
+    def _ensure_purchase_bill(self, order, row, input_tax, payable):
+        """Post one bill per registered receipt and validate its replay."""
+        reference = row["po_number"]
+        bill_date = row["arrival_maumbi_date"]
+        Move = self.env["account.move"].sudo().with_company(self.company).with_context(default_move_type="in_invoice")
+        bills = order.invoice_ids | Move.search([
+            ("company_id", "=", self.company.id),
+            ("move_type", "=", "in_invoice"),
+            "|", ("ref", "=", reference), ("invoice_origin", "=", reference),
+        ])
+        if len(bills) > 1:
+            raise StateInconsistencyError(f"Multiple vendor bills for {reference}.")
+        if not bills:
+            values = order._prepare_invoice()
+            invoice_lines = []
+            for line in order.order_line:
+                line_values = line._prepare_account_move_line()
+                line_values["tax_ids"] = [(6, 0, input_tax.ids)]
+                invoice_lines.append((0, 0, line_values))
+            values.update({
+                "ref": reference,
+                "invoice_date": bill_date,
+                "date": bill_date,
+                "invoice_payment_term_id": False,
+                "invoice_date_due": row["due_date"],
+                "invoice_line_ids": invoice_lines,
+            })
+            bills = Move.create(values)
+            terms = bills.line_ids.filtered(lambda line: line.display_type == "payment_term")
+            if not terms:
+                raise StateInconsistencyError(f"Missing payment term lines for vendor bill {reference}.")
+            terms.write({"account_id": payable.id})
+            bills.action_post()
+
+        tax_lines = bills.line_ids.filtered(lambda line: line.display_type == "tax")
+        terms = bills.line_ids.filtered(lambda line: line.display_type == "payment_term")
+        bill_lines = bills.invoice_line_ids.filtered(lambda line: line.display_type == "product")
+        if (
+            bills.state != "posted"
+            or bills.move_type != "in_invoice"
+            or bills.partner_id != order.partner_id
+            or (bills.ref != reference and bills.invoice_origin != reference)
+            or str(bills.date) != bill_date
+            or str(bills.invoice_date) != bill_date
+            or str(bills.invoice_date_due) != row["due_date"]
+            or bill_lines.purchase_line_id != order.order_line
+            or len(bill_lines) != len(order.order_line)
+            or any(
+                line.product_id != line.purchase_line_id.product_id
+                or line.product_uom_id != line.purchase_line_id.product_uom_id
+                or abs(_dec(line.quantity) - _dec(line.purchase_line_id.product_qty)) > CENT
+                or abs(_dec(line.price_unit) - _dec(line.purchase_line_id.price_unit)) > CENT
+                for line in bill_lines
+            )
+            or terms.account_id != payable
+            or not tax_lines
+            or tax_lines.tax_line_id != input_tax
+            or tax_lines.account_id.mapped("code") != ["114100"]
+            or abs(abs(sum((_dec(line.tax_base_amount) for line in tax_lines), ZERO)) - _dec(row["tax_dpp"])) > CENT
+            or abs(_dec(bills.amount_untaxed) - _dec(row["commercial_dpp"])) > CENT
+            or abs(_dec(bills.amount_tax) - _dec(row["ppn_amount"])) > CENT
+            or abs(_dec(bills.amount_total) - _dec(row["total_with_ppn"])) > CENT
+        ):
+            raise StateInconsistencyError(f"Vendor bill for {reference} does not match its PO and register.")
 
     def _resolve_canonical_tax_code_04(self):
         """Resolve authoritative tax record for Tax Code 04 (DPP Nilai Lain PMK 131/2024, 12%).

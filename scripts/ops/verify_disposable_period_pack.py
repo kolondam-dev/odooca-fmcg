@@ -194,14 +194,21 @@ class PeriodPackOracle:
         self.expected_ap_paid = sum(_dec(r.get("amount_paid_dpp", 0)) for r in self.reader.ap_payments)
 
         # Independent PO input tax derivation from pack po_lines.csv (11% PPN Masukan)
-        self.expected_po_input_tax = sum(
-            (
-                _dec(pline.get("qty_cartons", 0))
-                * _dec(pline.get("carton_qty", 0))
-                * _dec(pline.get("unit_cost_price", 0))
+        input_tax_by_po = {}
+        for line in self.reader.po_lines:
+            tax = (
+                _dec(line["qty_cartons"])
+                * _dec(line["carton_qty"])
+                * _dec(line["unit_cost_price"])
                 * Decimal("0.11")
             ).quantize(Decimal("0.01"))
-            for pline in self.reader.po_lines
+            po_number = line["po_number"]
+            input_tax_by_po[po_number] = input_tax_by_po.get(po_number, ZERO) + tax
+        self.expected_po_input_tax = sum(input_tax_by_po.values(), ZERO)
+        self.expected_period_input_tax = sum(
+            (input_tax_by_po[row["po_number"]] for row in self.reader.po_headers
+             if self.manifest.pack_start <= row["arrival_maumbi_date"] <= self.manifest.pack_end),
+            ZERO,
         )
 
         # Authoritative closing stock schema from closing_state JSON (keyed by "SKU||LOT")
@@ -595,12 +602,12 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             _dec(getattr(m_line, "debit", 0)) - _dec(getattr(m_line, "credit", 0)) for m_line in aml_tax_in
         )
         report["checks"]["gl_ppn_masukan_114100"] = {
-            "expected_po_input_tax": str(oracle.expected_po_input_tax),
+            "expected_po_input_tax": str(oracle.expected_period_input_tax),
             "actual_gl_balance": str(gl_tax_in_balance),
         }
-        if abs(gl_tax_in_balance - oracle.expected_po_input_tax) > Decimal("1.00"):
+        if abs(gl_tax_in_balance - oracle.expected_period_input_tax) > Decimal("1.00"):
             report["violations"].append(
-                f"GL PPN Masukan (114100) balance mismatch: expected {oracle.expected_po_input_tax} (derived from pack po_lines.csv), found {gl_tax_in_balance}"
+                f"GL PPN Masukan (114100) balance mismatch: expected {oracle.expected_period_input_tax} (derived from pack po_lines.csv), found {gl_tax_in_balance}"
             )
 
     # Effective tax rate formula check (11% effective on commercial DPP)

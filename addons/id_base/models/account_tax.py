@@ -17,7 +17,7 @@ class AccountTax(models.Model):
         desc = str(getattr(self, "description", "") or "").lower()
         combined = f"{name} {desc}"
         return (
-            getattr(self, "type_tax_use", "") == "sale"
+            getattr(self, "type_tax_use", "") in ("sale", "purchase")
             and abs(float(getattr(self, "amount", 0.0) or 0.0) - 12.0) < 0.01
             and any(term in combined for term in ("04", "nilai lain", "kode 04", "kode_04"))
         )

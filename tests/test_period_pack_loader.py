@@ -952,6 +952,13 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         self.assertEqual(oracle.expected_period_output_tax, Decimal("426858171.17"))
         self.assertEqual(oracle.expected_inv_ppn, Decimal("446229567.06"))
 
+    def test_input_tax_gl_excludes_september_receipt_from_august_cutoff(self):
+        from scripts.ops.verify_disposable_period_pack import PeriodPackOracle
+
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        self.assertEqual(oracle.expected_period_input_tax, Decimal("720627600.00"))
+        self.assertEqual(oracle.expected_po_input_tax, Decimal("782852400.00"))
+
     def test_so_replay_with_real_csv_schema_cartons_and_price(self):
         """Supervisor Counterexample 1: Verify SO line qty matches qty_cartons * carton_qty and price."""
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")

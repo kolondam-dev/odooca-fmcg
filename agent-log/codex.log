@@ -510,3 +510,9 @@
 - [F] Selisih PPN Rp19.371.395,89 tepat sama dengan 50 faktur September; oracle cutoff kini mengikuti tanggal posting dalam register.
 - [BU] Tagihan vendor, stok dan digest A/B tetap terbuka.
 - Task managed by codex agent at 2026-11-21T13:02:21+07:00
+
+[2026-11-21T15:54:38+07:00] [INFO] PR #110: posting tagihan vendor dan cutoff PPN Masukan
+- [F] Run 44873643566 membuktikan audit AR dan PPN keluaran cocok.
+- [F] ORM disposable memposting 16 tagihan, replay 0 duplikasi. PPN pack Rp782.852.400; PPN Agustus Rp720.627.600.
+- [BU] F4 dua database, stock-to-GL dan digest A/B belum lulus.
+- Task managed by codex agent at 2026-11-21T15:54:38+07:00

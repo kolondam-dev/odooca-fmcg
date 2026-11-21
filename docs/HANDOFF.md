@@ -1,3 +1,17 @@
+## 2026-11-21T15:54:38+07:00 — Agent Codex-Cloud1 — F4/PR #110: Tagihan vendor dan cutoff PPN Masukan
+**Berubah:**
+- Sinkronisasi `origin/main` `34ba18e`, dengan kedua riwayat handoff dipertahankan.
+- Loader memposting tagihan native setelah receipt, mengikat baris ke PO, akun PPN 114100 dan AP 211000, serta memvalidasi replay. Oracle membedakan PPN seluruh pack dari jurnal bulan Agustus.
+**Diverifikasi:**
+- [F] Run 44873643566: AR dan PPN keluaran cocok. Tagihan vendor masih 0 pada SHA lama.
+- [F] Odoo disposable: semua 16 tagihan posted; replay membuat 0 tagihan. PPN pack Rp782.852.400, dari mana Rp720.627.600 tercatat sampai 31 Agustus. 79 tes lokal, Ruff, 14 manifest dan diff-check lulus.
+- [F] Delta fisik 1.229 karton cocok dengan 2.000 karton receipt September dikurangi 771 karton DO September. Satu retur September menjelaskan delta karantina 10 karton. Verifier membandingkan quants saat ini dengan penutupan 31 Agustus.
+- [F] Dampak test **TAMBAH**: regresi cutoff PPN Masukan di suite F4. Planner memilih full regression.
+**Belum diuji:**
+- [BU] Audit F4 A/B pada SHA baru. Closing inventory, stock-to-GL dan digest A/B tetap terbuka.
+**Berikutnya:**
+- Verifikasi posting tagihan pada F4 dan telusuri rekonstruksi stok per cutoff serta diff digest A/B.
+
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 7): perubahan setelah disetujui (claude-design)
 
 - P1: persetujuan hanya berlaku untuk isi pesanan saat diajukan. Pengajuan menyimpan snapshot (`snapshot_taken`, `manual_discount_amount`, `program_discount_amount`). Guard memblokir bila diskon manual bertambah setelah pengajuan taktikal, bila promo ditambahkan/bertambah setelah persetujuan (butuh pemantauan promo Supervisor sendiri), dan bila nilai promo bertambah setelah pengajuan promo. Pengajuan lama tanpa snapshot dianggap berlaku.
