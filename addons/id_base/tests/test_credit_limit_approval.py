@@ -214,8 +214,10 @@ class TestCreditLimitApproval(TransactionCase):
             "l10n_id_coretax_exported": True,
         })
         for records in (inv, self.env["account.move"]):
-            with self.assertRaisesRegex(UserError, "Legacy tax number generation is disabled"):
-                records.action_generate_nsfp()
+            with self.assertRaises(UserError) as legacy_error:
+                records.with_context(lang="id_ID").action_generate_nsfp()
+            self.assertIn("dinonaktifkan", str(legacy_error.exception).casefold())
+            self.assertIn("Coretax", str(legacy_error.exception))
         self.assertEqual(inv.l10n_id_tax_invoice_number, "LEGACY-TEST-REFERENCE")
         self.assertTrue(inv.l10n_id_coretax_exported)
         self.assertEqual(before, inv.line_ids.read(["balance", "account_id", "date", "parent_state"]))

@@ -51,11 +51,11 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Source Location</th>
-                                    <th>Lot / Serial</th>
-                                    <th class="text-end">Reserved / Planned</th>
-                                    <th>Packaging Breakdown</th>
+                                    <th t-translation="on">Product</th>
+                                    <th t-translation="on">Source Location</th>
+                                    <th t-translation="on">Lot / Serial</th>
+                                    <th t-translation="on" class="text-end">Reserved / Planned</th>
+                                    <th t-translation="on">Packaging Breakdown</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -89,9 +89,9 @@
                         </table>
                         <p class="text-muted">This picklist reads native Odoo demand and reservation lines. The report does not create or change lot or location assignments.</p>
                         <div class="row mt-5">
-                            <div class="col-4 text-center">Prepared by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Checked by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Approved by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center" t-translation="on">Prepared by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center" t-translation="on">Checked by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center" t-translation="on">Approved by<br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>
@@ -122,12 +122,12 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Lot / Serial</th>
-                                    <th>Source Location</th>
-                                    <th class="text-end">Quantity</th>
-                                    <th>Packaging Breakdown</th>
-                                    <th>Destination Package</th>
+                                    <th t-translation="on">Product</th>
+                                    <th t-translation="on">Lot / Serial</th>
+                                    <th t-translation="on">Source Location</th>
+                                    <th t-translation="on" class="text-end">Quantity</th>
+                                    <th t-translation="on">Packaging Breakdown</th>
+                                    <th t-translation="on">Destination Package</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -181,11 +181,11 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Product</th>
-                                    <th>Lot / Serial</th>
-                                    <th class="text-end">Quantity</th>
-                                    <th>Packaging Breakdown</th>
-                                    <th>Package</th>
+                                    <th t-translation="on">Product</th>
+                                    <th t-translation="on">Lot / Serial</th>
+                                    <th t-translation="on" class="text-end">Quantity</th>
+                                    <th t-translation="on">Packaging Breakdown</th>
+                                    <th t-translation="on">Package</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -216,9 +216,9 @@
                             </tbody>
                         </table>
                         <div class="row mt-5">
-                            <div class="col-4 text-center">Handed over by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Received by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center">Date / Stamp<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center" t-translation="on">Handed over by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center" t-translation="on">Received by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center" t-translation="on">Date / Stamp<br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>
