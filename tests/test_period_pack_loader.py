@@ -945,6 +945,13 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         tax_violations = [v for v in report["violations"] if "Tax Code 04" in v or "Effective tax rate mismatch" in v]
         self.assertGreaterEqual(len(tax_violations), 1)
 
+    def test_output_tax_gl_uses_posting_period_not_all_pack_invoices(self):
+        from scripts.ops.verify_disposable_period_pack import PeriodPackOracle
+
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        self.assertEqual(oracle.expected_period_output_tax, Decimal("426858171.17"))
+        self.assertEqual(oracle.expected_inv_ppn, Decimal("446229567.06"))
+
     def test_so_replay_with_real_csv_schema_cartons_and_price(self):
         """Supervisor Counterexample 1: Verify SO line qty matches qty_cartons * carton_qty and price."""
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")

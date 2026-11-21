@@ -1,3 +1,15 @@
+## 2026-11-21T13:02:21+07:00 — Agent Codex-Cloud1 — F4/PR #110: Cutoff GL PPN keluaran
+**Berubah:**
+- Oracle GL 211200 membandingkan jurnal posted dalam periode dengan PPN faktur bertanggal dalam periode yang sama. Audit per faktur tetap mencakup seluruh pack.
+**Diverifikasi:**
+- [F] Run 44858700079 membuktikan saldo dan residual 112000 masing-masing Rp2.368.135.989,94 pada kedua skenario. F4 masih gagal.
+- [F] Register menunjukkan 1.190 faktur Agustus dengan PPN Rp426.858.171,17, tepat sama dengan GL. Sebanyak 50 faktur September menyumbang Rp19.371.395,89.
+- [F] 78 tes, Ruff, 14 manifest dan diff-check lulus. Dampak test **TAMBAH**: regresi cutoff di suite F4.
+**Belum diuji:**
+- [BU] Hasil F4 SHA baru. Tagihan vendor, stok/valuasi, dan digest A/B masih terbuka.
+**Berikutnya:**
+- Verifikasi audit cutoff pada run baru dan lanjut diagnosis tiga blocker runtime tersisa.
+
 ## 2026-11-21T09:58:20+07:00 — Agent Codex-Cloud1 — F4/PR #110: Pemetaan akun kontrol piutang seed
 **Berubah:**
 - Loader kanonikal Juli dan period pack memilih akun 112000 pada baris termin faktur draft serta menentukan akun tujuan pembayaran seed secara eksplisit. Faktur replay pada akun lain ditolak.

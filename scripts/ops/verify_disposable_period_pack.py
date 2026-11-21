@@ -180,6 +180,11 @@ class PeriodPackOracle:
         # Invoices totals
         self.expected_inv_dpp = sum(_dec(r.get("commercial_dpp") or r.get("dpp_amount", 0)) for r in self.reader.invoices)
         self.expected_inv_ppn = sum(_dec(r.get("ppn_amount", 0)) for r in self.reader.invoices)
+        self.expected_period_output_tax = sum(
+            (_dec(row["ppn_amount"]) for row in self.reader.invoices
+             if self.manifest.pack_start <= row["date_invoice"] <= self.manifest.pack_end),
+            ZERO,
+        )
         self.expected_inv_total = sum(_dec(r.get("total_invoice_with_ppn", 0)) for r in self.reader.invoices)
 
         # AR collections total
@@ -523,7 +528,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 f"Total per-invoice Tax Code 04 / PPN Keluaran violations: {inv_tax_violations}"
             )
 
-        # GL Tie-out for PPN Keluaran
+        # Calendar-period GL tie-out. The pack also contains invoices posted later.
         aml_tax_out = AccountMoveLine.search(
             [
                 ("company_id", "=", company.id),
@@ -537,12 +542,12 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             _dec(getattr(m_line, "credit", 0)) - _dec(getattr(m_line, "debit", 0)) for m_line in aml_tax_out
         )
         report["checks"]["gl_ppn_keluaran_211200"] = {
-            "expected": str(oracle.expected_inv_ppn),
+            "expected": str(oracle.expected_period_output_tax),
             "actual": str(gl_tax_out_balance),
         }
-        if abs(gl_tax_out_balance - oracle.expected_inv_ppn) > Decimal("1.00"):
+        if abs(gl_tax_out_balance - oracle.expected_period_output_tax) > Decimal("1.00"):
             report["violations"].append(
-                f"GL PPN Keluaran (211200) balance mismatch: expected {oracle.expected_inv_ppn}, found {gl_tax_out_balance}"
+                f"GL PPN Keluaran (211200) balance mismatch: expected {oracle.expected_period_output_tax}, found {gl_tax_out_balance}"
             )
 
     # Tax Account 114100 (PPN Masukan) - Mandatory and independently derived from pack po_lines.csv
