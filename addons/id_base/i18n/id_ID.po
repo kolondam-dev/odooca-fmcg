@@ -202,9 +202,14 @@ msgstr "Lokasi Asal"
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+msgid "Lot / Serial"
+msgstr "Lot / Nomor Seri"
+
+
+#. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
-msgid "Lot / Serial"
+msgid "Lot / Serial Number"
 msgstr "Lot / Nomor Seri"
 
 

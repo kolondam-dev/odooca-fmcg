@@ -5749,3 +5749,8 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - Fix in this follow-up: extend the PO occurrence list for `Lot / Serial` to all three report views; wrap each signature label in its own explicit `t-translation="on"` span; extend the importer-chain test matrix to assert the three-view term mapping and Picklist signature mapping.
 - Also made the remaining Packlist and Delivery Order signature labels explicit translation spans, matching their existing PO entries.
 - Pending: exact-HEAD CI, including the Odoo runtime install-test and live HTTP PDF render smoke. No merge or deployment authorized.
+
+
+### Correction to 2026-11-21 PR #135 translation diagnosis
+
+The previous attempt's assumption that one PO entry with multiple view occurrences would be imported for all views was disproved by the runtime importer-chain test: the parser yielded only the Picklist mapping. Avoid relying on multi-view occurrence expansion for this term. The Packlist and Delivery Order source label is now made distinct ("Lot / Serial Number") while both retain the Indonesian translation "Lot / Nomor Seri"; the Picklist retains "Lot / Serial". The PO and importer-chain test matrix now map each source term to the relevant report views explicitly. This keeps the rendered Indonesian labels consistent and makes the import mapping unambiguous. Validate via fresh install-test and live HTTP PDF render.

@@ -138,9 +138,9 @@ class TestFMCGWarehouseReports(TransactionCase):
             "Customer / Destination": ("Pelanggan / Tujuan", ("report_fmcg_picklist", "report_fmcg_packlist")),
             "Source Document": ("Dokumen Asal", ("report_fmcg_picklist", "report_fmcg_packlist")),
             "Scheduled": ("Dijadwalkan", ("report_fmcg_picklist", "report_fmcg_packlist")),
-            "Lot / Serial": ("Lot / Nomor Seri", (
-                "report_fmcg_picklist", "report_fmcg_packlist",
-                "report_fmcg_delivery_order",
+            "Lot / Serial": ("Lot / Nomor Seri", ("report_fmcg_picklist",)),
+            "Lot / Serial Number": ("Lot / Nomor Seri", (
+                "report_fmcg_packlist", "report_fmcg_delivery_order",
             )),
             "Prepared by": ("Disiapkan oleh", ("report_fmcg_picklist",)),
             "Ship To": ("Dikirim Kepada", ("report_fmcg_delivery_order",)),

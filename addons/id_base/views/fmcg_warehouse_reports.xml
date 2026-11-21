@@ -123,7 +123,7 @@
                             <thead>
                                 <tr>
                                     <th t-translation="on">Product</th>
-                                    <th t-translation="on">Lot / Serial</th>
+                                    <th t-translation="on">Lot / Serial Number</th>
                                     <th t-translation="on">Source Location</th>
                                     <th t-translation="on" class="text-end">Quantity</th>
                                     <th t-translation="on">Packaging Breakdown</th>
@@ -182,7 +182,7 @@
                             <thead>
                                 <tr>
                                     <th t-translation="on">Product</th>
-                                    <th t-translation="on">Lot / Serial</th>
+                                    <th t-translation="on">Lot / Serial Number</th>
                                     <th t-translation="on" class="text-end">Quantity</th>
                                     <th t-translation="on">Packaging Breakdown</th>
                                     <th t-translation="on">Package</th>

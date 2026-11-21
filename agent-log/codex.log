@@ -512,3 +512,9 @@
 - Root causes: PO occurrence for "Lot / Serial" only named Picklist; signature label was embedded in a compound translated div rather than a standalone span.
 - Changed id_ID.po occurrence references, explicit translation spans for signature labels in all three reports, and importer-chain expected term matrix. No assertion weakened, no runtime/business logic changed.
 - Await exact-SHA CI. Do not merge/deploy.
+
+2026-11-21 — PR #135 importer mapping correction
+- CI run 44892571364 failed install-test in test_00_picklist_translation_importer_chain and report-render subtests for Packlist/Delivery Order.
+- Exact runtime importer-chain diagnostics for /opt/id-addons/id_base/i18n/id_ID.po showed only the Picklist mapping for "Lot / Serial" despite multiple #: occurrences.
+- Corrected by using a unique source term "Lot / Serial Number" for Packlist and Delivery Order while retaining Indonesian msgstr "Lot / Nomor Seri"; Picklist retains "Lot / Serial". Updated PO entries and importer-chain expected matrix to assert explicit per-report mappings. No assertions removed or weakened.
+- Await fresh exact-HEAD CI and PDF render smoke; no merge/deploy.
