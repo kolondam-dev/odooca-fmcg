@@ -1,9 +1,23 @@
+from datetime import datetime, time, timedelta
+
+import pytz
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
 
+APPROVAL_WORK_TZ = "Asia/Makassar"  # hari/bulan kerja WITA, selaras PWA (WORK_TZ)
+
+
 class SaleOrder(models.Model):
     _inherit = "sale.order"
+
+    has_program_discount = fields.Boolean(
+        string="Memakai Promo Resmi", compute="_compute_has_program_discount")
+
+    def _compute_has_program_discount(self):
+        for order in self:
+            order.has_program_discount = order._has_program_discount()
 
     has_tactical_discount = fields.Boolean(
         string="Memiliki Diskon Taktikal",
@@ -143,18 +157,22 @@ class SaleOrder(models.Model):
         if not category:
             raise UserError("Kategori persetujuan 'tactical_discount' tidak ditemukan.")
 
+        decision = self._approval_discount_decision(category)
         req = self.env["fmcg.approval.request"].create({
             "category_id": category.id,
             "res_model": "sale.order",
             "res_id": self.id,
             "reference_document": f"{self.name} - {self.partner_id.name}",
             "amount": self.amount_total,
-            "discount_percent": self.max_line_discount if hasattr(self, "max_line_discount") else 0.0,
+            "discount_percent": decision["pct"],
+            "principal_id": decision["principal_id"] or False,
+            "principal_decided": True,
             "analytic_account_id": self.tactical_analytic_account_id.id,
             "reason": reason or f"Pengajuan diskon taktikal untuk pesanan {self.name}",
+            **self._approval_snapshot_vals(),
         })
         req.action_submit()
-        if hasattr(self, "discount_approval_state"):
+        if hasattr(self, "discount_approval_state") and req.state == "pending":
             self.write({"discount_approval_state": "pending"})
         self.message_post(
             body=f"Pengajuan diskon taktikal <b>{req.name}</b> telah diajukan ke penyelia/manajer.",
@@ -168,6 +186,149 @@ class SaleOrder(models.Model):
             "type": "ir.actions.act_window",
             "target": "current",
         }
+
+    def _approval_principal_id(self):
+        """Principal pertama pada baris produk (kompatibilitas pesanan satu principal)."""
+        self.ensure_one()
+        for line in self.order_line:
+            pid = self._approval_line_principal(line)
+            if pid:
+                return pid
+        return False
+
+    @staticmethod
+    def _approval_line_principal(line):
+        """Principal sebuah baris: baris reward memakai principal program promo (bila ada),
+        selain itu principal produk. 0/False = tanpa principal."""
+        if line.price_subtotal < 0:
+            promo_principal = getattr(line, "promo_principal_id", False)
+            if promo_principal:
+                return promo_principal.id
+        return line.product_id.principal_id.id or False
+
+    @api.model
+    def _approval_tz_bounds(self, anchor, scope):
+        """Awal/akhir jendela (UTC naif) menurut hari/bulan kerja WITA, bukan hari UTC."""
+        tz = pytz.timezone(APPROVAL_WORK_TZ)
+        local = pytz.utc.localize(anchor).astimezone(tz)
+        day = local.date()
+        if scope == "outlet_month":
+            first = day.replace(day=1)
+            nxt = (first + timedelta(days=32)).replace(day=1)
+        else:
+            first, nxt = day, day + timedelta(days=1)
+
+        def to_utc(d):
+            return tz.localize(datetime.combine(d, time.min)).astimezone(pytz.utc).replace(tzinfo=None)
+
+        return to_utc(first), to_utc(nxt)
+
+    @classmethod
+    def _stats_by_principal(cls, lines, into=None):
+        """{principal_id: [nilai diskon Rp, nilai bruto Rp]}: diskon baris + reward program resmi."""
+        stats = into if into is not None else {}
+        for line in lines:
+            if line.display_type:
+                continue
+            bucket = stats.setdefault(cls._approval_line_principal(line), [0.0, 0.0])
+            if line.price_subtotal < 0:  # baris reward/program bernilai negatif
+                bucket[0] += abs(line.price_subtotal)
+                continue
+            line_gross = line.price_unit * line.product_uom_qty
+            bucket[1] += line_gross
+            bucket[0] += line_gross * (line.discount or 0.0) / 100.0
+        return stats
+
+    def _approval_cumulative_by_principal(self, scope="order"):
+        """{principal_id: diskon kumulatif %} berbobot nilai, dihitung terpisah per principal.
+
+        Pada cakupan outlet_month / salesman_day, pesanan lain pada jendela WITA yang sama
+        (company sama, tidak batal, tidak ditolak) ikut dihitung per principal.
+        """
+        self.ensure_one()
+        stats = self._stats_by_principal(self.order_line)
+        if scope in ("outlet_month", "salesman_day"):
+            start, end = self._approval_tz_bounds(self.date_order or fields.Datetime.now(), scope)
+            owner = ("order_id.partner_id", "=", self.partner_id.id) if scope == "outlet_month" \
+                else ("order_id.user_id", "=", self.user_id.id)
+            others = self.env["sale.order.line"].sudo().search([
+                owner,
+                ("order_id", "!=", self.id),
+                ("order_id.company_id", "=", self.company_id.id),
+                ("order_id.state", "!=", "cancel"),
+                ("order_id.discount_approval_state", "!=", "rejected"),
+                ("order_id.date_order", ">=", start),
+                ("order_id.date_order", "<", end),
+            ])
+            self._stats_by_principal(others, into=stats)
+        return {pid: round(d / g * 100.0, 4) for pid, (d, g) in stats.items() if g > 0}
+
+    def _approval_cumulative_discount_pct(self, scope="order"):
+        """Diskon kumulatif tertinggi (%) di antara principal pada pesanan."""
+        self.ensure_one()
+        by_principal = self._approval_cumulative_by_principal(scope)
+        return max(by_principal.values()) if by_principal else 0.0
+
+    def _approval_discount_decision(self, category):
+        """Keputusan approval diskon per principal.
+
+        Mengembalikan dict: within_free_zone (semua principal berdiskon di dalam zona bebasnya),
+        principal_id dan pct (principal penentu: rantai tier terpanjang, lalu % tertinggi),
+        free_limit (batas principal penentu, bila ada).
+        """
+        self.ensure_one()
+        by_principal = {
+            pid: pct for pid, pct in self._approval_cumulative_by_principal(category.cumulative_scope).items()
+            if pct > 0.0
+        }
+        if not by_principal:
+            return {"within_free_zone": False, "principal_id": False, "pct": 0.0, "free_limit": None}
+        exceeding = []
+        for pid, pct in by_principal.items():
+            limit = category._free_zone_limit(pid)
+            if limit is None or pct > limit:
+                exceeding.append((pid, pct, limit))
+        if not exceeding:
+            pid = max(by_principal, key=by_principal.get)
+            return {"within_free_zone": True, "principal_id": pid, "pct": by_principal[pid],
+                    "free_limit": category._free_zone_limit(pid)}
+        pid, pct, limit = max(
+            exceeding,
+            key=lambda e: (len(category._applicable_tier_rules(e[0], e[1], self.amount_total)), e[1]),
+        )
+        return {"within_free_zone": False, "principal_id": pid, "pct": pct, "free_limit": limit}
+
+    def _approval_discount_amounts(self):
+        """(diskon manual Rp, diskon program Rp) pada pesanan saat ini."""
+        self.ensure_one()
+        manual = program = 0.0
+        for line in self.order_line:
+            if line.display_type:
+                continue
+            if line.price_subtotal < 0:
+                program += abs(line.price_subtotal)
+            else:
+                manual += line.price_unit * line.product_uom_qty * (line.discount or 0.0) / 100.0
+        return manual, program
+
+    def _approval_snapshot_vals(self):
+        """Nilai diskon saat pengajuan dibuat, untuk mendeteksi perubahan setelah disetujui."""
+        self.ensure_one()
+        manual, program = self._approval_discount_amounts()
+        return {
+            "snapshot_taken": True,
+            "manual_discount_amount": manual,
+            "program_discount_amount": program,
+        }
+
+    def _has_program_discount(self):
+        """True bila pesanan memuat diskon program resmi (baris program atau baris reward negatif)."""
+        self.ensure_one()
+        return any(
+            (not line.display_type)
+            and (getattr(line, "promo_program_id", False) or line.price_subtotal < 0)
+            for line in self.order_line
+        )
 
     def _open_approval_request(self, category_code):
         """Permintaan approval yang masih berjalan (draf/pending) untuk SO ini dan kategori tertentu."""
@@ -193,25 +354,40 @@ class SaleOrder(models.Model):
         for order in self:
             if order.has_tactical_discount and not order._open_approval_request("tactical_discount"):
                 category = Category.search([("code", "=", "tactical_discount")], limit=1)
-                if category:
+                decision = order._approval_discount_decision(category) if category else {}
+                if category and decision["within_free_zone"]:
+                    order.message_post(
+                        body=f"Diskon kumulatif {decision['pct']:.2f}% berada dalam zona bebas "
+                             f"(&le; {decision['free_limit']:.2f}%): tanpa persetujuan.",
+                        subtype_xmlid="mail.mt_note",
+                    )
+                elif category:
                     req = Request.create({
                         "category_id": category.id,
                         "res_model": "sale.order",
                         "res_id": order.id,
                         "reference_document": f"{order.name} - {order.partner_id.name}",
                         "amount": order.amount_total,
-                        "discount_percent": order.max_line_discount,
+                        "discount_percent": decision["pct"],
+                        "principal_id": decision["principal_id"] or False,
+                        "principal_decided": True,
                         "analytic_account_id": order.tactical_analytic_account_id.id or False,
+                        **order._approval_snapshot_vals(),
                         "reason": (discount_reason or order.discount_approval_note
                                    or f"Diskon taktikal dari aplikasi lapangan untuk pesanan {order.name}"),
                     })
                     req.action_submit()
-                    order.write({"discount_approval_state": "pending"})
+                    if req.state == "pending":
+                        order.write({"discount_approval_state": "pending"})
                     order.message_post(
                         body=f"Pengajuan diskon taktikal <b>{req.name}</b> dibuat otomatis dari aplikasi lapangan.",
                         subtype_xmlid="mail.mt_note",
                     )
                     created |= req
+            # Pemantauan promo resmi: tetap approval, hanya hingga Supervisor (keputusan pemilik).
+            # Bila pengajuan diskon taktikal masih berjalan, rantainya sudah memuat Supervisor.
+            if order._has_program_discount() and not order._open_approval_request("tactical_discount"):
+                created |= order._create_promo_usage_request()
             if order.has_below_hpp and order.below_hpp_approval_state in ("none", False) \
                     and not order._open_approval_request("discount_below_hpp"):
                 category = Category.search([("code", "=", "discount_below_hpp")], limit=1)
@@ -255,7 +431,118 @@ class SaleOrder(models.Model):
                         f"Wajib mengajukan persetujuan berjenjang (Branch Manager hingga Pemilik/Direksi) "
                         f"sebelum diproses."
                     )
+                # 2. Guard pengajuan diskon (taktikal) dan pemantauan promo resmi: SO tidak boleh
+                #    dikonfirmasi saat pengajuannya menunggu atau ditolak.
+                order._check_discount_requests_allow_confirm()
         return super().action_confirm()
+
+    def _approval_effective_request(self, category_code):
+        """Pengajuan yang berlaku untuk kategori: terbaru yang tidak dibatalkan (riwayat lama tetap tersimpan)."""
+        self.ensure_one()
+        return self.env["fmcg.approval.request"].sudo().search([
+            ("res_model", "=", "sale.order"),
+            ("res_id", "=", self.id),
+            ("category_id.code", "=", category_code),
+            ("state", "!=", "cancelled"),
+        ], order="id desc", limit=1)
+
+    def _check_discount_requests_allow_confirm(self):
+        """Guard konfirmasi berdasarkan pengajuan yang berlaku (terbaru, tidak dibatalkan).
+
+        - Promo resmi (wajib): tanpa pengajuan, menunggu, atau ditolak -> diblokir; hanya disetujui yang lolos.
+          Pesanan campuran dengan pengajuan taktikal cukup satu rantai taktikal (tanpa pengajuan promo kedua).
+        - Diskon taktikal: bila sudah ada pengajuan yang berlaku, harus disetujui (zona bebas Tier 0
+          menghasilkan pengajuan yang langsung disetujui). SO lama tanpa pengajuan tidak diblokir.
+        Penolakan lama tidak memblokir bila pengajuan pengganti yang berlaku sudah disetujui.
+        """
+        self.ensure_one()
+        tactical = self._approval_effective_request("tactical_discount")
+        manual_now, program_now = self._approval_discount_amounts()
+        eps = 0.5  # toleransi pembulatan (Rp)
+        # Pengajuan yang sudah disetujui hanya berlaku untuk isi pesanan saat diajukan.
+        if tactical and tactical.snapshot_taken and manual_now > tactical.manual_discount_amount + eps:
+            raise UserError(
+                f"Pesanan {self.name} tidak dapat dikonfirmasi: diskon manual bertambah setelah pengajuan "
+                f"{tactical.name}. Ajukan ulang persetujuan diskon."
+            )
+        # Pesanan campuran (promo resmi + diskon manual) mengikuti satu rantai taktikal yang sudah
+        # memuat Supervisor, selama rantai itu sudah mencakup promo yang ada sekarang. Promo yang
+        # ditambahkan setelah pengajuan, atau pengajuan zona bebas tanpa approver, tetap butuh
+        # pemantauan promo Supervisor sendiri.
+        tactical_covers_program = bool(
+            self.has_tactical_discount and tactical.line_ids
+            and (not tactical.snapshot_taken or program_now <= tactical.program_discount_amount + eps)
+        )
+        if self._has_program_discount() and not tactical_covers_program:
+            req = self._approval_effective_request("promo_program_usage")
+            if not req:
+                raise UserError(
+                    f"Pesanan {self.name} memakai promo resmi dan belum diajukan untuk pemantauan Supervisor. "
+                    f"Gunakan tombol 'Ajukan Pemantauan Promo' sebelum konfirmasi."
+                )
+            if req.snapshot_taken and program_now > req.program_discount_amount + eps:
+                raise UserError(
+                    f"Pesanan {self.name} tidak dapat dikonfirmasi: nilai promo bertambah setelah pengajuan "
+                    f"{req.name}. Ajukan ulang pemantauan promo."
+                )
+            self._raise_unless_approved(req, "pemantauan promo resmi")
+        if tactical:
+            self._raise_unless_approved(tactical, "diskon taktikal")
+
+    def _raise_unless_approved(self, req, label):
+        if req.state == "approved":
+            return
+        if req.state == "rejected":
+            raise UserError(
+                f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} DITOLAK. "
+                f"Revisi pesanan dan ajukan ulang."
+            )
+        raise UserError(
+            f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} "
+            f"masih menunggu persetujuan."
+        )
+
+    def _create_promo_usage_request(self):
+        """Membuat pengajuan pemantauan promo resmi (hingga Supervisor). Idempoten untuk yang berjalan."""
+        self.ensure_one()
+        if self._open_approval_request("promo_program_usage"):
+            return self.env["fmcg.approval.request"]
+        category = self.env["fmcg.approval.category"].sudo().search(
+            [("code", "=", "promo_program_usage")], limit=1)
+        if not category:
+            return self.env["fmcg.approval.request"]
+        req = self.env["fmcg.approval.request"].sudo().create({
+            "category_id": category.id,
+            "res_model": "sale.order",
+            "res_id": self.id,
+            "reference_document": f"{self.name} - {self.partner_id.name}",
+            "amount": self.amount_total,
+            "discount_percent": self._approval_cumulative_discount_pct(category.cumulative_scope),
+            "reason": f"Pemantauan penggunaan promo resmi untuk pesanan {self.name}",
+            **self._approval_snapshot_vals(),
+        })
+        req.action_submit()
+        self.message_post(
+            body=f"Pemantauan promo resmi <b>{req.name}</b> diajukan ke Supervisor.",
+            subtype_xmlid="mail.mt_note",
+        )
+        return req
+
+    def action_request_promo_usage_approval(self):
+        """Tombol: ajukan pemantauan promo resmi (hingga Supervisor)."""
+        self.ensure_one()
+        if not self._has_program_discount():
+            raise UserError("Pesanan ini tidak memuat diskon program resmi.")
+        req = self._create_promo_usage_request()
+        if not req:
+            raise UserError("Sudah ada pengajuan pemantauan promo yang berjalan atau kategori belum dikonfigurasi.")
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "fmcg.approval.request",
+            "res_id": req.id,
+            "view_mode": "form",
+            "target": "current",
+        }
 
     def _on_approval_status_change(self, request, status):
         """Callback ketika status pengajuan approval berubah."""
@@ -273,6 +560,13 @@ class SaleOrder(models.Model):
                         body="Pengajuan penjualan di bawah HPP DITOLAK oleh manajemen.",
                         subtype_xmlid="mail.mt_note",
                     )
+            elif request.category_code == "promo_program_usage":
+                if status == "approved":
+                    order.message_post(
+                        body="Penggunaan promo resmi telah DISETUJUI Supervisor.", subtype_xmlid="mail.mt_note")
+                elif status == "rejected":
+                    order.message_post(
+                        body="Penggunaan promo resmi DITOLAK Supervisor.", subtype_xmlid="mail.mt_note")
             elif request.category_code == "tactical_discount":
                 if status == "approved":
                     if hasattr(order, "discount_approval_state"):

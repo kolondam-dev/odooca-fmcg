@@ -1,3 +1,47 @@
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 7): perubahan setelah disetujui (claude-design)
+
+- P1: persetujuan hanya berlaku untuk isi pesanan saat diajukan. Pengajuan menyimpan snapshot (`snapshot_taken`, `manual_discount_amount`, `program_discount_amount`). Guard memblokir bila diskon manual bertambah setelah pengajuan taktikal, bila promo ditambahkan/bertambah setelah persetujuan (butuh pemantauan promo Supervisor sendiri), dan bila nilai promo bertambah setelah pengajuan promo. Pengajuan lama tanpa snapshot dianggap berlaku.
+- Tes `test_30`–`test_33` (setujui → tambah promo → konfirmasi ditolak → ajukan promo → disetujui → berhasil; diskon manual dinaikkan; nilai promo dinaikkan; kontrol tanpa perubahan).
+
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 6): pesanan campuran satu rantai (claude-design)
+
+- P1: pesanan campuran (promo resmi + diskon manual) kini cukup satu rantai taktikal; pengajuan promo terpisah tidak diwajibkan bila pengajuan taktikal berlaku. Bila tidak ada pengajuan taktikal, promo tetap wajib disetujui Supervisor. Penolakan taktikal tetap memblokir. Rantai taktikal yang dihitung hanya yang punya langkah approver; pengajuan zona bebas (tanpa approver) tidak menggugurkan pemantauan promo Supervisor (`test_21c`).
+- Tes `test_21` diperluas sampai konfirmasi (kumulatif 10% → rantai SPV/Branch Manager/Direksi; blokir saat tier menunggu, berhasil setelah semua setuju, tanpa pengajuan promo kedua); `test_21b` untuk taktikal ditolak.
+
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 5): siklus approval pada guard konfirmasi (claude-design)
+
+- Guard memakai pengajuan yang berlaku = terbaru yang tidak dibatalkan (`_approval_effective_request`); riwayat lama tetap. Promo resmi: tanpa pengajuan/dibatalkan/menunggu/ditolak = blokir, hanya disetujui lolos. Taktikal: bila ada pengajuan berlaku harus disetujui; zona bebas Tier 0 (pengajuan langsung approved atau tanpa pengajuan) tetap lolos; SO lama tanpa pengajuan tidak diblokir.
+- Jalur ajukan ulang untuk promo: `_create_promo_usage_request()` dan tombol "Ajukan Pemantauan Promo" (`has_program_discount`) di tab Tata Kelola SO.
+- Tes `test_25`–`test_29` (tanpa pengajuan/dibatalkan, tolak→ulang→setujui dengan riwayat, setuju→pengganti ditolak, taktikal tolak→ulang→setujui, Tier 0).
+
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 4): guard konfirmasi SO (claude-design)
+
+- P1: pengajuan promo resmi kini mengendalikan konfirmasi. `action_confirm` memanggil `_check_discount_requests_allow_confirm()`: pengajuan `promo_program_usage` dan `tactical_discount` yang draft/pending/rejected memblokir konfirmasi; konfirmasi berhasil setelah disetujui. Guard berbasis keberadaan pengajuan, jadi SO lama tanpa pengajuan tidak terpengaruh. Guard HPP tetap.
+- Cakupan di luar permintaan review: diskon taktikal ikut dijaga (celah yang sama).
+- Tes `test_22`–`test_24` (pending, rejected, setelah Supervisor menyetujui, taktikal pending).
+
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 3) + keputusan promo resmi (claude-design)
+
+- P1: kelompok tanpa principal tidak lagi memakai batas principal pertama saat submit: `request.principal_decided` membuat principal kosong tetap berarti aturan umum. Tes `test_19` (urutan baris dibalik).
+- Keputusan pemilik: pesanan murni promo resmi tetap melalui approval, hanya hingga Supervisor, agar Supervisor memantau penggunaan/alokasi/distribusi promo. Kategori baru `promo_program_usage` (Tier 1 Supervisor, SLA 4 jam); `_has_program_discount()`; pesanan dengan diskon manual memakai satu rantai taktikal. Tes `test_20`–`test_21`.
+- Catatan proses: perubahan ini sudah ada di working tree sebagai modifikasi tak ber-komit dari sesi lain; saya meninjau seluruh diff, memperbaiki tes yang memicu pengajuan HPP tak sengaja (`_reward_line` tanpa HPP), lalu meng-komit.
+
+## 2026-11-20 — [BU] BE-15 perbaikan review PR #176: jendela WITA, company, multi-principal (claude-design)
+
+- P1 jendela: hari/bulan akumulasi memakai batas WITA (Asia/Makassar → UTC), bukan hari UTC; filter `company_id` sama.
+- P1 multi-principal: diskon kumulatif dihitung terpisah per principal (`_approval_cumulative_by_principal`); zona bebas hanya bila setiap principal berdiskon berada di dalam batasnya; principal penentu = rantai tier terpanjang lalu % tertinggi, disimpan di `fmcg.approval.request.principal_id`; reward diatribusikan ke principal programnya (`promo_principal_id` bila ada, jika tidak principal produk), juga untuk pesanan historis.
+- Refactor: `category._applicable_tier_rules` dipakai bersama mesin dan keputusan.
+- Tes baru `test_13`–`test_18`. Pengecualian approval untuk pesanan murni promo resmi tetap menunggu keputusan pemilik.
+
+## 2026-11-20 — [BU] BE-15: Tier 0 dan approval diskon kumulatif per principal (claude-design)
+
+- Aturan: `principal_id` (aturan khusus principal menimpa umum, terpisah untuk zona bebas dan tier approver) dan `is_free_zone` (Tier 0; batas = `max_discount`). Kategori: `cumulative_scope` (order / outlet_month / salesman_day).
+- Diskon kumulatif % berbobot nilai: diskon baris + baris reward program resmi, per principal; jendela outlet-bulan/salesman-hari menggabungkan pesanan lain (principal sama, tidak batal/ditolak). Rantai tetap berjenjang.
+- Di dalam zona bebas: tanpa pengajuan (jalur lapangan) atau auto-approved tanpa langkah approver (tombol SO). Handler mobile membalas `accepted` bila tidak ada pengajuan/kredit/HPP pending.
+- Data: rule `rule_tactical_tier0` dengan batas awal 0% (perilaku lama); angka sebenarnya diisi pemilik di Tata Kelola Approval, per principal lewat aturan khusus.
+- Tes: `test_07`–`test_12` (id_approval), `test_free_zone_discount_is_accepted_without_approval` (mobile). Odoo tidak ada lokal; verifikasi lewat CI.
+- Belum: `approval_tiers` di snapshot (BE-18) dan pratinjau tier di PWA (FE-11).
+
 ## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
 
 - P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.
