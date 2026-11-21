@@ -12,8 +12,11 @@ dependencies {
     testImplementation(libs.kotlin.test.junit)
 }
 
+val contractSamples = layout.buildDirectory.dir("contract-samples")
+
 tasks.test {
     useJUnit()
     // Tes mengeluarkan contoh payload ke sini untuk divalidasi terhadap skema OpenAPI (tools/validate_contract.py).
-    systemProperty("contract.out", layout.buildDirectory.dir("contract-samples").get().asFile.absolutePath)
+    outputs.dir(contractSamples).withPropertyName("contractSamples")
+    systemProperty("contract.out", contractSamples.get().asFile.absolutePath)
 }

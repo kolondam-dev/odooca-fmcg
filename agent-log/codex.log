@@ -489,3 +489,30 @@
 - [F] No merge, deployment, or server-data change was performed by this work.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-20T08:41:39+07:00
+[2026-11-20T22:40:22+07:00] [INFO] PR #110: sinkronisasi main dan patch scope DO
+- [F] Merge origin/main 69c6e05; kedua sisi konflik HANDOFF dipertahankan.
+- [F] ORM Odoo 19 disposable: filter lama 0, filter patch tepat 1; tiga kontrol negatif dikecualikan. 77 unit test, Ruff, dan 14 manifest lulus.
+- Task managed by codex agent at 2026-11-20T22:40:22+07:00
+
+[2026-11-21T06:06:45+07:00] [INFO] PR #110: cache kontrak Android dan pajak native F4
+- [F] Android: FROM-CACHE sebelumnya menghilangkan check_in.json; deklarasi output memulihkan 3 sampel dan validator OpenAPI lulus.
+- [F] ORM Odoo: test faktur Kode 04 gagal tanpa patch karena tax_line_id kosong dan lulus dengan patch.
+- [BU] CI exact-SHA baru serta vendor bill, stok, AR-to-GL dan digest F4 masih terbuka.
+- Task managed by codex agent at 2026-11-21T06:06:45+07:00
+
+[2026-11-21T09:58:20+07:00] [INFO] PR #110: akun kontrol piutang seed Juli–Agustus
+- [F] Reproduksi pack pada 44ffa4f membuktikan 4.843 AML piutang dan saldo Rp2.368.135.989,94 pada 121000; 112000 tidak memiliki AML.
+- [F] Patch memilih 112000 pada payment terms draft dan tujuan pembayaran. ORM disposable membuktikan pembayaran lintas periode dan replay.
+- Task managed by codex agent at 2026-11-21T09:58:20+07:00
+
+[2026-11-21T13:02:21+07:00] [INFO] PR #110: scope periode audit GL PPN keluaran
+- [F] Run 44858700079 membuktikan AR 112000 cocok Rp2.368.135.989,94 pada A dan B.
+- [F] Selisih PPN Rp19.371.395,89 tepat sama dengan 50 faktur September; oracle cutoff kini mengikuti tanggal posting dalam register.
+- [BU] Tagihan vendor, stok dan digest A/B tetap terbuka.
+- Task managed by codex agent at 2026-11-21T13:02:21+07:00
+
+[2026-11-21T15:54:38+07:00] [INFO] PR #110: posting tagihan vendor dan cutoff PPN Masukan
+- [F] Run 44873643566 membuktikan audit AR dan PPN keluaran cocok.
+- [F] ORM disposable memposting 16 tagihan, replay 0 duplikasi. PPN pack Rp782.852.400; PPN Agustus Rp720.627.600.
+- [BU] F4 dua database, stock-to-GL dan digest A/B belum lulus.
+- Task managed by codex agent at 2026-11-21T15:54:38+07:00
