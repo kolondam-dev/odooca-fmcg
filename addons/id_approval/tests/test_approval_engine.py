@@ -488,6 +488,36 @@ class TestApprovalEngine(TransactionCase):
         reqs = order._mobile_auto_request_approvals()
         self.assertEqual(reqs.mapped("category_id.code"), ["tactical_discount"])
 
+    def _promo_order(self):
+        order = self._tactical_order(discount=0.0, extra_lines=[self._reward_line()])
+        reqs = order._mobile_auto_request_approvals()
+        self.assertEqual(reqs.category_id.code, "promo_program_usage")
+        return order, reqs
+
+    def test_22_promo_request_blocks_confirmation_until_supervisor_approves(self):
+        """Review PR #176 (P1): pengajuan promo mengendalikan konfirmasi SO."""
+        order, req = self._promo_order()
+        with self.assertRaises(UserError):  # pending
+            order.action_confirm()
+        req.with_user(self.user_spv).action_approve(notes="Sesuai alokasi")
+        self.assertEqual(req.state, "approved")
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+
+    def test_23_rejected_promo_request_blocks_confirmation(self):
+        order, req = self._promo_order()
+        req.with_user(self.user_spv).action_reject(notes="Melebihi alokasi")
+        self.assertEqual(req.state, "rejected")
+        with self.assertRaises(UserError):
+            order.action_confirm()
+
+    def test_24_tactical_request_blocks_confirmation_while_pending(self):
+        order = self._tactical_order(discount=5.0)
+        req = order._mobile_auto_request_approvals()
+        self.assertEqual(req.state, "pending")
+        with self.assertRaises(UserError):
+            order.action_confirm()
+
     def test_04_new_sku_activation_workflow(self):
         """SKU baru tidak aktif jual hingga disetujui manajemen."""
         prod_tmpl = self.env["product.template"].create({

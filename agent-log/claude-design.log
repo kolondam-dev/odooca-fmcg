@@ -392,3 +392,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-21T06:32:10+07:00] [INFO] BE-15 fix review #176 r3 + promo resmi
 - principal_decided; kategori promo_program_usage (SPV); tes 19-21
 - Task managed by claude-design agent at 2026-11-21T06:32:10+07:00
+
+[2026-11-21T07:01:18+07:00] [INFO] BE-15 fix review #176 r4
+- guard konfirmasi SO untuk promo dan diskon taktikal; tes 22-24
+- Task managed by claude-design agent at 2026-11-21T07:01:18+07:00

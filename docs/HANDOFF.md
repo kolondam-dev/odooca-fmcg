@@ -1,3 +1,9 @@
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 4): guard konfirmasi SO (claude-design)
+
+- P1: pengajuan promo resmi kini mengendalikan konfirmasi. `action_confirm` memanggil `_check_discount_requests_allow_confirm()`: pengajuan `promo_program_usage` dan `tactical_discount` yang draft/pending/rejected memblokir konfirmasi; konfirmasi berhasil setelah disetujui. Guard berbasis keberadaan pengajuan, jadi SO lama tanpa pengajuan tidak terpengaruh. Guard HPP tetap.
+- Cakupan di luar permintaan review: diskon taktikal ikut dijaga (celah yang sama).
+- Tes `test_22`–`test_24` (pending, rejected, setelah Supervisor menyetujui, taktikal pending).
+
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 3) + keputusan promo resmi (claude-design)
 
 - P1: kelompok tanpa principal tidak lagi memakai batas principal pertama saat submit: `request.principal_decided` membuat principal kosong tetap berarti aturan umum. Tes `test_19` (urutan baris dibalik).

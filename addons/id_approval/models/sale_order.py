@@ -416,7 +416,35 @@ class SaleOrder(models.Model):
                         f"Wajib mengajukan persetujuan berjenjang (Branch Manager hingga Pemilik/Direksi) "
                         f"sebelum diproses."
                     )
+                # 2. Guard pengajuan diskon (taktikal) dan pemantauan promo resmi: SO tidak boleh
+                #    dikonfirmasi saat pengajuannya menunggu atau ditolak.
+                order._check_discount_requests_allow_confirm()
         return super().action_confirm()
+
+    def _check_discount_requests_allow_confirm(self):
+        """Blokir konfirmasi bila ada pengajuan diskon/promo yang menunggu atau ditolak."""
+        self.ensure_one()
+        labels = {
+            "tactical_discount": "diskon taktikal",
+            "promo_program_usage": "pemantauan promo resmi",
+        }
+        requests = self.env["fmcg.approval.request"].sudo().search([
+            ("res_model", "=", "sale.order"),
+            ("res_id", "=", self.id),
+            ("category_id.code", "in", list(labels)),
+            ("state", "in", ("draft", "pending", "rejected")),
+        ])
+        for req in requests:
+            label = labels[req.category_id.code]
+            if req.state == "rejected":
+                raise UserError(
+                    f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} DITOLAK. "
+                    f"Revisi pesanan dan ajukan ulang."
+                )
+            raise UserError(
+                f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} "
+                f"masih menunggu persetujuan."
+            )
 
     def _on_approval_status_change(self, request, status):
         """Callback ketika status pengajuan approval berubah."""
@@ -434,6 +462,13 @@ class SaleOrder(models.Model):
                         body="Pengajuan penjualan di bawah HPP DITOLAK oleh manajemen.",
                         subtype_xmlid="mail.mt_note",
                     )
+            elif request.category_code == "promo_program_usage":
+                if status == "approved":
+                    order.message_post(
+                        body="Penggunaan promo resmi telah DISETUJUI Supervisor.", subtype_xmlid="mail.mt_note")
+                elif status == "rejected":
+                    order.message_post(
+                        body="Penggunaan promo resmi DITOLAK Supervisor.", subtype_xmlid="mail.mt_note")
             elif request.category_code == "tactical_discount":
                 if status == "approved":
                     if hasattr(order, "discount_approval_state"):
