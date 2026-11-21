@@ -181,6 +181,17 @@ class TestMobileRead(MobileFixture, TransactionCase):
             self.assertNotIn(secret, serialized)
         self.assertEqual(snapshot["version"], self.service()._snapshot_payload()["version"])
 
+    def test_snapshot_includes_approval_tiers_when_id_approval_installed(self):
+        """BE-18: tier approval untuk pratinjau; opsional dan tanpa dependensi manifest."""
+        if "fmcg.approval.category" not in self.env:
+            self.skipTest("id_approval tidak terpasang")
+        snapshot = self.service()._snapshot_payload()
+        tiers = snapshot["approval_tiers"]["discount"]
+        self.assertIn(tiers["scope"], ("order", "outlet_month", "salesman_day"))
+        self.assertIn("free_zone_max", tiers["default"])
+        self.assertTrue(tiers["default"]["tiers"])
+        self.assertIsInstance(tiers["usage"], list)
+
     def test_outlet_summary_respects_native_sales_acl_and_assigned_scope(self):
         self.outlet.pic_name = "Outlet contact"
         self.outlet.with_company(self.company).credit_limit = 1000000

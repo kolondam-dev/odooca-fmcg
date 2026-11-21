@@ -6019,6 +6019,168 @@
             },
             "additionalProperties": false
           },
+          "approval_tiers": {
+            "type": "object",
+            "properties": {
+              "discount": {
+                "type": "object",
+                "properties": {
+                  "scope": {
+                    "type": "string",
+                    "enum": [
+                      "order",
+                      "outlet_month",
+                      "salesman_day"
+                    ]
+                  },
+                  "default": {
+                    "type": "object",
+                    "properties": {
+                      "free_zone_max": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "tiers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "min_discount": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "approver": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "min_discount",
+                            "approver"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "free_zone_max",
+                      "tiers"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "principals": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "free_zone_max": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "tiers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "min_discount": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "approver": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            },
+                            "required": [
+                              "min_discount",
+                              "approver"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "free_zone_max",
+                        "tiers"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "usage": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "outlet_id": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "principal": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "discount_amount": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "gross_amount": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "outlet_id",
+                        "principal",
+                        "discount_amount",
+                        "gross_amount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "scope",
+                  "default",
+                  "principals",
+                  "usage"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "discount"
+            ],
+            "additionalProperties": false
+          },
           "extra_call_outlets": {
             "type": "array",
             "items": {

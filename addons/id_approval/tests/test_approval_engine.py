@@ -1,3 +1,4 @@
+from odoo import fields
 from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase
 
@@ -687,6 +688,41 @@ class TestApprovalEngine(TransactionCase):
         self.assertFalse(free._mobile_auto_request_approvals())
         free.action_confirm()
         self.assertEqual(free.state, "sale")
+
+    def test_34_mobile_snapshot_payload_exposes_tiers_free_zone_and_usage(self):
+        """BE-18: konfigurasi tier + pemakaian kumulatif untuk pratinjau PWA."""
+        principal, product = self._principal_product("PRS")
+        category = self._free_zone_rule().category_id
+        category.cumulative_scope = "salesman_day"
+        self._free_zone_rule().max_discount = 2.0
+        self.env["fmcg.approval.rule"].create({
+            "category_id": category.id, "tier_sequence": 0, "name": "Zona bebas PRS",
+            "approver_type": "group", "group_id": self.grp_spv.id,
+            "is_free_zone": True, "max_discount": 6.0, "principal_id": principal.id,
+        })
+        order = self._tactical_order(product=product, qty=5.0, discount=5.0)
+        payload = self.env["fmcg.approval.category"]._mobile_snapshot_payload(
+            principal_ids=[principal.id], partner_ids=[self.partner_tempo.id],
+            user=order.user_id, company=order.company_id, anchor=order.date_order)
+        self.assertEqual(payload["scope"], "salesman_day")
+        self.assertEqual(payload["default"]["free_zone_max"], 2.0)
+        self.assertEqual([t["min_discount"] for t in payload["default"]["tiers"]], [0.01, 3.01, 7.01])
+        self.assertEqual(payload["principals"][str(principal.id)]["free_zone_max"], 6.0)
+        # tier principal tanpa aturan khusus memakai tier umum
+        self.assertEqual(len(payload["principals"][str(principal.id)]["tiers"]), 3)
+        entry = next(e for e in payload["usage"] if e["principal"] == str(principal.id))
+        self.assertEqual(entry["outlet_id"], None)
+        self.assertAlmostEqual(entry["discount_amount"], 3000.0, places=2)
+        self.assertAlmostEqual(entry["gross_amount"], 60000.0, places=2)
+
+    def test_35_mobile_snapshot_payload_order_scope_has_no_usage(self):
+        payload = self.env["fmcg.approval.category"]._mobile_snapshot_payload(
+            principal_ids=[], partner_ids=[self.partner_tempo.id],
+            user=self.env.user, company=self.env.company, anchor=fields.Datetime.now())
+        self.assertEqual(payload["scope"], "order")
+        self.assertEqual(payload["usage"], [])
+        self.assertEqual(payload["principals"], {})
+        self.assertEqual(payload["default"]["free_zone_max"], 0.0)
 
     def test_04_new_sku_activation_workflow(self):
         """SKU baru tidak aktif jual hingga disetujui manajemen."""

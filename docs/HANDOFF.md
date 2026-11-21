@@ -1,3 +1,10 @@
+## 2026-11-21 — [BU] BE-18: `approval_tiers` pada snapshot (claude-design)
+
+- Snapshot memuat `approval_tiers.discount`: `scope`, `default` dan `principals` (`free_zone_max` + `tiers[{min_discount, approver}]`, khusus principal hanya bila ada aturan khusus), serta `usage` (pemakaian diskon pada jendela WITA berjalan: per salesman-hari atau per outlet-bulan × principal). Opsional dan lunak (tanpa dependensi manifest `id_mobile_api` → `id_approval`); angka pemakaian dibaca lewat ACL pengguna sehingga bisa lebih rendah dari server; hanya pratinjau, server tetap otoritatif.
+- PWA: `SnapshotSchema.approval_tiers` opsional; `contracts/openapi.json` diekspor ulang. Klien lama tanpa field tetap valid.
+- Tes: vitest catalog (parse valid/ditolak), `test_34`/`test_35` (id_approval), satu tes di `test_read_api`.
+- Belum: FE-11 (pratinjau tier di POS dan status approval di Riwayat/Hasil kirim).
+
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 7): perubahan setelah disetujui (claude-design)
 
 - P1: persetujuan hanya berlaku untuk isi pesanan saat diajukan. Pengajuan menyimpan snapshot (`snapshot_taken`, `manual_discount_amount`, `program_discount_amount`). Guard memblokir bila diskon manual bertambah setelah pengajuan taktikal, bila promo ditambahkan/bertambah setelah persetujuan (butuh pemantauan promo Supervisor sendiri), dan bila nilai promo bertambah setelah pengajuan promo. Pengajuan lama tanpa snapshot dianggap berlaku.
