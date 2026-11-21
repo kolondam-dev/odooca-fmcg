@@ -12,7 +12,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
@@ -69,12 +73,13 @@ class LoginViewModel(private val container: AppContainer) : ViewModel() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreen(container: AppContainer, onLoggedIn: () -> Unit) {
     val vm: LoginViewModel = viewModel(factory = viewModelFactory { initializer { LoginViewModel(container) } })
     val state by vm.state.collectAsStateWithLifecycle()
 
-    Column(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
         ScreenHeader(title = "Odooca Field", subtitle = "Masuk dengan akun Odoo Anda")
         Column(
             modifier = Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(OdoocaSpacing.S4),
@@ -92,7 +97,7 @@ fun LoginScreen(container: AppContainer, onLoggedIn: () -> Unit) {
                 onValueChange = vm::onLogin,
                 label = { Text("Pengguna") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("login_user"),
             )
             OutlinedTextField(
                 value = state.password,
@@ -101,7 +106,7 @@ fun LoginScreen(container: AppContainer, onLoggedIn: () -> Unit) {
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("login_password"),
             )
             state.error?.let {
                 Text(it, color = OdoocaColors.Bad, style = MaterialTheme.typography.bodyMedium)
@@ -109,6 +114,7 @@ fun LoginScreen(container: AppContainer, onLoggedIn: () -> Unit) {
             PrimaryButton(
                 text = if (state.loading) "Memproses…" else "Masuk",
                 onClick = { vm.submit(onLoggedIn) },
+                modifier = Modifier.testTag("login_submit"),
                 enabled = state.configured && !state.loading && state.login.isNotBlank() && state.password.isNotEmpty(),
             )
         }
