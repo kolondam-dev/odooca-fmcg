@@ -242,9 +242,12 @@ class TestFMCGWarehouseReports(TransactionCase):
         importer = TranslationImporter(self.env.cr, verbose=False)
         importer.load_file(po_path, "id_ID")
         imported_values = {
-            term: importer.model_terms_translations
-            .get("ir.ui.view", {}).get("arch_db", {})
-            .get(f"id_base.{xmlid}", {}).get(term, {}).get("id_ID")
+            term: {
+                xmlid: importer.model_terms_translations
+                .get("ir.ui.view", {}).get("arch_db", {})
+                .get(f"id_base.{xmlid}", {}).get(term, {}).get("id_ID")
+                for xmlid in xmlids
+            }
             for term, (_value, xmlids) in expected_terms.items()
         }
         self.assertEqual(
