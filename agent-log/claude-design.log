@@ -420,3 +420,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-21T19:22:27+07:00] [INFO] BE-18 fix CI #179
 - tiers di luar digest versi; contract-samples jadi output cache Gradle
 - Task managed by claude-design agent at 2026-11-21T19:22:27+07:00
+
+[2026-11-21T21:19:53+07:00] [INFO] BE-18 fix CI #179 putaran 2
+- hapus blok tier lama sebelum digest
+- Task managed by claude-design agent at 2026-11-21T21:19:53+07:00

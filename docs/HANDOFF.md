@@ -1,3 +1,7 @@
+## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (putaran 2): blok tier ganda (claude-design)
+
+- install-test masih gagal karena `git checkout` pada putaran sebelumnya mengembalikan versi komit yang sudah memuat blok tier SEBELUM digest; blok baru ditambahkan di bawahnya sehingga ada dua blok dan yang lama tetap ikut digest (`include_approval_tiers=False` pun tidak berpengaruh). Blok lama dihapus; sisa satu blok SETELAH digest. Pelajaran: setelah `git checkout <file>` selalu diff ulang terhadap HEAD sebelum menambah perubahan.
+
 ## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (claude-design)
 
 - install-test: `approval_tiers` ikut digest versi snapshot, sehingga konfigurasi atau pemakaian yang berubah (setiap order) membuat command offline berikutnya ditolak "Stale catalog snapshot version" (regresi nyata, bukan hanya tes). Kini `approval_tiers` ditambahkan SETELAH digest; jalur cek versi command dan evidence memanggil `_snapshot_payload(include_approval_tiers=False)` (juga menghemat query pemakaian). Tes regresi `test_approval_tiers_do_not_change_snapshot_version`. Koreksi catatan PR: digest TIDAK berubah karena tier.

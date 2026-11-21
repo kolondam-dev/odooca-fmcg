@@ -246,16 +246,6 @@ class MobileWorkday(models.Model):
         }
         if assignment.office_id:
             result["office"] = assignment.office_id._map_payload()
-        # BE-18: id_approval opsional (tanpa dependensi manifest); tier dipakai PWA hanya untuk pratinjau.
-        category_model = self.env.registry.get("fmcg.approval.category")
-        if category_model is not None and hasattr(category_model, "_mobile_snapshot_payload"):
-            tiers = self.env["fmcg.approval.category"]._mobile_snapshot_payload(
-                principal_ids=products.mapped("principal_id").ids,
-                partner_ids=partners.ids, user=self.env.user, company=company,
-                anchor=datetime.now(ZoneInfo("UTC")).replace(tzinfo=None),
-            )
-            if tiers:
-                result["approval_tiers"] = {"discount": tiers}
         digest = hashlib.sha256(json.dumps(result, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         result.update(
             version=f"odoo-read-v1:{digest}",
