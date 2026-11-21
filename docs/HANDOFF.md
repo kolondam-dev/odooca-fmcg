@@ -1,3 +1,22 @@
+## 2026-11-21T13:00:02+07:00 — Codex — Integrasi perbaikan cache domain pada PR #177
+**Basis:** main `69c6e05`; perbaikan Dev `f23ea50204d13f018bc40872c01ce3b4d5bf288e`. Konflik HANDOFF dan log diselesaikan dengan mempertahankan kedua entri.
+**Dampak test CUKUP untuk delta ini:** bukti Dev mereproduksi sampel hilang sebelum perbaikan dan memulihkan tiga sampel identik pada cache hit lintas checkout setelah perbaikan. Validator OpenAPI tetap menjadi oracle. [BU] Hasil CI pada SHA integrasi dan runtime API 24/35.
+
+## 2026-11-21T10:22:32+07:00 — Codex Android Dev — Perbaiki cache sampel kontrak DEV-01
+**Basis:** [F] Branch Dev `7bcd5aa`; arahan `79f41bb` untuk CI PR #177 pada `27d7428`.
+**Berubah:** [F] Task `:core:domain:test` mendeklarasikan `build/contract-samples` sebagai output. Argument provider memasok lokasi checkout ke JVM tanpa mengikat cache ke path absolut. Assertion dan validator yang ada dipakai untuk pembuktian.
+**Verifikasi:** [F] Baseline Dev `7bcd5aa`: cold run dan validator lulus. Checkout bersih di path yang sama mendapat `:core:domain:test FROM-CACHE` dan validator gagal karena `check_in.json` hilang. Kandidat: cache awal kosong, 72 tes lulus. Checkout bersih di path berbeda dengan cache yang sama mendapat `:core:domain:test FROM-CACHE`; tiga sampel dipulihkan dengan SHA-256 identik dan tiga kontrol positif serta empat kontrol negatif OpenAPI lulus di kedua run.
+**Gate dan planner:** [F] Gate statis terhadap main `69c6e05` lulus (Ruff, 14 manifest, 30 tes kontrak, token). Delta perbaikan dari `7bcd5aa` hanya memilih `android`. Kandidat DEV-01 secara keseluruhan tetap memilih full regression 11 suite.
+**Dampak test:** **SESUAIKAN** — pertahankan assertion dan validator; tambahkan bukti bahwa validator tetap dapat membaca ketiga sampel saat Gradle memulihkan hasil dari cache. CI pada SHA integrasi PR #177 menunggu Lead. Runtime emulator tetap HOLD.
+## 2026-11-21T09:48:00+07:00 — Codex — Integrasi Lead Android DEV-01A/01B
+**Basis:** main `69c6e053a02870fa28ee4d8e45bfebbda125e588`, Dev `7bcd5aab839092b96de862be1b2b045fb0ceab2f`. Branch `agen/android-integration-dev-01-Codex-Mobile-Native`.
+**Berubah:** integrasi DEV-01A/01B tanpa konflik. Arahan untuk kedua tim pada [workflow bersama](android/LOCAL_WORKFLOW.md). [BU] CI PR, full regression dan runtime API 24/35 menunggu eksekusi. Dampak test **TAMBAH**.
+
+## 2026-11-20T22:27:23+07:00 — Codex Android Dev — Selaraskan DEV-01 dengan PR #173
+**Basis:** [F] Main `69c6e053a02870fa28ee4d8e45bfebbda125e588`, arahan `6b894ca`. `dcad215` merupakan checkpoint historis yang dipertahankan sebagai ancestor.
+**Berubah:** [F] Job smoke API 24/35 memakai SDK `platforms;android-37.0` rev 2 dan Build Tools 36.0.0. Versi Gradle dalam bukti dibaca dari wrapper PR #173. Versi Actions diselaraskan dengan main. Seluruh job wajib Android identik dengan main.
+**Dampak test:** **TAMBAH** — tes kontrak menolak platform SDK salah di tiap job Android, termasuk emulator opsional. Perubahan workflow memerlukan full regression. Runtime API 24/35 tetap [BU].
+
 ## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
 
 - P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.
@@ -33,6 +52,51 @@
 - Pembaca layar: `role="img"` + `aria-label` "1 karton, 2 pack, 3 pcs". Legenda satuan sekali di POS.
 - Tes: `tests/unit-qty.test.ts` (termasuk penjaga tanpa "krt/pak" di komponen), `tests/browser/unit-qty.spec.ts`.
 - Belum dimigrasi (utang K34): Hasil kirim, baris pengiriman/POD, Closing trip, Riwayat, `loadSummary` ("20 karton · 8 pak") di `delivery-progress.ts`.
+## 2026-11-19T19:44:36+07:00 — Codex Android Dev — Bukti checkpoint DEV-01A/01B
+**SHA:** [F] Main acuan `39172de900668263676577d843a095bf90065ec2`, basis Dev `92da15d`, arahan terbaru diperiksa pada `09f9cba8645f24ca08718542701dfe782e0adb2a`, DEV-01A `59d89f8`, sumber kandidat `9d51fb8a99c7b24db8622cb11686ae5191939b65`. Commit bukti ini hanya menambah HANDOFF dan agent log.
+**Gate lokal:** [F] Bagian statis pada kandidat lulus, termasuk Ruff, 14 manifest, 29 tes kontrak/planner dan token zero-diff. Planner `full: true` memilih 11 suite untuk perubahan workflow/test control plane. [BU] `--gradle` tidak lengkap. `:core:data:testDebugUnitTest` dan `:app:lintDebug` gagal sebelum tes Robolectric dan analisis lint app selesai karena unduhan `org.robolectric:nativeruntime-dist-compat:1.0.16` ditolak HTTP 403 oleh redirect Maven.
+**Bukti terpisah:** [F] 72 tes JVM dan validator OpenAPI (tiga kontrol positif, empat negatif) lulus. `:app:assembleDebug` lulus. SHA-256 APK debug lokal `8a58d804e1adb58e967d4e2f0219bffc1068322c09eedefe3777d1d65a75bec8`. Resource APK debug biasa menolak cleartext. `:app:assembleDebugAndroidTest -Podooca.uiFixture=true` lulus kompilasi dan packaging. Fixture HTTP dan redaksi laporan lulus di host.
+**Runtime:** [BU] API 24 dan API 35 belum diuji untuk boot, instalasi, cold start, Login dan instrumentation. Acceptance per API membutuhkan KVM usable, laporan tahap dan screenshot Login, lalu laporan UI. Lead menjalankan workflow opsional dan full regression sesuai [README Android](../android/README.md).
+**Berikutnya:** [F] Handoff `09f9cba` mempertahankan scope smoke. Counterexample status receipt tak dikenal pada D01-05c/d dibawa ke slice D01 terkait. Acceptance Odoo disposable dan perangkat fisik setelah checkpoint.
+
+## 2026-11-19T19:33:41+07:00 — Codex Android Dev — DEV-01B kandidat instrumentation
+**Base dan SHA:** [F] Main `39172de`, arahan `92da15d`, DEV-01A `59d89f8`. SHA checkpoint adalah commit yang memperkenalkan entri ini pada branch `agen/android-dev-Codex-Mobile-Native`.
+**Berubah:** [F] Mode UI opsional menyiapkan fixture HTTP loopback debug, Login kosong/salah/benar, resume/rekreasi Activity, Beranda kosong, navigasi Kalibrasi, penolakan izin lokasi OS dan logout. Android 12+ meminta fine dan coarse bersama. Test ID dan status/timing dipublikasikan via laporan tersanitasi.
+**Gate:** [F] Actionlint, Bash syntax, Ruff, 14 manifest, 29 tes kontrak/planner Android, fixture HTTP dan filter laporan lulus. Build APK tes `:app:assembleDebugAndroidTest -Podooca.uiFixture=true` lulus pada Temurin 17.0.17+10 dan SDK 35. Pemeriksaan kandidat menggunakan `ANDROID_GATE_BASE=39172de`. Planner memilih full regression karena workflow berubah.
+**Bukti runtime:** [BU] API 24: boot/install/cold start/Login/instrumentation belum diuji. API 35: seluruh tahap tersebut belum diuji. Cloud tidak memiliki `/dev/kvm`; biner adb 37.0.1 terpasang tetapi gagal menyiapkan `.android` pada direktori home Cloud yang read-only. Lead menjalankan matriks pada SHA checkpoint sesuai instruksi README. Izin diberikan/perkiraan, font/ukuran/rotasi, Odoo disposable B09 dan perangkat fisik masih terbuka.
+**Dampak test:** **TAMBAH** — kegagalan membuka aplikasi, navigasi awal, form dan penanganan izin harus terlihat terpisah dari hasil build dan install. Scope checkpoint berhenti sebelum DEV-02A dan perluasan visual D01.
+
+## 2026-11-19T19:30:53+07:00 — Codex Android Dev — DEV-01A kandidat smoke emulator
+**Base:** [F] Main `39172de`; baseline bersama dan arahan `92da15d` pada branch `agen/android-dev-Codex-Mobile-Native`.
+**Berubah:** [F] Matriks manual API 24/35 Google APIs x86_64, toolchain berpinned, smoke cold start dengan oracle foreground dan semantics Login, artefak tersanitasi, serta kontrak job opsional di luar `android-gate`.
+**Verifikasi:** [F] Bash syntax, actionlint dan kontrak Android lulus. [BU] Boot/install/cold start/Login API 24 dan 35 menunggu runner dengan KVM. Planner memilih full regression untuk kontrol workflow. Lead menjalankan review dan CI.
+**Dampak test:** **TAMBAH** — APK yang dapat dibangun namun crash, tidak mencapai foreground, atau gagal merender Login harus gagal pada job smoke dengan status per tahap.
+
+## 2026-11-19T19:20:10+07:00 — Codex — Arahan tetap untuk dua tim Android
+**Berubah:** [F] [Handoff bersama](android/LOCAL_WORKFLOW.md) mencatat arahan per tim, waktu pemeriksaan baseline, dan pelaporan checkpoint melalui GitHub. DES-00/DES-01 dan DEV-01A/01B tetap aktif.
+**Scope:** [F] Pembaruan instruksi pada branch baseline bersama.
+
+## 2026-11-19T19:15:04+07:00 — Codex — Baseline Android bersama
+**Berubah:** [F] Branch `agen/android-baseline-Codex-Mobile-Native` memuat baseline yang dipertahankan, main `39172de` dan [handoff bersama](android/LOCAL_WORKFLOW.md). Kedua tim memakai checkout Cloud masing-masing dan menyerahkan commit melalui branch GitHub.
+**Scope:** [F] Publikasi baseline terisolasi sesuai mandat pemilik; review, merge dan deployment tetap mengikuti otorisasi masing-masing.
+
+## 2026-11-19T17:17:03+07:00 — Codex — Sinkronisasi Lead Android
+**Berubah:** [F] Checkout utama memakai main lokal yang mengikuti origin/main. Dokumen menjelaskan kandidat per slice dan pemeriksaan kebaruan main sebelum perakitan, push, serta merge. Gate menambah opsi Lead `--refresh-main`.
+**Scope:** [F] Branch tim tetap lokal. Publikasi kandidat mengikuti checkpoint dan mandat pemilik.
+
+## 2026-11-19T17:01:49+07:00 — Codex — Handoff lokal Android
+**Berubah:** [F] Lead menangani seluruh GitHub. Design dan Dev memakai branch lokal dan bundle bila checkout berbeda. Tambahkan panduan operasi lokal dan pilihan basis gate dari SHA yang diserahkan Lead.
+**Menunggu:** [BU] Handoff bundle ke sesi tim bila tidak memakai checkout yang sama.
+
+## 2026-11-19T15:40:25+07:00 — Codex — Spesifikasi engineering Android v2
+**Berubah:** [F] SSOT Android v2, design system dengan kontrak Figma/Compose, paket Design dan Dev, register endpoint/backend/DB, serta gerbang integrasi antartim dan slice publikasi.
+**Diverifikasi:** [F] Basis main `e28e655` dan pemeriksaan keterlacakan enam dokumen. Perubahan ini dokumentasi.
+**Menunggu:** [BU] File Figma/library yang akan dipakai sebagai referensi resmi, inventaris frame aktual, uji emulator/fisik dan Odoo disposable.
+
+## 2026-11-19T14:53:47+07:00 — Codex — Baseline koordinasi Android
+**Berubah:** [F] SSOT dan register blocker di `docs/android/ARCHITECTURE.md`, spec Design/Dev dan operasi branch, plus `android/tools/integration_gate.sh`.
+**Diverifikasi:** [F] Basis `e28e655`. Ruff, 14 manifest serta tes kontrak selector, workflow dan Android lulus.
+**Belum diuji:** [BU] Mode Gradle lokal, emulator, perangkat fisik, konektivitas Odoo Android dan integrasi workspace desain.
 
 ## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
 
