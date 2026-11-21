@@ -37,6 +37,9 @@ class TestFMCGWarehouseReports(TransactionCase):
             ("name", "=", "id_base"),
         ])._update_translations(overwrite=False)
         cls.env.invalidate_all()
+        # Translation imports update ir.ui.view.arch_db; invalidate the QWeb
+        # view cache as well so report rendering observes the imported terms.
+        cls.env["ir.ui.view"].clear_caches()
         cls.warehouse = cls.env.ref("stock.warehouse0")
         cls.picking_type = cls.warehouse.out_type_id
         cls.source = cls.picking_type.default_location_src_id
@@ -134,11 +137,11 @@ class TestFMCGWarehouseReports(TransactionCase):
             ]
             parsed_rows = list(reader)
         expected_terms = {
-            "Picklist": ("Daftar Pengambilan", "report_fmcg_picklist"),
-            "Customer / Destination": ("Pelanggan / Tujuan", "report_fmcg_picklist"),
-            "Source Document": ("Dokumen Asal", "report_fmcg_picklist"),
-            "Scheduled": ("Dijadwalkan", "report_fmcg_picklist"),
-            "Ship To": ("Dikirim Kepada", "report_fmcg_delivery_order"),
+            "Picklist": ("Daftar Pengambilan", ("report_fmcg_picklist",)),
+            "Customer / Destination": ("Pelanggan / Tujuan", ("report_fmcg_picklist", "report_fmcg_packlist")),
+            "Source Document": ("Dokumen Asal", ("report_fmcg_picklist", "report_fmcg_packlist")),
+            "Scheduled": ("Dijadwalkan", ("report_fmcg_picklist", "report_fmcg_packlist")),
+            "Ship To": ("Dikirim Kepada", ("report_fmcg_delivery_order",)),
         }
         raw_entries = [
             entry for entry in reader.pofile
@@ -190,8 +193,8 @@ class TestFMCGWarehouseReports(TransactionCase):
                     "imd_model": "ir.ui.view",
                     "name": "ir.ui.view,arch_db",
                     "imd_name": xmlid,
-                }]
-                for term, (value, xmlid) in expected_terms.items()
+                } for xmlid in xmlids]
+                for term, (value, xmlids) in expected_terms.items()
             },
             "PO parser term matrix mismatch: " + json.dumps({
                 "raw_po_entries": raw_diagnostics,
@@ -242,18 +245,19 @@ class TestFMCGWarehouseReports(TransactionCase):
             term: importer.model_terms_translations
             .get("ir.ui.view", {}).get("arch_db", {})
             .get(f"id_base.{xmlid}", {}).get(term, {}).get("id_ID")
-            for term, (_value, xmlid) in expected_terms.items()
+            for term, (_value, xmlids) in expected_terms.items()
         }
         self.assertEqual(
             imported_values,
-            {term: value for term, (value, _xmlid) in expected_terms.items()},
+            {term: {xmlid: value for xmlid in xmlids}
+             for term, (value, xmlids) in expected_terms.items()},
             "TranslationImporter term matrix mismatch: " + json.dumps({
                 "imported_values": imported_values,
                 "imported_langs": sorted(importer.imported_langs),
                 "parsed_terms": parsed_term_diagnostics,
             }, ensure_ascii=False, default=str),
         )
-        imported = imported_values["Picklist"]
+        imported = imported_values["Picklist"]["report_fmcg_picklist"]
         if "id_ID" not in importer.imported_langs or imported != "Daftar Pengambilan":
             rejection_checks = {
                 "value_present": bool(row.get("value")),
@@ -276,6 +280,7 @@ class TestFMCGWarehouseReports(TransactionCase):
 
         importer.save(overwrite=True)
         self.env.invalidate_all()
+        self.env["ir.ui.view"].clear_caches()
         exported_csv = BytesIO()
         self.assertTrue(
             trans_export("id_ID", ["id_base"], exported_csv, "csv", self.env)

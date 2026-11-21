@@ -169,18 +169,21 @@ msgstr "Daftar Pengambilan"
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
 msgid "Customer / Destination"
 msgstr "Pelanggan / Tujuan"
 
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
 msgid "Source Document"
 msgstr "Dokumen Asal"
 
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
 msgid "Scheduled"
 msgstr "Dijadwalkan"
 

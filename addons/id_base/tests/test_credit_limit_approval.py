@@ -186,8 +186,10 @@ class TestCreditLimitApproval(TransactionCase):
         inv.action_post()
 
         before = inv.line_ids.read(["balance", "account_id", "date", "parent_state"])
-        with self.assertRaisesRegex(UserError, "Legacy tax number generation is disabled"):
-            inv.with_context(lang="en_US").action_generate_nsfp()
+        with self.assertRaises(UserError) as tax_error:
+            inv.with_context(lang="id_ID").action_generate_nsfp()
+        self.assertIn("dinonaktifkan", str(tax_error.exception).casefold())
+        self.assertIn("Coretax", str(tax_error.exception))
         self.assertFalse(inv.l10n_id_tax_invoice_number)
         self.assertFalse(inv.l10n_id_tax_invoice_date)
 
@@ -196,8 +198,10 @@ class TestCreditLimitApproval(TransactionCase):
             "date_from": fields.Date.today() - timedelta(days=1),
             "date_to": fields.Date.today() + timedelta(days=1),
         })
-        with self.assertRaisesRegex(UserError, "Legacy tax CSV generation is disabled"):
-            wizard.with_context(lang="en_US").action_generate_coretax_csv()
+        with self.assertRaises(UserError) as export_error:
+            wizard.with_context(lang="id_ID").action_generate_coretax_csv()
+        self.assertIn("dinonaktifkan", str(export_error.exception).casefold())
+        self.assertIn("Coretax", str(export_error.exception))
         self.assertEqual(wizard.state, "draft")
         self.assertFalse(wizard.export_file)
         self.assertFalse(inv.l10n_id_coretax_exported)
