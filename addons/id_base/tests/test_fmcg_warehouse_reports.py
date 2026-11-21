@@ -37,9 +37,6 @@ class TestFMCGWarehouseReports(TransactionCase):
             ("name", "=", "id_base"),
         ])._update_translations(overwrite=False)
         cls.env.invalidate_all()
-        # Translation imports update ir.ui.view.arch_db; invalidate the QWeb
-        # view cache as well so report rendering observes the imported terms.
-        cls.env["ir.ui.view"].clear_caches()
         cls.warehouse = cls.env.ref("stock.warehouse0")
         cls.picking_type = cls.warehouse.out_type_id
         cls.source = cls.picking_type.default_location_src_id
@@ -283,7 +280,6 @@ class TestFMCGWarehouseReports(TransactionCase):
 
         importer.save(overwrite=True)
         self.env.invalidate_all()
-        self.env["ir.ui.view"].clear_caches()
         exported_csv = BytesIO()
         self.assertTrue(
             trans_export("id_ID", ["id_base"], exported_csv, "csv", self.env)
