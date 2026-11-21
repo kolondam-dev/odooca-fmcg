@@ -68,6 +68,19 @@ class FmcgApprovalRequest(models.Model):
         ("cancelled", "Dibatalkan"),
     ], string="Status Persetujuan", default="draft", tracking=True, index=True)
 
+    snapshot_taken = fields.Boolean(
+        string="Snapshot Diskon Tersimpan",
+        help="True bila nilai diskon pesanan saat pengajuan dicatat; dipakai untuk mendeteksi perubahan "
+             "pesanan setelah disetujui. Pengajuan lama (False) dianggap masih berlaku.")
+    manual_discount_amount = fields.Float(string="Diskon Manual saat Pengajuan (Rp)")
+    program_discount_amount = fields.Float(string="Diskon Program saat Pengajuan (Rp)")
+    principal_decided = fields.Boolean(
+        string="Principal Sudah Ditetapkan",
+        help="True bila principal penentu sudah dipilih oleh perhitungan per principal; "
+             "principal kosong berarti kelompok tanpa principal (aturan umum).")
+    principal_id = fields.Many2one(
+        "id.principal", string="Principal Penentu", index=True,
+        help="Principal yang aturannya (zona bebas/tier) menentukan rantai approver pada pengajuan ini.")
     current_tier_sequence = fields.Integer(string="Tingkat Saat Ini (Tier)", default=1, tracking=True)
     total_tiers = fields.Integer(string="Total Tingkatan (Tiers)", compute="_compute_tier_summary", store=True)
 
@@ -160,21 +173,27 @@ class FmcgApprovalRequest(models.Model):
                 continue
 
             # Cari aturan tier yang sesuai dari kategori
-            rules = rec.category_id.rule_ids.sorted(key=lambda r: r.tier_sequence)
-            applicable_rules = []
-            for r in rules:
-                # Filter nominal jika kategori bertingkat nominal
-                if rec.category_id.has_amount_tiers and r.min_amount > 0 and rec.amount < r.min_amount:
-                    continue
-                # Filter diskon jika kategori bertingkat diskon
-                if rec.category_id.has_discount_tiers and r.min_discount > 0 and rec.discount_percent < r.min_discount:
-                    continue
-                applicable_rules.append(r)
-
-            if not applicable_rules:
-                # Fallback ke rule standar pertama
-                applicable_rules = list(rules[:1])
-
+            target = self.env[rec.res_model].sudo().browse(rec.res_id).exists()
+            if rec.principal_decided:
+                # Keputusan per principal sudah final (False = kelompok tanpa principal, aturan umum):
+                # jangan diganti principal pertama pesanan.
+                principal_id = rec.principal_id.id
+            else:
+                principal_id = target._approval_principal_id() if target and hasattr(
+                    target, "_approval_principal_id") else False
+            # Zona bebas (Tier 0): diskon kumulatif di bawah batas tidak perlu approver.
+            free_limit = rec.category_id._free_zone_limit(principal_id) \
+                if rec.category_id.has_discount_tiers else None
+            if free_limit is not None and rec.discount_percent <= free_limit:
+                rec.write({"state": "approved", "current_tier_sequence": 0})
+                rec.message_post(
+                    body=f"Diskon kumulatif {rec.discount_percent:.2f}% berada dalam zona bebas "
+                         f"(&le; {free_limit:.2f}%): tidak perlu persetujuan.",
+                    subtype_xmlid="mail.mt_note",
+                )
+                rec._notify_target_record("approved")
+                continue
+            applicable_rules = rec.category_id._applicable_tier_rules(principal_id, rec.discount_percent, rec.amount)
             # Buat approval request lines
             lines_vals = []
             for idx, r in enumerate(applicable_rules):
