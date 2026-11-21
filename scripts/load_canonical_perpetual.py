@@ -776,7 +776,9 @@ class CanonicalPerpetualAdapter:
             )
             _resolve_or_create_explicit_account("211200", "PPN Keluaran FMCG", "liability_current")
             _resolve_or_create_explicit_account("114100", "PPN Masukan FMCG", "asset_current")
-            _resolve_or_create_explicit_account("112000", "Piutang Usaha FMCG", "asset_receivable")
+            self.seed_receivable = _resolve_or_create_explicit_account(
+                "112000", "Piutang Usaha FMCG", "asset_receivable"
+            )
             _resolve_or_create_explicit_account("211000", "Utang Usaha FMCG", "liability_payable")
             _resolve_or_create_explicit_account("410100", "Pendapatan Penjualan FMCG", "income")
 
@@ -2195,6 +2197,12 @@ class CanonicalPerpetualAdapter:
         for line_item in line_rows:
             lines_by_so.setdefault(line_item["so_number"], []).append(line_item)
 
+        native_accounting = bool(getattr(getattr(self.env, "cr", None), "dbname", None))
+        if native_accounting and AccountMove is not None:
+            receivable = self.seed_receivable
+            if not receivable or receivable.account_type != "asset_receivable" or not receivable.reconcile:
+                raise RuntimeError("Canonical seed requires reconciliable receivable account 112000.")
+
         inv_by_so = {iv["so_number"]: iv for iv in inv_rows}
         del_by_so = {dl["so_number"]: dl for dl in del_rows}
 
@@ -2307,6 +2315,10 @@ class CanonicalPerpetualAdapter:
                     )
                 existing_inv = existing_invs[0] if existing_invs else None
                 if existing_inv:
+                    if native_accounting and existing_inv.line_ids.filtered(
+                        lambda line: line.display_type == "payment_term"
+                    ).account_id != receivable:
+                        raise RuntimeError(f"Canonical invoice {inv_num} is outside receivable account 112000.")
                     self.stats["skipped_invoices"] += 1
                 else:
                     so_lines_list = _iter_records(getattr(so, "order_line", None))
@@ -2412,6 +2424,11 @@ class CanonicalPerpetualAdapter:
                     if "invoice_origin" in am_fields or not am_fields:
                         inv_vals["invoice_origin"] = so_num
                     inv = AccountMove.create(inv_vals)
+                    if native_accounting:
+                        terms = inv.line_ids.filtered(lambda line: line.display_type == "payment_term")
+                        if not terms:
+                            raise RuntimeError(f"Canonical invoice {inv_num} has no payment term lines.")
+                        terms.write({"account_id": receivable.id})
                     self.stats["invoices_created"] += 1
                     # Memanggil action_post() secara native tanpa reversal context (move_reverse_cancel).
                     # Pencegahan duplikasi COGS ditangani secara sempit dan elegan melalui override model
@@ -2763,6 +2780,8 @@ class CanonicalPerpetualAdapter:
                     "amount": p_data["net_cash_collected_total"],
                     "date": p_data["payment_date"],
                 }
+                if getattr(getattr(self.env, "cr", None), "dbname", None):
+                    pay_vals["destination_account_id"] = self.seed_receivable.id
                 pay_fields = getattr(AccountPayment, "_fields", {})
                 if "memo" in pay_fields:
                     pay_vals["memo"] = pay_id

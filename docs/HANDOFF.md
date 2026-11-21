@@ -1,3 +1,15 @@
+## 2026-11-21T09:58:20+07:00 — Agent Codex-Cloud1 — F4/PR #110: Pemetaan akun kontrol piutang seed
+**Berubah:**
+- Loader kanonikal Juli dan period pack memilih akun 112000 pada baris termin faktur draft serta menentukan akun tujuan pembayaran seed secara eksplisit. Faktur replay pada akun lain ditolak.
+**Diverifikasi:**
+- [F] Pada reproduksi pack `44ffa4f`, akun 121000 memuat 4.843 baris posted dengan saldo GL dan residual Rp2.368.135.989,94 per 31 Agustus. Akun 112000 tidak memiliki baris posted. Terdapat 291 pembayaran Agustus pada faktur bertanggal Juli senilai Rp2.179.069.581,14.
+- [F] Odoo disposable: faktur Juli posted di 112000, pembayaran Agustus via loader direkonsiliasi pada 112000, residual 600 dari 1.000, replay 0 pembayaran. Default partner tetap 121000.
+- [F] 140 tes Python, Ruff, 14 manifest dan diff-check lulus. Planner memilih full regression melalui workflow dan path seed.
+**Belum diuji:**
+- [BU] Pembuktian dua database F4 pada SHA baru. Baseline lama harus dibangun ulang untuk uji karena jurnal historis tetap memakai akun lama.
+**Berikutnya:**
+- Periksa saldo 112000, vendor bill, stok, dan digest pada run F4 SHA baru.
+
 ## 2026-11-21T06:06:45+07:00 — Agent Codex-Cloud1 — F4/PR #110: Output cache Android dan pajak native Kode 04
 **Berubah:**
 - Gradle mendeklarasikan direktori sampel kontrak sebagai output task tes domain agar ikut dipulihkan dari build cache.

@@ -499,3 +499,8 @@
 - [F] ORM Odoo: test faktur Kode 04 gagal tanpa patch karena tax_line_id kosong dan lulus dengan patch.
 - [BU] CI exact-SHA baru serta vendor bill, stok, AR-to-GL dan digest F4 masih terbuka.
 - Task managed by codex agent at 2026-11-21T06:06:45+07:00
+
+[2026-11-21T09:58:20+07:00] [INFO] PR #110: akun kontrol piutang seed Juli–Agustus
+- [F] Reproduksi pack pada 44ffa4f membuktikan 4.843 AML piutang dan saldo Rp2.368.135.989,94 pada 121000; 112000 tidak memiliki AML.
+- [F] Patch memilih 112000 pada payment terms draft dan tujuan pembayaran. ORM disposable membuktikan pembayaran lintas periode dan replay.
+- Task managed by codex agent at 2026-11-21T09:58:20+07:00
