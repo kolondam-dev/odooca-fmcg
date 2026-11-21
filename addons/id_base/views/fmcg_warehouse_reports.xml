@@ -89,9 +89,9 @@
                         </table>
                         <p class="text-muted">This picklist reads native Odoo demand and reservation lines. The report does not create or change lot or location assignments.</p>
                         <div class="row mt-5">
-                            <div class="col-4 text-center" t-translation="on">Prepared by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center" t-translation="on">Checked by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center" t-translation="on">Approved by<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Prepared by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Checked by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Approved by</span><br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>
@@ -148,8 +148,8 @@
                             </tbody>
                         </table>
                         <div class="row mt-5">
-                            <div class="col-6 text-center">Packing staff<br/><br/><br/>____________________</div>
-                            <div class="col-6 text-center">Inspector<br/><br/><br/>____________________</div>
+                            <div class="col-6 text-center"><span t-translation="on">Packing staff</span><br/><br/><br/>____________________</div>
+                            <div class="col-6 text-center"><span t-translation="on">Inspector</span><br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>
@@ -216,9 +216,9 @@
                             </tbody>
                         </table>
                         <div class="row mt-5">
-                            <div class="col-4 text-center" t-translation="on">Handed over by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center" t-translation="on">Received by<br/><br/><br/>____________________</div>
-                            <div class="col-4 text-center" t-translation="on">Date / Stamp<br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Handed over by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Received by</span><br/><br/><br/>____________________</div>
+                            <div class="col-4 text-center"><span t-translation="on">Date / Stamp</span><br/><br/><br/>____________________</div>
                         </div>
                     </div>
                 </t>

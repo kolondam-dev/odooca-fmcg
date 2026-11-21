@@ -505,3 +505,10 @@
 - CI failures: install-test (4 assertions: legacy tax error locale + 3 report-render subtests), domain-tests (contract sample FileNotFoundError), android-gate (aggregate failure from domain-tests).
 - Root causes: final recordset branch still asserted English error; report table headers/signature blocks lacked explicit QWeb t-translation; Gradle did not declare generated contract-samples as task output, so FROM-CACHE omitted generated JSON.
 - Follow-up patch: localize final legacy test assertions; mark all report table headers and signature blocks t-translation="on"; declare Gradle contract-samples output to make cache restore payload samples. No weakened assertions, no Android production code change, no merge/deploy. Exact-SHA validation pending.
+
+2026-11-21 — PR #135 QWeb translation follow-up
+- Reviewed exact failed install-test log for run 44886788120 / checked out merge SHA d080d549eaf11435980992518e7b276685574cba (PR head 43124a572802607e917691d963eff5fe25ea7b00).
+- Failures: Picklist "Disiapkan oleh"; Packlist and Delivery Order "Lot / Nomor Seri".
+- Root causes: PO occurrence for "Lot / Serial" only named Picklist; signature label was embedded in a compound translated div rather than a standalone span.
+- Changed id_ID.po occurrence references, explicit translation spans for signature labels in all three reports, and importer-chain expected term matrix. No assertion weakened, no runtime/business logic changed.
+- Await exact-SHA CI. Do not merge/deploy.

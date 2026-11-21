@@ -5740,3 +5740,12 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 - Android domain tests were `FROM-CACHE`; the tests emit OpenAPI contract JSON into `build/contract-samples`, but that directory was not declared as a Gradle task output, so the cache restored test results without restoring the generated JSON files. The subsequent validator then failed with FileNotFoundError.
 
 **Follow-up changes committed after this analysis:** update the remaining legacy assertion loop to validate the localized UserError; explicitly enable QWeb translation on table headers and signature blocks; declare `contract-samples` as an output of the Gradle `test` task so cache restores generated samples. No assertions were weakened, no Android code was changed, and no merge/deploy was performed. Exact-SHA CI must verify these fixes.
+
+
+## 2026-11-21 — PR #135 follow-up: QWeb translation render failure
+
+- Exact failing run: CI run 44886788120 at PR head `43124a572802607e917691d963eff5fe25ea7b00`; 28 other checks/workflows passed, while `install-test` failed on three rendered-label assertions.
+- Root cause: the `Lot / Serial` PO entry referenced only `report_fmcg_picklist`, so its translation was not imported for Packlist and Delivery Order. The Picklist signature wrapped several line-breaks and underscores in one translated div; that made the expected standalone `Prepared by` term unreliable in rendered QWeb.
+- Fix in this follow-up: extend the PO occurrence list for `Lot / Serial` to all three report views; wrap each signature label in its own explicit `t-translation="on"` span; extend the importer-chain test matrix to assert the three-view term mapping and Picklist signature mapping.
+- Also made the remaining Packlist and Delivery Order signature labels explicit translation spans, matching their existing PO entries.
+- Pending: exact-HEAD CI, including the Odoo runtime install-test and live HTTP PDF render smoke. No merge or deployment authorized.
