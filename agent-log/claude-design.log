@@ -396,3 +396,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-21T07:01:18+07:00] [INFO] BE-15 fix review #176 r4
 - guard konfirmasi SO untuk promo dan diskon taktikal; tes 22-24
 - Task managed by claude-design agent at 2026-11-21T07:01:18+07:00
+
+[2026-11-21T10:01:30+07:00] [INFO] BE-15 fix review #176 r5
+- guard memakai pengajuan berlaku terbaru; tombol ajukan promo; tes 25-29
+- Task managed by claude-design agent at 2026-11-21T10:01:30+07:00

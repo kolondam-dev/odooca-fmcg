@@ -1,3 +1,9 @@
+## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 5): siklus approval pada guard konfirmasi (claude-design)
+
+- Guard memakai pengajuan yang berlaku = terbaru yang tidak dibatalkan (`_approval_effective_request`); riwayat lama tetap. Promo resmi: tanpa pengajuan/dibatalkan/menunggu/ditolak = blokir, hanya disetujui lolos. Taktikal: bila ada pengajuan berlaku harus disetujui; zona bebas Tier 0 (pengajuan langsung approved atau tanpa pengajuan) tetap lolos; SO lama tanpa pengajuan tidak diblokir.
+- Jalur ajukan ulang untuk promo: `_create_promo_usage_request()` dan tombol "Ajukan Pemantauan Promo" (`has_program_discount`) di tab Tata Kelola SO.
+- Tes `test_25`–`test_29` (tanpa pengajuan/dibatalkan, tolak→ulang→setujui dengan riwayat, setuju→pengganti ditolak, taktikal tolak→ulang→setujui, Tier 0).
+
 ## 2026-11-21 — [BU] BE-15 perbaikan review PR #176 (putaran 4): guard konfirmasi SO (claude-design)
 
 - P1: pengajuan promo resmi kini mengendalikan konfirmasi. `action_confirm` memanggil `_check_discount_requests_allow_confirm()`: pengajuan `promo_program_usage` dan `tactical_discount` yang draft/pending/rejected memblokir konfirmasi; konfirmasi berhasil setelah disetujui. Guard berbasis keberadaan pengajuan, jadi SO lama tanpa pengajuan tidak terpengaruh. Guard HPP tetap.

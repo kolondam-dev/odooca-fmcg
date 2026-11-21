@@ -12,6 +12,13 @@ APPROVAL_WORK_TZ = "Asia/Makassar"  # hari/bulan kerja WITA, selaras PWA (WORK_T
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
+    has_program_discount = fields.Boolean(
+        string="Memakai Promo Resmi", compute="_compute_has_program_discount")
+
+    def _compute_has_program_discount(self):
+        for order in self:
+            order.has_program_discount = order._has_program_discount()
+
     has_tactical_discount = fields.Boolean(
         string="Memiliki Diskon Taktikal",
         compute="_compute_discount_and_cost_flags",
@@ -353,26 +360,9 @@ class SaleOrder(models.Model):
                     )
                     created |= req
             # Pemantauan promo resmi: tetap approval, hanya hingga Supervisor (keputusan pemilik).
-            # Bila pengajuan diskon taktikal sudah ada/baru dibuat, rantainya sudah memuat Supervisor.
-            if order._has_program_discount() and not order._open_approval_request("tactical_discount") \
-                    and not order._open_approval_request("promo_program_usage"):
-                category = Category.search([("code", "=", "promo_program_usage")], limit=1)
-                if category:
-                    req = Request.create({
-                        "category_id": category.id,
-                        "res_model": "sale.order",
-                        "res_id": order.id,
-                        "reference_document": f"{order.name} - {order.partner_id.name}",
-                        "amount": order.amount_total,
-                        "discount_percent": order._approval_cumulative_discount_pct(category.cumulative_scope),
-                        "reason": f"Pemantauan penggunaan promo resmi untuk pesanan {order.name}",
-                    })
-                    req.action_submit()
-                    order.message_post(
-                        body=f"Pemantauan promo resmi <b>{req.name}</b> diajukan ke Supervisor.",
-                        subtype_xmlid="mail.mt_note",
-                    )
-                    created |= req
+            # Bila pengajuan diskon taktikal masih berjalan, rantainya sudah memuat Supervisor.
+            if order._has_program_discount() and not order._open_approval_request("tactical_discount"):
+                created |= order._create_promo_usage_request()
             if order.has_below_hpp and order.below_hpp_approval_state in ("none", False) \
                     and not order._open_approval_request("discount_below_hpp"):
                 category = Category.search([("code", "=", "discount_below_hpp")], limit=1)
@@ -421,30 +411,90 @@ class SaleOrder(models.Model):
                 order._check_discount_requests_allow_confirm()
         return super().action_confirm()
 
-    def _check_discount_requests_allow_confirm(self):
-        """Blokir konfirmasi bila ada pengajuan diskon/promo yang menunggu atau ditolak."""
+    def _approval_effective_request(self, category_code):
+        """Pengajuan yang berlaku untuk kategori: terbaru yang tidak dibatalkan (riwayat lama tetap tersimpan)."""
         self.ensure_one()
-        labels = {
-            "tactical_discount": "diskon taktikal",
-            "promo_program_usage": "pemantauan promo resmi",
-        }
-        requests = self.env["fmcg.approval.request"].sudo().search([
+        return self.env["fmcg.approval.request"].sudo().search([
             ("res_model", "=", "sale.order"),
             ("res_id", "=", self.id),
-            ("category_id.code", "in", list(labels)),
-            ("state", "in", ("draft", "pending", "rejected")),
-        ])
-        for req in requests:
-            label = labels[req.category_id.code]
-            if req.state == "rejected":
+            ("category_id.code", "=", category_code),
+            ("state", "!=", "cancelled"),
+        ], order="id desc", limit=1)
+
+    def _check_discount_requests_allow_confirm(self):
+        """Guard konfirmasi berdasarkan pengajuan yang berlaku (terbaru, tidak dibatalkan).
+
+        - Promo resmi (wajib): tanpa pengajuan, menunggu, atau ditolak -> diblokir; hanya disetujui yang lolos.
+        - Diskon taktikal: bila sudah ada pengajuan yang berlaku, harus disetujui (zona bebas Tier 0
+          menghasilkan pengajuan yang langsung disetujui). SO lama tanpa pengajuan tidak diblokir.
+        Penolakan lama tidak memblokir bila pengajuan pengganti yang berlaku sudah disetujui.
+        """
+        self.ensure_one()
+        if self._has_program_discount():
+            req = self._approval_effective_request("promo_program_usage")
+            if not req:
                 raise UserError(
-                    f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} DITOLAK. "
-                    f"Revisi pesanan dan ajukan ulang."
+                    f"Pesanan {self.name} memakai promo resmi dan belum diajukan untuk pemantauan Supervisor. "
+                    f"Gunakan tombol 'Ajukan Pemantauan Promo' sebelum konfirmasi."
                 )
+            self._raise_unless_approved(req, "pemantauan promo resmi")
+        req = self._approval_effective_request("tactical_discount")
+        if req:
+            self._raise_unless_approved(req, "diskon taktikal")
+
+    def _raise_unless_approved(self, req, label):
+        if req.state == "approved":
+            return
+        if req.state == "rejected":
             raise UserError(
-                f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} "
-                f"masih menunggu persetujuan."
+                f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} DITOLAK. "
+                f"Revisi pesanan dan ajukan ulang."
             )
+        raise UserError(
+            f"Pesanan {self.name} tidak dapat dikonfirmasi: pengajuan {label} {req.name} "
+            f"masih menunggu persetujuan."
+        )
+
+    def _create_promo_usage_request(self):
+        """Membuat pengajuan pemantauan promo resmi (hingga Supervisor). Idempoten untuk yang berjalan."""
+        self.ensure_one()
+        if self._open_approval_request("promo_program_usage"):
+            return self.env["fmcg.approval.request"]
+        category = self.env["fmcg.approval.category"].sudo().search(
+            [("code", "=", "promo_program_usage")], limit=1)
+        if not category:
+            return self.env["fmcg.approval.request"]
+        req = self.env["fmcg.approval.request"].sudo().create({
+            "category_id": category.id,
+            "res_model": "sale.order",
+            "res_id": self.id,
+            "reference_document": f"{self.name} - {self.partner_id.name}",
+            "amount": self.amount_total,
+            "discount_percent": self._approval_cumulative_discount_pct(category.cumulative_scope),
+            "reason": f"Pemantauan penggunaan promo resmi untuk pesanan {self.name}",
+        })
+        req.action_submit()
+        self.message_post(
+            body=f"Pemantauan promo resmi <b>{req.name}</b> diajukan ke Supervisor.",
+            subtype_xmlid="mail.mt_note",
+        )
+        return req
+
+    def action_request_promo_usage_approval(self):
+        """Tombol: ajukan pemantauan promo resmi (hingga Supervisor)."""
+        self.ensure_one()
+        if not self._has_program_discount():
+            raise UserError("Pesanan ini tidak memuat diskon program resmi.")
+        req = self._create_promo_usage_request()
+        if not req:
+            raise UserError("Sudah ada pengajuan pemantauan promo yang berjalan atau kategori belum dikonfigurasi.")
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "fmcg.approval.request",
+            "res_id": req.id,
+            "view_mode": "form",
+            "target": "current",
+        }
 
     def _on_approval_status_change(self, request, status):
         """Callback ketika status pengajuan approval berubah."""

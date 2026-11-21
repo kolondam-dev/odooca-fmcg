@@ -518,6 +518,76 @@ class TestApprovalEngine(TransactionCase):
         with self.assertRaises(UserError):
             order.action_confirm()
 
+    def test_25_promo_without_request_or_cancelled_blocks_confirmation(self):
+        """Matriks siklus: promo wajib punya pengajuan yang berlaku dan disetujui."""
+        order = self._tactical_order(discount=0.0, extra_lines=[self._reward_line()])
+        with self.assertRaises(UserError):  # belum diajukan
+            order.action_confirm()
+        order.action_request_promo_usage_approval()
+        req = order._approval_effective_request("promo_program_usage")
+        req.sudo().write({"state": "cancelled"})
+        with self.assertRaises(UserError):  # dibatalkan = tidak berlaku
+            order.action_confirm()
+
+    def test_26_rejected_then_replacement_lifecycle_keeps_history(self):
+        """Tolak -> ajukan ulang -> menunggu (blokir) -> setujui -> konfirmasi; riwayat tetap."""
+        order, first = self._promo_order()
+        first.with_user(self.user_spv).action_reject(notes="Melebihi alokasi")
+        with self.assertRaises(UserError):
+            order.action_confirm()
+        second = order._create_promo_usage_request()
+        self.assertTrue(second)
+        self.assertNotEqual(second, first)
+        with self.assertRaises(UserError):  # pengganti masih menunggu; penolakan lama tidak relevan
+            order.action_confirm()
+        second.with_user(self.user_spv).action_approve(notes="Direvisi, sesuai")
+        order.action_confirm()  # penolakan lama tidak lagi memblokir
+        self.assertEqual(order.state, "sale")
+        history = self.env["fmcg.approval.request"].search([
+            ("res_model", "=", "sale.order"), ("res_id", "=", order.id),
+            ("category_id.code", "=", "promo_program_usage")])
+        self.assertEqual(sorted(history.mapped("state")), ["approved", "rejected"])
+
+    def test_27_approved_then_replacement_rejected_blocks(self):
+        order, first = self._promo_order()
+        first.with_user(self.user_spv).action_approve(notes="ok")
+        second = order._create_promo_usage_request()
+        self.assertTrue(second)
+        second.with_user(self.user_spv).action_reject(notes="Alokasi habis")
+        with self.assertRaises(UserError):
+            order.action_confirm()
+
+    def test_28_tactical_rejected_then_replacement_approved_confirms(self):
+        order = self._tactical_order(discount=5.0)
+        first = order._mobile_auto_request_approvals()
+        first.with_user(self.user_spv).action_reject(notes="Terlalu besar")
+        with self.assertRaises(UserError):
+            order.action_confirm()
+        second = order._mobile_auto_request_approvals()
+        self.assertTrue(second)
+        with self.assertRaises(UserError):
+            order.action_confirm()  # pengganti menunggu
+        second.with_user(self.user_spv).action_approve(notes="SPV")
+        second.with_user(self.user_mgr).action_approve(notes="Manager")
+        self.assertEqual(second.state, "approved")
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+
+    def test_29_tactical_free_zone_still_confirms_without_approver(self):
+        """Tier 0 tetap sah: pengajuan zona bebas langsung disetujui dan tidak memblokir konfirmasi."""
+        self._free_zone_rule().max_discount = 4.0
+        order = self._tactical_order(discount=3.0)
+        order.tactical_analytic_account_id = self.analytic_account.id
+        action = order.action_request_tactical_discount_approval(reason="Zona bebas")
+        self.assertEqual(self.env["fmcg.approval.request"].browse(action["res_id"]).state, "approved")
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+        # Pesanan zona bebas tanpa pengajuan sama sekali (jalur lapangan) juga tidak diblokir
+        free = self._tactical_order(discount=3.0)
+        self.assertFalse(free._mobile_auto_request_approvals())
+        free.action_confirm()
+        self.assertEqual(free.state, "sale")
+
     def test_04_new_sku_activation_workflow(self):
         """SKU baru tidak aktif jual hingga disetujui manajemen."""
         prod_tmpl = self.env["product.template"].create({
