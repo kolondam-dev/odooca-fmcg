@@ -440,3 +440,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-22T15:10:22+07:00] [INFO] BE-19 fix review PR #184
 - credit_mode efektif parent; business_date WITA bersama id_base; tes ORM faktur nyata
 - Task managed by claude-design agent at 2026-11-22T15:10:22+07:00
+
+[2026-11-22T16:05:10+07:00] [INFO] FE-12 blokir order strict
+- credit-block.ts, OrderScreen/VisitPanel, demo strict, tes vitest+e2e, K36
+- Task managed by claude-design agent at 2026-11-22T16:05:10+07:00
