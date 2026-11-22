@@ -1,3 +1,9 @@
+## 2026-11-22T11:28:39+07:00 — Codex Android Dev — Bekukan versi provisioning smoke
+**Basis:** [F] Dev `f23ea50`; arahan `5cbd64a`, run smoke `44881381326` pada kandidat Lead `a74613c`.
+**Berubah:** [F] Job opt-in memasang Platform Tools 37.0.3, emulator 37.3.10 (build 16970787), serta Google APIs x86_64 API 24 rev 27 dan API 35 rev 9 dari arsip versi tetap dengan checksum katalog Google. SDK Manager memasang platform compile 37.0 dan Build Tools 36.0.0. Registrasi emulator lokal memungkinkan AVD Manager memilih paket tanpa pemasangan emulator kedua. Skrip tetap mencatat dan memvalidasi semua revisi.
+**Bukti:** [F] Jalankan langkah provisioning workflow pada dua SDK Cloud kosong. Kedua arsip image cocok dengan checksum dan kedua AVD berhasil dibuat untuk platform/ABI masing-masing. `emulator -version` dan tahap toolchain pada smoke mengenali versi yang dipatok. [BU] Kedua smoke berhenti di KVM karena Cloud tidak memiliki `/dev/kvm`. Boot, instalasi APK, Login dan instrumentation menunggu run Lead.
+**Gate dan dampak test:** **TAMBAH** — tes kontrak mengunci jalur arsip dan mencegah paket runtime kembali dipasang dari kanal bergulir SDK Manager. Bash syntax, actionlint, Ruff, 31 tes kontrak CI lulus. Job wajib Android identik dengan `f23ea50`; perubahan workflow memilih full regression 11 suite.
+
 ## 2026-11-21T10:22:32+07:00 — Codex Android Dev — Perbaiki cache sampel kontrak DEV-01
 **Basis:** [F] Branch Dev `7bcd5aa`; arahan `79f41bb` untuk CI PR #177 pada `27d7428`.
 **Berubah:** [F] Task `:core:domain:test` mendeklarasikan `build/contract-samples` sebagai output. Argument provider memasok lokasi checkout ke JVM tanpa mengikat cache ke path absolut. Assertion dan validator yang ada dipakai untuk pembuktian.

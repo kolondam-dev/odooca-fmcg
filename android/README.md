@@ -95,9 +95,11 @@ pada SHA yang sama.
 
 Untuk runner lokal, siapkan Temurin 17.0.17+10 dan SDK Linux x86_64 terisolasi
 dengan Command-line Tools 19.0, platform `android-37.0` rev 2, Build Tools 36.0.0,
-Platform Tools 37.0.1, emulator 37.2.13, dan kedua image Google APIs x86_64
-(API 24 rev 27, API 35 rev 9). SDK Manager mungkin kemudian menawarkan versi
-lebih baru. Skrip berhenti saat revisi terpasang berbeda dari yang dipatok.
+Platform Tools 37.0.3, emulator 37.3.10, dan kedua image Google APIs x86_64
+(API 24 rev 27, API 35 rev 9). Workflow memasang Platform Tools, emulator, dan
+image dari arsip Google yang dipatok dan diperiksa checksum-nya. SDK Manager
+memasang platform SDK dan Build Tools. Skrip berhenti saat revisi terpasang
+berbeda dari pin.
 Dengan `ANDROID_HOME` dan `ANDROID_SDK_ROOT` mengarah ke SDK tersebut dan
 `/dev/kvm` bisa dibaca/ditulis, jalankan setiap API secara berurutan:
 

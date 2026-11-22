@@ -84,8 +84,8 @@ verify_revision() {
 verify_revision cmdline-tools/19.0 19.0
 verify_revision platforms/android-37.0 2
 verify_revision build-tools/36.0.0 36.0.0
-verify_revision platform-tools 37.0.1
-verify_revision emulator 37.2.13
+verify_revision platform-tools 37.0.3
+verify_revision emulator 37.3.10
 verify_revision "system-images/android-$api/google_apis/$abi" "$image_revision"
 java_runtime=$(java -XshowSettings:properties -version 2>&1 |
     awk -F' = ' '/^[[:space:]]*java.runtime.version = / { print $2 }')
