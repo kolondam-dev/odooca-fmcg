@@ -163,6 +163,30 @@ class TestAndroidBootstrapContract(unittest.TestCase):
             jobs["android-gate"]["needs"], ["changes", "guards", "domain-tests", "data-tests", "build"]
         )
 
+    def test_emulator_provisioning_uses_versioned_sdk_archives(self):
+        jobs = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))["jobs"]
+        provision = next(
+            step["run"]
+            for step in jobs["emulator-smoke"]["steps"]
+            if step.get("name") == "Install Android SDK and system image"
+        )
+        commands = provision.replace("\\\n", " ").splitlines()
+        install = next(line for line in commands if "--channel=0" in line)
+        self.assertNotIn('"platform-tools"', install)
+        self.assertNotIn('"emulator"', install)
+        self.assertNotIn("system-images;", install)
+        self.assertIn("install_archive platform-tools_r37.0.3-linux.zip", provision)
+        self.assertIn("install_archive emulator-linux_x64-16970787.zip", provision)
+        self.assertIn('<localPackage path="emulator"', provision)
+        self.assertIn("<revision><major>37</major><minor>3</minor><micro>10</micro></revision>", provision)
+        self.assertIn("24) install_archive sys-img/google_apis/x86_64-24_r27.zip", provision)
+        self.assertIn("35) install_archive sys-img/google_apis/x86_64-35_r09.zip", provision)
+        self.assertIn("sha1sum --check --status", provision)
+
+        smoke = (ANDROID / "tools" / "emulator_smoke.sh").read_text(encoding="utf-8")
+        self.assertIn("verify_revision platform-tools 37.0.3", smoke)
+        self.assertIn("verify_revision emulator 37.3.10", smoke)
+
     def test_contract_validator_has_four_negative_schema_controls(self):
         source = (ANDROID / "tools" / "validate_contract.py").read_text(encoding="utf-8")
         self.assertEqual(source.count('check("[negatif]'), 4)
