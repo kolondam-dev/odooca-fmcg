@@ -3,6 +3,12 @@
 - [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.
 - [BU] Instalasi Odoo, terjemahan QWeb, dan PDF menunggu verifikasi runtime pada commit ini.
 
+## 2026-11-22 — [BU] FE-12 perbaikan review PR #186: bukti e2e guard kredit (claude-design)
+
+- Tidak ada perubahan source produksi; hanya penguatan bukti. `tests/browser/credit-block.spec.ts` kini 4 skenario (phone + tablet): (1) strict overdue dengan keranjang valid DAN foto display tersimpan, tombol "Kirim order" nonaktif dan caption "Foto display wajib" tidak ada, jadi penyebabnya hanya guard kredit; (2) `send()` dipaksa dijalankan lewat klik pada tombol yang atributnya dilepas sementara: alert "wajib lunas" muncul, tidak ada Hasil kirim, draft tetap utuh; (3) strict overdue: Selesai kunjungan tanpa order dengan foto check-out + catatan, kunjungan ditutup lokal dan Riwayat tidak memuat "Order • "; (4) outlet tanpa blokir: tombol aktif, order terkirim (Hasil kirim) dan tercatat di Riwayat.
+- Uji mutasi (lokal): menghapus `|| !!strictBlock` dari `disabled` → skenario 1 gagal; menghapus guard di `send()` → skenario 2 gagal. Sumber dipulihkan sebelum commit.
+- Tes unit berbasis regex source dihapus (bukan bukti eksekusi); `credit-block.test.ts` kini 5 tes fungsi murni.
+
 ## 2026-11-22 — [F] FE-12: pemblokiran order mode kredit strict di PWA (claude-design)
 
 - `domain/credit-block.ts` (`strictCreditBlock`, `strictCreditMessage`): blokir hanya bila `credit_mode` = `strict` dan outlet ada di `snapshot.outlet_credit`; tidak diketahui (null/absen/blok absen) tidak memblokir. Server tetap otoritatif.

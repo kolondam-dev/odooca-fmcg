@@ -57,17 +57,3 @@ describe("strictCreditBlock", () => {
         );
     });
 });
-
-describe("penjaga regresi: kirim order memeriksa blokir strict", () => {
-    it("send() menolak sebelum foto display dan tombol Kirim dinonaktifkan", async () => {
-        const { readFileSync } = await import("node:fs");
-        const src = readFileSync("src/components/OrderScreen.tsx", "utf8");
-        expect(src).toContain(
-            "strictCreditBlock(outlet, snapshot.outlet_credit)",
-        );
-        expect(src).toMatch(
-            /if \(strictBlock\) \{\s*setError\(strictCreditMessage/,
-        );
-        expect(src).toMatch(/disabled=\{[^}]*!!strictBlock[^}]*\}/s);
-    });
-});
