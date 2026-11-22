@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+from collections import Counter
 from decimal import Decimal
 import hashlib
 import json
@@ -30,6 +31,7 @@ import logging
 import os
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 from typing import Any, Dict, Optional, Tuple
 
 _logger = logging.getLogger("verify_disposable_period_pack")
@@ -278,6 +280,53 @@ class PeriodPackOracle:
             self.expected_sku_reserved_pcs[sku] = self.expected_sku_reserved_pcs.get(sku, ZERO) + res_pcs
             self.expected_sku_quarantine_pcs[sku] = self.expected_sku_quarantine_pcs.get(sku, ZERO) + quar_pcs
             self.expected_closing_valuation += lot_val
+
+
+def _stock_at_cutoff(env, company, quants, oracle):
+    """Reverse completed post-cutoff movements and recover their outstanding sale allocations."""
+    if not getattr(getattr(env, "cr", None), "dbname", None):
+        return quants
+
+    balances = {}
+
+    def bucket(product, location, lot):
+        key = (product.id, location.id, lot.id)
+        if key not in balances:
+            balances[key] = SimpleNamespace(
+                product_id=product, location_id=location, lot_id=lot,
+                quantity=ZERO, reserved_quantity=ZERO,
+            )
+        return balances[key]
+
+    for quant in quants:
+        row = bucket(quant.product_id, quant.location_id, quant.lot_id)
+        row.quantity += _dec(quant.quantity)
+        row.reserved_quantity += _dec(quant.reserved_quantity)
+
+    cutoff = oracle.manifest.pack_end
+    ordered_by_cutoff = {row["so_number"] for row in oracle.reader.sales_orders if row["date_order"] <= cutoff}
+    future_lines = env["stock.move.line"].sudo().search([
+        ("company_id", "=", company.id),
+        ("state", "=", "done"),
+        ("date", ">", f"{cutoff} 23:59:59"),
+        "|", ("location_id.usage", "=", "internal"), ("location_dest_id.usage", "=", "internal"),
+    ])
+    for line in future_lines:
+        qty = _dec(line.quantity_product_uom)
+        if line.location_dest_id.usage == "internal":
+            bucket(line.product_id, line.location_dest_id, line.lot_id).quantity -= qty
+        if line.location_id.usage == "internal":
+            source = bucket(line.product_id, line.location_id, line.lot_id)
+            source.quantity += qty
+            # The seed reserves the actual allocated lot at order confirmation.
+            if line.location_dest_id.usage == "customer" and line.picking_id.sale_id.client_order_ref in ordered_by_cutoff:
+                source.reserved_quantity += qty
+    return balances.values()
+
+
+def _is_quarantine(location):
+    name = (getattr(location, "name", "") or "").lower()
+    return "quarantine" in name or "karantina" in name
 
 
 def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
@@ -814,9 +863,14 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 ("location_id.usage", "=", "internal"),
             ]
         )
+        quants = _stock_at_cutoff(env, company, quants, oracle)
         quant_valuation = sum(
             _dec(getattr(q, "quantity", 0)) * _dec(getattr(getattr(q, "product_id", None), "standard_price", 0))
             for q in quants
+        )
+        physical_valuation = sum(
+            _dec(q.quantity) * _dec(getattr(q.product_id, "standard_price", 0))
+            for q in quants if not _is_quarantine(q.location_id)
         )
         report["checks"]["stock_to_gl"] = {
             "account_code": stock_acc.code,
@@ -848,8 +902,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                 q_qty = _dec(getattr(q, "quantity", 0))
                 q_res = _dec(getattr(q, "reserved_quantity", 0))
                 lot_name = getattr(getattr(q, "lot_id", None), "name", "")
-                loc_name = str(getattr(getattr(q, "location_id", None), "name", "") or "").lower()
-                is_quarantine = "quarantine" in loc_name or "karantina" in loc_name
+                is_quarantine = _is_quarantine(q.location_id)
 
                 if is_quarantine:
                     actual_sku_quarantine[p_code] = actual_sku_quarantine.get(p_code, ZERO) + q_qty
@@ -981,11 +1034,11 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             # Audit total stock valuation
             report["checks"]["closing_stock_valuation"] = {
                 "expected": str(oracle.expected_closing_valuation),
-                "actual": str(quant_valuation),
+                "actual": str(physical_valuation),
             }
-            if abs(quant_valuation - oracle.expected_closing_valuation) > Decimal("100.00"):
+            if abs(physical_valuation - oracle.expected_closing_valuation) > Decimal("100.00"):
                 report["violations"].append(
-                    f"Closing stock valuation mismatch: expected {oracle.expected_closing_valuation} (from closing_state), found {quant_valuation}"
+                    f"Closing stock valuation mismatch: expected {oracle.expected_closing_valuation} (from closing_state), found {physical_valuation}"
                 )
 
     # 10. AR-to-GL Audit (Account 112000 vs Open Invoices Residual)
@@ -1062,7 +1115,7 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     return report
 
 
-def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
+def capture_period_state_snapshot(env: Any, *, include_components: bool = False) -> Dict[str, Any]:
     """Capture comprehensive deterministic SHA-256 digest of database transactional and GL state."""
     if env is None:
         return {"snapshot": "mock_snapshot_hash", "digest": "mock_digest"}
@@ -1200,7 +1253,7 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
     raw = "\n".join(all_components).encode("utf-8")
     digest = hashlib.sha256(raw).hexdigest()
 
-    return {
+    snapshot = {
         "po_count": len(po_hashes),
         "so_count": len(so_hashes),
         "invoice_count": len(inv_hashes),
@@ -1212,6 +1265,9 @@ def capture_period_state_snapshot(env: Any) -> Dict[str, Any]:
         "partial_reconcile_count": len(reconcile_hashes),
         "digest": digest,
     }
+    if include_components:
+        snapshot["components"] = Counter(all_components)
+    return snapshot
 
 
 def ensure_idr_currency_active(env: Any) -> None:
@@ -1541,7 +1597,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
 
 
 def run_scenario_b_from_empty_database(
-    env: Any, pack_dir: Path, expected_digest: Optional[str] = None
+    env: Any, pack_dir: Path, expected_digest: Optional[str] = None, expected_snapshot: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """Execute Scenario B: Prove deterministic initialization from empty DB -> July -> August."""
     assert_disposable_database(env)
@@ -1592,7 +1648,7 @@ def run_scenario_b_from_empty_database(
     oracle = PeriodPackOracle(pack_dir)
     audit = audit_period_database(env, oracle)
     res["audit"] = audit
-    snap_b = capture_period_state_snapshot(env)
+    snap_b = capture_period_state_snapshot(env, include_components=expected_snapshot is not None)
     res["snapshot_digest"] = snap_b.get("digest")
 
     if expected_digest:
@@ -1601,6 +1657,22 @@ def run_scenario_b_from_empty_database(
         else:
             res["digest_comparison"] = f"MISMATCH: expected {expected_digest}, got {snap_b.get('digest')}"
             audit["violations"].append(f"Scenario B digest mismatch against expected: {res['digest_comparison']}")
+            if expected_snapshot and "components" in expected_snapshot and "components" in snap_b:
+                res["snapshot_diff"] = {}
+                for label, left, right in (
+                    ("only_a", expected_snapshot["components"], snap_b["components"]),
+                    ("only_b", snap_b["components"], expected_snapshot["components"]),
+                ):
+                    difference = left - right
+                    counts = Counter()
+                    samples = {}
+                    for row, count in difference.items():
+                        kind = row.partition(":")[0]
+                        counts[kind] += count
+                        examples = samples.setdefault(kind, [])
+                        if len(examples) < 3:
+                            examples.append((row, count))
+                    res["snapshot_diff"][label] = {"counts": dict(counts), "samples": samples}
 
     if (
         audit.get("status") == "PASS"
@@ -1643,12 +1715,13 @@ def run_full_disposable_period_verification(
         "audit": {"status": "NOT_RUN"},
     }
 
+    snap1 = None
     # 1. Fault-Injection Recovery Probes on Baseline July (Batch write, tamper, rollback, real apply recovery)
     if scenario in ("all", "A"):
         _logger.info("Executing Fault-Injection Recovery Probes on Baseline July...")
         ensure_idr_currency_active(env)
         report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)
-        snap1 = capture_period_state_snapshot(env)
+        snap1 = capture_period_state_snapshot(env, include_components=scenario == "all")
         report["scenario_a_digest"] = snap1["digest"]
 
         _logger.info("Executing Scenario A: Re-running period pack for zero-drift replay proof...")

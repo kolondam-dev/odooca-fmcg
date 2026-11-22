@@ -1,3 +1,17 @@
+## 2026-11-22T09:39:47+07:00 — Agent Codex-Cloud1 — F4/PR #110: Cutoff stok dan pembukuan tagihan ke interim
+**Berubah:**
+- Sinkronisasi `origin/main` `cc9ecb6`; riwayat handoff dan deklarasi output Gradle dipertahankan.
+- Tagihan mendebit interim receipt 113900. Verifier membalik mutasi native setelah cutoff per lokasi dan lot, memulihkan alokasi DO seed yang belum selesai pada cutoff, dan membedakan nilai fisik dari total stok internal termasuk karantina.
+- Laporan F4 menampilkan jumlah dan sampel selisih komponen digest per jenis record ketika A/B berbeda.
+**Diverifikasi:**
+- [F] Run 44887074713: tagihan, PPN, dan AR/AP cocok. Selisih awal GL 113000 setelah tagihan bertambah sebesar DPP Rp6.551.160.000.
+- [F] Odoo disposable dengan konfigurasi kanonikal: 16 tagihan posted, akun 113900, replay tanpa duplikasi. Saldo 113000 untuk receipts sampai cutoff cocok dengan stok Rp6.551.160.000.
+- [F] 80 tes Python, Ruff, 14 manifest dan diff-check lulus. Dampak test **TAMBAH**: regresi receipt/DO/karantina lintas cutoff.
+**Belum diuji:**
+- [BU] F4 pada kedua database penuh dan kesetaraan digest.
+**Berikutnya:**
+- Pantau run SHA baru dan gunakan selisih komponen untuk menyelesaikan penyebab digest bila masih berbeda.
+
 ## 2026-11-22 — [F] I2b review HOLD: comparator FIN05–FIN09 diperketat (opencode)
 
 - [F] Review independen PR #178 memberi HOLD/P2 pada head `5887332`: detail dan `line_ids` FIN08/FIN09 bisa tertukar antarpartner, baris berisi debit tanpa tipe akun diabaikan, dan angka totals/GL berbentuk teks tetap diterima.

@@ -516,3 +516,9 @@
 - [F] ORM disposable memposting 16 tagihan, replay 0 duplikasi. PPN pack Rp782.852.400; PPN Agustus Rp720.627.600.
 - [BU] F4 dua database, stock-to-GL dan digest A/B belum lulus.
 - Task managed by codex agent at 2026-11-21T15:54:38+07:00
+
+[2026-11-22T09:39:47+07:00] [INFO] PR #110: stok per cutoff, akun interim tagihan, dan bukti diff A/B
+- [F] Run 44887074713: AR, AP dan PPN cocok; GL persediaan bertambah tepat sebesar DPP tagihan Agustus.
+- [F] Probe Odoo disposable: 16 tagihan posted dan receipt sampai cutoff tie-out Rp6.551.160.000 pada 113000; tagihan memakai 113900.
+- [BU] F4 penuh dan digest A/B menunggu run.
+- Task managed by codex agent at 2026-11-22T09:39:47+07:00

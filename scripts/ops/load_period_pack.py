@@ -1804,7 +1804,7 @@ class GenericPeriodPackLoader:
 
         native_accounting = bool(getattr(getattr(self.env, "cr", None), "dbname", None))
         if native_accounting:
-            input_tax, payable = self._resolve_purchase_bill_accounts()
+            input_tax, payable, interim = self._resolve_purchase_bill_accounts()
 
         processed = 0
         for po_row in po_headers:
@@ -1828,7 +1828,7 @@ class GenericPeriodPackLoader:
                                 pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
                             )
                 if native_accounting:
-                    self._ensure_purchase_bill(existing, po_row, input_tax, payable)
+                    self._ensure_purchase_bill(existing, po_row, input_tax, payable, interim)
                 continue
 
             prin_code = po_row["principal_code"]
@@ -1881,7 +1881,7 @@ class GenericPeriodPackLoader:
                             pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
                         )
             if native_accounting:
-                self._ensure_purchase_bill(po_rec, po_row, input_tax, payable)
+                self._ensure_purchase_bill(po_rec, po_row, input_tax, payable, interim)
             processed += 1
 
         return processed
@@ -1890,6 +1890,9 @@ class GenericPeriodPackLoader:
         """Resolve the dedicated seed input tax and payable control account."""
         input_account = self._resolve_account("114100")
         payable = self._resolve_account("211000")
+        interim = self._resolve_account("113900")
+        if not interim:
+            raise StateInconsistencyError("Period purchase bills require stock interim account 113900.")
         if not input_account or not payable or payable.account_type != "liability_payable" or not payable.reconcile:
             raise StateInconsistencyError("Period purchase bills require input tax account 114100 and payable 211000.")
 
@@ -1915,9 +1918,9 @@ class GenericPeriodPackLoader:
             })
         if len(taxes) != 1 or taxes.type_tax_use != "purchase" or taxes.amount_type != "percent" or taxes.amount != 12:
             raise StateInconsistencyError("Invalid or ambiguous seed purchase tax Code 04.")
-        return taxes, payable
+        return taxes, payable, interim
 
-    def _ensure_purchase_bill(self, order, row, input_tax, payable):
+    def _ensure_purchase_bill(self, order, row, input_tax, payable, interim):
         """Post one bill per registered receipt and validate its replay."""
         reference = row["po_number"]
         bill_date = row["arrival_maumbi_date"]
@@ -1935,6 +1938,8 @@ class GenericPeriodPackLoader:
             for line in order.order_line:
                 line_values = line._prepare_account_move_line()
                 line_values["tax_ids"] = [(6, 0, input_tax.ids)]
+                # The receipt already debited stock valuation. The bill clears its interim credit.
+                line_values["account_id"] = interim.id
                 invoice_lines.append((0, 0, line_values))
             values.update({
                 "ref": reference,
@@ -1964,6 +1969,7 @@ class GenericPeriodPackLoader:
             or str(bills.invoice_date_due) != row["due_date"]
             or bill_lines.purchase_line_id != order.order_line
             or len(bill_lines) != len(order.order_line)
+            or bill_lines.account_id != interim
             or any(
                 line.product_id != line.purchase_line_id.product_id
                 or line.product_uom_id != line.purchase_line_id.product_uom_id

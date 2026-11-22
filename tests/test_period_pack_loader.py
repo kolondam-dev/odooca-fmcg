@@ -11,6 +11,7 @@ from decimal import Decimal
 from pathlib import Path
 import shutil
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 from scripts.ops.load_period_pack import (
@@ -2416,6 +2417,56 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         self.assertAlmostEqual(tax_credits, 297052.27, places=2)
         self.assertAlmostEqual(ar_debits, 2997527.47, places=2)
         self.assertAlmostEqual(product_credits + tax_credits, ar_debits, places=2)
+
+
+class TestStockCutoff(unittest.TestCase):
+    def test_reverses_future_receipt_delivery_and_quarantine_by_lot(self):
+        from unittest.mock import Mock
+
+        from scripts.ops.verify_disposable_period_pack import _stock_at_cutoff
+
+        stock = SimpleNamespace(id=1, usage="internal")
+        quarantine = SimpleNamespace(id=2, usage="internal")
+        supplier = SimpleNamespace(id=3, usage="supplier")
+        customer = SimpleNamespace(id=4, usage="customer")
+        product = SimpleNamespace(id=1)
+        older_lot = SimpleNamespace(id=1)
+        new_lot = SimpleNamespace(id=2)
+        sale = SimpleNamespace(client_order_ref="SO-before-cutoff")
+
+        def line(qty, lot, source, destination, order=None):
+            return SimpleNamespace(
+                quantity_product_uom=qty, product_id=product, lot_id=lot,
+                location_id=source, location_dest_id=destination,
+                picking_id=SimpleNamespace(sale_id=order),
+            )
+
+        def quant(qty, lot, location):
+            return SimpleNamespace(
+                quantity=qty, reserved_quantity=0, product_id=product, lot_id=lot, location_id=location,
+            )
+
+        env = MockEnv({"stock.move.line": Mock()})
+        env.cr = SimpleNamespace(dbname="fmcg_period_disposable")
+        search = env["stock.move.line"].sudo().search
+        search.return_value = [
+            line(20, new_lot, supplier, stock),
+            line(7, older_lot, stock, customer, sale),
+            line(1, older_lot, customer, quarantine),
+        ]
+        oracle = SimpleNamespace(
+            manifest=SimpleNamespace(pack_end="2026-08-31"),
+            reader=SimpleNamespace(sales_orders=[{"so_number": sale.client_order_ref, "date_order": "2026-08-31"}]),
+        )
+        quants = [quant(3, older_lot, stock), quant(20, new_lot, stock), quant(2, older_lot, quarantine)]
+        result = {
+            (row.location_id.id, row.lot_id.id): (row.quantity, row.reserved_quantity)
+            for row in _stock_at_cutoff(env, SimpleNamespace(id=1), quants, oracle)
+        }
+        self.assertEqual(result, {(1, 1): (10, 7), (1, 2): (0, 0), (2, 1): (1, 0)})
+        self.assertIn(("date", ">", "2026-08-31 23:59:59"), search.call_args.args[0])
+        self.assertIn(("state", "=", "done"), search.call_args.args[0])
+        self.assertIn(("company_id", "=", 1), search.call_args.args[0])
 
 
 class TestArResolverCrossPeriod(unittest.TestCase):
