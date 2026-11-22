@@ -190,12 +190,15 @@ msgstr "Dijadwalkan"
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
 msgid "Product"
 msgstr "Produk"
 
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
 msgid "Source Location"
 msgstr "Lokasi Asal"
 
@@ -226,6 +229,8 @@ msgstr "Direservasi / Direncanakan"
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_picklist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
 msgid "Packaging Breakdown"
 msgstr "Rincian Kemasan"
 
@@ -262,6 +267,7 @@ msgstr "Daftar Pengepakan"
 
 #. module: id_base
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
 msgid "Quantity"
 msgstr "Kuantitas"
 

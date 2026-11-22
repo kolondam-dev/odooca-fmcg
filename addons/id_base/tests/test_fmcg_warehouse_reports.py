@@ -141,6 +141,12 @@ class TestFMCGWarehouseReports(TransactionCase):
             "Lot / Serial": ("Lot / Nomor Seri", ("report_fmcg_picklist",)),
             "Lot / Serial Number": ("Lot / Nomor Seri", ("report_fmcg_packlist",)),
             "Lot / Batch / Serial": ("Lot / Nomor Seri", ("report_fmcg_delivery_order",)),
+            "Product": ("Produk", ("report_fmcg_picklist", "report_fmcg_packlist", "report_fmcg_delivery_order")),
+            "Source Location": ("Lokasi Asal", ("report_fmcg_picklist", "report_fmcg_packlist")),
+            "Quantity": ("Kuantitas", ("report_fmcg_packlist", "report_fmcg_delivery_order")),
+            "Packaging Breakdown": (
+                "Rincian Kemasan", ("report_fmcg_picklist", "report_fmcg_packlist", "report_fmcg_delivery_order"),
+            ),
             "Prepared by": ("Disiapkan oleh", ("report_fmcg_picklist",)),
             "Ship To": ("Dikirim Kepada", ("report_fmcg_delivery_order",)),
         }
