@@ -15,8 +15,11 @@ dependencies {
 tasks.test {
     useJUnit()
     // Tes mengeluarkan contoh payload ke sini untuk divalidasi terhadap skema OpenAPI (tools/validate_contract.py).
-    systemProperty("contract.out", layout.buildDirectory.dir("contract-samples").get().asFile.absolutePath)
     // Deklarasikan contoh kontrak sebagai output agar ikut dipulihkan dari build cache; tanpa ini tes yang
     // FROM-CACHE tidak menulis ulang contoh dan tools/validate_contract.py gagal (FileNotFoundError).
-    outputs.dir(layout.buildDirectory.dir("contract-samples"))
+    // Declare the directory as a task output so Gradle's build cache restores it
+    // when :core:domain:test is FROM-CACHE in CI.
+    val contractSamples = layout.buildDirectory.dir("contract-samples")
+    systemProperty("contract.out", contractSamples.get().asFile.absolutePath)
+    outputs.dir(contractSamples)
 }
