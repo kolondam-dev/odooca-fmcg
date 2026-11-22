@@ -59,6 +59,7 @@ from scripts.ops.load_period_pack import (  # noqa: E402
     PreflightContinuityError,
     StateInconsistencyError,
     _dec,
+    extract_ref,
 )
 
 ZERO = Decimal("0.00")
@@ -409,6 +410,30 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         report["violations"].append(f"SO count mismatch: expected {oracle.expected_so_count}, found {so_count}")
     if abs(act_net_dpp - oracle.expected_net_dpp) > Decimal("1.00"):
         report["violations"].append(f"SO Net DPP mismatch: expected {oracle.expected_net_dpp}, found {act_net_dpp}")
+
+    owners = oracle.manifest.sales_owners() if isinstance(oracle.manifest, PeriodPackManifest) else {}
+    if owners:
+        expected_orders = {row["so_number"]: row for row in oracle.reader.sales_orders}
+        date_errors = []
+        owner_errors = []
+        for order in so_recs:
+            row = expected_orders.get(order.client_order_ref)
+            if row is None:
+                report["violations"].append(f"Unexpected sales order {order.client_order_ref}")
+                continue
+            if str(order.date_order)[:10] != row["date_order"]:
+                date_errors.append(order.client_order_ref)
+            expected_owner = owners.get(extract_ref(row["customer"]))
+            if not expected_owner or order.user_id.login != expected_owner:
+                owner_errors.append(order.client_order_ref)
+        report["checks"]["so_headers"] = {
+            "date_mismatches": len(date_errors), "owner_mismatches": len(owner_errors),
+        }
+        if date_errors or owner_errors:
+            report["violations"].append(
+                f"SO header drift: dates={len(date_errors)} {date_errors[:5]}, "
+                f"owners={len(owner_errors)} {owner_errors[:5]}"
+            )
 
     # 3. Outbound Deliveries (DO Picking) Count & Status Done
     pickings = StockPicking.search(

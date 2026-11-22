@@ -1,3 +1,18 @@
+## 2026-11-22T22:05:33+07:00 — Agent Codex-Cloud1 — F4/PR #110: Ownership dan tanggal SO historis
+
+**Berubah:**
+- Loader menggunakan login salesman dari register outlet yang dipin checksum oleh manifest. Resolusi akun dibatasi pada login aktif di perusahaan seed.
+- SO diproses berdasarkan tanggal register dan referensi. Tanggal order dipulihkan setelah konfirmasi native. Replay memperbaiki header lama pada SO bertanda batch yang sama.
+- F4 mengaudit owner dan tanggal setiap SO terhadap sumber. Deskripsi PR mencatat bukti pada SHA yang diverifikasi dan status acceptance HOLD.
+**Diverifikasi:**
+- [F] Register mencakup 1.240 SO dengan enam login salesman. Sebanyak 146 tes Python, Ruff, dan pemeriksaan 14 manifest lulus.
+- [F] Probe Odoo disposable memakai sampel outlet dari keenam login: tanggal dan owner benar setelah konfirmasi, repair header batch lama dan replay kedua lulus.
+- [F] Dampak test **TAMBAH**. Regresi Python mengecek ownership register dan pemulihan header lama, lalu F4 mengaudit seluruh SO di kedua skenario.
+**Belum diuji:**
+- [BU] F4 pada SHA baru dan urutan ketersediaan stok, kas, dan kredit antarjenis transaksi. Loader masih menjalankan inbound dan outbound dalam tahap terpisah.
+**Berikutnya:**
+- Pemetaan kas/payment memerlukan keputusan K5 untuk saldo awal per rekening atau batas fasilitas yang disahkan. Rp5 miliar pada manifest dipakai untuk simulasi agregat dan belum menentukan pembukuan bank/kas. Lanjutkan identitas Coretax dan skenario operasional sesuai re-review.
+
 ## 2026-11-22T16:07:51+07:00 — Agent Codex-Cloud1 — F4/PR #110: Integrasi perubahan kredit BE-19
 
 **Berubah:**

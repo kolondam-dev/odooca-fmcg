@@ -237,6 +237,26 @@ class PeriodPackManifest:
                 "MANIFEST.json missing required metadata ('period', 'pack_start', 'pack_end')"
             )
 
+    def sales_owners(self) -> Dict[str, str]:
+        """Resolve outlet ownership from the register pinned by the period manifest."""
+        name = "customer_registry_354.csv"
+        expected = self.raw_data.get("canonical_july_15_register_fingerprints", {}).get(name)
+        if not expected:
+            return {}
+        path = self.pack_dir.parent.parent / name
+        if not path.is_file() or compute_sha256_lf(path) != expected:
+            raise ManifestVerificationError(f"Missing or changed sales ownership register: {path}")
+        owners = {}
+        with path.open(encoding="utf-8-sig", newline="") as source:
+            for row in csv.DictReader(source):
+                ref, login = row["ref"], row["salesman_code"].strip().lower()
+                if ref in owners:
+                    raise ManifestVerificationError(f"Duplicate outlet in sales ownership register: {ref}")
+                owners[ref] = login
+        if not owners:
+            raise ManifestVerificationError(f"Empty sales ownership register: {path}")
+        return owners
+
     def verify_checksums(self, strict: bool = True) -> Dict[str, str]:
         """Verify LF SHA-256 for all declared files in MANIFEST.json."""
         if not self.files_sha256:
@@ -2723,6 +2743,16 @@ class GenericPeriodPackLoader:
                     except Exception as post_err:
                         _logger.warning(f"action_post on stock account.move non-fatal: {post_err}")
 
+    def _sync_seed_order_header(self, order, row, owner_id):
+        """Restore the historical date after native confirmation and repair marked replays."""
+        values = {}
+        if str(order.date_order)[:10] != row["date_order"]:
+            values["date_order"] = row["date_order"]
+        if owner_id and _rec_id(getattr(order, "user_id", None)) != owner_id:
+            values["user_id"] = owner_id
+        if values:
+            order.write(values)
+
     def _apply_sales_orders_and_deliveries(self) -> Tuple[int, int]:
         """Create and validate Sales Orders and Outbound Deliveries."""
         so_rows = self.reader.sales_orders
@@ -2750,14 +2780,36 @@ class GenericPeriodPackLoader:
         # Authoritative canonical Tax Code 04 resolution (fail-closed if missing, ambiguous, or wrong-code)
         canonical_tax_04 = self._resolve_canonical_tax_code_04()
 
-        for so_row in so_rows:
+        owners = self.manifest.sales_owners()
+        owner_ids = {}
+        if owners:
+            users = self.env["res.users"].sudo()
+            for row in so_rows:
+                ref = extract_ref(row["customer"])
+                login = owners.get(ref)
+                if not login:
+                    raise PreflightContinuityError(f"No pinned sales owner for outlet {ref}")
+                if login not in owner_ids:
+                    user = users.search(
+                        [("login", "=", login), ("active", "=", True), ("company_ids", "in", [self.company.id])],
+                        limit=1,
+                    )
+                    if not user:
+                        raise PreflightContinuityError(f"Sales owner {login} unavailable in the seed company")
+                    owner_ids[login] = user.id
+
+        for so_row in sorted(so_rows, key=lambda row: (row["date_order"], row["so_number"])):
             so_num = so_row["so_number"]
+            cust_ref = extract_ref(so_row["customer"])
+            owner_id = owner_ids.get(owners.get(cust_ref))
             so_lines = lines_by_so.get(so_num, [])
             existing = SaleOrder.search(
                 [("company_id", "=", self.company.id), ("client_order_ref", "=", so_num)], limit=1
             )
             if existing:
                 self._validate_existing_so(existing, so_row, so_lines)
+                if getattr(existing, "fmcg_seed_batch", None) == f"PERIOD_{self.period}":
+                    self._sync_seed_order_header(existing, so_row, owner_id)
                 if hasattr(existing, "picking_ids"):
                     for pick in existing.picking_ids:
                         if getattr(pick, "state", "") not in ("done", "cancel"):
@@ -2775,7 +2827,6 @@ class GenericPeriodPackLoader:
                             do_count += 1
                 continue
 
-            cust_ref = extract_ref(so_row["customer"])
             partner = Partner.search([("ref", "=", cust_ref)], limit=1) or Partner.search(
                 [("name", "ilike", cust_ref)], limit=1
             )
@@ -2788,6 +2839,8 @@ class GenericPeriodPackLoader:
                 "company_id": self.company.id,
                 "date_order": so_row["date_order"],
             }
+            if owner_id:
+                so_vals["user_id"] = owner_id
             if hasattr(SaleOrder, "_fields") and "fmcg_seed_batch" in SaleOrder._fields:
                 so_vals["fmcg_seed_batch"] = f"PERIOD_{self.period}"
 
@@ -2849,6 +2902,7 @@ class GenericPeriodPackLoader:
                 )
 
             so_rec.with_context(fmcg_seed_load=True).action_confirm()
+            self._sync_seed_order_header(so_rec, so_row, owner_id)
             so_count += 1
 
             # Validate picking delivery if present

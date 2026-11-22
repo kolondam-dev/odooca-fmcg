@@ -32,6 +32,28 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 AUG_PACK_DIR = REPO_ROOT / "data" / "registers" / "periods" / "2026-08"
 
 
+class TestHistoricalSalesOwnership(unittest.TestCase):
+    def test_august_registry_owns_every_order(self):
+        manifest = PeriodPackManifest(AUG_PACK_DIR)
+        loader = GenericPeriodPackLoader(env=None, pack_dir=AUG_PACK_DIR)
+        owners = manifest.sales_owners()
+        order_logins = [
+            owners[row["customer"].split(" - ", 1)[0]] for row in loader.reader.sales_orders
+        ]
+        self.assertEqual(len(order_logins), 1240)
+        self.assertEqual(set(order_logins), {"cvs-01", "cvs-02", "mgt-01", "sls-01", "sls-02", "sls-03"})
+
+    def test_seed_header_restores_native_confirmation_date_and_owner_once(self):
+        loader = GenericPeriodPackLoader(env=None, pack_dir=AUG_PACK_DIR)
+        row = {"date_order": "2026-08-03"}
+        order = MockRecord(date_order="2026-11-22 08:00:00", user_id=1)
+        loader._sync_seed_order_header(order, row, 7)
+        self.assertEqual(order.date_order, "2026-08-03")
+        self.assertEqual(order.user_id, 7)
+        order.write = lambda values: self.fail(f"Matching replay unexpectedly wrote {values}")
+        loader._sync_seed_order_header(order, row, 7)
+
+
 class MockModel:
     """Mock Odoo model for unit testing loader logic offline."""
 
