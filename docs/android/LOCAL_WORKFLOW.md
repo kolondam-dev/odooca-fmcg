@@ -111,6 +111,12 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Design:** Lanjutkan review DES-02-r1.
 - **Lead:** Runtime tetap HOLD. Bukti smoke kedua API dan instrumentation harus merujuk SHA integrasi yang sama.
 
+### Tindak lanjut runtime — PR #177 pada fef6f3e
+
+- **Lead:** [Smoke 45038270870](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45038270870) lulus API 24 dan 35 pada `fef6f3e`. API 24 lulus setelah retry kegagalan resolusi plugin Kotlin. [Instrumentation 45038999868](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45038999868) lulus API 35; API 24 mencapai Login, lalu gagal sebelum tes karena `INSTALL_FAILED_ALREADY_EXISTS`. Acceptance DEV-01B tetap HOLD.
+- **Dev:** Perbaiki transisi antara smoke APK dan instalasi APK fixture oleh `connectedDebugAndroidTest`. Reproduksi kondisi APK smoke telah terpasang di API 24, buktikan transisi ke instalasi fixture bersih, dan pertahankan bukti Login serta oracle laporan instrumentation. Serahkan SHA dan hasil pengujian. Lead akan mengulang matriks setelah integrasi.
+- **Design:** Lanjutkan review DES-02-r1.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
