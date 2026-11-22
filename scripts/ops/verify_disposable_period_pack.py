@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 from collections import Counter
+from datetime import date, timedelta
 from decimal import Decimal
 import hashlib
 import json
@@ -304,11 +305,12 @@ def _stock_at_cutoff(env, company, quants, oracle):
         row.reserved_quantity += _dec(quant.reserved_quantity)
 
     cutoff = oracle.manifest.pack_end
+    next_day = (date.fromisoformat(cutoff) + timedelta(days=1)).isoformat()
     ordered_by_cutoff = {row["so_number"] for row in oracle.reader.sales_orders if row["date_order"] <= cutoff}
     future_lines = env["stock.move.line"].sudo().search([
         ("company_id", "=", company.id),
         ("state", "=", "done"),
-        ("date", ">", f"{cutoff} 23:59:59"),
+        ("date", ">=", f"{next_day} 00:00:00"),
         "|", ("location_id.usage", "=", "internal"), ("location_dest_id.usage", "=", "internal"),
     ])
     for line in future_lines:
@@ -1115,7 +1117,22 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     return report
 
 
-def capture_period_state_snapshot(env: Any, *, include_components: bool = False) -> Dict[str, Any]:
+def _stock_business_reference(move):
+    """Find the source document behind an Odoo-generated picking sequence."""
+    picking = getattr(move, "picking_id", None)
+    sale_ref = getattr(getattr(picking, "sale_id", None), "client_order_ref", None)
+    if sale_ref:
+        direction = getattr(getattr(picking, "picking_type_id", None), "code", "")
+        return f"{sale_ref}/{direction}"
+    purchase = getattr(getattr(move, "purchase_line_id", None), "order_id", None)
+    if purchase:
+        return getattr(purchase, "origin", None) or purchase.name
+    return getattr(picking, "origin", None)
+
+
+def capture_period_state_snapshot(
+    env: Any, *, include_components: bool = False, cross_database: bool = False
+) -> Dict[str, Any]:
     """Capture comprehensive deterministic SHA-256 digest of database transactional and GL state."""
     if env is None:
         return {"snapshot": "mock_snapshot_hash", "digest": "mock_digest"}
@@ -1129,6 +1146,24 @@ def capture_period_state_snapshot(env: Any, *, include_components: bool = False)
     StockMoveLine = env["stock.move.line"].sudo()
     StockQuant = env["stock.quant"].sudo()
     PartialReconcile = env["account.partial.reconcile"].sudo()
+
+    stock_moves = StockMove.search([])
+    stock_docs = {}
+    stock_journals = {}
+    if cross_database:
+        for move in stock_moves:
+            document = _stock_business_reference(move)
+            if not document:
+                continue
+            stock_docs[move.id] = document
+            journal = getattr(move, "account_move_id", None)
+            if journal:
+                stock_journals.setdefault(journal.id, set()).add(document)
+
+    def stock_journal_key(move):
+        documents = stock_journals.get(getattr(move, "id", None))
+        journal_code = getattr(getattr(move, "journal_id", None), "code", "")
+        return f"stock/{journal_code}/{','.join(sorted(documents))}" if documents else None
 
     # 1. Purchase Orders and Lines
     po_hashes = []
@@ -1161,7 +1196,7 @@ def capture_period_state_snapshot(env: Any, *, include_components: bool = False)
     # 3. Invoices and Lines
     inv_hashes = []
     for m in AccountMove.search([]):
-        ref_id = getattr(m, "payment_reference", "") or getattr(m, "ref", "") or getattr(m, "name", "")
+        ref_id = stock_journal_key(m) or getattr(m, "payment_reference", "") or getattr(m, "ref", "") or getattr(m, "name", "")
         if not ref_id:
             continue
         inv_hashes.append(
@@ -1193,11 +1228,15 @@ def capture_period_state_snapshot(env: Any, *, include_components: bool = False)
 
     # 5. Stock Moves & Stock Move Lines (Lot Allocation)
     stock_hashes = sorted([
-        f"SM:{m.reference}:{getattr(getattr(m, 'product_id', None), 'default_code', '')}:{getattr(m, 'product_qty', 0)}:{getattr(m, 'state', '')}"
-        for m in StockMove.search([]) if getattr(m, "reference", None)
+        f"SM:{stock_docs.get(getattr(m, 'id', None)) or m.reference}:{getattr(getattr(m, 'product_id', None), 'default_code', '')}:{getattr(m, 'product_qty', 0)}:{getattr(m, 'state', '')}"
+        for m in stock_moves if getattr(m, "reference", None)
     ])
+    def move_line_reference(line):
+        move = getattr(line, "move_id", None)
+        return stock_docs.get(getattr(move, "id", None)) or getattr(line, "reference", "") or getattr(move, "reference", "")
+
     sml_hashes = sorted([
-        f"SML:{getattr(sml, 'reference', '') or getattr(getattr(sml, 'move_id', None), 'reference', '')}:"
+        f"SML:{move_line_reference(sml)}:"
         f"{getattr(getattr(sml, 'product_id', None), 'default_code', '')}:"
         f"{getattr(getattr(sml, 'lot_id', None), 'name', '')}:{getattr(sml, 'quantity', 0)}:"
         f"{getattr(getattr(sml, 'location_id', None), 'complete_name', '')}:"
@@ -1214,8 +1253,10 @@ def capture_period_state_snapshot(env: Any, *, include_components: bool = False)
     # 7. Account Move Lines
     aml_hashes = []
     for mline in AccountMoveLine.search([]):
-        m_name = getattr(getattr(mline, "move_id", None), "name", "")
-        m_ref = getattr(getattr(mline, "move_id", None), "ref", "")
+        move = getattr(mline, "move_id", None)
+        stock_key = stock_journal_key(move)
+        m_name = stock_key or getattr(move, "name", "")
+        m_ref = stock_key or getattr(move, "ref", "")
         a_code = getattr(getattr(mline, "account_id", None), "code", "")
         p_ref = getattr(getattr(mline, "partner_id", None), "ref", "") or getattr(getattr(mline, "partner_id", None), "name", "")
         m_date = getattr(mline, "date", "")
@@ -1223,7 +1264,10 @@ def capture_period_state_snapshot(env: Any, *, include_components: bool = False)
         crd = getattr(mline, "credit", 0)
         rec = getattr(mline, "reconciled", False)
         p_state = getattr(mline, "parent_state", "")
-        aml_hashes.append(f"AML:{m_name}:{m_ref}:{p_ref}:{m_date}:{a_code}:{deb}:{crd}:{rec}:{p_state}")
+        entry = f"AML:{m_name}:{m_ref}:{p_ref}:{m_date}:{a_code}:{deb}:{crd}:{rec}:{p_state}"
+        if stock_key:
+            entry += f":{getattr(getattr(mline, 'product_id', None), 'default_code', '')}"
+        aml_hashes.append(entry)
     aml_hashes.sort()
 
     # 8. Reconciliation Edges
@@ -1648,7 +1692,9 @@ def run_scenario_b_from_empty_database(
     oracle = PeriodPackOracle(pack_dir)
     audit = audit_period_database(env, oracle)
     res["audit"] = audit
-    snap_b = capture_period_state_snapshot(env, include_components=expected_snapshot is not None)
+    snap_b = capture_period_state_snapshot(
+        env, include_components=expected_snapshot is not None, cross_database=expected_snapshot is not None
+    )
     res["snapshot_digest"] = snap_b.get("digest")
 
     if expected_digest:
@@ -1715,13 +1761,13 @@ def run_full_disposable_period_verification(
         "audit": {"status": "NOT_RUN"},
     }
 
-    snap1 = None
+    comparison_snapshot = None
     # 1. Fault-Injection Recovery Probes on Baseline July (Batch write, tamper, rollback, real apply recovery)
     if scenario in ("all", "A"):
         _logger.info("Executing Fault-Injection Recovery Probes on Baseline July...")
         ensure_idr_currency_active(env)
         report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)
-        snap1 = capture_period_state_snapshot(env, include_components=scenario == "all")
+        snap1 = capture_period_state_snapshot(env)
         report["scenario_a_digest"] = snap1["digest"]
 
         _logger.info("Executing Scenario A: Re-running period pack for zero-drift replay proof...")
@@ -1733,6 +1779,9 @@ def run_full_disposable_period_verification(
             report["scenario_a_zero_drift"] = "PASS"
         else:
             report["scenario_a_zero_drift"] = "FAIL_DRIFT_DETECTED"
+        if scenario == "all" and not expected_digest:
+            comparison_snapshot = capture_period_state_snapshot(env, include_components=True, cross_database=True)
+            report["scenario_a_comparison_digest"] = comparison_snapshot["digest"]
 
     # 2. Run Scenario B (Empty DB -> July -> August)
     if scenario in ("all", "B"):
@@ -1748,9 +1797,9 @@ def run_full_disposable_period_verification(
                 raise RuntimeError(
                     f"Scenario B target database '{getattr(target_env.cr, 'dbname', '')}' must be distinct from Scenario A database"
                 )
-            exp_dig = expected_digest or report.get("scenario_a_digest")
+            exp_dig = expected_digest or (comparison_snapshot and comparison_snapshot["digest"])
             report["scenario_b_continuation"] = run_scenario_b_from_empty_database(
-                target_env, pack_dir, expected_digest=exp_dig
+                target_env, pack_dir, expected_digest=exp_dig, expected_snapshot=comparison_snapshot
             )
 
     # 3. Comprehensive Oracle Audit

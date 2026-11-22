@@ -522,3 +522,8 @@
 - [F] Probe Odoo disposable: 16 tagihan posted dan receipt sampai cutoff tie-out Rp6.551.160.000 pada 113000; tagihan memakai 113900.
 - [BU] F4 penuh dan digest A/B menunggu run.
 - Task managed by codex agent at 2026-11-22T09:39:47+07:00
+
+[2026-11-22T09:43:08+07:00] [INFO] PR #110: pembanding dokumen stok lintas database
+- [F] Sequence picking Odoo standard maju meski savepoint rollback. Probe native: transaksi yang sama menghasilkan digest raw berbeda, digest lintas DB sama.
+- [F] Replay dan rollback tetap memakai digest raw; perubahan lot dan nilai jurnal tetap mengubah digest lintas DB.
+- Task managed by codex agent at 2026-11-22T09:43:08+07:00

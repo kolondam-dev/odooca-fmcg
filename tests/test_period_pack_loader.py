@@ -1311,6 +1311,41 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         # Digests must be 100% identical because local database surrogate integer IDs were normalized to business keys!
         self.assertEqual(snap1["digest"], snap2["digest"])
 
+    def test_cross_database_snapshot_uses_stock_document_but_preserves_amounts_and_lots(self):
+        from scripts.ops.verify_disposable_period_pack import capture_period_state_snapshot
+
+        def snapshot(number, lot="LOT-A", debit=100):
+            product = MockRecord(default_code="SKU")
+            journal = MockRecord(
+                id=1, name=f"STJ/{number}", ref=f"OUT/{number}", move_type="entry", invoice_line_ids=[],
+            )
+            move = MockRecord(
+                id=2, reference=f"OUT/{number}", account_move_id=journal, product_id=product,
+                picking_id=MockRecord(
+                    sale_id=MockRecord(client_order_ref="SO-202608-0001"),
+                    picking_type_id=MockRecord(code="outgoing"),
+                ),
+            )
+            detail = MockRecord(move_id=move, product_id=product, lot_id=MockRecord(name=lot))
+            aml = MockRecord(move_id=journal, product_id=product, debit=debit)
+            env = MockEnv({
+                "purchase.order": MockModel(), "sale.order": MockModel(), "account.payment": MockModel(),
+                "account.move": MockModel(records=[journal]), "account.move.line": MockModel(records=[aml]),
+                "stock.move": MockModel(records=[move]), "stock.move.line": MockModel(records=[detail]),
+                "stock.quant": MockModel(), "account.partial.reconcile": MockModel(),
+            })
+            return (
+                capture_period_state_snapshot(env)["digest"],
+                capture_period_state_snapshot(env, cross_database=True)["digest"],
+            )
+
+        raw_a, business_a = snapshot("0003")
+        raw_b, business_b = snapshot("0004")
+        self.assertNotEqual(raw_a, raw_b)
+        self.assertEqual(business_a, business_b)
+        self.assertNotEqual(business_a, snapshot("0004", lot="LOT-B")[1])
+        self.assertNotEqual(business_a, snapshot("0004", debit=200)[1])
+
     def test_audit_period_database_resolves_native_odoo19_payment_memo(self):
         """Audit oracle resolves AR/AP payments via native Odoo 19 'memo' field without rejecting as invalid field."""
         from scripts.ops.verify_disposable_period_pack import audit_period_database, PeriodPackOracle
@@ -2464,7 +2499,7 @@ class TestStockCutoff(unittest.TestCase):
             for row in _stock_at_cutoff(env, SimpleNamespace(id=1), quants, oracle)
         }
         self.assertEqual(result, {(1, 1): (10, 7), (1, 2): (0, 0), (2, 1): (1, 0)})
-        self.assertIn(("date", ">", "2026-08-31 23:59:59"), search.call_args.args[0])
+        self.assertIn(("date", ">=", "2026-09-01 00:00:00"), search.call_args.args[0])
         self.assertIn(("state", "=", "done"), search.call_args.args[0])
         self.assertIn(("company_id", "=", 1), search.call_args.args[0])
 

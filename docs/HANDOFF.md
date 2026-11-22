@@ -1,3 +1,14 @@
+## 2026-11-22T09:43:08+07:00 — Agent Codex-Cloud1 — F4/PR #110: Identitas dokumen stok pada pembanding A/B
+**Berubah:**
+- Pembanding dua database menggunakan identitas register pada picking dan jurnal valuasi terkait. Replay dan probe rollback tetap memakai digest raw. Laporan menyertakan sampel selisih apabila digest A/B masih berbeda.
+**Diverifikasi:**
+- [F] Probe Odoo disposable: receipt identik dalam dua savepoint menghasilkan nomor native berbeda, digest raw berbeda, dan digest lintas database identik.
+- [F] 81 tes lokal dan Ruff lulus. Dampak test **TAMBAH**: perubahan lot maupun debit tetap terdeteksi.
+**Belum diuji:**
+- [BU] Hasil penuh pada SHA baru.
+**Berikutnya:**
+- Pantau F4 A/B dan tangani selisih residual yang dilaporkan.
+
 ## 2026-11-22T09:39:47+07:00 — Agent Codex-Cloud1 — F4/PR #110: Cutoff stok dan pembukuan tagihan ke interim
 **Berubah:**
 - Sinkronisasi `origin/main` `cc9ecb6`; riwayat handoff dan deklarasi output Gradle dipertahankan.
