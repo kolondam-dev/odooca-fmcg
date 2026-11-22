@@ -1,5 +1,5 @@
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import AccessError, ValidationError
 
 
 class FmcgApprovalCategory(models.Model):
@@ -84,3 +84,44 @@ class FmcgApprovalCategory(models.Model):
                 duplicate = self.search([("code", "=", rec.code), ("id", "!=", rec.id)], limit=1)
                 if duplicate:
                     raise ValidationError(f"Kode kategori persetujuan '{rec.code}' sudah terdaftar!")
+
+    @api.model
+    def _mobile_snapshot_payload(self, principal_ids, partner_ids, user, company, anchor):
+        """Konfigurasi tier diskon + pemakaian kumulatif untuk snapshot PWA (BE-18).
+
+        Hanya baca dan tanpa rahasia: batas zona bebas, rentang tier, label tingkat approver, dan
+        pemakaian diskon pada jendela WITA berjalan. Pemakaian dibaca lewat ACL pengguna sehingga
+        dapat lebih rendah dari angka server; server tetap otoritatif saat order dikirim.
+        PWA hanya untuk pratinjau, bukan pengambil keputusan.
+        """
+        category = self.sudo().search([("code", "=", "tactical_discount")], limit=1)
+        if not category:
+            return None
+
+        def block(principal_id):
+            free = category._free_zone_limit(principal_id)
+            tiers = [
+                {"min_discount": r.min_discount, "approver": r.name}
+                for r in category._rules_for_principal(principal_id, free_zone=False)
+            ]
+            return {"free_zone_max": free, "tiers": tiers}
+
+        principals = {}
+        for pid in sorted(set(principal_ids)):
+            specific = category.rule_ids.filtered(lambda r, pid=pid: r.principal_id.id == pid)
+            if specific:
+                principals[str(pid)] = block(pid)
+        scope = category.cumulative_scope
+        payload = {
+            "scope": scope,
+            "default": block(False),
+            "principals": principals,
+            "usage": [],
+        }
+        if scope in ("salesman_day", "outlet_month"):
+            try:
+                payload["usage"] = self.env["sale.order"]._approval_usage_entries(
+                    scope, user, partner_ids, company, anchor)
+            except AccessError:
+                payload["usage"] = []  # tanpa hak baca pesanan: pratinjau tanpa pemakaian, server tetap otoritatif
+        return payload

@@ -359,3 +359,25 @@
 - [F] Reproduksi baru + positive placeholder membuat unit XLSX 28/28 PASS; FIN04 8/8, ruff, 14 manifest, compile dan diff check PASS.
 - [BU] Finance I0 exact-SHA baru menunggu commit/push; PR, live acceptance dan katalog tetap HOLD, tanpa merge/deploy.
 - Task managed by opencode at 2026-11-19T16:37:22+07:00
+
+[2026-11-20T08:49:53+07:00] [INFO] PR #169 merged: oracle FIN57 independen diterima pemilik
+- [F] PR #169 merge oleh kolondam-dev pada 2026-11-19T10:36:33Z; head 6f45f66d6784ff9836a90ebf9f1c15822869fb19, merge commit 918fd3e6b4d3d0dfc86aefa406e55cf463ce993d.
+- [F] Exact-SHA 6f45f66: 22 check PASS, 6 skipped impact plan, 0 gagal/pending (termasuk candidate-install-upgrade, finance-gate, install-test, init-test, invariant-tests, seed-invariants, Module Upgrade + upgrade-gate).
+- [F] Finance I0: FINANCE_I2A_LEDGERS_CORE PASS dua company disposable (scale 1/7), FIN57 4 dokumen / 3 non-register move / 4 akun tie-out unik vs posted AML; FIN01/02/03/04/51 PASS; rollback PASS.
+- [BU] Katalog tetap 58/58 BELUM_DITERIMA; penerimaan live FIN01/02/03/04/51/57 HOLD sampai bukti privat, mapping/perimeter, periode beku, penolakan Sales, dan sign-off Controller+QA.
+- Task managed by opencode at 2026-11-20T08:49:53+07:00
+
+[2026-11-21T09:42:39+07:00] [INFO] I2b XLSX tie-out FIN05-FIN09 pada fixture disposable
+- [F] Wizard nyata mengekspor FIN05/FIN06 (2 periode x customer/supplier + all), FIN07 (4 as-of x 2 tipe), FIN08/FIN09 (3 as-of x 2 tipe) pada 2 company sintetis.
+- [F] Comparator baru membandingkan sel workbook dengan oracle AML/partial independen: coverage unik, nilai per partner/line, bucket dan edges, totals, partner_count, split tipe akun, grup line_ids, dan tie-out GL.
+- [F] Ekspor FIN07 kosong hanya diterima sebagai placeholder resmi dengan GL nol; unit XLSX 52/52 PASS lokal (24 kasus I2b baru).
+- [BU] Exact-SHA Finance I0 belum dijalankan; live FIN05-FIN09 tetap HOLD, katalog tidak berubah.
+- Task managed by opencode at 2026-11-21T09:42:39+07:00
+
+
+[2026-11-22T08:31:26+07:00] [FIX] I2b review HOLD PR #178: comparator FIN05-FIN09 diperketat
+- [F] Temuan P2 review: swap detail/line_ids antarpartner FIN08/FIN09, baris berdata tanpa account_type diabaikan, dan totals/GL berbentuk teks diterima.
+- [F] Comparator kini membandingkan partner_id tiap detail line, coverage line_ids per partner, bucket partner vs detail, menolak baris orphan, dan mewajibkan sel/nilai JSON numerik.
+- [F] 7 counterexample baru (59 total unit XLSX); ruff, manifest, dan test bertarget PASS lokal.
+- [BU] Exact-SHA Finance I0 menunggu push; katalog dan penerimaan live tetap HOLD.
+- Task managed by opencode at 2026-11-22T08:31:26+07:00

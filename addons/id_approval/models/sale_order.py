@@ -263,6 +263,45 @@ class SaleOrder(models.Model):
             self._stats_by_principal(others, into=stats)
         return {pid: round(d / g * 100.0, 4) for pid, (d, g) in stats.items() if g > 0}
 
+    @api.model
+    def _approval_usage_entries(self, scope, user, partner_ids, company, anchor):
+        """Pemakaian diskon pada jendela WITA berjalan: [{outlet_id, principal, discount_amount, gross_amount}].
+
+        salesman_day: pesanan salesman pada hari ini (outlet_id null). outlet_month: pesanan outlet PJP
+        pada bulan ini. Dibaca lewat ACL pengguna (tanpa sudo): record rule dapat menyembunyikan
+        pesanan salesman lain sehingga angka bisa lebih rendah; server tetap otoritatif.
+        """
+        start, end = self._approval_tz_bounds(anchor, scope)
+        domain = [
+            ("order_id.company_id", "=", company.id),
+            ("order_id.state", "!=", "cancel"),
+            ("order_id.discount_approval_state", "!=", "rejected"),
+            ("order_id.date_order", ">=", start),
+            ("order_id.date_order", "<", end),
+        ]
+        if scope == "salesman_day":
+            domain.append(("order_id.user_id", "=", user.id))
+        else:
+            domain.append(("order_id.partner_id", "in", list(partner_ids)))
+        grouped = {}
+        for line in self.env["sale.order.line"].search(domain):
+            outlet = line.order_id.partner_id.id if scope == "outlet_month" else False
+            key = (outlet, self._approval_line_principal(line))
+            self._stats_by_principal(line, into=grouped.setdefault(key, {}))
+        entries = []
+        for (outlet, principal), stats in sorted(grouped.items(), key=lambda kv: (kv[0][0] or 0, kv[0][1] or 0)):
+            disc = sum(v[0] for v in stats.values())
+            gross = sum(v[1] for v in stats.values())
+            if gross <= 0:
+                continue
+            entries.append({
+                "outlet_id": str(outlet) if outlet else None,
+                "principal": str(principal) if principal else None,
+                "discount_amount": round(disc, 2),
+                "gross_amount": round(gross, 2),
+            })
+        return entries
+
     def _approval_cumulative_discount_pct(self, scope="order"):
         """Diskon kumulatif tertinggi (%) di antara principal pada pesanan."""
         self.ensure_one()

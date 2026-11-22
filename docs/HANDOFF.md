@@ -1,3 +1,39 @@
+## 2026-11-22 — [F] I2b review HOLD: comparator FIN05–FIN09 diperketat (opencode)
+
+- [F] Review independen PR #178 memberi HOLD/P2 pada head `5887332`: detail dan `line_ids` FIN08/FIN09 bisa tertukar antarpartner, baris berisi debit tanpa tipe akun diabaikan, dan angka totals/GL berbentuk teks tetap diterima.
+- [F] Perbaikan: FIN08/FIN09 membandingkan `partner_id` pada setiap detail line, coverage `line_ids` per partner, dan bucket partner terhadap detail line; `expected_rows` kini memuat partner. FIN05/FIN06/FIN07/FIN08/FIN09 menolak baris berisi data tanpa `account_type`; totals, GL, bucket, dan nilai JSON wajib numerik, bukan teks.
+- [F] 7 counterexample baru (59 total pada berkas XLSX) menutup ketiga temuan: swap `line_ids`, swap `partner_id` detail, baris orphan, dan nominal teks.
+- [BU] Exact-SHA Finance I0 untuk commit perbaikan belum berjalan; `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA` dan penerimaan live FIN05–FIN09 tetap HOLD.
+
+## 2026-11-21 — [BU] I2b XLSX tie-out FIN05–FIN09 pada fixture disposable (opencode)
+
+- Wizard nyata mengekspor FIN05/FIN06 (2 periode × customer/supplier + `all`), FIN07 (4 as-of × 2 tipe), FIN08/FIN09 (3 as-of × 2 tipe) pada 2 company sintetis; sel dibandingkan dengan oracle AML/partial independen: coverage uniqueness, nilai per partner/line, bucket aging, totals, `partner_count`, split tipe akun, dan tie-out GL.
+- Comparator FIN05–FIN09 ditambahkan ke `scripts/ops/verify_finance_i2_xlsx.py`; 24 kasus unit baru (52 total) termasuk offset konsisten, duplikat, grup `line_ids`, bucket/edge, dan ekspor FIN07 kosong (hanya placeholder resmi + GL nol).
+- [BU] Exact-SHA Finance I0 belum berjalan; PR menunggu review. Live FIN05–FIN09 tetap HOLD: control account disetujui, periode beku, kasus parsial/unreconcile, dan sign-off Controller+QA belum tersedia. `REPORT_CATALOG.csv` tidak berubah.
+
+## 2026-11-20 — [F] PR #169 merged: oracle FIN57 independen (opencode)
+
+- PR #169 di-merge pemilik pada 2026-11-19T10:36:33Z; head `6f45f66d6784ff9836a90ebf9f1c15822869fb19`, merge commit `918fd3e6b4d3d0dfc86aefa406e55cf463ce993d`. Exact-SHA: 22 PASS, 6 skipped impact plan, 0 gagal/pending; `candidate-install-upgrade`, `finance-gate`, `install-test`, `init-test`, `invariant-tests`, `seed-invariants`, upgrade + `upgrade-gate` hijau.
+- Oracle `FINANCE_I2A_LEDGERS_CORE` pada dua company disposable (scale 1 dan 7) mencatat `FIN57_xlsx_vs_expected_table`: 4 dokumen, 3 non-register move/row, **4 akun tie-out unik**, dibandingkan ke posted AML langsung; FIN01/02/03/04/51 PASS; rollback PASS.
+- [BU] Penerimaan live FIN01/02/03/04/51/57 tetap HOLD: workbook/AML privat, mapping/perimeter, periode beku, penolakan role Sales, dan sign-off Controller+QA belum ada; `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA`.
+- Bukti CI: https://github.com/kolondam-dev/odooca-fmcg/pull/169#issuecomment-7027841475
+
+## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (putaran 2): blok tier ganda (claude-design)
+
+- install-test masih gagal karena `git checkout` pada putaran sebelumnya mengembalikan versi komit yang sudah memuat blok tier SEBELUM digest; blok baru ditambahkan di bawahnya sehingga ada dua blok dan yang lama tetap ikut digest (`include_approval_tiers=False` pun tidak berpengaruh). Blok lama dihapus; sisa satu blok SETELAH digest. Pelajaran: setelah `git checkout <file>` selalu diff ulang terhadap HEAD sebelum menambah perubahan.
+
+## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (claude-design)
+
+- install-test: `approval_tiers` ikut digest versi snapshot, sehingga konfigurasi atau pemakaian yang berubah (setiap order) membuat command offline berikutnya ditolak "Stale catalog snapshot version" (regresi nyata, bukan hanya tes). Kini `approval_tiers` ditambahkan SETELAH digest; jalur cek versi command dan evidence memanggil `_snapshot_payload(include_approval_tiers=False)` (juga menghemat query pemakaian). Tes regresi `test_approval_tiers_do_not_change_snapshot_version`. Koreksi catatan PR: digest TIDAK berubah karena tier.
+- domain-tests Android: `core:domain:test` terpulihkan dari build cache (FROM-CACHE) sehingga `contract-samples` tidak ditulis dan `validate_contract.py` gagal. Muncul kini karena `openapi.json` berubah memicu suite android tanpa perubahan sumber domain. `outputs.dir(contract-samples)` dideklarasikan pada tugas test agar ikut tersimpan di cache.
+- android-gate gagal hanya sebagai akibat domain-tests.
+
+## 2026-11-21 — [BU] BE-18: `approval_tiers` pada snapshot (claude-design)
+
+- Snapshot memuat `approval_tiers.discount`: `scope`, `default` dan `principals` (`free_zone_max` + `tiers[{min_discount, approver}]`, khusus principal hanya bila ada aturan khusus), serta `usage` (pemakaian diskon pada jendela WITA berjalan: per salesman-hari atau per outlet-bulan × principal). Opsional dan lunak (tanpa dependensi manifest `id_mobile_api` → `id_approval`); angka pemakaian dibaca lewat ACL pengguna sehingga bisa lebih rendah dari server; hanya pratinjau, server tetap otoritatif.
+- PWA: `SnapshotSchema.approval_tiers` opsional; `contracts/openapi.json` diekspor ulang. Klien lama tanpa field tetap valid.
+- Tes: vitest catalog (parse valid/ditolak), `test_34`/`test_35` (id_approval), satu tes di `test_read_api`.
+- Belum: FE-11 (pratinjau tier di POS dan status approval di Riwayat/Hasil kirim).
 ## 2026-11-21T15:54:38+07:00 — Agent Codex-Cloud1 — F4/PR #110: Tagihan vendor dan cutoff PPN Masukan
 **Berubah:**
 - Sinkronisasi `origin/main` `34ba18e`, dengan kedua riwayat handoff dipertahankan.

@@ -151,6 +151,16 @@ export const OfficeMapSchema = z
         coordinate_status: z.enum(["test", "unverified", "verified"]),
     })
     .strict();
+const ApprovalTierBlockSchema = z.object({
+    /** Batas zona bebas (%), null = tidak ada zona bebas. */
+    free_zone_max: z.number().nonnegative().nullable(),
+    tiers: z.array(
+        z.object({
+            min_discount: z.number().nonnegative(),
+            approver: z.string().min(1),
+        }),
+    ),
+});
 export const SnapshotSchema = z
     .object({
         catalog_version: z.literal(2).optional(),
@@ -240,6 +250,27 @@ export const SnapshotSchema = z
                 outlet_expense_v1: z.boolean().optional(),
                 /** Penyelesaian penagihan multi-faktur (`collection.settlement.submit`). */
                 collection_v2: z.boolean().optional(),
+            })
+            .optional(),
+        /**
+         * Tata kelola approval diskon (BE-18): hanya untuk pratinjau di POS. Server tetap menentukan
+         * perlu/tidaknya approval saat order dikirim. Batas zona bebas dan tier bisa khusus principal.
+         */
+        approval_tiers: z
+            .object({
+                discount: z.object({
+                    scope: z.enum(["order", "outlet_month", "salesman_day"]),
+                    default: ApprovalTierBlockSchema,
+                    principals: z.record(z.string(), ApprovalTierBlockSchema),
+                    usage: z.array(
+                        z.object({
+                            outlet_id: z.string().nullable(),
+                            principal: z.string().nullable(),
+                            discount_amount: z.number().nonnegative(),
+                            gross_amount: z.number().positive(),
+                        }),
+                    ),
+                }),
             })
             .optional(),
         /** Outlet di luar PJP yang boleh diajukan sebagai extra call (pencarian layar Extra call). */
