@@ -424,3 +424,11 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-21T21:19:53+07:00] [INFO] BE-18 fix CI #179 putaran 2
 - hapus blok tier lama sebelum digest
 - Task managed by claude-design agent at 2026-11-21T21:19:53+07:00
+
+[2026-11-22T08:27:24+07:00] [INFO] FE-11 pratinjau tier approval
+- approval-preview.ts, ringkasan POS, keterangan pengajuan, tes vitest+e2e, K35
+- Task managed by claude-design agent at 2026-11-22T08:27:24+07:00
+
+[2026-11-22T09:27:28+07:00] [INFO] FE-11 fix review PR #181
+- hasManual: rantai taktikal hanya bila ada diskon manual; 3 tes baru
+- Task managed by claude-design agent at 2026-11-22T09:27:28+07:00
