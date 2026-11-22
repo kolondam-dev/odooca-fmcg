@@ -492,7 +492,7 @@
 
 [2026-11-22T08:33:20+07:00] [INFO] Dependabot policy and Gradle resolution retries after the Android toolchain merge
 - [F] PR #173 is merged as 127287a5c1cb273a612fc5ed643f88f7e8623658 (head 4158713, 28/28 check runs successful); PR #162 is merged as e6b1fb35abbcdad14039e67ee5f027e8005d6a25 (head 3e2a419, 28/28).
-- [F] Dependabot closed #164, #165, #166, #167 and #168 without merging because #173 superseded them; main was 92bfcfa (PR #179) with 49/49 successful check runs when this entry was written.
+- [F] The supervisor closed #164, #165, #166, #167 and #168 without merging because #173 superseded them; main was 92bfcfa (PR #179) with 49/49 successful check runs when this entry was written.
 - [F] .github/dependabot.yml now ignores every update of the locked Android toolchain: AGP (com.android.application, com.android.library and the com.android.tools.build:gradle classpath coordinate), Kotlin (org.jetbrains.kotlin:* libraries and org.jetbrains.kotlin.* plugins), KSP (com.google.devtools.ksp) and gradle-wrapper.
 - [F] Majors alone were not enough: PR #164 bumped Kotlin 2.0.21 -> 2.4.21, a semver-minor update, yet it still broke lock-step with KSP and AGP. The Android PR limit stays at 3 and both groups remain.
 - [F] androidx.* (including the CalVer Compose BOM), org.jetbrains.kotlinx*, OkHttp, Robolectric and desugar are not ignored and keep flowing.

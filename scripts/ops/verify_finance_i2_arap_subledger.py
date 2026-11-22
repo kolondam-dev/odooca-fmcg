@@ -13,6 +13,7 @@ oracle. Everything runs inside a savepoint and is rolled back.
 
 from collections import defaultdict
 from datetime import date
+import base64
 import json
 import sys
 from pathlib import Path
@@ -20,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent) if "__file__" in globals() else "/opt/scripts/ops")
 import verify_finance_golden_ledger as golden  # noqa: E402
 import verify_finance_i2_ledgers_core as i2a  # noqa: E402
+import verify_finance_i2_xlsx as xlsx_oracle  # noqa: E402
 import verify_finance_ledger_security as sec  # noqa: E402
 
 AR_TYPE = "asset_receivable"
@@ -433,6 +435,147 @@ def _control_accounts(env, company, accounts):
     return (accounts["ar"] | accounts["ap"]).with_company(company)
 
 
+AGING_EDGES = (30, 60, 90, 120)
+
+
+def _aging_names(edges=AGING_EDGES):
+    names = ["current"]
+    previous = 0
+    for edge in edges:
+        names.append(f"days_{previous + 1}_{edge}")
+        previous = edge
+    names.append("older")
+    return names
+
+
+def _export_report(env, company, **values):
+    """Render the wizard XLSX through the real dispatch, inside the fixture."""
+    wizard = env["id.finance.report.wizard"].with_context(
+        allowed_company_ids=company.ids,
+    ).create({
+        "company_id": company.id,
+        "company_ids": [(6, 0, company.ids)],
+        "only_posted_moves": True,
+        **values,
+    })
+    action = wizard.action_export_xlsx()
+    require(
+        action.get("type") == "ir.actions.act_url",
+        f"XLSX export did not download for {values.get('report_type')}",
+    )
+    return base64.b64decode(wizard.result_xlsx or b"")
+
+
+def _partner_ledger_expected(oracle, wanted_types):
+    rows = {
+        (row["partner_id"], row["account_type"]): (
+            row["opening_balance"], row["debit"], row["credit"],
+            row["closing_balance"],
+        )
+        for row in oracle["rows"].values()
+    }
+    totals = {
+        key: oracle["totals"][key]
+        for key in ("opening_balance", "debit", "credit", "closing_balance")
+    }
+    by_type = {}
+    for (_partner_id, account_type), values in rows.items():
+        current = by_type.setdefault(account_type, [0.0, 0.0, 0.0, 0.0])
+        for index, value in enumerate(values):
+            current[index] = round(current[index] + value, 2)
+    for account_type in wanted_types:
+        by_type.setdefault(account_type, [0.0, 0.0, 0.0, 0.0])
+    return rows, totals, {key: tuple(value) for key, value in by_type.items()}, \
+        totals["closing_balance"]
+
+
+def _open_items_expected(oracle):
+    lines = {
+        line_id: (
+            row["move_id"], row["account_id"], row["partner_id"],
+            row["account_type"], row["date"].isoformat(),
+            row["due_date"].isoformat(), row["balance"], row["matched_amount"],
+            row["residual"],
+        )
+        for line_id, row in oracle["rows"].items()
+    }
+    partners = {key: row["residual"] for key, row in oracle["partner_rows"].items()}
+    totals = {key: round(value, 2) for key, value in oracle["account_totals"].items()}
+    return lines, partners, totals, round(oracle["total_residual"], 2)
+
+
+def _aging_expected(oracle, as_of):
+    buckets, partner_buckets, _account_buckets = _expected_aging(oracle, as_of)
+    names = _aging_names()
+    expected_buckets = {name: round(buckets.get(name, 0.0), 2) for name in names}
+    expected_partners = {
+        key: {name: round(values.get(name, 0.0), 2) for name in names}
+        for key, values in partner_buckets.items()
+    }
+    totals = defaultdict(float)
+    details = {}
+    for line_id, row in oracle["rows"].items():
+        totals[row["account_type"]] = round(
+            totals[row["account_type"]] + row["residual"], 2,
+        )
+        details[line_id] = (
+            row["partner_id"], row["account_type"], row["due_date"].isoformat(),
+            _bucket(row["due_date"], as_of), row["residual"],
+        )
+    return expected_buckets, expected_partners, dict(totals), details, \
+        round(oracle["total_residual"], 2)
+
+
+def assert_partner_ledger_export(env, company, oracle, partner_type, d_from, d_to):
+    payload = _export_report(
+        env, company, report_type="partner_ledger", date_from=d_from,
+        date_to=d_to, partner_type=partner_type,
+    )
+    wanted_types = {
+        "customer": (AR_TYPE,), "supplier": (AP_TYPE,),
+        "all": (AR_TYPE, AP_TYPE),
+    }[partner_type]
+    rows, totals, by_type, closing = _partner_ledger_expected(oracle, wanted_types)
+    return {
+        "case": "FIN05/FIN06_xlsx_vs_independent_AML", "company": company.id,
+        "period": f"{d_from}/{d_to}", "partner_type": partner_type,
+        **xlsx_oracle.verify_partner_ledger(
+            payload, rows, totals, by_type, (closing, closing),
+        ),
+    }
+
+
+def assert_open_items_export(env, company, oracle, partner_type, as_of):
+    payload = _export_report(
+        env, company, report_type="open_items", as_of_date=as_of,
+        partner_type=partner_type,
+    )
+    lines, partners, totals, total = _open_items_expected(oracle)
+    return {
+        "case": "FIN07_xlsx_vs_independent_AML", "company": company.id,
+        "as_of": as_of, "partner_type": partner_type,
+        **xlsx_oracle.verify_open_items(
+            payload, lines, partners, totals, (total, total),
+        ),
+    }
+
+
+def assert_aging_export(env, company, oracle, partner_type, as_of):
+    payload = _export_report(
+        env, company, report_type="aged_partner_balance", as_of_date=as_of,
+        partner_type=partner_type,
+    )
+    buckets, partners, totals, details, total = _aging_expected(oracle, as_of)
+    return {
+        "case": "FIN08/FIN09_xlsx_vs_independent_AML", "company": company.id,
+        "as_of": as_of, "partner_type": partner_type,
+        **xlsx_oracle.verify_aged_partner_balance(
+            payload, buckets, partners, totals, details, (total, total),
+            AGING_EDGES,
+        ),
+    }
+
+
 def check_fixture(env, fixture, evidence, check_hard_coded=False):
     company, accounts, journals, partner, scale, docs = fixture
     control = _control_accounts(env, company, accounts)
@@ -452,6 +595,9 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
                 company.id, date_from, date_to, partner_type=partner_type,
             )
             assert_partner_ledger(snapshot, oracle)
+            evidence["cases"].append(assert_partner_ledger_export(
+                env, company, oracle, partner_type, date_from, date_to,
+            ))
             evidence["cases"].append({
                 "company": company.name, "scale": scale, "report": snapshot["report_id"],
                 "period": label, "partner_type": partner_type, "result": "PASS",
@@ -507,6 +653,13 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
                 "FIN06 August control figures mismatch",
             )
 
+    all_oracle = independent_partner_ledger(
+        env, company, control, "2026-07-01", "2026-07-31",
+    )
+    evidence["cases"].append(assert_partner_ledger_export(
+        env, company, all_oracle, "all", "2026-07-01", "2026-07-31",
+    ))
+
     for as_of in ("2026-07-14", "2026-07-25", "2026-07-31", "2026-08-31"):
         for partner_type, account_key in (("customer", "ar"), ("supplier", "ap")):
             oracle = independent_open_items(
@@ -516,6 +669,9 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
                 company.id, as_of, partner_type=partner_type,
             )
             assert_open_items(snapshot, oracle)
+            evidence["cases"].append(assert_open_items_export(
+                env, company, oracle, partner_type, as_of,
+            ))
             evidence["cases"].append({
                 "company": company.name, "scale": scale, "report": "FIN07",
                 "as_of": as_of, "partner_type": partner_type, "result": "PASS",
@@ -664,6 +820,9 @@ def check_fixture(env, fixture, evidence, check_hard_coded=False):
                 company.id, as_of, partner_type=partner_type,
             )
             assert_aging(snapshot, oracle, as_of)
+            evidence["cases"].append(assert_aging_export(
+                env, company, oracle, partner_type, as_of,
+            ))
             evidence["cases"].append({
                 "company": company.name, "scale": scale, "report": snapshot["report_id"],
                 "as_of": as_of, "partner_type": partner_type, "result": "PASS",
