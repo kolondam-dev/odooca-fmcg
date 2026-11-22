@@ -1,3 +1,16 @@
+## 2026-11-22T16:07:51+07:00 — Agent Codex-Cloud1 — F4/PR #110: Integrasi perubahan kredit BE-19
+
+**Berubah:**
+- Sinkronisasi `main` ke `16b909e` (PR #184); riwayat handoff kedua cabang digabung. Penghitungan hari bisnis WITA dan kebijakan kredit commercial partner dari BE-19 ikut dalam integrasi.
+**Diverifikasi:**
+- [F] 40 tes Odoo untuk guard HPP, kredit, golden chain dan snapshot mobile lulus setelah sinkronisasi. Ruff dan pemeriksaan 14 manifest lulus.
+- [F] Audit sumber: 4.854 mutasi stok sampai cutoff cocok dengan penutupan per SKU/lot tanpa saldo negatif pada replay tanggal/ID; 1.240 SO jatuh pada hari kunjungan yang tercantum di PJP.
+- [F] Rekonstruksi sumber 31 Agustus menghasilkan 345 faktur terbuka Rp2.368.135.989,94. F4 `44977382857` pada `8ab215b` mencatat saldo GL 112000 dan residual tersebut sama pada kedua skenario.
+**Belum diuji:**
+- [BU] CI integrasi pada hasil merge ini. Replay register belum membuktikan ketersediaan harian saat proses loader, dan jadwal PJP belum membuktikan ownership order di Odoo.
+**Berikutnya:**
+- Pantau CI pada hasil merge. Untuk matriks e-Faktur, verifikasi pemetaan ke field Coretax di `res.partner` dan output varian NPWP16, NIK, serta TIN_0.
+
 ## 2026-11-22T15:31:02+07:00 — Agent Codex-Cloud1 — F4/PR #110: Guard HPP dan golden chain native
 
 **Berubah:**
@@ -11,6 +24,22 @@
 - [BU] Golden chain memakai fixture Odoo baru. Acceptance seed Agustus masih terbuka untuk ketersediaan harian, diskon bertingkat dan footer, promo/pricelist dengan eligibility, approval historis, PJP dan ownership, packlist/trip/driver/FEFO/ED, matriks pajak buyer, dan workflow biaya.
 **Berikutnya:**
 - Verifikasi ulang CI integrasi F4 pada SHA baru. Gunakan snapshot dan bukti sumber Agustus untuk menutup acceptance historis yang belum teruji.
+
+## 2026-11-22 — [BU] BE-19 perbaikan review PR #184: kebijakan efektif parent, hari bisnis WITA bersama, tes faktur nyata (claude-design)
+
+- P2 kebijakan: `commercial.credit_mode` kini memakai commercial partner (parent) seperti `sale.order._compute_credit_limit_exceeded`; parent yang tidak boleh dibaca → `null` (tidak diketahui, PWA tidak memblokir). Karena ikut digest, mengubah kebijakan parent mengubah versi outlet anak.
+- P2 tanggal: helper tunggal `id_base/models/business_day.py` (`business_date()` WITA). Validasi kredit server (`id_base/models/sale_order.py`) memakai `business_date()` menggantikan `fields.Date.today()` (UTC); `mobile_workday.business_date` mendelegasikan ke helper yang sama. Perilaku server berubah selama 00.00–08.00 WITA: faktur jatuh tempo "kemarin" menurut WITA kini overdue pada validasi server.
+- Perimeter: `outlet_credit` = commercial parent dalam perusahaan sesi; faktur outlet saudara (satu parent, tidak ditugaskan) ikut terhitung, kunci hasil hanya outlet ditugaskan. Bukan "faktur outlet individual".
+- Tes ORM nyata `id_mobile_api/tests/test_credit_snapshot.py` (faktur posted/draft, parent/anak/saudara, parent lain, perusahaan lain, jatuh tempo hari ini, parsial/lunas, user mobile tanpa hak baca faktur, versi, frozen-clock 23:59:59 WITA, 01:00 WITA, 08:00 WITA). Pembayaran parsial/lunas disimulasikan lewat SQL pada `account_move` karena perusahaan uji tanpa jurnal bank. Tes Odoo hanya terverifikasi di CI.
+- Utang baru: `credit_limit` pada snapshot masih dibaca dari outlet, sedangkan server memakai commercial partner (kelas selisih sama; tidak diubah di PR ini agar tidak melebar). Dicatat untuk BE-7/FE-12.
+
+## 2026-11-22 — [F] BE-19: credit_mode dan tunggakan faktur outlet pada snapshot (claude-design)
+
+- `id_mobile_api/models/mobile_workday.py`: `commercial.credit_mode` (`strict|limit|limit_due|approval`, default `limit`) ikut digest karena jarang berubah. Blok baru top-level `outlet_credit` = `{outlet_id: {overdue_count, overdue_total, oldest_due}}` hanya untuk outlet yang punya faktur jatuh tempo; `{}` berarti server membaca dan tidak ada tunggakan, blok tidak ada berarti tidak diketahui (server lama).
+- `outlet_credit` SENGAJA di luar digest versi (sama seperti `approval_tiers`, ikut `include_approval_tiers`): tiap pembayaran mengubahnya, bila ikut digest command offline ditolak "Stale catalog snapshot version". Command dan evidence tidak memuatnya.
+- Kriteria sama dengan `sale.order._compute_credit_limit_exceeded`: `out_invoice` terposting, `payment_state` bukan paid/in_payment/reversed, `invoice_date_due` < hari bisnis, filter perusahaan sesi. Dibaca sebagai agregat dengan `sudo()` (akun mobile tidak otomatis boleh membaca faktur), dibatasi pada outlet yang lolos `check_access`; tidak ada field faktur lain yang keluar.
+- Kontrak: `contracts.ts` (`credit_mode`, `outlet_credit`), `openapi.json`, tes katalog. Tes Odoo di `test_read_api.py` (mock `_read_group` untuk memeriksa domain dan di luar digest; faktur nyata tidak dibuat karena perusahaan uji tanpa bagan akun). Tes Odoo hanya terverifikasi di CI.
+- Utang: server menghitung "jatuh tempo" dengan `fields.Date.today()` (UTC), snapshot memakai hari bisnis WITA; selisih hanya 00:00–08:00 WITA. Server tetap otoritatif saat order dikirim. FE-12 (pemblokiran di PWA) belum dikerjakan.
 
 ## 2026-11-22 — [F] Pasca-merge toolchain Android: kebijakan Dependabot dan retry resolusi Gradle (codex)
 

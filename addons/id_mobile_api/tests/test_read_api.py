@@ -207,6 +207,43 @@ class TestMobileRead(MobileFixture, TransactionCase):
             before["version"],
             self.service()._snapshot_payload(include_approval_tiers=False)["version"])
 
+    def test_snapshot_commercial_carries_credit_mode(self):
+        """BE-19: kebijakan kredit outlet dikirim agar PWA dapat memblokir mode strict."""
+        self.assertEqual(self.service()._snapshot_payload()["outlets"][0]["commercial"]["credit_mode"], "limit")
+        self.outlet.credit_mode = "strict"
+        self.assertEqual(self.service()._snapshot_payload()["outlets"][0]["commercial"]["credit_mode"], "strict")
+
+    def test_outlet_credit_block_is_empty_without_overdue_invoices(self):
+        self.assertEqual(self.service()._snapshot_payload()["outlet_credit"], {})
+        self.assertNotIn("outlet_credit", self.service()._snapshot_payload(include_approval_tiers=False))
+
+    def test_outlet_credit_reports_overdue_outside_digest(self):
+        """BE-19: tunggakan berubah tiap pembayaran → di luar digest; kriteria sama dengan sale.order."""
+        seen = {}
+        account_move = type(self.env["account.move"])
+
+        def fake_read_group(model, domain, groupby=(), aggregates=(), *args, **kwargs):
+            seen["domain"], seen["groupby"], seen["aggregates"] = domain, list(groupby), list(aggregates)
+            return [(self.outlet, 2, 150000.0, business_date() - timedelta(days=9))]
+
+        before = self.service()._snapshot_payload(include_approval_tiers=False)
+        with patch.object(account_move, "_read_group", fake_read_group):
+            snapshot = self.service()._snapshot_payload()
+        self.assertEqual(snapshot["outlet_credit"], {str(self.outlet.id): {
+            "overdue_count": 2, "overdue_total": 150000.0,
+            "oldest_due": (business_date() - timedelta(days=9)).isoformat(),
+        }})
+        self.assertEqual(snapshot["version"], before["version"])
+        domain = seen["domain"]
+        for clause in (
+            ("company_id", "=", self.company.id), ("move_type", "=", "out_invoice"), ("state", "=", "posted"),
+            ("payment_state", "not in", ["paid", "in_payment", "reversed"]),
+            ("invoice_date_due", "<", business_date()),
+        ):
+            self.assertIn(clause, domain)
+        self.assertIn(("commercial_partner_id", "in", [self.outlet.commercial_partner_id.id]), domain)
+        self.assertNotIn("amount_residual", str(snapshot))
+
     def test_outlet_summary_respects_native_sales_acl_and_assigned_scope(self):
         self.outlet.pic_name = "Outlet contact"
         self.outlet.with_company(self.company).credit_limit = 1000000

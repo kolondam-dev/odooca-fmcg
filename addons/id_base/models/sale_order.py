@@ -1,6 +1,8 @@
 from odoo import api, fields, models
 from odoo.exceptions import AccessError, UserError
 
+from .business_day import business_date
+
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
@@ -121,7 +123,8 @@ class SaleOrder(models.Model):
         "amount_total",
     )
     def _compute_credit_limit_exceeded(self):
-        today = fields.Date.today()
+        # Hari bisnis WITA (bukan UTC) agar selaras dengan snapshot mobile (BE-19/FE-12).
+        today = business_date()
         for order in self:
             # Lewati order historis kanonikal
             if order.fmcg_seed_batch or self.env.context.get("fmcg_seed_load"):

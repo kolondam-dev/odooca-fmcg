@@ -6,10 +6,12 @@ from zoneinfo import ZoneInfo
 
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.addons.id_base.models.business_day import business_date as _business_date
 
 
 def business_date():
-    return datetime.now(ZoneInfo("Asia/Makassar")).date()
+    # Satu definisi hari bisnis WITA bersama id_base (dipakai juga validasi kredit server).
+    return _business_date()
 
 
 class MobileReadConflict(UserError):
@@ -134,10 +136,20 @@ class MobileWorkday(models.Model):
 
     def _outlet_commercial(self, partner, company):
         """Assigned outlet only; native model/field ACLs remain authoritative."""
-        visible = partner.fields_get(["property_payment_term_id", "credit_limit", "pic_name"])
+        visible = partner.fields_get(["property_payment_term_id", "credit_limit", "pic_name", "credit_mode"])
         result = {"currency": company.currency_id.name, "max_order": None,
                   "previous_visit_total": None, "top_sku": None,
-                  "payment_terms": None, "credit_limit": None, "contact": None}
+                  "payment_terms": None, "credit_limit": None, "contact": None,
+                  "credit_mode": None}
+        if "credit_mode" in visible:
+            # BE-19: kebijakan kredit EFEKTIF seperti server (`sale.order._compute_credit_limit_exceeded`
+            # memakai commercial partner/parent); jarang berubah → ikut digest, jadi perubahan pada parent
+            # ikut mengubah versi outlet anak. Parent yang tidak boleh dibaca → tidak diketahui (None).
+            parent = partner.commercial_partner_id or partner
+            try:
+                result["credit_mode"] = parent.credit_mode or "limit"
+            except AccessError:
+                result["credit_mode"] = None
         if "pic_name" in visible:
             result["contact"] = partner.pic_name or None
         if "property_payment_term_id" in visible:
@@ -162,6 +174,38 @@ class MobileWorkday(models.Model):
         except AccessError:
             # A mobile-read account is not automatically a sales-history account.
             result["max_order"] = result["top_sku"] = None
+        return result
+
+    @api.model
+    def _outlet_overdue(self, partners, company, day):
+        """BE-19: faktur jatuh tempo per outlet ditugaskan (fakta baca-saja untuk pemblokiran mode strict).
+
+        Kriteria sama dengan `sale.order._compute_credit_limit_exceeded` (faktur pelanggan terposting,
+        belum lunas, `invoice_date_due` < hari bisnis). Agregat saja (jumlah, sisa tagihan, jatuh tempo
+        tertua) dibaca dengan sudo karena akun mobile tidak otomatis boleh membaca faktur; cakupan dibatasi
+        pada outlet yang sudah lolos `check_access` dan perusahaan sesi. Perimeter kredit = COMMERCIAL
+        PARTNER (parent) dalam perusahaan sesi, sama dengan server: faktur outlet saudara yang tidak
+        ditugaskan tetapi satu parent ikut terhitung; kunci hasil tetap hanya outlet yang ditugaskan.
+        Hanya outlet yang punya tunggakan dimuat (blok kosong = tidak ada tunggakan)."""
+        commercial = {p.id: (p.commercial_partner_id or p).id for p in partners}
+        if not commercial:
+            return {}
+        rows = self.env["account.move"].sudo()._read_group(
+            [("company_id", "=", company.id), ("commercial_partner_id", "in", list(set(commercial.values()))),
+             ("move_type", "=", "out_invoice"), ("state", "=", "posted"),
+             ("payment_state", "not in", ["paid", "in_payment", "reversed"]),
+             ("invoice_date_due", "<", day)],
+            ["commercial_partner_id"],
+            ["__count", "amount_residual_signed:sum", "invoice_date_due:min"])
+        by_partner = {partner.id: (count, amount, oldest) for partner, count, amount, oldest in rows}
+        result = {}
+        for outlet_id, partner_id in commercial.items():
+            if partner_id in by_partner:
+                count, amount, oldest = by_partner[partner_id]
+                result[str(outlet_id)] = {
+                    "overdue_count": count, "overdue_total": round(amount, 2),
+                    "oldest_due": oldest.isoformat() if oldest else None,
+                }
         return result
 
     @api.model
@@ -264,5 +308,8 @@ class MobileWorkday(models.Model):
             )
             if tiers:
                 result["approval_tiers"] = {"discount": tiers}
+        # BE-19: tunggakan faktur outlet berubah setiap pembayaran → di luar digest, sama alasannya.
+        if include_approval_tiers:
+            result["outlet_credit"] = self._outlet_overdue(partners, company, day)
         assignment._assert_day(day)
         return result

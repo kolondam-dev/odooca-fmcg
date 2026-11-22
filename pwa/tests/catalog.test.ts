@@ -510,3 +510,49 @@ it("approval_tiers dengan scope tak dikenal atau usage tanpa bruto ditolak", () 
         }),
     ).toBe(false);
 });
+
+it("snapshot menerima credit_mode dan outlet_credit opsional (BE-19)", () => {
+    const base = catalog();
+    expect(base.outlet_credit).toBeUndefined();
+    const outlet = {
+        id: "5",
+        name: "Toko Uji",
+        channel: "GT",
+        address: "Jl. Uji",
+        distance: "",
+        time: "",
+        latitude: 1.4,
+        longitude: 124.8,
+        radius: 50,
+        commercial: {
+            max_order: null,
+            previous_visit_total: null,
+            top_sku: null,
+            payment_terms: null,
+            credit_limit: null,
+            contact: null,
+            credit_mode: "strict",
+        },
+    };
+    const parsed = SnapshotSchema.parse({
+        ...base,
+        outlets: [outlet],
+        outlet_credit: {
+            "5": {
+                overdue_count: 2,
+                overdue_total: 150000,
+                oldest_due: "2026-10-01",
+            },
+        },
+    });
+    expect(parsed.outlets[0].commercial?.credit_mode).toBe("strict");
+    expect(parsed.outlet_credit?.["5"].overdue_count).toBe(2);
+    expect(
+        SnapshotSchema.safeParse({
+            ...base,
+            outlet_credit: {
+                "5": { overdue_count: 0, overdue_total: 0, oldest_due: null },
+            },
+        }).success,
+    ).toBe(false);
+});
