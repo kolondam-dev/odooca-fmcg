@@ -10,6 +10,10 @@ import {
     ORDER_V2_UNSUPPORTED,
 } from "../domain/order-pricing";
 import { quoteV2 } from "../domain/order-discount";
+import {
+    approvalPreviewText,
+    previewApproval,
+} from "../domain/approval-preview";
 import type {
     DiscountProgram,
     FooterDiscount,
@@ -441,8 +445,34 @@ export function OrderScreen({
             ? null
             : creditLimit - (outlet?.commercial?.ar_outstanding ?? 0);
     const overCredit = creditLeft !== null && totals.total > creditLeft;
+    // Pratinjau tier (FE-11): indikasi saja, server menentukan saat order dikirim.
+    const cartPrincipal =
+        snapshot.products.find(
+            (p) => p.id === totals.quote.lines[0]?.product_id,
+        )?.principal ?? null;
+    const hasProgramDiscount =
+        totals.quote.lines.some((l) =>
+            l.steps.some((s) => s.label !== "tactical"),
+        ) || totals.quote.footerSteps.some((s) => s.label !== "tactical");
+    const approvalPreview = previewApproval({
+        tiers: snapshot.approval_tiers,
+        principal: cartPrincipal,
+        outletId,
+        discount: totals.quote.lineDiscount + totals.quote.footerDiscount,
+        gross: totals.quote.subtotal,
+        hasProgram: hasProgramDiscount,
+        hasManual: totals.quote.tactical,
+    });
+    // Tanpa konfigurasi tier (server lama) tetap perilaku lama: diskon taktikal = perlu approval.
+    const discountReason = approvalPreview
+        ? approvalPreview.status === "needs" || approvalPreview.promoMonitoring
+            ? approvalPreviewText(approvalPreview)
+            : null
+        : totals.quote.tactical
+          ? "tactical discount"
+          : null;
     const approvalReasons = [
-        ...(totals.quote.tactical ? ["tactical discount"] : []),
+        ...(discountReason ? [discountReason] : []),
         ...(overCredit ? ["limit kredit"] : []),
     ];
     /** Pemakaian budget program oleh seluruh keranjang kecuali bagian `skip`. */
@@ -775,6 +805,14 @@ export function OrderScreen({
                     {approvalReasons.length ? (
                         <Callout tone="warn">
                             Menunggu approval: {approvalReasons.join(", ")}
+                        </Callout>
+                    ) : approvalPreview?.status === "free" ? (
+                        <Callout tone="neu">
+                            {approvalPreviewText(approvalPreview)}
+                            {approvalPreview.headroom !== null
+                                ? ` · sisa ±${money(approvalPreview.headroom)}`
+                                : ""}
+                            . Pratinjau; server yang memutuskan.
                         </Callout>
                     ) : (
                         <Callout tone="neu">

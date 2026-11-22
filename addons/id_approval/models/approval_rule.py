@@ -26,4 +26,14 @@ class FmcgApprovalRule(models.Model):
     min_discount = fields.Float(string="Batas Diskon Minimal (%)", default=0.0)
     max_discount = fields.Float(string="Batas Diskon Maksimal (%)", default=0.0)
     sla_hours = fields.Integer(string="Target SLA (Jam)", default=24)
-
+    principal_id = fields.Many2one(
+        "id.principal",
+        string="Khusus Principal",
+        help="Kosong = aturan umum. Bila ada aturan khusus untuk principal pesanan, hanya aturan "
+             "khusus itu yang dipakai (menimpa aturan umum) untuk kategori yang sama.",
+    )
+    is_free_zone = fields.Boolean(
+        string="Zona Bebas (Tier 0)",
+        help="Tanpa persetujuan bila diskon kumulatif <= Batas Diskon Maksimal (%) aturan ini. "
+             "Aturan zona bebas tidak menjadi langkah approver.",
+    )

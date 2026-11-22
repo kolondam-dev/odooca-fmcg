@@ -380,3 +380,55 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-20T08:48:24+07:00] [INFO] BE-14 fix review #174
 - diskon baris tanpa header wajib approval; tes ditambah
 - Task managed by claude-design agent at 2026-11-20T08:48:24+07:00
+
+[2026-11-20T12:15:38+07:00] [INFO] BE-15 Tier 0 + kumulatif per principal
+- free zone, principal_id, cumulative_scope, diskon program ikut, tes Odoo via CI
+- Task managed by claude-design agent at 2026-11-20T12:15:38+07:00
+
+[2026-11-20T17:54:45+07:00] [INFO] BE-15 fix review #176
+- jendela WITA+company, kumulatif per principal, tes 13-18
+- Task managed by claude-design agent at 2026-11-20T17:54:45+07:00
+
+[2026-11-21T06:32:10+07:00] [INFO] BE-15 fix review #176 r3 + promo resmi
+- principal_decided; kategori promo_program_usage (SPV); tes 19-21
+- Task managed by claude-design agent at 2026-11-21T06:32:10+07:00
+
+[2026-11-21T07:01:18+07:00] [INFO] BE-15 fix review #176 r4
+- guard konfirmasi SO untuk promo dan diskon taktikal; tes 22-24
+- Task managed by claude-design agent at 2026-11-21T07:01:18+07:00
+
+[2026-11-21T10:01:30+07:00] [INFO] BE-15 fix review #176 r5
+- guard memakai pengajuan berlaku terbaru; tombol ajukan promo; tes 25-29
+- Task managed by claude-design agent at 2026-11-21T10:01:30+07:00
+
+[2026-11-21T10:26:59+07:00] [INFO] BE-15 fix review #176 r6
+- pesanan campuran satu rantai taktikal; tes 21/21b/21c
+- Task managed by claude-design agent at 2026-11-21T10:26:59+07:00
+
+[2026-11-21T10:50:57+07:00] [INFO] Fix tes test_21 (CI install-test)
+- rantai 3 tier untuk kumulatif 10%; kode produksi tidak berubah
+- Task managed by claude-design agent at 2026-11-21T10:50:57+07:00
+
+[2026-11-21T13:01:38+07:00] [INFO] BE-15 fix review #176 r7
+- snapshot diskon pada pengajuan; guard memblokir perubahan setelah disetujui; tes 30-33
+- Task managed by claude-design agent at 2026-11-21T13:01:38+07:00
+
+[2026-11-21T14:43:38+07:00] [INFO] BE-18 approval_tiers pada snapshot
+- payload tier+usage, kontrak PWA, tes
+- Task managed by claude-design agent at 2026-11-21T14:43:38+07:00
+
+[2026-11-21T19:22:27+07:00] [INFO] BE-18 fix CI #179
+- tiers di luar digest versi; contract-samples jadi output cache Gradle
+- Task managed by claude-design agent at 2026-11-21T19:22:27+07:00
+
+[2026-11-21T21:19:53+07:00] [INFO] BE-18 fix CI #179 putaran 2
+- hapus blok tier lama sebelum digest
+- Task managed by claude-design agent at 2026-11-21T21:19:53+07:00
+
+[2026-11-22T08:27:24+07:00] [INFO] FE-11 pratinjau tier approval
+- approval-preview.ts, ringkasan POS, keterangan pengajuan, tes vitest+e2e, K35
+- Task managed by claude-design agent at 2026-11-22T08:27:24+07:00
+
+[2026-11-22T09:27:28+07:00] [INFO] FE-11 fix review PR #181
+- hasManual: rantai taktikal hanya bila ada diskon manual; 3 tes baru
+- Task managed by claude-design agent at 2026-11-22T09:27:28+07:00

@@ -554,3 +554,20 @@
 [2026-11-21T13:00:02+07:00] [INFO] Integrasi perbaikan cache domain PR #177
 - Perbaikan Dev f23ea50; kedua entri konflik dipertahankan. CI PR memverifikasi domain-tests.
 - Task managed by codex agent at 2026-11-21T13:00:02+07:00
+
+[2026-11-22T08:33:20+07:00] [INFO] Dependabot policy and Gradle resolution retries after the Android toolchain merge
+- [F] PR #173 is merged as 127287a5c1cb273a612fc5ed643f88f7e8623658 (head 4158713, 28/28 check runs successful); PR #162 is merged as e6b1fb35abbcdad14039e67ee5f027e8005d6a25 (head 3e2a419, 28/28).
+- [F] The supervisor closed #164, #165, #166, #167 and #168 without merging because #173 superseded them; main was 92bfcfa (PR #179) with 49/49 successful check runs when this entry was written.
+- [F] .github/dependabot.yml now ignores every update of the locked Android toolchain: AGP (com.android.application, com.android.library and the com.android.tools.build:gradle classpath coordinate), Kotlin (org.jetbrains.kotlin:* libraries and org.jetbrains.kotlin.* plugins), KSP (com.google.devtools.ksp) and gradle-wrapper.
+- [F] Majors alone were not enough: PR #164 bumped Kotlin 2.0.21 -> 2.4.21, a semver-minor update, yet it still broke lock-step with KSP and AGP. The Android PR limit stays at 3 and both groups remain.
+- [F] androidx.* (including the CalVer Compose BOM), org.jetbrains.kotlinx*, OkHttp, Robolectric and desugar are not ignored and keep flowing.
+- [F] Version-catalog plugin dependencies are named by plugin id, not by the catalog alias agp/kotlin/ksp and not groupId:artifactId (dependabot-core/gradle/lib/dependabot/gradle/file_parser.rb maps the plugins group to the plugin id). org.jetbrains.kotlin:* does not match org.jetbrains.kotlinx:* and a negative control in the test proves it.
+- [F] dependabot/dependabot-core#13937 is still open on 2026-11-22: ignore rules do not reliably match plugins parsed from a version catalog, so the plugin entries are best effort and a recurring toolchain PR has to be closed with `@dependabot ignore this dependency`. [BU] Plugin matching cannot be proven until Dependabot runs the next schedule.
+- [F] android/gradle.properties widens repository retries to 5 attempts with a 1000 ms initial backoff through systemProp.org.gradle.internal.repository.max.retries and systemProp.org.gradle.internal.repository.initial.backoff.
+- [BU] Both keys are internal Gradle system properties rather than public API; they only widen retries and never change versions or skip verification, and their effect on the KSP flake is unproven until the next transient failure.
+- [F] tests/test_android_ci.py now asserts the retry keys are positive integers and that the Dependabot policy locks the whole toolchain, ignores all wrapper bumps, leaves androidx and kotlinx unignored, and keeps both groups under the lowered limit.
+- [F] Local contracts: 31 tests across test_android_ci.py, test_ci_impact.py and test_ci_workflow_guards.py pass; ruff and check_manifests.py pass.
+- [BU] Gradle compilation and tests remain proven only on GitHub Actions; this machine has no JDK or Android SDK.
+- [F] No merge, deployment, or server-data change was performed by this work.
+- [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
+- Task managed by codex agent at 2026-11-22T08:33:20+07:00

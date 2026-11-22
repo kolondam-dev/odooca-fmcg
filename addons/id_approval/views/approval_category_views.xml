@@ -38,6 +38,7 @@
                         <group string="Karakteristik Tiering">
                             <field name="has_amount_tiers"/>
                             <field name="has_discount_tiers"/>
+                            <field name="cumulative_scope" invisible="not has_discount_tiers"/>
                         </group>
                     </group>
                     <notebook>
