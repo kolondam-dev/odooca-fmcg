@@ -5754,3 +5754,12 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 ### Correction to 2026-11-21 PR #135 translation diagnosis
 
 The previous attempt's assumption that one PO entry with multiple view occurrences would be imported for all views was disproved by the runtime importer-chain test: the parser yielded only the Picklist mapping. Avoid relying on multi-view occurrence expansion for this term. The Packlist and Delivery Order source label is now made distinct ("Lot / Serial Number") while both retain the Indonesian translation "Lot / Nomor Seri"; the Picklist retains "Lot / Serial". The PO and importer-chain test matrix now map each source term to the relevant report views explicitly. This keeps the rendered Indonesian labels consistent and makes the import mapping unambiguous. Validate via fresh install-test and live HTTP PDF render.
+
+
+## 2026-11-22 — PR #135: isolate translation terms per report view
+
+- Exact failing CI: run `44913505693`, job `install-test`, tested HEAD `724b2f4ddda7b5353f8ab4b4843e7dff0d76f171`.
+- Three failures were confirmed: importer-chain matrix and rendered Indonesian lot labels in Packlist and Delivery Order. Runtime importer diagnostics marked the shared `Lot / Serial Number` PO entry obsolete and returned no imported mapping for it.
+- Corrective approach: do not share one PO msgid across report views. Picklist keeps `Lot / Serial`; Packlist uses `Lot / Serial Number`; Delivery Order now uses the distinct `Lot / Batch / Serial`. Each PO entry has exactly one report-view occurrence and maps to `Lot / Nomor Seri`.
+- Updated the importer-chain matrix to assert all three source terms against their individual view XML IDs. No assertion was removed or weakened; no business/runtime stock logic changed.
+- New exact-HEAD CI, including install-test and live HTTP PDF render smoke, is required. No merge or deployment.
