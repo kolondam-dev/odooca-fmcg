@@ -371,6 +371,21 @@ class TestAccountMoveCogs(TransactionCase):
             out_vals = inv._stock_account_prepare_realtime_out_lines_vals()
             self.assertEqual(out_vals, [])
 
+    def test_balanced_journal_with_matching_leg_and_unlinked_extra_cost_is_rejected(self):
+        invoice = self._create_basic_invoice(self.company_seed, is_seed=True)
+        line = invoice.invoice_line_ids[0]
+        sale_line, move, journal = self._build_valid_stj_and_sm()
+        move.value = 100.0
+        debit, credit = journal.line_ids
+        debit.debit = 100.0
+        credit.credit = 1000.0
+        journal.line_ids.append(SimpleNamespace(
+            account_id=debit.account_id, debit=900.0, credit=0.0, product_id=self.product,
+        ))
+        with patch.object(type(line), "sale_line_ids", MockRecordSet([sale_line]), create=True):
+            with self.assertRaisesRegex(UserError, "tidak sesuai dengan nilai valuasi pergerakan barang"):
+                invoice._is_seed_commercial_invoice_with_posted_delivery_cogs()
+
     def test_wrong_journal_date_rejected(self):
         """Kasus P1: Jurnal STJ dengan tanggal beda (e.g. 1999-01-01) wajib ditolak fail-closed."""
         inv = self._create_basic_invoice(self.company_seed, is_seed=True)

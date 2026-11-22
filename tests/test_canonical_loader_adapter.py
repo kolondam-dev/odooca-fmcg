@@ -3392,6 +3392,15 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         }, env)
 
         self.assertTrue(seed_inv._is_seed_commercial_invoice_with_posted_delivery_cogs())
+        excess_debit = MockRecord({
+            "account_id": aml_debit.account_id, "debit": 900.0, "credit": 0.0,
+        }, "account.move.line", 903, env)
+        cogs_am.line_ids = MockRecordList([aml_debit, excess_debit, aml_credit])
+        aml_credit.credit += 900.0
+        with self.assertRaisesRegex(UserError, "tidak sesuai dengan nilai valuasi pergerakan barang"):
+            seed_inv._is_seed_commercial_invoice_with_posted_delivery_cogs()
+        cogs_am.line_ids = MockRecordList([aml_debit, aml_credit])
+        aml_credit.credit -= 900.0
         self.assertEqual(seed_inv._stock_account_prepare_realtime_out_lines_vals(), [])
 
         # 2. Faktur Biasa (is_fmcg_seed_invoice=False) -> Pengecualian dilarang (False, native)
@@ -3679,7 +3688,7 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
         # 11. Split-lot picking with partial invoicing (e.g. SO-202608-0083):
         # STJ has multiple debit lines for the same product (e.g. 3,432,000 for line 1 and 792,000 for line 2).
         # Invoice only bills line 2 (exp_val = 792,000). Total STJ debit = 4,224,000.
-        # Guard must PASS because prod_aml_debits has exact matching line (792,000).
+        # Both valuation amounts must be backed by completed outbound moves in the same journal.
         aml_debit_split_1 = MockRecord({
             "account_id": MockRecord({"code": "510000"}, "account.account", 1, env),
             "debit": 3432000.0,
@@ -3703,6 +3712,18 @@ class TestCanonicalLoaderAdapter(unittest.TestCase):
             "journal_id": stj_journal,
             "line_ids": MockRecordList([aml_debit_split_1, aml_debit_split_2, aml_credit_split_tot]),
         }, "account.move", 820, env)
+        env["stock.move"].create({
+            "name": "WH/OUT/0083-1",
+            "state": "done",
+            "product_id": prod,
+            "company_id": env.company,
+            "location_id": wh_loc,
+            "location_dest_id": cust_loc,
+            "quantity": 312.0,
+            "date": "2026-08-04",
+            "value": 3432000.0,
+            "account_move_id": cogs_split_am,
+        })
         sm_split_accepted = MockRecord({
             "name": "WH/OUT/0083-2",
             "state": "done",

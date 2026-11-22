@@ -1,5 +1,5 @@
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 
 class SaleOrder(models.Model):
@@ -168,8 +168,8 @@ class SaleOrder(models.Model):
             order.write({"credit_approval_state": "pending"})
             order.message_post(
                 body=(
-                    f"Pengajuan Persetujuan Kredit: Total eksposur Rp {order.total_credit_exposure:,.2f} "
-                    f"melebihi limit kredit outlet Rp {order.partner_credit_limit:,.2f}."
+                    "Pengajuan Persetujuan Kredit: Outlet melebihi batas kredit "
+                    "atau memiliki faktur jatuh tempo."
                 ),
                 subject="Permohonan Persetujuan Limit Kredit FMCG",
             )
@@ -177,7 +177,11 @@ class SaleOrder(models.Model):
 
     def action_approve_credit(self):
         """Menyetujui penjualan over-limit oleh Branch Manager / Finance."""
+        if not self.env.su and not self.env.user.has_group("sales_team.group_sale_manager"):
+            raise AccessError("Keputusan persetujuan kredit memerlukan akses Sales Manager.")
         for order in self:
+            if order.credit_approval_state != "pending" or order.state not in ("draft", "sent"):
+                raise UserError("Keputusan kredit hanya berlaku untuk penawaran dengan pengajuan pending.")
             order.write({
                 "credit_approval_state": "approved",
                 "credit_approved_by": self.env.user.id,
@@ -191,7 +195,11 @@ class SaleOrder(models.Model):
 
     def action_reject_credit(self):
         """Menolak penjualan over-limit oleh Branch Manager / Finance."""
+        if not self.env.su and not self.env.user.has_group("sales_team.group_sale_manager"):
+            raise AccessError("Keputusan persetujuan kredit memerlukan akses Sales Manager.")
         for order in self:
+            if order.credit_approval_state != "pending" or order.state not in ("draft", "sent"):
+                raise UserError("Keputusan kredit hanya berlaku untuk penawaran dengan pengajuan pending.")
             order.write({
                 "credit_approval_state": "rejected",
                 "credit_approved_by": self.env.user.id,
@@ -254,10 +262,6 @@ class SaleOrder(models.Model):
                 raise UserError(
                     f"Pesanan {order.name} tidak dapat dikonfirmasi!\n"
                     f"Pelanggan '{order.partner_id.name}' melebihi batas kredit / memiliki faktur jatuh tempo.\n"
-                    f"- Limit Kredit: Rp {order.partner_credit_limit:,.2f}\n"
-                    f"- Saldo Piutang: Rp {order.partner_credit_balance:,.2f}\n"
-                    f"- Total Pesanan: Rp {order.amount_total:,.2f}\n"
-                    f"- Total Eksposur: Rp {order.total_credit_exposure:,.2f}\n\n"
                     "Silakan klik tombol 'Ajukan Persetujuan Kredit' untuk meminta persetujuan Branch Manager."
                 )
 

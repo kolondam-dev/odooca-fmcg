@@ -1,3 +1,17 @@
+## 2026-11-22T15:31:02+07:00 — Agent Codex-Cloud1 — F4/PR #110: Guard HPP dan golden chain native
+
+**Berubah:**
+- Sinkronisasi `main` sampai `a66b4d6`. Kedua riwayat handoff dan log digabung.
+- Verifikasi HPP menjumlahkan semua baris debit HPP dan kredit stok per produk terhadap seluruh stock move eligible yang terhubung ke jurnal. Nilai tambahan tanpa stock move pendukung ditolak.
+- Keputusan kredit di jalur tombol mensyaratkan Sales Manager dan pengajuan pending. Pesan untuk Sales memakai alasan blokir yang dapat diakses oleh perannya. Log loader menyatakan bypass saat data approval historis tidak tersedia.
+**Diverifikasi:**
+- [F] Odoo disposable: 33 tes HPP, kredit, dan golden chain lulus.
+- [F] Dampak test **TAMBAH**: counterexample stock move 100 dengan debit 100 + 900 dan kredit 1.000, plus golden chain Odoo untuk order tertahan, keputusan approval, pengiriman ber-lot, posting invoice dan rekonsiliasi pembayaran.
+**Belum diuji:**
+- [BU] Golden chain memakai fixture Odoo baru. Acceptance seed Agustus masih terbuka untuk ketersediaan harian, diskon bertingkat dan footer, promo/pricelist dengan eligibility, approval historis, PJP dan ownership, packlist/trip/driver/FEFO/ED, matriks pajak buyer, dan workflow biaya.
+**Berikutnya:**
+- Verifikasi ulang CI integrasi F4 pada SHA baru. Gunakan snapshot dan bukti sumber Agustus untuk menutup acceptance historis yang belum teruji.
+
 ## 2026-11-22 — [F] Pasca-merge toolchain Android: kebijakan Dependabot dan retry resolusi Gradle (codex)
 
 - **Berubah:** `.github/dependabot.yml`, `android/gradle.properties`, `tests/test_android_ci.py`, `docs/HANDOFF.md`, `agent-log/codex.log`. Tanpa perubahan kode aplikasi dan tanpa perubahan versi toolchain.

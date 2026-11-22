@@ -2839,11 +2839,11 @@ class GenericPeriodPackLoader:
                         self._set_sol_taxes(sol, canonical_tax_04.id)
 
             # P2-D: Document historical approval bypass.
-            # Seed/historical orders were pre-approved operationally in the physical world.
-            # Log traceability record for orders with tactical discount or below HPP.
+            # The historical register does not attest approval or identify its actors.
+            # Log the import exception for orders with tactical discount or below HPP.
             if getattr(so_rec, "has_below_hpp", False) or getattr(so_rec, "has_tactical_discount", False):
                 _logger.info(
-                    f"[HISTORICAL_IMPORT_APPROVAL_BYPASS] SO {so_num}: Historical order pre-approved "
+                    f"[HISTORICAL_IMPORT_APPROVAL_BYPASS] SO {so_num}: Historical import skipped live approval guards "
                     f"(has_below_hpp={getattr(so_rec, 'has_below_hpp', False)}, "
                     f"has_tactical_discount={getattr(so_rec, 'has_tactical_discount', False)})"
                 )
