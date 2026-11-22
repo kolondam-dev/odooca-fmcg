@@ -333,6 +333,8 @@ type Req = {
     sub: string;
     status: Status;
     reason?: string;
+    /** Keterangan server untuk pengajuan yang menunggu (mis. nomor pengajuan). */
+    detail?: string;
 };
 
 /** Pengajuan diskon/approval yang berasal dari order di antrean. */
@@ -370,6 +372,8 @@ export function requestsFrom(queue: QueueItem[]): Req[] {
             q.state === "rejected"
                 ? (q.receipt?.message ?? q.error)
                 : undefined;
+        const detail =
+            status.label === "Menunggu" ? q.receipt?.message : undefined;
         const base = `${q.label} · ${money(Number(p.observed_total))}`;
         for (const [i, f] of (p.footer_discounts ?? []).entries())
             if (f.kind === "tactical")
@@ -379,6 +383,7 @@ export function requestsFrom(queue: QueueItem[]): Req[] {
                     sub: `${q.label} · ${money(f.amount)}`,
                     status,
                     reason,
+                    detail,
                 });
         for (const l of p.lines ?? [])
             for (const [i, d] of (l.discounts ?? []).entries())
@@ -389,6 +394,7 @@ export function requestsFrom(queue: QueueItem[]): Req[] {
                         sub: `${l.product_id} · ${q.label}`,
                         status,
                         reason,
+                        detail,
                     });
         if (needs && !tactical)
             out.push({
@@ -397,6 +403,7 @@ export function requestsFrom(queue: QueueItem[]): Req[] {
                 sub: base,
                 status,
                 reason,
+                detail,
             });
     }
     return out;
@@ -451,6 +458,7 @@ export function RequestsScreen({
                     {r.reason ? (
                         <p class="pos-neg">Alasan: {r.reason}</p>
                     ) : null}
+                    {r.detail ? <p class="ui-row__sub">{r.detail}</p> : null}
                 </Card>
             ))}
             {children}

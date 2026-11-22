@@ -18,6 +18,15 @@
 - [BU] Penerimaan live FIN01/02/03/04/51/57 tetap HOLD: workbook/AML privat, mapping/perimeter, periode beku, penolakan role Sales, dan sign-off Controller+QA belum ada; `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA`.
 - Bukti CI: https://github.com/kolondam-dev/odooca-fmcg/pull/169#issuecomment-7027841475
 
+## 2026-11-22 — [F] FE-11: pratinjau tier approval di POS dan keterangan pengajuan (claude-design)
+
+- `domain/approval-preview.ts` (`previewApproval`) menghitung status (tanpa diskon / zona bebas / perlu approval), diskon kumulatif %, rantai approver berjenjang, tier berikutnya dan sisa zona bebas (Rp) dari `snapshot.approval_tiers`, per principal dan cakupan (`order`, `outlet_month`, `salesman_day`). Server tetap otoritatif.
+- POS: Ringkasan order menampilkan "Menunggu approval: Diskon 5% → perlu Supervisor → Branch Manager", atau "Diskon 1% dalam zona bebas · sisa ±Rp … Pratinjau; server yang memutuskan". Diskon program resmi tanpa rantai taktikal tampil sebagai "Pemantauan promo: Supervisor". Tanpa `approval_tiers` (server lama) perilaku lama dipertahankan.
+- Hasil kirim: langkah "Approval" memuat pesan server (nomor pengajuan) + perkiraan rantai. Riwayat pengajuan: baris "Menunggu" memuat pesan server.
+- Data demo: `approval_tiers` (zona bebas 2%, Supervisor/Branch Manager/Direksi) agar mode demo dan e2e menampilkan pratinjau.
+- Tes: vitest `tests/approval-preview.test.ts` (13), e2e `tests/browser/approval-preview.spec.ts` (phone + tablet). Utang: K35.
+- Jawaban pemilik dicatat di backlog: NOO dapat disubmit tanpa order, approval Supervisor lalu Branch Manager; kredit `strict` diblokir di PWA (BE-19/FE-12 baru).
+
 ## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (putaran 2): blok tier ganda (claude-design)
 
 - install-test masih gagal karena `git checkout` pada putaran sebelumnya mengembalikan versi komit yang sudah memuat blok tier SEBELUM digest; blok baru ditambahkan di bawahnya sehingga ada dua blok dan yang lama tetap ikut digest (`include_approval_tiers=False` pun tidak berpengaruh). Blok lama dihapus; sisa satu blok SETELAH digest. Pelajaran: setelah `git checkout <file>` selalu diff ulang terhadap HEAD sebelum menambah perubahan.

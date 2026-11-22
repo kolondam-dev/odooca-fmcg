@@ -250,9 +250,9 @@ Jadi layar Outlet_kosong tidak akan pernah muncul di LIVE kecuali perilaku ini d
 
 ### 3.3 Keputusan yang masih terbuka
 
-2. NOO: boleh kunjungan survei dan/atau order sebelum disetujui Branch Manager; apakah otomatis masuk PJP.
+2. NOO: boleh kunjungan survei dan/atau order sebelum disetujui Branch Manager; apakah otomatis masuk PJP. **Dijawab pemilik (2026-11-22): NOO dapat disubmit tanpa order terlebih dahulu; approval oleh Supervisor lalu Branch Manager (rantai dua tier, bukan hanya Branch Manager).** Kunjungan/order sebelum disetujui dan masuk PJP otomatis belum dijawab.
 3. Saran order: target (median 3 order vs par manual), kelipatan minimum, sumber SKU wajib listing.
-4. Kredit: apakah PWA memblokir order untuk mode `strict` (faktur jatuh tempo) atau hanya memperingatkan.
+4. Kredit: apakah PWA memblokir order untuk mode `strict` (faktur jatuh tempo) atau hanya memperingatkan. **Dijawab pemilik (2026-11-22): PWA memblokir pada mode `strict`.** Perlu field `credit_mode` dan jumlah faktur jatuh tempo pada snapshot (backlog baru BE-19/FE-12; lihat bagian bawah).
 5. Angka batas Tier 0 dan tier per principal (diisi lewat konfigurasi backend, bukan keputusan kode).
 6. Jam rencana PJP ("08.30") tanpa detik — asumsi saat ini.
 
@@ -320,4 +320,13 @@ Catatan desain: karena batas berbeda per principal dan order dapat memuat bebera
 | BE-16 | Model `fmcg.pjp.visit` + command `sales.extra_call.request` + sambungan kategori                                                               | P1                        |
 | BE-17 | Kategori `new_outlet` + command `outlet.register.request` + model status outlet                                                                | P1                        |
 | BE-18 | `approval_tiers` pada snapshot (zona bebas, rentang tier, pemakaian kumulatif) **Selesai (PR BE-18)**                                          | P1                        |
-| FE-11 | Pratinjau tier di POS ("perlu Branch Manager") dan status approval pada Riwayat/Hasil kirim                                                    | P1 (setelah BE-14, BE-18) |
+| FE-11 | Pratinjau tier di POS ("perlu Branch Manager") dan status approval pada Riwayat/Hasil kirim **Selesai (PR FE-11); status per langkah menunggu BE-12** | P1 (setelah BE-14, BE-18) |
+
+## 6. Tindak lanjut jawaban pemilik 2026-11-22
+
+| ID    | Pekerjaan                                                                                                                                           | Prioritas |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| BE-19 | `commercial.credit_mode` dan jumlah faktur jatuh tempo per outlet pada snapshot (digest ikut)                                                       | P1        |
+| FE-12 | Mode kredit `strict`: PWA memblokir tombol Kirim order untuk outlet dengan faktur jatuh tempo, dengan penjelasan dan jalur penagihan                | P1        |
+| BE-17 | (diperbarui) kategori `new_outlet` berantai Supervisor → Branch Manager; NOO dapat disubmit tanpa order                                             | P1        |
+
