@@ -1,3 +1,15 @@
+## 2026-11-22 — [F] Pasca-merge toolchain Android: kebijakan Dependabot dan retry resolusi Gradle (codex)
+
+- **Berubah:** `.github/dependabot.yml`, `android/gradle.properties`, `tests/test_android_ci.py`, `docs/HANDOFF.md`, `agent-log/codex.log`. Tanpa perubahan kode aplikasi dan tanpa perubahan versi toolchain.
+- **Status PR:** [F] PR #173 MERGED sebagai `127287a5c1cb273a612fc5ed643f88f7e8623658` (head `4158713`, 28/28 check-run success); PR #162 MERGED sebagai `e6b1fb35abbcdad14039e67ee5f027e8005d6a25` (head `3e2a419`, 28/28). [F] #164–#168 ditutup oleh supervisor tanpa merge karena digantikan #173; `main` saat entri ditulis `92bfcfa` (PR #179) dengan 49/49 check-run success.
+- **Kebijakan Dependabot:** [F] Semua update untuk toolchain terkunci diabaikan, bukan hanya major: AGP (`com.android.application`, `com.android.library`, plus koordinat classpath `com.android.tools.build:gradle`), Kotlin (library `org.jetbrains.kotlin:*` dan plugin `org.jetbrains.kotlin.*`), KSP (`com.google.devtools.ksp`), dan wrapper (`gradle-wrapper`). Alasan: #164 menaikkan Kotlin 2.0.21 -> 2.4.21 yang semver-minor tetapi tetap memutus pasangan dengan KSP, jadi `ignore` major saja tidak mencegah kegagalan yang sudah terjadi.
+- **Dependensi lain tetap mengalir:** [F] `androidx.*` (termasuk BOM Compose yang CalVer, kenaikan tahun = major), `org.jetbrains.kotlinx*`, OkHttp, Robolectric, dan desugar tidak diabaikan; batas PR Android turun 5 -> 3 dan dua grup tetap.
+- **Penamaan Dependabot:** [F] Dependency plugin dari version catalog dinamai dengan plugin id, bukan alias `agp`/`kotlin`/`ksp` (diverifikasi di `dependabot-core/gradle/lib/dependabot/gradle/file_parser.rb`: grup `plugins` menghasilkan `name` = id plugin). Pola `org.jetbrains.kotlin:*` tidak menelan `org.jetbrains.kotlinx:*`; ada kontrol negatif di tes.
+- **Batasan upstream:** [F] `dependabot/dependabot-core#13937` (masih terbuka 2026-11-22) menyatakan aturan `ignore` belum andal mencocokkan plugin dari version catalog; karena itu entri plugin bersifat upaya terbaik dan PR toolchain yang tetap muncul ditutup dengan perintah `@dependabot ignore this dependency`. [BU] Efektivitas pencocokan plugin belum bisa dibuktikan sampai Dependabot menjalankan jadwal berikutnya.
+- **Mitigasi flake:** [F] `systemProp.org.gradle.internal.repository.max.retries=5` dan `systemProp.org.gradle.internal.repository.initial.backoff=1000` (default Gradle 3 percobaan/125 ms). [BU] Keduanya properti internal Gradle, bukan API publik; hanya memperlebar retry resolusi repositori, tidak mengubah versi atau melewati verifikasi. Efektivitas terhadap flake KSP belum terbukti sampai ada kegagalan transien berikutnya.
+- **Kontrak baru:** [F] Dua tes di `tests/test_android_ci.py`: properti retry wajib ada dan bilangan bulat positif; kebijakan Dependabot wajib mengunci seluruh update toolchain, mengabaikan semua bump wrapper, tidak mengabaikan `androidx.*`, tidak menelan `org.jetbrains.kotlinx*`, serta menjaga dua grup dan batas <= 3.
+- **Verifikasi lokal:** [F] `pytest` tiga berkas kontrak = 31 lulus; `ruff check .` dan `python scripts/check_manifests.py` PASS. [BU] Kompilasi/tes Gradle hanya terbukti di GitHub Actions karena mesin ini tanpa JDK/Android SDK.
+- **Batas:** [F] Tidak ada merge, deploy, atau perubahan data server. [BU] Emulator API 24/35, Redmi 4X, POCO M3, backend live, dan kenaikan `targetSdk` tetap tahap N2 terpisah.
 ## 2026-11-22T09:43:08+07:00 — Agent Codex-Cloud1 — F4/PR #110: Identitas dokumen stok pada pembanding A/B
 **Berubah:**
 - Pembanding dua database menggunakan identitas register pada picking dan jurnal valuasi terkait. Replay dan probe rollback tetap memakai digest raw. Laporan menyertakan sampel selisih apabila digest A/B masih berbeda.
@@ -42,6 +54,20 @@
 - Oracle `FINANCE_I2A_LEDGERS_CORE` pada dua company disposable (scale 1 dan 7) mencatat `FIN57_xlsx_vs_expected_table`: 4 dokumen, 3 non-register move/row, **4 akun tie-out unik**, dibandingkan ke posted AML langsung; FIN01/02/03/04/51 PASS; rollback PASS.
 - [BU] Penerimaan live FIN01/02/03/04/51/57 tetap HOLD: workbook/AML privat, mapping/perimeter, periode beku, penolakan role Sales, dan sign-off Controller+QA belum ada; `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA`.
 - Bukti CI: https://github.com/kolondam-dev/odooca-fmcg/pull/169#issuecomment-7027841475
+
+## 2026-11-22 — [BU] FE-11 perbaikan review PR #181: rantai taktikal hanya dengan diskon manual (claude-design)
+
+- P2: pratinjau memicu rantai taktikal tanpa diskon manual (promo resmi murni 8% tampil Supervisor → Branch Manager → Direksi; order baru tanpa diskon tampil perlu approval karena histori outlet). `previewApproval` kini menerima `hasManual` (dari `quote.tactical` hasil keranjang): tanpa diskon manual order ini, status hanya `none` atau pemantauan promo Supervisor. Bila ada diskon manual, persentase kumulatif tetap menghitung promo dan histori.
+- Tes: tiga kasus baru di `tests/approval-preview.test.ts` (promo murni 8%, order baru dengan histori melewati Tier 0, manual kecil + promo + histori). Vitest 549, e2e terkait, build hijau.
+
+## 2026-11-22 — [F] FE-11: pratinjau tier approval di POS dan keterangan pengajuan (claude-design)
+
+- `domain/approval-preview.ts` (`previewApproval`) menghitung status (tanpa diskon / zona bebas / perlu approval), diskon kumulatif %, rantai approver berjenjang, tier berikutnya dan sisa zona bebas (Rp) dari `snapshot.approval_tiers`, per principal dan cakupan (`order`, `outlet_month`, `salesman_day`). Server tetap otoritatif.
+- POS: Ringkasan order menampilkan "Menunggu approval: Diskon 5% → perlu Supervisor → Branch Manager", atau "Diskon 1% dalam zona bebas · sisa ±Rp … Pratinjau; server yang memutuskan". Diskon program resmi tanpa rantai taktikal tampil sebagai "Pemantauan promo: Supervisor". Tanpa `approval_tiers` (server lama) perilaku lama dipertahankan.
+- Hasil kirim: langkah "Approval" memuat pesan server (nomor pengajuan) + perkiraan rantai. Riwayat pengajuan: baris "Menunggu" memuat pesan server.
+- Data demo: `approval_tiers` (zona bebas 2%, Supervisor/Branch Manager/Direksi) agar mode demo dan e2e menampilkan pratinjau.
+- Tes: vitest `tests/approval-preview.test.ts` (13), e2e `tests/browser/approval-preview.spec.ts` (phone + tablet). Utang: K35.
+- Jawaban pemilik dicatat di backlog: NOO dapat disubmit tanpa order, approval Supervisor lalu Branch Manager; kredit `strict` diblokir di PWA (BE-19/FE-12 baru).
 
 ## 2026-11-21 — [BU] BE-18 perbaikan CI PR #179 (putaran 2): blok tier ganda (claude-design)
 

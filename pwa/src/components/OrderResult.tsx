@@ -131,15 +131,20 @@ export function OrderResult({
                                       ? "active"
                                       : "wait"
                             }
-                            title="Approval supervisor"
+                            title="Approval"
                             sub={
                                 rejected
                                     ? (receipt?.message ?? "Ditolak")
                                     : needsApproval
-                                      ? (receipt?.message ??
-                                        (approvalReasons.length
-                                            ? approvalReasons.join(" + ")
-                                            : "Menunggu keputusan"))
+                                      ? [
+                                            receipt?.message ??
+                                                "Menunggu keputusan",
+                                            approvalReasons.length
+                                                ? `Perkiraan: ${approvalReasons.join(" + ")}`
+                                                : "",
+                                        ]
+                                            .filter(Boolean)
+                                            .join(" · ")
                                       : `Kemungkinan perlu approval: ${approvalReasons.join(" + ")}`
                             }
                         />

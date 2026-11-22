@@ -247,6 +247,21 @@ export class MockProvider implements FieldProvider {
                     product_ids: ["demo-product-1", "demo-product-2"],
                 },
             ],
+            approval_tiers: {
+                discount: {
+                    scope: "outlet_month" as const,
+                    default: {
+                        free_zone_max: 2,
+                        tiers: [
+                            { min_discount: 0.01, approver: "Supervisor" },
+                            { min_discount: 3, approver: "Branch Manager" },
+                            { min_discount: 7, approver: "Direksi" },
+                        ],
+                    },
+                    principals: {},
+                    usage: [],
+                },
+            },
             discount_programs: [
                 {
                     id: "demo-promo-biskuit",

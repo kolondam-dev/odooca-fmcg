@@ -12,9 +12,9 @@ work = "2.12.0"
 okhttp = "5.5.1"
 serialization = "1.13.0"
 coroutines = "1.11.0"
-desugar = "2.1.3"
+desugar = "2.1.5"
 androidxTestCore = "1.6.1"
-robolectric = "4.14.1"
+robolectric = "4.18.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
