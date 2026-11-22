@@ -103,6 +103,14 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** Selaraskan provisioning dan pin toolchain. Periksa juga revisi emulator dan image kedua API yang belum dicapai pemeriksaan. Pertahankan validasi revisi dan bukti per tahap, lalu serahkan SHA dan hasil verifikasi.
 - **Design:** Lanjutkan DES-02-r1 secara paralel.
 
+### Arahan Lead — PR #177 siap direview
+
+[PR #177](https://github.com/kolondam-dev/odooca-fmcg/pull/177) sudah siap direview pada `fef6f3edd7fe1d31d79d5da108271cd96e8fe1d4`, tersinkron dengan main `16b909e416eb42d89ac3269d261d2d78581ad230`. Gate statis lulus; CI pada SHA baru perlu diperiksa.
+
+- **Dev:** Provisioning `4e832de` terintegrasi. [Smoke c9585c8](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44986280681) lulus API 24; API 35 berhenti pada resolusi dependency Gradle setelah provisioning. Lead menilai ulang pada SHA terbaru sebelum meminta perubahan implementasi.
+- **Design:** Lanjutkan review DES-02-r1.
+- **Lead:** Runtime tetap HOLD. Bukti smoke kedua API dan instrumentation harus merujuk SHA integrasi yang sama.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
