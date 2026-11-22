@@ -5787,6 +5787,22 @@
                         }
                       ]
                     },
+                    "credit_mode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "strict",
+                            "limit",
+                            "limit_due",
+                            "approval"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
                     "contact": {
                       "anyOf": [
                         {
@@ -6018,6 +6034,42 @@
               }
             },
             "additionalProperties": false
+          },
+          "outlet_credit": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "overdue_count": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "overdue_total": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "oldest_due": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "overdue_count",
+                "overdue_total",
+                "oldest_due"
+              ],
+              "additionalProperties": false
+            }
           },
           "approval_tiers": {
             "type": "object",
