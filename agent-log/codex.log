@@ -518,3 +518,10 @@
 - Exact runtime importer-chain diagnostics for /opt/id-addons/id_base/i18n/id_ID.po showed only the Picklist mapping for "Lot / Serial" despite multiple #: occurrences.
 - Corrected by using a unique source term "Lot / Serial Number" for Packlist and Delivery Order while retaining Indonesian msgstr "Lot / Nomor Seri"; Picklist retains "Lot / Serial". Updated PO entries and importer-chain expected matrix to assert explicit per-report mappings. No assertions removed or weakened.
 - Await fresh exact-HEAD CI and PDF render smoke; no merge/deploy.
+
+
+[2026-11-22T09:30:00+07:00] [INFO] PR #135 isolate warehouse translation terms per report view
+- [F] Exact CI run 44913505693 / install-test at HEAD 724b2f4 failed three report translation assertions; parser marked shared PO msgid "Lot / Serial Number" with Packlist + Delivery Order occurrences obsolete and imported no mapping.
+- [F] Android, Seed, PWA, Full Dataset Runtime, Upgrade Runtime and Finance I0 workflows passed at that SHA; CI install-test failed, PDF smoke skipped as a consequence.
+- [F] Corrected XML/PO/test matrix: Picklist "Lot / Serial"; Packlist "Lot / Serial Number"; Delivery Order "Lot / Batch / Serial"; each source term has one view occurrence and Indonesian translation "Lot / Nomor Seri".
+- [F] No assertions weakened/removed; no business logic, inventory behavior, merge or deployment changed. Exact-SHA CI + live HTTP PDF smoke pending.
