@@ -170,7 +170,9 @@ read-only 2026-11-19 dan blocker yang lebih baru lihat
 [F] Repo mempunyai pembanding offline FIN04 dan unit sintetis pembaca XLSX
 FIN01/02/03/51/57. Untuk I2b, wizard nyata mengekspor FIN05/FIN06/FIN07/
 FIN08/FIN09 dan selnya dibandingkan dengan oracle AML/partial disposable
-(termasuk bucket aging, grup line per partner, dan tie-out GL). [BU] Gate
+(termasuk bucket aging, grup line per partner, identitas partner pada tiap
+detail line, penolakan baris tanpa tipe akun, sel numerik wajib, dan tie-out
+GL). [BU] Gate
 Finance I0 pada exact SHA harus membuktikan render workbook asli OCA/custom
 dan tie-out-nya terhadap oracle fixture disposable.
 Walaupun gate itu lulus, hasilnya hanya menguji layout, filter, cakupan, angka,

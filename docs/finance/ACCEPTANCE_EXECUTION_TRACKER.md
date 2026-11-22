@@ -138,18 +138,21 @@ oracle AML/partial independen:
 
 - FIN05/FIN06: coverage unik `(partner, tipe akun)`, opening/debit/credit/
   closing per baris, identitas movement dan closing, totals + `partner_count`,
-  split `by_account_type`, serta subledger↔GL tie-out;
+  split `by_account_type`, serta subledger↔GL tie-out; baris berisi data tanpa
+  tipe akun ditolak, dan totals/GL wajib berupa sel numerik (bukan teks);
 - FIN07: coverage line unik, move/account/partner/tipe/tanggal/balance/matched/
   residual per line, grup `line_ids` per partner, total akun, dan tie-out GL;
   ekspor kosong hanya diterima sebagai placeholder resmi dengan GL nol;
 - FIN08/FIN09: urutan bucket dan edges, total per bucket, bucket per partner,
-  residual per partner, detail line per bucket, total akun dan tie-out GL.
+  residual per partner, **coverage `line_ids` per partner dan `partner_id` pada
+  setiap detail line**, kecocokan bucket partner dengan detail line, total akun
+  dan tie-out GL.
 
 Filter `date_from`/`partner_ids` FIN07 belum tersedia di jalur export wizard,
 jadi slice terfilter tetap diverifikasi pada oracle native dan tidak diklaim
 tercakup XLSX. Field snapshot skalar (mis. `total_residual`) tidak ditulis ke
 workbook; nilainya diturunkan dari baris dan dipatok ke oracle. Unit offline
-menutup 24 kasus I2b (52 total pada berkas XLSX); [BU] render native hanya
+menutup 31 kasus I2b (59 total pada berkas XLSX); [BU] render native hanya
 dijalankan Finance I0 CI pada exact SHA. Tidak ada workbook bisnis, AML live,
 atau status katalog yang berubah.
 

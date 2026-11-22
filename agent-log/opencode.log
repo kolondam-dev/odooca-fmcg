@@ -373,3 +373,11 @@
 - [F] Ekspor FIN07 kosong hanya diterima sebagai placeholder resmi dengan GL nol; unit XLSX 52/52 PASS lokal (24 kasus I2b baru).
 - [BU] Exact-SHA Finance I0 belum dijalankan; live FIN05-FIN09 tetap HOLD, katalog tidak berubah.
 - Task managed by opencode at 2026-11-21T09:42:39+07:00
+
+
+[2026-11-22T08:31:26+07:00] [FIX] I2b review HOLD PR #178: comparator FIN05-FIN09 diperketat
+- [F] Temuan P2 review: swap detail/line_ids antarpartner FIN08/FIN09, baris berdata tanpa account_type diabaikan, dan totals/GL berbentuk teks diterima.
+- [F] Comparator kini membandingkan partner_id tiap detail line, coverage line_ids per partner, bucket partner vs detail, menolak baris orphan, dan mewajibkan sel/nilai JSON numerik.
+- [F] 7 counterexample baru (59 total unit XLSX); ruff, manifest, dan test bertarget PASS lokal.
+- [BU] Exact-SHA Finance I0 menunggu push; katalog dan penerimaan live tetap HOLD.
+- Task managed by opencode at 2026-11-22T08:31:26+07:00

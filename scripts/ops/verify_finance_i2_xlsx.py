@@ -600,6 +600,33 @@ def _decimal(value, where):
     return decimal(value, where)
 
 
+def _decimal_cell(cell, where):
+    """Require an exported numeric cell; a number stored as text must fail."""
+    require(cell is not None and cell.kind == "n", f"{where}: numeric cell is missing")
+    return decimal(cell.value, where)
+
+
+def _json_number(value, where):
+    """Require a JSON number so a stringified amount cannot sneak through."""
+    require(isinstance(value, (int, float)) and not isinstance(value, bool),
+            f"{where}: {value!r} is not a number")
+    return decimal(repr(value) if isinstance(value, float) else str(value), where)
+
+
+def _json_integer(value, where, positive=False):
+    """Require a JSON integer for ids so a float or string cannot slip through."""
+    require(isinstance(value, int) and not isinstance(value, bool),
+            f"{where}: {value!r} is not an integer")
+    if positive:
+        require(value > 0, f"{where}: {value} is not positive")
+    return int(value)
+
+
+def _row_has_data(row, columns):
+    """True when any mapped column of the row still carries a value."""
+    return any(_text(row, column).strip() for column in set(columns.values()))
+
+
 PARTNER_LEDGER_FIELDS = ("opening_balance", "debit", "credit", "closing_balance")
 
 
@@ -624,6 +651,8 @@ def verify_partner_ledger(workbook, expected_rows, expected_totals, expected_by_
     for row in sheets["rows"][index + 1:]:
         account_type = _text(row, columns["account_type"]).strip()
         if not account_type:
+            require(not _row_has_data(row, columns),
+                    f"{where} rows: row without account_type carries data")
             continue
         partner_id = _integer(row.get(columns["partner_id"]), f"{where} partner id")
         key = (partner_id, account_type)
@@ -657,7 +686,7 @@ def verify_partner_ledger(workbook, expected_rows, expected_totals, expected_by_
                 "closing_balance", "partner_count")
     require(set(totals) == set(required),
             f"{where} totals keys mismatch: {sorted(totals)}")
-    numbers = {key: _decimal(totals[key].value, f"{where} total {key}")
+    numbers = {key: _decimal_cell(totals[key], f"{where} total {key}")
                for key in ("opening_balance", "debit", "credit", "movement_balance",
                            "closing_balance")}
     require(totals["partner_count"].kind == "n",
@@ -704,7 +733,7 @@ def verify_partner_ledger(workbook, expected_rows, expected_totals, expected_by_
         require(set(data) == set(PARTNER_LEDGER_FIELDS),
                 f"{where} account type {account_type!r} keys mismatch: {sorted(data)}")
         observed_types[account_type] = tuple(
-            _decimal(data[field], f"{where} {account_type} {field}")
+            _json_number(data[field], f"{where} {account_type} {field}")
             for field in PARTNER_LEDGER_FIELDS
         )
     expected_types = {
@@ -726,9 +755,9 @@ def verify_partner_ledger(workbook, expected_rows, expected_totals, expected_by_
     gl = _dict_cells(sheets["gl_tie_out"], f"{where} gl_tie_out")
     for key in ("subledger_total", "gl_control_total", "difference"):
         require(key in gl, f"{where} gl_tie_out has no {key} key")
-    subledger = _decimal(gl["subledger_total"].value, f"{where} subledger total")
-    control = _decimal(gl["gl_control_total"].value, f"{where} GL control total")
-    difference = _decimal(gl["difference"].value, f"{where} tie-out difference")
+    subledger = _decimal_cell(gl["subledger_total"], f"{where} subledger total")
+    control = _decimal_cell(gl["gl_control_total"], f"{where} GL control total")
+    difference = _decimal_cell(gl["difference"], f"{where} tie-out difference")
     wanted_subledger, wanted_control = (
         _decimal(value, f"expected GL {value}") for value in expected_gl
     )
@@ -764,7 +793,7 @@ def verify_open_items(workbook, expected_lines, expected_partners,
         for key in ("subledger_total", "gl_control_total", "difference"):
             require(key in gl, f"{where} gl_tie_out has no {key} key")
         observed = tuple(
-            _decimal(gl[key].value, f"{where} {key}")
+            _decimal_cell(gl[key], f"{where} {key}")
             for key in ("subledger_total", "gl_control_total", "difference")
         )
         wanted = tuple(_decimal(value, f"expected GL {value}") for value in expected_gl)
@@ -829,6 +858,8 @@ def verify_open_items(workbook, expected_lines, expected_partners,
     for row in sheets["partners"][index + 1:]:
         account_type = _text(row, columns["account_type"]).strip()
         if not account_type:
+            require(not _row_has_data(row, columns),
+                    f"{where} partners: row without account_type carries data")
             continue
         partner_id = _integer(row.get(columns["partner_id"]), f"{where} partner id")
         key = (partner_id, account_type)
@@ -863,6 +894,8 @@ def verify_open_items(workbook, expected_lines, expected_partners,
     for row in sheets["account_totals"][index + 1:]:
         account_type = _text(row, columns["account_type"]).strip()
         if not account_type:
+            require(not _row_has_data(row, columns),
+                    f"{where} account_totals: row without account_type carries data")
             continue
         require(account_type not in observed_totals,
                 f"{where} repeats account type {account_type!r}")
@@ -888,9 +921,9 @@ def verify_open_items(workbook, expected_lines, expected_partners,
     gl = _dict_cells(sheets["gl_tie_out"], f"{where} gl_tie_out")
     for key in ("subledger_total", "gl_control_total", "difference"):
         require(key in gl, f"{where} gl_tie_out has no {key} key")
-    subledger = _decimal(gl["subledger_total"].value, f"{where} subledger total")
-    control = _decimal(gl["gl_control_total"].value, f"{where} GL control total")
-    difference = _decimal(gl["difference"].value, f"{where} tie-out difference")
+    subledger = _decimal_cell(gl["subledger_total"], f"{where} subledger total")
+    control = _decimal_cell(gl["gl_control_total"], f"{where} GL control total")
+    difference = _decimal_cell(gl["difference"], f"{where} tie-out difference")
     wanted_subledger, wanted_control = (
         _decimal(value, f"expected GL {value}") for value in expected_gl
     )
@@ -907,7 +940,12 @@ def verify_open_items(workbook, expected_lines, expected_partners,
 def verify_aged_partner_balance(workbook, expected_buckets, expected_partners,
                                 expected_account_totals, expected_rows, expected_gl,
                                 expected_edges, where="FIN08/FIN09"):
-    """PIN FIN08/FIN09 bucket split, partner buckets and detail rows to the oracle."""
+    """PIN FIN08/FIN09 bucket split, partner buckets and detail rows to the oracle.
+
+    ``expected_rows`` maps each ``line_id`` to
+    ``(partner_id, account_type, due_date, bucket, residual)`` so a swap between
+    partners fails even when every partner total and bucket stays unchanged.
+    """
     sheets = read_workbook(workbook)
     for name in ("bucket_order", "edges", "buckets", "partners", "account_totals",
                  "rows", "gl_tie_out"):
@@ -926,7 +964,7 @@ def verify_aged_partner_balance(workbook, expected_buckets, expected_partners,
     buckets = _dict_cells(sheets["buckets"], f"{where} buckets")
     require(set(buckets) == set(names),
             f"{where} bucket keys mismatch: {sorted(buckets)}")
-    observed_buckets = {name: _decimal(buckets[name].value, f"{where} bucket {name}")
+    observed_buckets = {name: _decimal_cell(buckets[name], f"{where} bucket {name}")
                         for name in names}
     wanted_buckets = {name: _decimal(value, f"expected bucket {name}")
                       for name, value in expected_buckets.items()}
@@ -935,13 +973,28 @@ def verify_aged_partner_balance(workbook, expected_buckets, expected_partners,
                 f"{where} bucket {name}: expected {wanted}, "
                 f"got {observed_buckets[name]}")
 
+    expected = {
+        int(line_id): (
+            int(partner_id), account_type, str(due_date), bucket,
+            _decimal(residual, f"expected line {line_id}"),
+        )
+        for line_id, (partner_id, account_type, due_date, bucket, residual)
+        in expected_rows.items()
+    }
+    partner_lines = {}
+    for line_id, values in expected.items():
+        partner_lines.setdefault((values[0], values[1]), set()).add(line_id)
+
     index, columns = _header(sheets["partners"],
                              {"partner_id", "account_type", "residual"},
                              f"{where} partners")
     observed_partners = {}
+    partner_lines_exported = {}
     for row in sheets["partners"][index + 1:]:
         account_type = _text(row, columns["account_type"]).strip()
         if not account_type:
+            require(not _row_has_data(row, columns),
+                    f"{where} partners: row without account_type carries data")
             continue
         partner_id = _integer(row.get(columns["partner_id"]), f"{where} partner id")
         key = (partner_id, account_type)
@@ -955,12 +1008,25 @@ def verify_aged_partner_balance(workbook, expected_buckets, expected_partners,
                 f"{where} partner {key} bucket keys mismatch: "
                 f"{sorted(partner_buckets)}")
         converted = {
-            name: _decimal(partner_buckets[name], f"{where} partner {key} {name}")
+            name: _json_number(partner_buckets[name], f"{where} partner {key} {name}")
             for name in names
         }
         require(residual == sum(converted.values()),
                 f"{where} partner {key}: residual differs from its buckets")
+        line_ids = nested.get("line_ids")
+        require(isinstance(line_ids, list) and line_ids,
+                f"{where} partner {key} has no line ids")
+        exported = {
+            _json_integer(item, f"{where} partner {key} line id", positive=True)
+            for item in line_ids
+        }
+        require(len(exported) == len(line_ids),
+                f"{where} partner {key} repeats a line id")
+        require(exported == partner_lines.get(key, set()),
+                f"{where} partner {key} line coverage mismatch: "
+                f"{sorted(exported)} != {sorted(partner_lines.get(key, set()))}")
         observed_partners[key] = converted
+        partner_lines_exported[key] = exported
     wanted_partners = {
         (int(partner_id), account_type): {
             name: _decimal(value, f"expected partner {partner_id} {name}")
@@ -988,6 +1054,8 @@ def verify_aged_partner_balance(workbook, expected_buckets, expected_partners,
     for row in sheets["account_totals"][index + 1:]:
         account_type = _text(row, columns["account_type"]).strip()
         if not account_type:
+            require(not _row_has_data(row, columns),
+                    f"{where} account_totals: row without account_type carries data")
             continue
         require(account_type not in observed_totals,
                 f"{where} repeats account type {account_type!r}")
@@ -1006,8 +1074,8 @@ def verify_aged_partner_balance(workbook, expected_buckets, expected_partners,
                 f"got {observed_totals[account_type]}")
 
     index, columns = _header(sheets["rows"],
-                             {"line_id", "account_type", "bucket", "due_date",
-                              "residual"},
+                             {"line_id", "partner_id", "account_type", "bucket",
+                              "due_date", "residual"},
                              f"{where} rows")
     observed_rows = {}
     for row in sheets["rows"][index + 1:]:
@@ -1015,38 +1083,44 @@ def verify_aged_partner_balance(workbook, expected_buckets, expected_partners,
             continue
         line_id = _integer(row.get(columns["line_id"]), f"{where} line id", positive=True)
         require(line_id not in observed_rows, f"{where} repeats line id {line_id}")
+        partner_id = _integer(row.get(columns["partner_id"]),
+                              f"{where} line {line_id} partner id")
         account_type = _text(row, columns["account_type"]).strip()
         bucket = _text(row, columns["bucket"]).strip()
         due_date = _text(row, columns["due_date"]).strip()
         require(account_type and due_date, f"{where} line {line_id} lacks account/date")
         require(bucket in names, f"{where} line {line_id} has unknown bucket {bucket!r}")
         residual = _number(row, columns["residual"], f"{where} line {line_id} residual")
-        observed_rows[line_id] = (account_type, due_date, bucket, residual)
-    expected = {
-        int(line_id): (account_type, str(due_date), bucket, _decimal(residual, "expected"))
-        for line_id, (account_type, due_date, bucket, residual)
-        in expected_rows.items()
-    }
+        observed_rows[line_id] = (partner_id, account_type, due_date, bucket, residual)
     require(set(observed_rows) == set(expected),
             f"{where} detail coverage mismatch: "
             f"{sorted(observed_rows)} != {sorted(expected)}")
     for line_id, wanted in expected.items():
         require(observed_rows[line_id] == wanted,
-                f"{where} line {line_id}: expected {wanted}, got {observed_rows[line_id]}")
+                f"{where} line {line_id}: expected {wanted}, "
+                f"got {observed_rows[line_id]}")
+    for key, buckets_exported in observed_partners.items():
+        lines = partner_lines_exported[key]
+        for name in names:
+            require(
+                sum(observed_rows[line][4] for line in lines
+                    if observed_rows[line][3] == name) == buckets_exported[name],
+                f"{where} partner {key} bucket {name}: detail rows do not match",
+            )
     for name in names:
-        require(sum(row[3] for row in observed_rows.values() if row[2] == name)
+        require(sum(row[4] for row in observed_rows.values() if row[3] == name)
                 == observed_buckets[name],
                 f"{where} detail rows do not add up to bucket {name}")
 
-    row_total = sum(row[3] for row in observed_rows.values())
+    row_total = sum(row[4] for row in observed_rows.values())
     require(row_total == sum(observed_totals.values()) == sum(observed_buckets.values()),
             f"{where} row, account and bucket totals disagree")
     gl = _dict_cells(sheets["gl_tie_out"], f"{where} gl_tie_out")
     for key in ("subledger_total", "gl_control_total", "difference"):
         require(key in gl, f"{where} gl_tie_out has no {key} key")
-    subledger = _decimal(gl["subledger_total"].value, f"{where} subledger total")
-    control = _decimal(gl["gl_control_total"].value, f"{where} GL control total")
-    difference = _decimal(gl["difference"].value, f"{where} tie-out difference")
+    subledger = _decimal_cell(gl["subledger_total"], f"{where} subledger total")
+    control = _decimal_cell(gl["gl_control_total"], f"{where} GL control total")
+    difference = _decimal_cell(gl["difference"], f"{where} tie-out difference")
     wanted_subledger, wanted_control = (
         _decimal(value, f"expected GL {value}") for value in expected_gl
     )

@@ -1,3 +1,10 @@
+## 2026-11-22 — [F] I2b review HOLD: comparator FIN05–FIN09 diperketat (opencode)
+
+- [F] Review independen PR #178 memberi HOLD/P2 pada head `5887332`: detail dan `line_ids` FIN08/FIN09 bisa tertukar antarpartner, baris berisi debit tanpa tipe akun diabaikan, dan angka totals/GL berbentuk teks tetap diterima.
+- [F] Perbaikan: FIN08/FIN09 membandingkan `partner_id` pada setiap detail line, coverage `line_ids` per partner, dan bucket partner terhadap detail line; `expected_rows` kini memuat partner. FIN05/FIN06/FIN07/FIN08/FIN09 menolak baris berisi data tanpa `account_type`; totals, GL, bucket, dan nilai JSON wajib numerik, bukan teks.
+- [F] 7 counterexample baru (59 total pada berkas XLSX) menutup ketiga temuan: swap `line_ids`, swap `partner_id` detail, baris orphan, dan nominal teks.
+- [BU] Exact-SHA Finance I0 untuk commit perbaikan belum berjalan; `REPORT_CATALOG.csv` tetap 58/58 `BELUM_DITERIMA` dan penerimaan live FIN05–FIN09 tetap HOLD.
+
 ## 2026-11-21 — [BU] I2b XLSX tie-out FIN05–FIN09 pada fixture disposable (opencode)
 
 - Wizard nyata mengekspor FIN05/FIN06 (2 periode × customer/supplier + `all`), FIN07 (4 as-of × 2 tipe), FIN08/FIN09 (3 as-of × 2 tipe) pada 2 company sintetis; sel dibandingkan dengan oracle AML/partial independen: coverage uniqueness, nilai per partner/line, bucket aging, totals, `partner_count`, split tipe akun, dan tie-out GL.

@@ -519,7 +519,7 @@ def _aging_expected(oracle, as_of):
             totals[row["account_type"]] + row["residual"], 2,
         )
         details[line_id] = (
-            row["account_type"], row["due_date"].isoformat(),
+            row["partner_id"], row["account_type"], row["due_date"].isoformat(),
             _bucket(row["due_date"], as_of), row["residual"],
         )
     return expected_buckets, expected_partners, dict(totals), details, \

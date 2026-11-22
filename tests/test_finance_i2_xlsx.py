@@ -683,8 +683,8 @@ class I2BXlsxOracleTest(unittest.TestCase):
         ]
         totals = totals if totals is not None else [("asset_receivable", 40)]
         details = details if details is not None else [
-            (11, "asset_receivable", "days_1_30", "2026-07-01", 28),
-            (12, "asset_receivable", "current", "2026-07-31", 12),
+            (11, 7, "asset_receivable", "days_1_30", "2026-07-01", 28),
+            (12, 0, "asset_receivable", "current", "2026-07-31", 12),
         ]
         edges = edges if edges is not None else [30, 60, 90, 120]
         gl = gl if gl is not None else (40, 40)
@@ -708,10 +708,11 @@ class I2BXlsxOracleTest(unittest.TestCase):
                   for account_type, residual in totals),
             ]),
             ("rows", [
-                {"A": "line_id", "B": "account_type", "C": "bucket", "D": "due_date",
-                 "E": "residual"},
-                *({"A": line, "B": account_type, "C": bucket, "D": due, "E": residual}
-                  for line, account_type, bucket, due, residual in details),
+                {"A": "line_id", "B": "partner_id", "C": "account_type",
+                 "D": "bucket", "E": "due_date", "F": "residual"},
+                *({"A": line, "B": partner, "C": account_type, "D": bucket,
+                   "E": due, "F": residual}
+                  for line, partner, account_type, bucket, due, residual in details),
             ]),
             ("gl_tie_out", [
                 {"A": "key", "B": "value"},
@@ -734,8 +735,8 @@ class I2BXlsxOracleTest(unittest.TestCase):
              (0, "asset_receivable"): {name: (12 if name == "current" else 0)
                                        for name in names}},
             {"asset_receivable": 40},
-            {11: ("asset_receivable", "2026-07-01", "days_1_30", 28),
-             12: ("asset_receivable", "2026-07-31", "current", 12)},
+            {11: (7, "asset_receivable", "2026-07-01", "days_1_30", 28),
+             12: (0, "asset_receivable", "2026-07-31", "current", 12)},
             (40, 40),
             (30, 60, 90, 120),
         )
@@ -766,7 +767,7 @@ class I2BXlsxOracleTest(unittest.TestCase):
 
     def test_aged_missing_detail_detected(self):
         sheets = self.aged_sheets(details=[
-            (11, "asset_receivable", "days_1_30", "2026-07-01", 28),
+            (11, 7, "asset_receivable", "days_1_30", "2026-07-01", 28),
         ])
         write_workbook(self.xlsx, sheets)
         with self.assertRaisesRegex(ValueError, "detail coverage"):
@@ -774,8 +775,8 @@ class I2BXlsxOracleTest(unittest.TestCase):
 
     def test_aged_detail_bucket_mutation_detected(self):
         sheets = self.aged_sheets(details=[
-            (11, "asset_receivable", "current", "2026-07-01", 28),
-            (12, "asset_receivable", "current", "2026-07-31", 12),
+            (11, 7, "asset_receivable", "current", "2026-07-01", 28),
+            (12, 0, "asset_receivable", "current", "2026-07-31", 12),
         ])
         write_workbook(self.xlsx, sheets)
         with self.assertRaisesRegex(ValueError, "line 11"):
@@ -792,3 +793,66 @@ class I2BXlsxOracleTest(unittest.TestCase):
         write_workbook(self.xlsx, sheets)
         with self.assertRaisesRegex(ValueError, "GL tie-out"):
             self.verify_aged()
+
+    def test_aged_partner_line_swap_detected(self):
+        names = ["current", "days_1_30", "days_31_60", "days_61_90",
+                 "days_91_120", "older"]
+        buckets = {name: 0 for name in names}
+        customer = dict(buckets, days_1_30=28)
+        partnerless = dict(buckets, current=12)
+        sheets = self.aged_sheets(partners=[
+            (7, "asset_receivable", 28, customer, [12]),
+            (0, "asset_receivable", 12, partnerless, [11]),
+        ])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "line coverage"):
+            self.verify_aged()
+
+    def test_aged_detail_partner_swap_detected(self):
+        sheets = self.aged_sheets(details=[
+            (11, 0, "asset_receivable", "days_1_30", "2026-07-01", 28),
+            (12, 7, "asset_receivable", "current", "2026-07-31", 12),
+        ])
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "line 11"):
+            self.verify_aged()
+
+    def test_aged_partner_orphan_row_detected(self):
+        sheets = self.aged_sheets()
+        sheets[4][1].append({"A": 7, "C": 28})
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "without account_type"):
+            self.verify_aged()
+
+    def test_aged_partner_bucket_text_detected(self):
+        sheets = self.aged_sheets()
+        row = sheets[4][1][1]
+        data = json.loads(row["D"])
+        data["buckets"]["days_1_30"] = "28"
+        row["D"] = json.dumps(data)
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "not a number"):
+            self.verify_aged()
+
+    def test_partner_ledger_orphan_row_detected(self):
+        sheets = self.ledger_sheets()
+        sheets[1][1].append({"A": 7, "B": "", "D": 100})
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "without account_type"):
+            self.verify_ledger()
+
+    def test_partner_ledger_text_total_detected(self):
+        sheets = self.ledger_sheets()
+        for row in sheets[2][1]:
+            if row.get("A") == "debit":
+                row["B"] = "163"
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "numeric cell is missing"):
+            self.verify_ledger()
+
+    def test_open_items_partner_orphan_row_detected(self):
+        sheets = self.open_item_sheets()
+        sheets[2][1].append({"A": 7, "C": 28})
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "without account_type"):
+            self.verify_open_items()
