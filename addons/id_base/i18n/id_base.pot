@@ -295,3 +295,13 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
 msgid "Date / Stamp"
 msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_packlist
+msgid "Lot / Serial Number"
+msgstr ""
+
+#. module: id_base
+#: model_terms:ir.ui.view,arch_db:id_base.report_fmcg_delivery_order
+msgid "Lot / Batch / Serial"
+msgstr ""

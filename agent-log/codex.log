@@ -542,3 +542,7 @@
 - [F] Android, Seed, PWA, Full Dataset Runtime, Upgrade Runtime and Finance I0 workflows passed at that SHA; CI install-test failed, PDF smoke skipped as a consequence.
 - [F] Corrected XML/PO/test matrix: Picklist "Lot / Serial"; Packlist "Lot / Serial Number"; Delivery Order "Lot / Batch / Serial"; each source term has one view occurrence and Indonesian translation "Lot / Nomor Seri".
 - [F] No assertions weakened/removed; no business logic, inventory behavior, merge or deployment changed. Exact-SHA CI + live HTTP PDF smoke pending.
+
+[2026-11-22T22:01:20+07:00] [INFO] PR #135: sinkronisasi dan verifikasi dokumen gudang
+- Sinkron main, lengkapi POT, dan uji PDF DO selesai parsial; runtime menunggu CI.
+- Task managed by codex agent at 2026-11-22T22:01:20+07:00

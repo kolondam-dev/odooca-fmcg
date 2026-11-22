@@ -63,11 +63,7 @@ picking.action_assign()
 assert picking.state == "assigned", picking.state
 assert sum(picking.move_ids.move_line_ids.mapped("quantity")) == 4
 
-for xmlid in (
-    "id_base.action_report_fmcg_picklist",
-    "id_base.action_report_fmcg_packlist",
-    "id_base.action_report_fmcg_delivery_order",
-):
+def render_pdf(xmlid):
     report = env.ref(xmlid)
     assert report.report_type == "qweb-pdf", (xmlid, report.report_type)
     pdf, content_type = report.with_context(
@@ -77,5 +73,27 @@ for xmlid in (
     assert isinstance(pdf, bytes) and pdf.startswith(b"%PDF-"), xmlid
     assert len(pdf) > 1000, (xmlid, len(pdf))
     print("WAREHOUSE_PDF_RENDERED=%s bytes=%s" % (xmlid, len(pdf)))
+
+render_pdf("id_base.action_report_fmcg_picklist")
+render_pdf("id_base.action_report_fmcg_packlist")
+
+operation = picking.move_ids.move_line_ids
+package = env["stock.package"].create({"name": "PACK-CI-WAREHOUSE-PDF"})
+operation.write({"quantity": 3, "picked": True, "result_package_id": package.id})
+result = picking.button_validate()
+if isinstance(result, dict) and result.get("res_model") == "stock.backorder.confirmation":
+    wizard_context = dict(env.context, **result.get("context", {}))
+    wizard = env[result["res_model"]].with_context(wizard_context).create({
+        "pick_ids": [Command.set(picking.ids)],
+    })
+    wizard.process()
+picking.invalidate_recordset()
+assert picking.state == "done", picking.state
+assert sum(picking.move_ids.move_line_ids.mapped("quantity")) == 3
+assert picking.move_ids.move_line_ids.lot_id == lot
+assert picking.move_ids.move_line_ids.result_package_id == package
+assert len(picking.backorder_ids) == 1
+assert sum(picking.backorder_ids.move_ids.mapped("product_uom_qty")) == 1
+render_pdf("id_base.action_report_fmcg_delivery_order")
 
 print("WAREHOUSE_PDF_SMOKE=PASS")
