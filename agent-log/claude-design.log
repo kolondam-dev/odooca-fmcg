@@ -436,3 +436,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-22T14:43:45+07:00] [INFO] BE-19 credit_mode + outlet_credit
 - credit_mode ikut digest; outlet_credit di luar digest; kontrak zod/openapi; tes Odoo mock
 - Task managed by claude-design agent at 2026-11-22T14:43:45+07:00
+
+[2026-11-22T15:10:22+07:00] [INFO] BE-19 fix review PR #184
+- credit_mode efektif parent; business_date WITA bersama id_base; tes ORM faktur nyata
+- Task managed by claude-design agent at 2026-11-22T15:10:22+07:00

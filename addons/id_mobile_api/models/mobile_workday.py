@@ -6,10 +6,12 @@ from zoneinfo import ZoneInfo
 
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError, ValidationError
+from odoo.addons.id_base.models.business_day import business_date as _business_date
 
 
 def business_date():
-    return datetime.now(ZoneInfo("Asia/Makassar")).date()
+    # Satu definisi hari bisnis WITA bersama id_base (dipakai juga validasi kredit server).
+    return _business_date()
 
 
 class MobileReadConflict(UserError):
@@ -140,8 +142,14 @@ class MobileWorkday(models.Model):
                   "payment_terms": None, "credit_limit": None, "contact": None,
                   "credit_mode": None}
         if "credit_mode" in visible:
-            # BE-19: kebijakan kredit (strict/limit/limit_due/approval); jarang berubah → ikut digest.
-            result["credit_mode"] = partner.credit_mode or "limit"
+            # BE-19: kebijakan kredit EFEKTIF seperti server (`sale.order._compute_credit_limit_exceeded`
+            # memakai commercial partner/parent); jarang berubah → ikut digest, jadi perubahan pada parent
+            # ikut mengubah versi outlet anak. Parent yang tidak boleh dibaca → tidak diketahui (None).
+            parent = partner.commercial_partner_id or partner
+            try:
+                result["credit_mode"] = parent.credit_mode or "limit"
+            except AccessError:
+                result["credit_mode"] = None
         if "pic_name" in visible:
             result["contact"] = partner.pic_name or None
         if "property_payment_term_id" in visible:
@@ -175,8 +183,10 @@ class MobileWorkday(models.Model):
         Kriteria sama dengan `sale.order._compute_credit_limit_exceeded` (faktur pelanggan terposting,
         belum lunas, `invoice_date_due` < hari bisnis). Agregat saja (jumlah, sisa tagihan, jatuh tempo
         tertua) dibaca dengan sudo karena akun mobile tidak otomatis boleh membaca faktur; cakupan dibatasi
-        pada outlet yang sudah lolos `check_access` dan perusahaan sesi. Hanya outlet yang punya tunggakan
-        dimuat (blok kosong = tidak ada tunggakan)."""
+        pada outlet yang sudah lolos `check_access` dan perusahaan sesi. Perimeter kredit = COMMERCIAL
+        PARTNER (parent) dalam perusahaan sesi, sama dengan server: faktur outlet saudara yang tidak
+        ditugaskan tetapi satu parent ikut terhitung; kunci hasil tetap hanya outlet yang ditugaskan.
+        Hanya outlet yang punya tunggakan dimuat (blok kosong = tidak ada tunggakan)."""
         commercial = {p.id: (p.commercial_partner_id or p).id for p in partners}
         if not commercial:
             return {}
