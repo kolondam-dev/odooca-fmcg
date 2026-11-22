@@ -203,6 +203,11 @@ export const SnapshotSchema = z
                             .nonnegative()
                             .nullable()
                             .optional(),
+                        /** Kebijakan kredit outlet (BE-19); `strict` = wajib lunas sebelum order baru. */
+                        credit_mode: z
+                            .enum(["strict", "limit", "limit_due", "approval"])
+                            .nullable()
+                            .optional(),
                         contact: z.string().nullable(),
                     })
                     .optional(),
@@ -251,6 +256,21 @@ export const SnapshotSchema = z
                 /** Penyelesaian penagihan multi-faktur (`collection.settlement.submit`). */
                 collection_v2: z.boolean().optional(),
             })
+            .optional(),
+        /**
+         * Tunggakan faktur per id outlet (BE-19), di luar digest versi. Blok ada = server membaca
+         * tunggakan; outlet yang tidak tercantum tidak punya faktur jatuh tempo. Blok tidak ada =
+         * tidak diketahui (server lama / tanpa akses), PWA tidak boleh memblokir.
+         */
+        outlet_credit: z
+            .record(
+                z.string(),
+                z.object({
+                    overdue_count: z.number().int().positive(),
+                    overdue_total: z.number().nonnegative(),
+                    oldest_due: z.string().nullable(),
+                }),
+            )
             .optional(),
         /**
          * Tata kelola approval diskon (BE-18): hanya untuk pratinjau di POS. Server tetap menentukan

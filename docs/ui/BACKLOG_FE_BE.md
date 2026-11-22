@@ -326,7 +326,6 @@ Catatan desain: karena batas berbeda per principal dan order dapat memuat bebera
 
 | ID    | Pekerjaan                                                                                                                                           | Prioritas |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| BE-19 | `commercial.credit_mode` dan jumlah faktur jatuh tempo per outlet pada snapshot (digest ikut)                                                       | P1        |
+| BE-19 | `commercial.credit_mode` (ikut digest) dan blok `outlet_credit` jumlah/total/tertua faktur jatuh tempo per outlet (di luar digest) **Selesai (PR BE-19)** | P1        |
 | FE-12 | Mode kredit `strict`: PWA memblokir tombol Kirim order untuk outlet dengan faktur jatuh tempo, dengan penjelasan dan jalur penagihan                | P1        |
 | BE-17 | (diperbarui) kategori `new_outlet` berantai Supervisor → Branch Manager; NOO dapat disubmit tanpa order                                             | P1        |
-

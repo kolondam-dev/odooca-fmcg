@@ -1,3 +1,11 @@
+## 2026-11-22 — [F] BE-19: credit_mode dan tunggakan faktur outlet pada snapshot (claude-design)
+
+- `id_mobile_api/models/mobile_workday.py`: `commercial.credit_mode` (`strict|limit|limit_due|approval`, default `limit`) ikut digest karena jarang berubah. Blok baru top-level `outlet_credit` = `{outlet_id: {overdue_count, overdue_total, oldest_due}}` hanya untuk outlet yang punya faktur jatuh tempo; `{}` berarti server membaca dan tidak ada tunggakan, blok tidak ada berarti tidak diketahui (server lama).
+- `outlet_credit` SENGAJA di luar digest versi (sama seperti `approval_tiers`, ikut `include_approval_tiers`): tiap pembayaran mengubahnya, bila ikut digest command offline ditolak "Stale catalog snapshot version". Command dan evidence tidak memuatnya.
+- Kriteria sama dengan `sale.order._compute_credit_limit_exceeded`: `out_invoice` terposting, `payment_state` bukan paid/in_payment/reversed, `invoice_date_due` < hari bisnis, filter perusahaan sesi. Dibaca sebagai agregat dengan `sudo()` (akun mobile tidak otomatis boleh membaca faktur), dibatasi pada outlet yang lolos `check_access`; tidak ada field faktur lain yang keluar.
+- Kontrak: `contracts.ts` (`credit_mode`, `outlet_credit`), `openapi.json`, tes katalog. Tes Odoo di `test_read_api.py` (mock `_read_group` untuk memeriksa domain dan di luar digest; faktur nyata tidak dibuat karena perusahaan uji tanpa bagan akun). Tes Odoo hanya terverifikasi di CI.
+- Utang: server menghitung "jatuh tempo" dengan `fields.Date.today()` (UTC), snapshot memakai hari bisnis WITA; selisih hanya 00:00–08:00 WITA. Server tetap otoritatif saat order dikirim. FE-12 (pemblokiran di PWA) belum dikerjakan.
+
 ## 2026-11-22 — [F] Pasca-merge toolchain Android: kebijakan Dependabot dan retry resolusi Gradle (codex)
 
 - **Berubah:** `.github/dependabot.yml`, `android/gradle.properties`, `tests/test_android_ci.py`, `docs/HANDOFF.md`, `agent-log/codex.log`. Tanpa perubahan kode aplikasi dan tanpa perubahan versi toolchain.
