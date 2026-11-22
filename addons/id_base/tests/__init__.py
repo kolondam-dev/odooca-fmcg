@@ -3,6 +3,7 @@ from . import test_account_move_cogs
 from . import test_pricelist_matrix
 from . import test_fmcg_dimensions_uom
 from . import test_fmcg_document_uom_breakdown
+from . import test_fmcg_warehouse_reports
 from . import test_credit_limit_approval
 from . import test_partner_pjp
 from . import test_geo_master

@@ -1,3 +1,14 @@
+## 2026-11-22T23:31:54+07:00 — Agent Codex-Cloud1 — F4/PR #110: Sinkronisasi PR gudang
+
+**Berubah:**
+- Sinkronisasi ke `main` `6137b97` yang memasukkan PR #135. Konflik handoff dan log diselesaikan dengan menggabungkan entri kedua cabang.
+**Diverifikasi:**
+- [F] Git merge hanya berkonflik di handoff dan log. Patch urutan fixture rollback tetap ada.
+**Belum diuji:**
+- [BU] CI integrasi dan F4 setelah sinkronisasi.
+**Berikutnya:**
+- Periksa audit header dan pemulihan rollback pada SHA integrasi.
+
 ## 2026-11-22T23:27:26+07:00 — Agent Codex-Cloud1 — F4/PR #110: Urutan fixture fault-injection
 
 **Berubah:**
@@ -51,6 +62,10 @@
 - [BU] Golden chain memakai fixture Odoo baru. Acceptance seed Agustus masih terbuka untuk ketersediaan harian, diskon bertingkat dan footer, promo/pricelist dengan eligibility, approval historis, PJP dan ownership, packlist/trip/driver/FEFO/ED, matriks pajak buyer, dan workflow biaya.
 **Berikutnya:**
 - Verifikasi ulang CI integrasi F4 pada SHA baru. Gunakan snapshot dan bukti sumber Agustus untuk menutup acceptance historis yang belum teruji.
+## 2026-11-22 — PR #135: katalog QWeb dan PDF DO parsial (codex)
+
+- [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.
+- [BU] Instalasi Odoo, terjemahan QWeb, dan PDF menunggu verifikasi runtime pada commit ini.
 
 ## 2026-11-22 — [BU] BE-19 perbaikan review PR #184: kebijakan efektif parent, hari bisnis WITA bersama, tes faktur nyata (claude-design)
 
@@ -7445,3 +7460,46 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
 **Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]
+
+
+## 2026-11-21 — Supervisor — PR #135 disinkronkan ke main terbaru
+**Konteks:** Main diverifikasi pada `34ba18e83aa7470cde601b742d2510ba411f7e92`; HEAD PR sebelum sync `a71d79002f27e5983283a2f9a27289796473c749`. Backup dibuat pada `backup/pr-135-before-main-sync-20261121`.
+**Berubah:** Integrasi mempertahankan kedua parent commit. HANDOFF dan log agen main yang lebih baru dipertahankan; catatan PR #135 Codex dibawa masuk. Perubahan WMS (report templates, Indonesian translations, tests, PDF smoke) dipertahankan. File PWA yang sudah identik/lebih baru di main tidak di-revert.
+**Verifikasi:** Sinkronisasi source saja; seluruh CI exact-SHA wajib dijalankan ulang. Belum ada klaim tes/PDF smoke lulus, merge PR, atau deployment.
+
+
+## 2026-11-21 — Supervisor follow-up: PR #135 CI failure analysis
+
+**Exact tested HEAD:** `b06c481786e35ed3c2cfad0b0c85bb3cbeda0f7f` (before the follow-up fixes below).
+
+**Observed failed checks:** `install-test`, `domain-tests`, and aggregate `android-gate`. The install job reports four failed assertions: the legacy tax-number test's final recordset loop still expected an English error string, and the three Picklist/Packlist/Delivery Order rendering subtests missed Indonesian labels. The Android aggregate gate fails because `domain-tests` fails.
+
+**Root causes identified:**
+- The final legacy tax-number assertion loop had not been updated with the Indonesian `id_ID` error context; earlier assertions in the same test were already localized.
+- QWeb translation entries existed in `id_ID.po`, but static table-header and signature-block nodes in the report XML were not explicitly marked with `t-translation="on"`. This explains untranslated `Lot / Serial` headers and Picklist signature labels at render time.
+- Android domain tests were `FROM-CACHE`; the tests emit OpenAPI contract JSON into `build/contract-samples`, but that directory was not declared as a Gradle task output, so the cache restored test results without restoring the generated JSON files. The subsequent validator then failed with FileNotFoundError.
+
+**Follow-up changes committed after this analysis:** update the remaining legacy assertion loop to validate the localized UserError; explicitly enable QWeb translation on table headers and signature blocks; declare `contract-samples` as an output of the Gradle `test` task so cache restores generated samples. No assertions were weakened, no Android code was changed, and no merge/deploy was performed. Exact-SHA CI must verify these fixes.
+
+
+## 2026-11-21 — PR #135 follow-up: QWeb translation render failure
+
+- Exact failing run: CI run 44886788120 at PR head `43124a572802607e917691d963eff5fe25ea7b00`; 28 other checks/workflows passed, while `install-test` failed on three rendered-label assertions.
+- Root cause: the `Lot / Serial` PO entry referenced only `report_fmcg_picklist`, so its translation was not imported for Packlist and Delivery Order. The Picklist signature wrapped several line-breaks and underscores in one translated div; that made the expected standalone `Prepared by` term unreliable in rendered QWeb.
+- Fix in this follow-up: extend the PO occurrence list for `Lot / Serial` to all three report views; wrap each signature label in its own explicit `t-translation="on"` span; extend the importer-chain test matrix to assert the three-view term mapping and Picklist signature mapping.
+- Also made the remaining Packlist and Delivery Order signature labels explicit translation spans, matching their existing PO entries.
+- Pending: exact-HEAD CI, including the Odoo runtime install-test and live HTTP PDF render smoke. No merge or deployment authorized.
+
+
+### Correction to 2026-11-21 PR #135 translation diagnosis
+
+The previous attempt's assumption that one PO entry with multiple view occurrences would be imported for all views was disproved by the runtime importer-chain test: the parser yielded only the Picklist mapping. Avoid relying on multi-view occurrence expansion for this term. The Packlist and Delivery Order source label is now made distinct ("Lot / Serial Number") while both retain the Indonesian translation "Lot / Nomor Seri"; the Picklist retains "Lot / Serial". The PO and importer-chain test matrix now map each source term to the relevant report views explicitly. This keeps the rendered Indonesian labels consistent and makes the import mapping unambiguous. Validate via fresh install-test and live HTTP PDF render.
+
+
+## 2026-11-22 — PR #135: isolate translation terms per report view
+
+- Exact failing CI: run `44913505693`, job `install-test`, tested HEAD `724b2f4ddda7b5353f8ab4b4843e7dff0d76f171`.
+- Three failures were confirmed: importer-chain matrix and rendered Indonesian lot labels in Packlist and Delivery Order. Runtime importer diagnostics marked the shared `Lot / Serial Number` PO entry obsolete and returned no imported mapping for it.
+- Corrective approach: do not share one PO msgid across report views. Picklist keeps `Lot / Serial`; Packlist uses `Lot / Serial Number`; Delivery Order now uses the distinct `Lot / Batch / Serial`. Each PO entry has exactly one report-view occurrence and maps to `Lot / Nomor Seri`.
+- Updated the importer-chain matrix to assert all three source terms against their individual view XML IDs. No assertion was removed or weakened; no business/runtime stock logic changed.
+- New exact-HEAD CI, including install-test and live HTTP PDF render smoke, is required. No merge or deployment.
