@@ -119,9 +119,11 @@ menambah ukuran/font perangkat dan laporan test ID, waktu, dan hasil yang
 disanitasi. Dump UI, stack trace, payload HTTP, dan log emulator mentah tidak
 masuk artefak. Kegagalan setup runner tampak pada job Actions dan metadata SHA/API.
 
-Mode UI memasang build debug khusus dengan endpoint fixture HTTP di
-`127.0.0.1`, memakai `adb reverse`. Varian itu hanya diaktifkan melalui
-`-Podooca.uiFixture=true`, dan kebijakan HTTP lokal hanya masuk debug khusus.
+Mode UI memakai APK debug reguler untuk bukti Login. Setelah screenshot,
+skrip menghapus paket smoke dari AVD, memverifikasi paket sudah tidak terpasang,
+dan mencatat hasilnya sebagai `fixture_reset`. Gradle kemudian memasang APK
+fixture dan APK tes melalui `:app:connectedDebugAndroidTest -Podooca.uiFixture=true`.
+Build khusus UI memakai endpoint HTTP `127.0.0.1` lewat `adb reverse`.
 Skenario memeriksa form kosong, tombol/label, resume dan rekreasi Activity,
 login ditolak/diterima, Beranda kosong, navigasi Kalibrasi, dialog izin OS
 ditolak, kembali, dan keluar. Bukti untuk izin diberikan, lokasi perkiraan,

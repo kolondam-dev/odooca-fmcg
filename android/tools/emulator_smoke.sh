@@ -64,7 +64,7 @@ record abi "$abi"
 record image "$image"
 record expected_image_revision "$image_revision"
 record mode "$mode"
-for check in kvm build boot install cold_start login_ui instrumentation; do
+for check in kvm build boot install cold_start login_ui fixture_reset instrumentation; do
     record "$check" NOT_RUN
 done
 
@@ -107,9 +107,8 @@ grep -qi 'KVM.*usable' "$work/accel.log"
 record kvm PASS
 
 stage=build
-gradle_args=(-Podooca.baseUrl=https://ci.invalid)
-if [[ "$mode" == ui ]]; then gradle_args=(-Podooca.uiFixture=true); fi
-(cd android && timeout 12m ./gradlew --no-daemon :app:assembleDebug "${gradle_args[@]}")
+(cd android && timeout 12m ./gradlew --no-daemon :app:assembleDebug \
+    -Podooca.baseUrl=https://ci.invalid -Podooca.uiFixture=false)
 test -s "$apk"
 record apk_sha256 "$(sha256sum "$apk" | cut -d' ' -f1)"
 record build PASS
@@ -198,12 +197,22 @@ mv "$work/login.png" "$evidence/login.png"
 record login_ui PASS
 
 if [[ "$mode" == ui ]]; then
-    stage=instrumentation
+    stage=fixture_reset
     connected=$(timeout 10 "$adb" devices | awk 'NR > 1 && NF {print $1}')
     if [[ "$connected" != "$ANDROID_SERIAL" ]]; then
         echo "Instrumentation requires exactly one attached device: the smoke AVD" >&2
         exit 1
     fi
+    # Gradle owns the fixture install. Clearing data leaves the smoke package installed on API 24.
+    timeout 30 "$adb" uninstall "$package" | tr -d '\r' | grep -Fxq Success
+    installed=$(timeout 10 "$adb" shell pm list packages "$package" | tr -d '\r')
+    if grep -Fxq "package:$package" <<<"$installed"; then
+        echo "Smoke package is still installed before instrumentation" >&2
+        exit 1
+    fi
+    record fixture_reset PASS
+
+    stage=instrumentation
     python3 android/tools/ui_smoke_fixture.py &
     fixture_pid=$!
     for _ in {1..20}; do
@@ -214,13 +223,12 @@ if [[ "$mode" == ui ]]; then
     kill -0 "$fixture_pid"
     curl -fsS --max-time 1 http://127.0.0.1:18080/health >/dev/null
     timeout 10 "$adb" reverse tcp:18080 tcp:18080
-    timeout 10 "$adb" shell pm clear "$package" | grep -q '^Success'
     timeout 10 "$adb" shell wm size | tee "$evidence/display.txt"
     timeout 10 "$adb" shell wm density | tee -a "$evidence/display.txt"
     timeout 10 "$adb" shell settings get system font_scale | tee -a "$evidence/display.txt"
     test_started=$(date +%s%N)
     test_result=0
-    (cd android && timeout 12m ./gradlew --no-daemon :app:connectedDebugAndroidTest "${gradle_args[@]}") || test_result=$?
+    (cd android && timeout 12m ./gradlew --no-daemon :app:connectedDebugAndroidTest -Podooca.uiFixture=true) || test_result=$?
     python3 android/tools/ui_smoke_report.py android/app/build/outputs/androidTest-results/connected/debug \
         "$evidence/instrumentation.tsv" "$test_started"
     test "$test_result" -eq 0

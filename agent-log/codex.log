@@ -551,3 +551,9 @@
 - [F] Tindak lanjut 5cbd64a untuk run 44881381326 pada a74613c. Platform Tools 37.0.3, emulator 37.3.10 dan image API 24 rev 27/API 35 rev 9 dipasang dari arsip Google dengan checksum.
 - [F] Provisioning dan pembuatan AVD lulus pada dua SDK Cloud terisolasi. Pemeriksaan revisi lulus. [BU] Boot, install, cold start dan instrumentation menunggu runner ber-KVM.
 - Task managed by codex agent at 2026-11-22T11:28:39+07:00
+
+[2026-11-22T22:46:50+07:00] [INFO] DEV-01B bersihkan APK smoke sebelum instalasi fixture UI
+- [F] Run 45038999868 pada fef6f3e menunjukkan Login lulus dan instalasi ulang target API 24 ditolak INSTALL_FAILED_ALREADY_EXISTS.
+- [F] Smoke memakai APK reguler. Mode UI uninstall dan verifikasi absensi sebelum Gradle memasang fixture. Simulasi host, dua build APK dan guard urutan lulus.
+- [BU] Eksekusi API 24/35 pada SHA perbaikan menunggu Lead. Cloud tanpa KVM; daemon ADB tidak bisa menulis ke home.
+- Task managed by codex agent at 2026-11-22T22:46:50+07:00
