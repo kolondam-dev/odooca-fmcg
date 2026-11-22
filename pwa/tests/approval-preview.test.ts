@@ -25,6 +25,7 @@ const base = {
     outletId: "5",
     gross: 1_000_000,
     hasProgram: false,
+    hasManual: true,
 };
 
 describe("previewApproval", () => {
@@ -41,7 +42,12 @@ describe("previewApproval", () => {
         ).toBeNull();
     });
     it("tanpa diskon → none", () => {
-        const p = previewApproval({ ...base, tiers: tiers(), discount: 0 })!;
+        const p = previewApproval({
+            ...base,
+            tiers: tiers(),
+            discount: 0,
+            hasManual: false,
+        })!;
         expect(p.status).toBe("none");
         expect(approvalPreviewText(p)).toBe("");
     });
@@ -220,5 +226,57 @@ describe("previewApproval", () => {
         const p = previewApproval({ ...base, tiers: t, discount: 50_000 })!;
         expect(p.status).toBe("needs");
         expect(approvalPreviewText(p)).toBe("Diskon 5% → perlu approver");
+    });
+    it("promo resmi murni 8% tanpa diskon manual → hanya pemantauan Supervisor", () => {
+        const p = previewApproval({
+            ...base,
+            tiers: tiers(),
+            discount: 80_000,
+            hasProgram: true,
+            hasManual: false,
+        })!;
+        expect(p.status).toBe("free");
+        expect(p.chain).toEqual([]);
+        expect(p.promoMonitoring).toBe(true);
+        expect(approvalPreviewText(p)).toBe("Pemantauan promo: Supervisor");
+    });
+    it("order baru tanpa diskon tidak perlu approval walau histori outlet melewati Tier 0", () => {
+        const usage = [
+            {
+                outlet_id: "5",
+                principal: "10",
+                discount_amount: 100_000,
+                gross_amount: 1_000_000,
+            },
+        ];
+        const p = previewApproval({
+            ...base,
+            tiers: tiers("outlet_month", usage),
+            discount: 0,
+            hasManual: false,
+        })!;
+        expect(p.status).toBe("none");
+        expect(p.chain).toEqual([]);
+        expect(approvalPreviewText(p)).toBe("");
+    });
+    it("diskon manual kecil + promo + histori: persentase kumulatif tetap menentukan rantai", () => {
+        const usage = [
+            {
+                outlet_id: "5",
+                principal: "10",
+                discount_amount: 40_000,
+                gross_amount: 1_000_000,
+            },
+        ];
+        const p = previewApproval({
+            ...base,
+            tiers: tiers("outlet_month", usage),
+            discount: 50_000,
+            hasProgram: true,
+            hasManual: true,
+        })!;
+        expect(p.pct).toBe(4.5);
+        expect(p.status).toBe("needs");
+        expect(p.chain).toEqual(["Supervisor", "Branch Manager"]);
     });
 });

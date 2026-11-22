@@ -461,6 +461,7 @@ export function OrderScreen({
         discount: totals.quote.lineDiscount + totals.quote.footerDiscount,
         gross: totals.quote.subtotal,
         hasProgram: hasProgramDiscount,
+        hasManual: totals.quote.tactical,
     });
     // Tanpa konfigurasi tier (server lama) tetap perilaku lama: diskon taktikal = perlu approval.
     const discountReason = approvalPreview

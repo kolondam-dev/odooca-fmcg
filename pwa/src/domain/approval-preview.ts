@@ -42,6 +42,8 @@ export function previewApproval(input: {
     gross: number;
     /** Ada diskon program resmi pada order. */
     hasProgram: boolean;
+    /** Ada diskon manual (tactical) pada order ini: hanya ini yang membuka rantai taktikal. */
+    hasManual: boolean;
 }): ApprovalPreview | null {
     const cfg = input.tiers?.discount;
     if (!cfg || input.gross <= 0) return null;
@@ -79,7 +81,7 @@ export function previewApproval(input: {
                   0,
                   Math.floor((limit / 100) * totalGross - totalDiscount),
               );
-    if (pct <= 0 && !input.hasProgram)
+    if (!input.hasManual && !input.hasProgram)
         return {
             ...base,
             status: "none",
@@ -88,7 +90,9 @@ export function previewApproval(input: {
             next: null,
         };
     const free = pct > 0 && limit !== null && pct <= limit;
-    if (pct <= 0 || free)
+    // Tanpa diskon manual pada order ini tidak ada rantai taktikal: promo resmi hanya dipantau
+    // Supervisor, dan histori outlet saja tidak memicu approval pada order baru.
+    if (!input.hasManual || pct <= 0 || free)
         return {
             ...base,
             status: "free",
