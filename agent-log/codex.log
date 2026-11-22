@@ -560,3 +560,8 @@
 - Register outlet yang dipin menentukan owner 1.240 SO; F4 mengaudit owner dan tanggal.
 - 146 tes Python, probe Odoo enam salesman, Ruff dan 14 manifest lulus.
 - Task managed by codex agent at 2026-11-22T22:06:21+07:00
+
+[2026-11-22T23:27:26+07:00] [INFO] F4: perbaiki urutan fixture rollback
+- Owner dan tanggal nol selisih di kedua skenario pada 82101d3; probe perlu menulis SO valid lebih dulu.
+- 83 tes Python terarah lulus.
+- Task managed by codex agent at 2026-11-22T23:27:26+07:00

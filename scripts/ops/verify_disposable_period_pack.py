@@ -1436,7 +1436,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
         valid_so_num = "SO-202608-PROBE-VALID-01"
         corrupt_so_num = "SO-202608-PROBE-CORRUPT-02"
 
-        # Record 1 (valid) will be written first in batch; Record 2 (corrupt) will trigger exception
+        # Give the corrupt record a later date so native chronological ordering writes the valid SO first.
         probe_sos = [
             {
                 "so_number": valid_so_num,
@@ -1449,7 +1449,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             {
                 "so_number": corrupt_so_num,
                 "customer": valid_cust,
-                "date_order": "2026-08-15",
+                "date_order": "2026-08-16",
                 "gross_dpp": "100000.00",
                 "discount_dpp": "0.00",
                 "net_dpp": "100000.00",

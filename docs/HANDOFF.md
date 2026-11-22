@@ -1,3 +1,15 @@
+## 2026-11-22T23:27:26+07:00 — Agent Codex-Cloud1 — F4/PR #110: Urutan fixture fault-injection
+
+**Berubah:**
+- Fixture rollback memberi tanggal yang lebih akhir pada SO dengan SKU rusak agar urutan loader menulis SO valid sebelum menolak SO rusak.
+**Diverifikasi:**
+- [F] F4 `45036451333` pada `82101d3`: kedua skenario mencatat 0 selisih owner dan tanggal, serta digest A/B MATCH. Probe batch gagal sebelum menulis SO valid, recovery tidak berjalan, dan replay A mendeteksi drift.
+- [F] Dampak test **SESUAIKAN**. Syarat penulisan nyata, penolakan SKU, rollback bersih, dan digest tetap diuji. 83 tes F4 lokal, Ruff, dan pemeriksaan manifest lulus.
+**Belum diuji:**
+- [BU] Hasil F4 pada commit perbaikan fixture.
+**Berikutnya:**
+- Pantau replay, rollback, dan recovery pada SHA baru serta lanjutkan acceptance sesuai prioritas K5.
+
 ## 2026-11-22T22:05:33+07:00 — Agent Codex-Cloud1 — F4/PR #110: Ownership dan tanggal SO historis
 
 **Berubah:**
