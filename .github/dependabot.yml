@@ -4,7 +4,9 @@ updates:
     directory: /android
     schedule:
       interval: monthly
-    open-pull-requests-limit: 5
+    # One PR per group; a low cap keeps mutually-locked toolchain PRs from
+    # piling up when the upgrade has to land as a single coordinated change.
+    open-pull-requests-limit: 3
     groups:
       kotlin-compose:
         patterns:
@@ -14,6 +16,38 @@ updates:
       android-jetpack:
         patterns:
           - "androidx.*"
+    ignore:
+      # AGP, the Gradle wrapper, Kotlin and KSP are one version-locked set: AGP
+      # needs a minimum Gradle, KSP must match Kotlin, newer AndroidX often
+      # needs a higher compileSdk, and CI cannot test a partial combination.
+      # PR #173 landed them together and superseded #164-#168, so upgrades are
+      # deliberate, planned PRs. Every other dependency (androidx.*, KotlinX,
+      # OkHttp, Robolectric, desugar) keeps flowing, including majors.
+      #
+      # Gradle plugin dependencies are named by plugin id, not by the catalog
+      # alias (`agp`, `kotlin`, `ksp`) and not groupId:artifactId. The
+      # org.jetbrains.kotlin:* form covers the stdlib/test libraries while
+      # org.jetbrains.kotlinx* (coroutines, serialization) stays out of scope.
+      #
+      # KNOWN UPSTREAM LIMITATION: ignore rules do not reliably match plugins
+      # parsed from a version catalog yet
+      # (dependabot/dependabot-core#13937, still open on 2026-11-22), so the
+      # plugin entries are best effort. If a locked-toolchain PR still appears,
+      # close it with `@dependabot ignore this dependency`.
+      - dependency-name: "com.android.application"
+      - dependency-name: "com.android.library"
+      # Kept for the buildscript classpath form of AGP.
+      - dependency-name: "com.android.tools.build:gradle"
+      - dependency-name: "org.jetbrains.kotlin:*"
+      - dependency-name: "org.jetbrains.kotlin.*"
+      - dependency-name: "com.google.devtools.ksp"
+      # The wrapper is pinned to an exact version plus its official checksum by
+      # tests/test_android_ci.py, so any Dependabot wrapper bump fails the gate
+      # until the checksum is verified. Raise it only in a planned toolchain PR.
+      - dependency-name: "gradle-wrapper"
+      # androidx.* is deliberately NOT ignored: the Compose BOM uses CalVer, so
+      # a year change (2024.12.01 -> 2026.09.00) is a semver-major update and
+      # must keep flowing through the kotlin-compose group.
 
   - package-ecosystem: github-actions
     directory: /
