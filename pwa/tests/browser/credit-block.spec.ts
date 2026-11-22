@@ -45,13 +45,12 @@ const openSummary = async (page: Page) => {
     await page.getByRole("button", { name: /SKU · .* · Lihat$/ }).click();
     return page.getByRole("dialog", { name: "Ringkasan order" });
 };
-/** Jumlah order terkirim/antre di Riwayat aktivitas (baris "Order • <outlet>"). */
-async function sentOrders(page: Page) {
+/** Buka Riwayat aktivitas dan TUNGGU baris `ready` tampil, sehingga daftar pasti sudah dimuat. */
+async function openHistory(page: Page, ready: RegExp) {
     await leaveVisit(page);
     await openActivity(page);
-    return activity(page)
-        .getByText(/Order • /)
-        .count();
+    await expect(activity(page).getByText(ready).first()).toBeVisible();
+    return activity(page).getByText(/Order • /);
 }
 
 test("strict + faktur jatuh tempo: display dan keranjang valid, tombol tetap nonaktif karena guard kredit", async ({
@@ -136,7 +135,8 @@ test("strict: kunjungan tetap bisa ditutup tanpa order dan tidak ada order dikir
         .first()
         .click();
     await leaveClosedVisit(page);
-    expect(await sentOrders(page)).toBe(0);
+    // Baris "Tutup kunjungan" tampil = Riwayat sudah dimuat; baru hitung order (harus 0).
+    await expect(await openHistory(page, /Tutup kunjungan • /)).toHaveCount(0);
 });
 
 test("outlet tanpa blokir: display dan keranjang valid, tombol aktif dan order berhasil masuk antrean", async ({
@@ -158,5 +158,6 @@ test("outlet tanpa blokir: display dan keranjang valid, tombol aktif dan order b
     await result
         .getByRole("button", { name: "Lihat order", exact: true })
         .click();
-    expect(await sentOrders(page)).toBeGreaterThan(0);
+    // Menunggu baris order tampil (auto-retry), bukan menghitung sesaat setelah region muncul.
+    await expect(await openHistory(page, /Order • /)).toHaveCount(1);
 });
