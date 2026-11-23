@@ -55,3 +55,21 @@ Still outstanding:
 - quantity breakdown on invoice lines and stock documents;
 - Picking List, Packing List, and custom Delivery Order reports;
 - FEFO pick suggestions based on real lot expiry, availability, reservation, and location data.
+
+## Vendor carton offers on an existing database
+
+An existing master seed marker can leave the 150 catalog SKUs without vendor carton offers.
+Run the targeted backfill against a disposable copy first, using the intended Odoo company ID.
+
+```bash
+FMCG_VENDOR_CARTON_MODE=dry-run FMCG_VENDOR_CARTON_COMPANY_ID=1 \
+  odoo shell -d <database> --no-http < scripts/load_fmcg_seed.py
+```
+
+The dry run lists planned offers with product, vendor, UoM, price and delay, then reports
+the planned and preserved counts. The backfill requires a unique active SKU in company scope
+and validates its principal and carton conversion against the CSV. Existing shared and
+company-local offers are preserved. With the same target and reviewed output, use
+`FMCG_VENDOR_CARTON_MODE=apply` to create the missing offers in one transaction.
+Run dry-run again and expect `planned=0`. The operation does not replay the master seed or
+modify purchase orders, inventory quantities or vendor bills.

@@ -1,3 +1,8 @@
+## 2026-11-23 — Backfill offer karton vendor existing (codex)
+
+- [F] Tambah mode dry-run dan apply dengan company eksplisit. Memvalidasi SKU, principal, serta rasio karton. Apply membuat hanya offer vendor yang belum ada.
+- [BU] Verifikasi native menunggu CI. Belum dijalankan pada demo existing.
+
 ## 2026-11-23 — UoM pembelian vendor FMCG (codex)
 
 - [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.

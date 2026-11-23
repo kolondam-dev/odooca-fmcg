@@ -550,3 +550,7 @@
 [2026-11-23T07:44:32+07:00] [INFO] UoM pembelian vendor FMCG
 - Seed offer native per SKU dan vendor, pertahankan basis UoM PO historis, tambah kontrak PO-receipt-bill pada CI.
 - Task managed by codex agent at 2026-11-23T07:44:32+07:00
+
+[2026-11-23T10:45:07+07:00] [INFO] Backfill offer karton vendor existing
+- Mode dry-run dan apply eksplisit, validasi SKU dan rasio; tidak dijalankan di demo.
+- Task managed by codex agent at 2026-11-23T10:45:07+07:00
