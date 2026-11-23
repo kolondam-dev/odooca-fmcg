@@ -67,6 +67,23 @@
 - [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.
 - [BU] Instalasi Odoo, terjemahan QWeb, dan PDF menunggu verifikasi runtime pada commit ini.
 
+## 2026-11-22 — [BU] FE-12 perbaikan review PR #186 (putaran 2): assertion Riwayat menunggu data dimuat (claude-design)
+
+- Penyebab flaky: `.count()` dibaca segera setelah region Riwayat muncul. Kini helper `openHistory(page, ready)` menunggu baris `ready` tampil dulu. Kasus positif menunggu baris "Order • " dan `toHaveCount(1)` (auto-retry); kasus nol menunggu baris "Tutup kunjungan • " (bukti Riwayat sudah dimuat) baru `toHaveCount(0)`. Source produksi tidak berubah. Terverifikasi lokal 24/24 lulus dengan `--repeat-each=3`.
+
+## 2026-11-22 — [BU] FE-12 perbaikan review PR #186: bukti e2e guard kredit (claude-design)
+
+- Tidak ada perubahan source produksi; hanya penguatan bukti. `tests/browser/credit-block.spec.ts` kini 4 skenario (phone + tablet): (1) strict overdue dengan keranjang valid DAN foto display tersimpan, tombol "Kirim order" nonaktif dan caption "Foto display wajib" tidak ada, jadi penyebabnya hanya guard kredit; (2) `send()` dipaksa dijalankan lewat klik pada tombol yang atributnya dilepas sementara: alert "wajib lunas" muncul, tidak ada Hasil kirim, draft tetap utuh; (3) strict overdue: Selesai kunjungan tanpa order dengan foto check-out + catatan, kunjungan ditutup lokal dan Riwayat tidak memuat "Order • "; (4) outlet tanpa blokir: tombol aktif, order terkirim (Hasil kirim) dan tercatat di Riwayat.
+- Uji mutasi (lokal): menghapus `|| !!strictBlock` dari `disabled` → skenario 1 gagal; menghapus guard di `send()` → skenario 2 gagal. Sumber dipulihkan sebelum commit.
+- Tes unit berbasis regex source dihapus (bukan bukti eksekusi); `credit-block.test.ts` kini 5 tes fungsi murni.
+
+## 2026-11-22 — [F] FE-12: pemblokiran order mode kredit strict di PWA (claude-design)
+
+- `domain/credit-block.ts` (`strictCreditBlock`, `strictCreditMessage`): blokir hanya bila `credit_mode` = `strict` dan outlet ada di `snapshot.outlet_credit`; tidak diketahui (null/absen/blok absen) tidak memblokir. Server tetap otoritatif.
+- OrderScreen: Callout merah di atas katalog, tombol "Kirim order" dinonaktifkan dengan keterangan, dan `send()` menolak sebelum langkah lain. Draft keranjang tetap dapat disusun. VisitPanel: kartu "Tagihan jatuh tempo" menampilkan penjelasan dan arahan minta pelunasan lewat Supervisor/tim penagihan; kunjungan tetap dapat diselesaikan tanpa order.
+- Data demo: Minimarket Pelangi mode strict dengan 2 faktur jatuh tempo (Rp1.250.000).
+- Tes: vitest `credit-block.test.ts` (6, termasuk penjaga regresi), e2e `credit-block.spec.ts` (phone + tablet). Utang: K36 (snapshot basi setelah pelunasan, `limit_due` belum diblokir, daftar faktur/penagihan menunggu BE-7/FE-8, `credit_limit` commercial partner).
+
 ## 2026-11-22 — [BU] BE-19 perbaikan review PR #184: kebijakan efektif parent, hari bisnis WITA bersama, tes faktur nyata (claude-design)
 
 - P2 kebijakan: `commercial.credit_mode` kini memakai commercial partner (parent) seperti `sale.order._compute_credit_limit_exceeded`; parent yang tidak boleh dibaca → `null` (tidak diketahui, PWA tidak memblokir). Karena ikut digest, mengubah kebijakan parent mengubah versi outlet anak.

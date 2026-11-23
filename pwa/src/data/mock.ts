@@ -146,6 +146,15 @@ export class MockProvider implements FieldProvider {
                     latitude: 1.456,
                     longitude: 124.84,
                     radius: 10,
+                    commercial: {
+                        max_order: null,
+                        previous_visit_total: null,
+                        top_sku: null,
+                        payment_terms: "Tunai (wajib lunas)",
+                        credit_limit: null,
+                        contact: null,
+                        credit_mode: "strict" as const,
+                    },
                     ...(this.relaxedLocation
                         ? { demo_unrestricted: true as const }
                         : {}),
@@ -247,6 +256,13 @@ export class MockProvider implements FieldProvider {
                     product_ids: ["demo-product-1", "demo-product-2"],
                 },
             ],
+            outlet_credit: {
+                "demo-outlet-3": {
+                    overdue_count: 2,
+                    overdue_total: 1250000,
+                    oldest_due: "2026-10-20",
+                },
+            },
             approval_tiers: {
                 discount: {
                     scope: "outlet_month" as const,
