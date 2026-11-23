@@ -270,6 +270,52 @@ class TestMobileCreditSnapshot(TransactionCase):
         self.assertEqual(recv["invoices"][0]["due_date"], (day - timedelta(days=10)).isoformat())
 
     @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_collect_today_window_is_exact_and_not_limited_by_the_list_cap(self):
+        """BE-20a: agregat jendela < 7 hari dari SEMUA faktur; +6 ikut, +7/tanpa jatuh tempo tidak."""
+        day = business_date()
+        outlet = self._partner("Credit Collect Outlet", is_company=True)
+        self._assign(outlet)
+        self._invoice(outlet, day - timedelta(days=30), 1000)  # terlambat
+        self._invoice(outlet, day, 2000)  # hari ini
+        partial = self._invoice(outlet, day + timedelta(days=6), 3000)  # +6 ikut
+        self._settle(partial, 2000)  # sisa 2000
+        self._invoice(outlet, day + timedelta(days=7), 4000)  # +7 tidak
+        self._invoice(outlet, day + timedelta(days=20), 5000)  # jauh tidak
+        with patch.object(type(self.env["id.mobile.workday"]), "RECEIVABLE_INVOICE_CAP", 2):
+            recv = self._receivables(outlet)
+        self.assertTrue(recv["truncated"])
+        self.assertEqual(len(recv["invoices"]), 2)
+        self.assertEqual(recv["collect_today"], {
+            "window_days": 7, "count": 3, "total": 5000.0, "overdue_count": 1})
+        self.assertEqual(recv["open_count"], 5)
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_collect_today_covers_commercial_parent_and_only_assigned_outlets(self):
+        day = business_date()
+        parent = self._partner("Credit Collect Parent", is_company=True)
+        child = self._partner("Credit Collect Child", parent_id=parent.id, type="contact")
+        sibling = self._partner("Credit Collect Sibling", parent_id=parent.id, type="contact")
+        self._assign(child)
+        self._invoice(parent, day - timedelta(days=1), 700)
+        self._invoice(sibling, day + timedelta(days=3), 300)
+        self._invoice(parent, day - timedelta(days=1), 999, company=self.foreign)
+        recv = self._receivables(child)
+        self.assertEqual(recv["collect_today"]["count"], 2)
+        self.assertEqual(recv["collect_today"]["total"], 1000.0)
+        self.assertNotIn(str(sibling.id), self._snapshot()["outlet_receivables"])
+
+    @freeze_time("2026-11-21 17:00:00", tick=False)
+    def test_collect_today_uses_wita_business_day(self):
+        """01:00 WITA 22 Nov = 17:00 UTC 21 Nov: jendela memakai tanggal WITA."""
+        day = business_date()
+        self.assertEqual(day.isoformat(), "2026-11-22")
+        outlet = self._partner("Credit Collect WITA", is_company=True)
+        self._assign(outlet)
+        self._invoice(outlet, day + timedelta(days=6), 100)
+        self._invoice(outlet, day + timedelta(days=7), 200)
+        self.assertEqual(self._receivables(outlet)["collect_today"]["count"], 1)
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
     def test_receivables_outside_digest_and_follow_payments(self):
         outlet = self._partner("Credit Pay Recv", is_company=True)
         self._assign(outlet)
