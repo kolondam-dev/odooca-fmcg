@@ -10,6 +10,7 @@ import {
     ORDER_V2_UNSUPPORTED,
 } from "../domain/order-pricing";
 import { quoteV2 } from "../domain/order-discount";
+import { strictCreditBlock, strictCreditMessage } from "../domain/credit-block";
 import {
     approvalPreviewText,
     previewApproval,
@@ -445,6 +446,8 @@ export function OrderScreen({
             ? null
             : creditLimit - (outlet?.commercial?.ar_outstanding ?? 0);
     const overCredit = creditLeft !== null && totals.total > creditLeft;
+    // FE-12: mode strict + faktur jatuh tempo → order baru diblokir (server tetap otoritatif).
+    const strictBlock = strictCreditBlock(outlet, snapshot.outlet_credit);
     // Pratinjau tier (FE-11): indikasi saja, server menentukan saat order dikirim.
     const cartPrincipal =
         snapshot.products.find(
@@ -487,6 +490,10 @@ export function OrderScreen({
         setError("");
         if (!orderV2Enabled(snapshot)) {
             setError(ORDER_V2_UNSUPPORTED);
+            return;
+        }
+        if (strictBlock) {
+            setError(strictCreditMessage(strictBlock, money));
             return;
         }
         if (!display) {
@@ -692,7 +699,11 @@ export function OrderScreen({
                     </button>
                 </Callout>
             ) : null}
-            {overCredit ? (
+            {strictBlock ? (
+                <Callout tone="bad" icon="warning" alert>
+                    {strictCreditMessage(strictBlock, money)}
+                </Callout>
+            ) : overCredit ? (
                 <Callout tone="warn" icon="warning">
                     Limit kredit terlampaui · order menunggu approval
                 </Callout>
@@ -831,11 +842,19 @@ export function OrderScreen({
                         </Callout>
                     ) : null}
                     <Button
-                        disabled={busy || !restored || !display}
+                        disabled={
+                            busy || !restored || !display || !!strictBlock
+                        }
                         onClick={() => void send()}
                     >
                         {busy ? "Mengirim…" : "Kirim order"}
                     </Button>
+                    {strictBlock ? (
+                        <ActionCaption>
+                            Diblokir: outlet mode wajib lunas dengan{" "}
+                            {strictBlock.count} faktur jatuh tempo.
+                        </ActionCaption>
+                    ) : null}
                     {!display ? (
                         <ActionCaption>
                             Foto display toko wajib sebelum order dikirim.
