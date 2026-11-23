@@ -110,6 +110,12 @@ untuk tie-out GL.
    `account_asset_management` pada image/profil; saat ini belum.
 2. Spike install + upgrade pada DB disposable, termasuk konflik `excludes:
    ["account_asset"]` dan dependensi `report_xlsx_helper`.
+   [BU] Profil `assets` CI dan verifikasi posted depreciation→GL telah disiapkan;
+   hasil runtime exact-SHA masih wajib. Pada SHA pin, `move_check` berarti
+   `move_id` terisi, **bukan** bukti posting mandiri: oracle harus memeriksa
+   `move.state == posted`, seluruh AML, company, tanggal, dan saldo. Baris
+   `type=create` dapat tanpa `move_id`; jangan pakai sebagai bukti akuisisi
+   tanpa sumber GL lain.
 3. [A] **Penilaian lisensi sebelum menambah dependensi.** Modul OCA
    `account_asset_management` berlisensi AGPL-3, sedangkan addon custom repo
    memakai LGPL-3. Menjadikannya dependensi langsung menimbulkan pertanyaan
