@@ -1,3 +1,9 @@
+## 2026-11-23 — [F] BE-20: keputusan pemilik D8 dan rancangan SJP (claude-design)
+
+- [F] Jawaban pemilik dicatat: SJP dibuat finance/AR admin dari AR terbuka (Generate SJP: tanggal jatuh tempo + salesman/rute); pelaksana salesman/delivery/supervisor/branch manager; hasil paid/partial/unpaid wajib diposting lalu divalidasi kasir dan accounting; setoran uang ke admin kasir, rekap SJP dan copy/asli faktur ke finance AR control.
+- [F] Rancangan `docs/ui/BE20_SJP_DESIGN.md`: addon `id_ar_collection`, model SJP/line/receipt, grup, fase BE-20b–e + FE-8b. Hanya dokumen.
+- [BU] Empat pertanyaan terbuka (SJP per hari, unpaid berlanjut, segregasi kasir/accounting, cetak PDF) menunggu pemilik sebelum BE-20b.
+
 ## 2026-11-23 — [F] BE-20a: agregat "wajib ditagih hari ini" dari server (claude-design)
 
 - [F] `_outlet_receivables` menambah `collect_today` {window_days 7, count, total, overdue_count} dari SEMUA faktur terbuka (commercial partner, perusahaan sesi, jatuh tempo < hari bisnis WITA + 7); outlet = `outlet_ids` penugasan hari itu (PJP). Volatil, di luar digest. 3 tes Odoo baru (+6/+7, cap daftar tidak membatasi agregat, parent/saudara, WITA) [BU: hanya CI, tidak ada Odoo di sandbox].
