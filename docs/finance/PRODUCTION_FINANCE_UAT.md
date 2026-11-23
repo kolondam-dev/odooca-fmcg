@@ -180,6 +180,11 @@ dan counterexample pada data sintetis yang di-rollback; hasil tersebut **tidak**
 menggantikan workbook live, digest/provenance, AML privat, freeze periode, uji
 Sales-only production, atau tanda tangan Controller + QA.
 
+Untuk FIN37/FIN38, gate fixture juga membandingkan XLSX wizard dengan AML/
+partial-reconcile independen (alokasi period, exception, realized/unrealized,
+exchange move, dan GL per currency). Ini tetap tidak membuktikan jurnal FX
+non-sintetis atau kebijakan accrual/rate perusahaan pada live.
+
 Untuk bukti live, simpan workbook dan sumber AML hanya di storage privat
 berotorisasi. Catatan publik cukup memuat commit live, company/periode/filter,
 digest, jumlah/agregat teredaksi, hasil comparator, lokasi bukti privat, dan
