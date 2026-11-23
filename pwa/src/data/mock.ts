@@ -11,6 +11,13 @@ import { orderHasDiscountRequest } from "../domain/order-pricing";
 import { ExpenseRealizationSchema } from "../domain/settlement-contracts";
 import { FieldStore } from "../storage/store";
 import { isDemoMode } from "../domain/running-mode";
+import { fieldBusinessDate } from "../domain/morning";
+
+/** Tanggal bisnis WITA bergeser n hari (data demo relatif agar tidak basi). */
+function dayOffset(n: number) {
+    const [y, m, d] = fieldBusinessDate().split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+}
 const actors: Record<string, Omit<Identity, "businessDate">> = {
     sales: {
         id: "DEMO-ANDRE",
@@ -260,23 +267,23 @@ export class MockProvider implements FieldProvider {
                 "demo-outlet-3": {
                     overdue_count: 2,
                     overdue_total: 1250000,
-                    oldest_due: "2026-10-20",
+                    oldest_due: dayOffset(-34),
                 },
             },
             outlet_receivables: {
                 "demo-outlet-3": {
-                    outstanding_total: 1550000,
-                    open_count: 3,
+                    outstanding_total: 1750000,
+                    open_count: 4,
                     overdue_count: 2,
                     overdue_total: 1250000,
-                    oldest_due: "2026-10-20",
+                    oldest_due: dayOffset(-34),
                     truncated: false,
                     invoices: [
                         {
                             reference: "INV/2026/0412",
                             partner: "Minimarket Pelangi",
-                            invoice_date: "2026-09-20",
-                            due_date: "2026-10-20",
+                            invoice_date: dayOffset(-64),
+                            due_date: dayOffset(-34),
                             total: 750000,
                             balance: 750000,
                             overdue: true,
@@ -284,8 +291,8 @@ export class MockProvider implements FieldProvider {
                         {
                             reference: "INV/2026/0455",
                             partner: "Minimarket Pelangi",
-                            invoice_date: "2026-10-05",
-                            due_date: "2026-11-05",
+                            invoice_date: dayOffset(-48),
+                            due_date: dayOffset(-18),
                             total: 500000,
                             balance: 500000,
                             overdue: true,
@@ -293,10 +300,19 @@ export class MockProvider implements FieldProvider {
                         {
                             reference: "INV/2026/0501",
                             partner: "Minimarket Pelangi",
-                            invoice_date: "2026-11-10",
-                            due_date: "2026-12-10",
+                            invoice_date: dayOffset(-25),
+                            due_date: dayOffset(5),
                             total: 300000,
                             balance: 300000,
+                            overdue: false,
+                        },
+                        {
+                            reference: "INV/2026/0533",
+                            partner: "Minimarket Pelangi",
+                            invoice_date: dayOffset(-10),
+                            due_date: dayOffset(20),
+                            total: 200000,
+                            balance: 200000,
                             overdue: false,
                         },
                     ],

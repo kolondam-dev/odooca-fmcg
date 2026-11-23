@@ -1,3 +1,9 @@
+## 2026-11-23 — [F] FE-8 baca: tutup P2 PR #189, total Wajib ditagih dari daftar terpotong (claude-design)
+
+- [F] `mustCollectToday` kini mengembalikan `complete`; daftar server terpotong (50 faktur) dan faktur termuat terakhir masih di jendela 7 hari ⇒ angka hanya minimum. VisitPanel menampilkan "Minimal Rp … · N+ faktur (daftar terpotong)" atau "Belum diketahui (daftar terpotong)" plus catatan; "Tidak ada" hanya bila lengkap. Piutang berjalan/jatuh tempo tetap agregat server.
+- [F] Tes: 6 unit baru (60 faktur terlambat/50 terkirim, terpotong lewat +7, +6, tanpa jatuh tempo) dan e2e phone+tablet >50 faktur. Docstring `creditRoom` diselaraskan (piutang tidak diketahui dianggap 0).
+- [BU] Total lengkap menunggu agregat jendela dari server (BE-20).
+
 ## 2026-11-23 — PR #190 backfill offer karton vendor existing (codex)
 
 - [F] Mode dry-run dan apply memvalidasi SKU, principal serta rasio karton. Apply membuat hanya offer baru pada company yang dipilih.
@@ -36,6 +42,14 @@
 - [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.
 - [F] Loader PO kanonik menetapkan UoM inventaris secara eksplisit agar kuantitas dan harga historis berbasis unit tetap sepadan.
 - [BU] Tes Odoo untuk replay, PO karton, receipt, dan data baris vendor bill menunggu CI. Aktivasi master pada basis data yang sudah memakai marker seed tetap terpisah.
+
+## 2026-11-23 — [F] FE-8 (bagian baca): kartu Tagihan, daftar faktur, Wajib ditagih hari ini (claude-design)
+
+- `domain/receivables.ts`: `daysUntilDue`, `dueLabel`, `mustCollectToday` (jatuh tempo < 7 hari dari hari bisnis, termasuk yang terlambat; aturan pemilik 2026-11-23), `outstandingFor`. `outlet-card.ts`: `creditRoom` dan `creditExceeded` kini mengikuti `credit_mode` (strict tidak memeriksa nominal) dan limit 0 = tanpa pemeriksaan (memperbaiki OrderScreen yang menganggap limit 0 selalu melebihi).
+- VisitPanel: kartu "Tagihan" (menggantikan "Tagihan jatuh tempo / Segera tersedia") berisi status (Wajib ditagih hari ini / Piutang berjalan / Tidak ada tagihan / Belum tersedia), piutang berjalan, sudah jatuh tempo, wajib ditagih hari ini, daftar faktur (8 teratas, label jatuh tempo, nominal sisa), callout strict/limit. Tanpa blok `outlet_receivables` memakai perilaku lama (`ar_outstanding`).
+- Tidak ada tombol "Mulai penagihan" dan tidak ada pencatatan: command `collection.*` backend masih kosong. Modul backend "AR collection assignment" (surat jalan penagihan) dicatat sebagai BE-20.
+- Data demo relatif terhadap hari bisnis (Minimarket Pelangi 4 faktur); `outlet-daftar.spec` diperbarui (server lama tanpa blok piutang).
+- Tes: vitest `receivables.test.ts` (8), e2e `receivables.spec.ts` (phone + tablet). Utang: K37 (penafsiran "< 7 hari" termasuk terlambat perlu konfirmasi pemilik).
 
 ## 2026-11-23 — [F] BE-7: piutang berjalan dan daftar faktur terbuka pada snapshot (claude-design)
 

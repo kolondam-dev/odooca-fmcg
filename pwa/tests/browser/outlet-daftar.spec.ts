@@ -122,6 +122,8 @@ for (const [name, limit, owed, expectNotice] of [
                 ...s.outlets[0],
                 commercial: commercial(limit, owed),
             };
+            // Server lama tanpa blok piutang (BE-7): memakai commercial.ar_outstanding.
+            delete s.outlet_receivables;
         });
         await openSales(page);
         await page.getByRole("button", { name: /Toko Sinar Pagi/ }).click();
@@ -131,7 +133,7 @@ for (const [name, limit, owed, expectNotice] of [
             .click();
         const hub = page.getByRole("region", { name: "Kunjungan outlet" });
         await expect(
-            hub.getByRole("heading", { name: "Tagihan jatuh tempo" }),
+            hub.getByRole("heading", { name: "Tagihan" }),
         ).toBeVisible();
         await expect(hub.getByText("Piutang berjalan")).toBeVisible();
         const notice = hub.getByText(
@@ -139,9 +141,9 @@ for (const [name, limit, owed, expectNotice] of [
         );
         if (expectNotice) await expect(notice).toBeVisible();
         else await expect(notice).toHaveCount(0);
-        // Faktur tidak dikarang: daftar faktur belum tersedia dan order tidak menunggu tagihan.
+        // Faktur tidak dikarang: tanpa blok piutang server, daftar faktur tidak ada dan order tidak menunggu tagihan.
         await expect(
-            hub.getByText(/Daftar faktur .* belum aktif/),
+            hub.getByText(/Data piutang belum dikirim server/),
         ).toBeVisible();
         await expect(
             hub.getByRole("button", { name: "Buat order di outlet" }),
