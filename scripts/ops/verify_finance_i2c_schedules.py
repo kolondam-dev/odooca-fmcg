@@ -19,6 +19,7 @@ incomplete or reversed date pairs before anything reaches the ledger.
 
 from collections import defaultdict
 from datetime import date
+import base64
 import json
 from pathlib import Path
 import sys
@@ -27,6 +28,7 @@ from odoo.exceptions import ValidationError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent) if "__file__" in globals() else "/opt/scripts/ops")
 import verify_finance_i2_ledgers_core as i2a  # noqa: E402
+import verify_finance_i2c_xlsx as xlsx_oracle  # noqa: E402
 import verify_finance_ledger_security as sec  # noqa: E402
 
 MISSING_SCHEDULE = "missing_schedule_metadata"
@@ -68,15 +70,29 @@ def independent_accrual(env, company, account, as_of):
         control = round_amt(control + balance)
         start = getattr(line, "start_date", None) if has_metadata else None
         end = getattr(line, "end_date", None) if has_metadata else None
+        identity = {
+            "move_id": line.move_id.id,
+            "account_id": line.account_id.id,
+            "partner_id": line.partner_id.id or 0,
+            "balance": balance,
+        }
         if not start or not end:
-            exceptions[line.id] = {"balance": balance, "reason": MISSING_SCHEDULE}
+            exceptions[line.id] = {**identity, "reason": MISSING_SCHEDULE}
             continue
         if start > end:
-            exceptions[line.id] = {"balance": balance, "reason": "invalid_schedule_range"}
+            exceptions[line.id] = {**identity, "reason": "invalid_schedule_range"}
             continue
         total_days = (end - start).days + 1
         elapsed = min(max((min(cutoff, end) - start).days + 1, 0), total_days)
-        rows[line.id] = {"balance": balance, "recognized": round_amt(balance * elapsed / total_days)}
+        recognized = round_amt(balance * elapsed / total_days)
+        rows[line.id] = {
+            **identity,
+            "start_date": start.isoformat(),
+            "end_date": end.isoformat(),
+            "total_days": total_days,
+            "recognized": recognized,
+            "remaining": round_amt(balance - recognized),
+        }
     return {
         "has_metadata": has_metadata,
         "rows": rows,
@@ -118,6 +134,43 @@ def assert_accrual(snapshot, oracle):
     require(
         snapshot["balanced"] and snapshot["unexplained_difference"] == 0.0,
         f"FIN37 schedule does not tie: {snapshot['unexplained_difference']}",
+    )
+
+
+def _export_report(env, company, report_type, as_of, **values):
+    """Render the real wizard XLSX inside the disposable fixture."""
+    wizard = env["id.finance.report.wizard"].with_context(
+        allowed_company_ids=company.ids,
+    ).create({
+        "company_id": company.id,
+        "company_ids": [(6, 0, company.ids)],
+        "report_type": report_type,
+        "as_of_date": as_of,
+        "only_posted_moves": True,
+        **values,
+    })
+    action = wizard.action_export_xlsx()
+    require(action.get("type") == "ir.actions.act_url",
+            f"XLSX export did not download for {report_type}")
+    return base64.b64decode(wizard.result_xlsx or b"")
+
+
+def assert_accrual_export(env, company, oracle, as_of, account_ids):
+    payload = _export_report(
+        env, company, "accrual_schedule", as_of,
+        account_ids=[(6, 0, account_ids)],
+    )
+    totals = {
+        "control_total": oracle["control_total"],
+        "recognized_total": oracle["recognized_total"],
+        "remaining_total": company.currency_id.round(
+            oracle["control_total"] - oracle["recognized_total"]
+            - oracle["exception_total"],
+        ),
+        "exception_total": oracle["exception_total"],
+    }
+    return xlsx_oracle.verify_accrual_schedule(
+        payload, oracle["rows"], oracle["exceptions"], totals,
     )
 
 
@@ -306,11 +359,145 @@ def build_fx_fixture(env, suffix):
     }
 
 
+MONETARY_ACCOUNT_TYPES = (
+    "asset_receivable", "liability_payable", "asset_cash",
+    "liability_credit_card", "asset_current", "liability_current",
+    "asset_non_current", "liability_non_current",
+)
+
+
+def _fx_leg_currency(line, company):
+    return line.currency_id.id or company.currency_id.id
+
+
+def _fx_leg_rate(line):
+    """Company currency per unit of the leg's foreign currency."""
+    if not line.amount_currency:
+        return None
+    return line.balance / line.amount_currency
+
+
+def _fx_partial_currency(partial, company):
+    return (
+        partial.debit_move_id.currency_id.id
+        or partial.credit_move_id.currency_id.id
+        or company.currency_id.id
+    )
+
+
+def _fx_is_write_off(move):
+    """A plain entry mixing a monetary line with a non-monetary one."""
+    if move.move_type != "entry":
+        return False
+    types = move.line_ids.mapped("account_id.account_type")
+    return any(t and t not in MONETARY_ACCOUNT_TYPES for t in types) and any(
+        t in MONETARY_ACCOUNT_TYPES for t in types
+    )
+
+
+def _fx_move_ids(partial):
+    return {
+        partial.debit_move_id.move_id.id,
+        partial.credit_move_id.move_id.id,
+    }
+
+
+def _fx_reverse_target(partial):
+    debit_move = partial.debit_move_id.move_id
+    credit_move = partial.credit_move_id.move_id
+    return debit_move.reversed_entry_id.id or credit_move.reversed_entry_id.id or None
+
+
+def _fx_cancelled_reversals(partials, company, round_amt):
+    """Return ids of partials that undo each other completely.
+
+    Only mutual, unique pairs whose currency and functional magnitudes mirror
+    exactly cancel. A non-mirror pair makes the report incomplete, so the oracle
+    fails instead of netting an unexplained residual.
+    """
+    parent = {}
+
+    def find(node):
+        parent.setdefault(node, node)
+        while parent[node] != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+        return node
+
+    def union(left, right):
+        left_root, right_root = find(left), find(right)
+        if left_root != right_root:
+            parent[right_root] = left_root
+
+    for partial in partials:
+        find(partial.debit_move_id.id)
+        find(partial.credit_move_id.id)
+        union(partial.debit_move_id.id, partial.credit_move_id.id)
+
+    groups = defaultdict(list)
+    for partial in partials:
+        groups[find(partial.debit_move_id.id)].append(partial)
+
+    cancelled = set()
+    for group in groups.values():
+        candidates = {
+            partial.id: [
+                other for other in group
+                if other.id != partial.id
+                and (_fx_reverse_target(partial) in _fx_move_ids(other)
+                     or _fx_reverse_target(other) in _fx_move_ids(partial))
+            ]
+            for partial in group
+        }
+        seen = set()
+        for partial in group:
+            if partial.id in seen:
+                continue
+            component = []
+            stack = [partial]
+            while stack:
+                node = stack.pop()
+                if node.id in seen:
+                    continue
+                seen.add(node.id)
+                component.append(node)
+                stack.extend(candidates[node.id])
+            links = {
+                (item.id, other.id)
+                for item in component
+                for other in candidates[item.id]
+            }
+            if not links:
+                continue
+            if len(component) != 2 or len(links) != 2:
+                raise ValueError(
+                    "FIN38 reversal component is ambiguous: "
+                    f"{sorted(item.id for item in component)}"
+                )
+            first, second = component
+            currency_gap = round_amt(
+                max(abs(first.debit_amount_currency), abs(first.credit_amount_currency))
+                - max(abs(second.debit_amount_currency), abs(second.credit_amount_currency))
+            )
+            functional_gap = round_amt(abs(first.amount) - abs(second.amount))
+            if (_fx_partial_currency(first, company)
+                    != _fx_partial_currency(second, company)
+                    or currency_gap or functional_gap):
+                raise ValueError(
+                    "FIN38 reversal pair does not cancel: "
+                    f"{sorted((first.id, second.id))}"
+                )
+            cancelled.update((first.id, second.id))
+    return cancelled
+
+
 def independent_fx(env, fixture, as_of):
     """Rebuild FIN38 totals without the production helper.
 
     Residuals are reconstructed from dated partials, never read from the current
-    ``amount_residual``, and the tie-out is per currency with no netting.
+    ``amount_residual``, and the tie-out is per currency with no netting. A
+    partial whose counterpart falls outside the report filter still reduces the
+    selected line; otherwise a filtered payment would look open again.
     """
     company = fixture["company"]
     cutoff = _cutoff(as_of)
@@ -331,56 +518,108 @@ def independent_fx(env, fixture, as_of):
             "asset_non_current", "liability_non_current",
         ]),
     ], order="date asc, move_id asc, id asc")
-    line_by_id = {line.id: line for line in lines}
 
-    selected = list(line_by_id)
-    # Same OR scope as production: a partial touching a selected line must apply
-    # even when its counterpart is outside the filtered set, otherwise a July
-    # invoice paid through a bank journal looks open again under journal filters.
+    # Scope the partials by every posted monetary line, not only the foreign
+    # ones: a settlement, write-off or functional-currency counterpart outside
+    # the revaluation base still reduces the selected line's residual.
+    monetary = env["account.move.line"].search([
+        ("company_id", "=", company.id),
+        ("date", "<=", cutoff),
+        ("parent_state", "=", "posted"),
+        ("display_type", "not in", ["line_note", "line_section", "line_subsection"]),
+        ("account_id.account_type", "in", list(MONETARY_ACCOUNT_TYPES)),
+    ])
+    scoped_ids = list(monetary.ids)
     partials = env["account.partial.reconcile"].search([
         ("company_id", "=", company.id),
         ("max_date", "<=", cutoff),
         "|",
-        ("debit_move_id", "in", selected),
-        ("credit_move_id", "in", selected),
-    ], order="max_date asc, id asc") if selected else env["account.partial.reconcile"]
+        ("debit_move_id", "in", scoped_ids),
+        ("credit_move_id", "in", scoped_ids),
+    ], order="max_date asc, id asc") if scoped_ids else env["account.partial.reconcile"]
 
     matched = defaultdict(float)
     matched_currency = defaultdict(float)
-    realized = unposted = 0.0
-    realized_by_currency = defaultdict(float)
-    tied = set()
+    matched_amount = defaultdict(float)
     for partial in partials:
-        debit = line_by_id.get(partial.debit_move_id.id)
-        credit = line_by_id.get(partial.credit_move_id.id)
-        if not debit or not credit:
-            continue
-        if not debit.amount_currency or not credit.amount_currency:
-            continue
-        matched[debit.id] = round_amt(matched[debit.id] - partial.amount)
-        matched_currency[debit.id] = round_amt(
-            matched_currency[debit.id] - abs(partial.debit_amount_currency)
+        debit_id = partial.debit_move_id.id
+        credit_id = partial.credit_move_id.id
+        matched[debit_id] = round_amt(matched[debit_id] - partial.amount)
+        matched_currency[debit_id] = round_amt(
+            matched_currency[debit_id] - abs(partial.debit_amount_currency)
         )
-        matched[credit.id] = round_amt(matched[credit.id] + partial.amount)
-        matched_currency[credit.id] = round_amt(
-            matched_currency[credit.id] + abs(partial.credit_amount_currency)
+        matched[credit_id] = round_amt(matched[credit_id] + partial.amount)
+        matched_currency[credit_id] = round_amt(
+            matched_currency[credit_id] + abs(partial.credit_amount_currency)
         )
+        matched_amount[debit_id] = round_amt(
+            matched_amount[debit_id] + abs(partial.amount)
+        )
+        matched_amount[credit_id] = round_amt(
+            matched_amount[credit_id] + abs(partial.amount)
+        )
+
+    tied = {
+        partial.exchange_move_id.id
+        for partial in partials
+        if partial.exchange_move_id
+    }
+    cancelled = _fx_cancelled_reversals(partials, company, round_amt)
+
+    realized = unposted = 0.0
+    realized_rows = {}
+    unposted_rows = {}
+    for partial in sorted(
+        (item for item in partials if item.id not in cancelled),
+        key=lambda item: (str(item.max_date or ""), item.id),
+    ):
+        debit = partial.debit_move_id
+        credit = partial.credit_move_id
+        debit_currency = _fx_leg_currency(debit, company)
+        credit_currency = _fx_leg_currency(credit, company)
+        if (company.currency_id.id in {debit_currency, credit_currency}
+                and len({debit_currency, credit_currency}) > 1):
+            # One leg is already in company currency: no exchange difference.
+            continue
+        if _fx_is_write_off(debit.move_id) or _fx_is_write_off(credit.move_id):
+            # A write-off removes carrying value without an FX settlement.
+            continue
+        debit_rate = _fx_leg_rate(debit)
+        credit_rate = _fx_leg_rate(credit)
+        if debit_rate is None or credit_rate is None:
+            raise ValueError(
+                f"FIN38 partial {partial.id} cannot be classified without a "
+                "leg currency amount"
+            )
         amount = round_amt(
-            abs(partial.debit_amount_currency) * (debit.balance / debit.amount_currency)
-            - abs(partial.credit_amount_currency) * (credit.balance / credit.amount_currency)
+            abs(partial.debit_amount_currency) * debit_rate
+            - abs(partial.credit_amount_currency) * credit_rate
         )
         if partial.exchange_move_id:
-            tied.add(partial.exchange_move_id.id)
             realized = round_amt(realized + amount)
-            realized_by_currency[debit.currency_id.id] = round_amt(
-                realized_by_currency[debit.currency_id.id] + amount
-            )
+            realized_rows[partial.id] = (amount,)
         else:
             unposted = round_amt(unposted + amount)
+            unposted_rows[partial.id] = (amount,)
+
+    realized_by_currency = defaultdict(float)
+    # Currency totals follow the realized rows, keyed by the partial's currency.
+    by_partial = {partial.id: partial for partial in partials}
+    for partial_id, values in realized_rows.items():
+        partial = by_partial[partial_id]
+        currency_id = _fx_leg_currency(partial.debit_move_id, company)
+        realized_by_currency[currency_id] = round_amt(
+            realized_by_currency[currency_id] + values[0]
+        )
 
     unrealized = 0.0
+    unrealized_rows = {}
+    over_reconciled = {
+        line.id for line in lines
+        if round_amt(matched_amount[line.id]) > round_amt(abs(line.balance)) + 0.01
+    }
     for line in lines:
-        if line.account_id.id in exchange_ids:
+        if line.account_id.id in exchange_ids or line.id in over_reconciled:
             continue
         residual = round_amt(line.balance + matched[line.id])
         residual_currency = round_amt(line.amount_currency + matched_currency[line.id])
@@ -389,7 +628,12 @@ def independent_fx(env, fixture, as_of):
         rate = line.currency_id._get_conversion_rate(
             line.currency_id, company.currency_id, company, cutoff,
         )
-        unrealized = round_amt(unrealized + round_amt(residual_currency * rate - residual))
+        revalued = round_amt(residual_currency * rate)
+        difference = round_amt(revalued - residual)
+        unrealized = round_amt(unrealized + difference)
+        unrealized_rows[line.id] = (
+            residual_currency, residual, rate, revalued, difference,
+        )
 
     gl_totals = defaultdict(float)
     for line in env["account.move.line"].search([
@@ -397,14 +641,18 @@ def independent_fx(env, fixture, as_of):
         ("account_id", "in", list(exchange_ids)),
         ("date", "<=", cutoff),
         ("parent_state", "=", "posted"),
+        ("display_type", "not in", ["line_note", "line_section", "line_subsection"]),
     ]):
         currency_id = line.currency_id.id or company.currency_id.id
         gl_totals[currency_id] = round_amt(gl_totals[currency_id] + line.balance)
 
     return {
         "unrealized_total": unrealized,
+        "unrealized_rows": unrealized_rows,
         "realized_total": realized,
+        "realized_rows": realized_rows,
         "unposted_total": unposted,
+        "unposted_rows": unposted_rows,
         "tied_exchange_move_ids": sorted(tied),
         "realized_by_currency": dict(realized_by_currency),
         "gl_totals": dict(gl_totals),
@@ -460,6 +708,32 @@ def assert_fx(snapshot, oracle, round_amt):
     require(not failing, f"FIN38 tie-out flagged currencies: {sorted(failing)}")
 
 
+def assert_fx_export(env, company, oracle, as_of):
+    payload = _export_report(env, company, "fx_revaluation", as_of)
+    currencies = set(oracle["realized_by_currency"]) | set(oracle["gl_totals"])
+    expected_gl = {
+        currency_id: (
+            oracle["realized_by_currency"].get(currency_id, 0.0),
+            oracle["gl_totals"].get(currency_id, 0.0),
+            company.currency_id.round(
+                oracle["realized_by_currency"].get(currency_id, 0.0)
+                - oracle["gl_totals"].get(currency_id, 0.0),
+            ),
+        )
+        for currency_id in currencies
+    }
+    return xlsx_oracle.verify_fx_revaluation(
+        payload,
+        oracle["unrealized_rows"],
+        oracle["realized_rows"],
+        oracle["unposted_rows"],
+        {currency_id: (amount,)
+         for currency_id, amount in oracle["realized_by_currency"].items()},
+        oracle["tied_exchange_move_ids"],
+        expected_gl,
+    )
+
+
 def check_fin37(env, fixture, evidence, check_hard_coded=False):
     company, accounts, _journals, _partner, scale, _docs = fixture
     models = env(context=dict(env.context, allowed_company_ids=[company.id]))
@@ -469,6 +743,13 @@ def check_fin37(env, fixture, evidence, check_hard_coded=False):
             company.id, as_of, account_ids=[accounts["cash"].id],
         )
         assert_accrual(snapshot, oracle)
+        exported = assert_accrual_export(
+            env, company, oracle, as_of, [accounts["cash"].id],
+        )
+        evidence["cases"].append({
+            "case": "FIN37_xlsx_vs_independent_AML", "company": company.id,
+            "as_of": as_of, **exported,
+        })
         evidence["cases"].append({
             "company": company.name, "scale": scale, "report": "FIN37",
             "as_of": as_of, "result": "PASS",
@@ -586,6 +867,13 @@ def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
             company.id, as_of, account_ids=[accounts["expense"].id],
         )
         assert_accrual(snapshot, oracle)
+        exported = assert_accrual_export(
+            env, company, oracle, as_of, [accounts["expense"].id],
+        )
+        evidence["cases"].append({
+            "case": "FIN37_xlsx_vs_independent_AML", "company": company.id,
+            "as_of": as_of, **exported,
+        })
         evidence["cases"].append({
             "company": company.name, "scale": scale, "report": "FIN37",
             "as_of": as_of, "metadata": oracle["has_metadata"], "result": "PASS",
@@ -713,6 +1001,11 @@ def check_fin38(env, fixture, evidence, check_hard_coded=False):
         oracle = independent_fx(env, fixture, as_of)
         snapshot = models["id.finance.fx.revaluation"]._snapshot(company.id, as_of)
         assert_fx(snapshot, oracle, round_amt)
+        exported = assert_fx_export(env, company, oracle, as_of)
+        evidence["cases"].append({
+            "case": "FIN38_xlsx_vs_independent_AML", "company": company.id,
+            "as_of": as_of, **exported,
+        })
         evidence["cases"].append({
             "company": company.name, "scale": 1, "report": "FIN38",
             "as_of": as_of, "result": "PASS",

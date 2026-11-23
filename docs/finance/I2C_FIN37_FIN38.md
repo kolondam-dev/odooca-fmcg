@@ -83,6 +83,26 @@ akan menghasilkan +100.000 dan gagal.
 
 ## Verifikasi
 
+**XLSX wizard vs oracle independen (slice lanjutan):**
+`scripts/ops/verify_finance_i2c_xlsx.py` membaca workbook dari
+`id.finance.report.wizard` tanpa Odoo. Gate disposable mengekspor FIN37 untuk
+fixture metadata maupun fail-closed dan FIN38 pada dua tanggal as-of, kemudian
+membandingkannya dengan AML/partial-reconcile yang dibaca langsung oleh
+`verify_finance_i2c_schedules.py`.
+
+- FIN37 mematok coverage dan identitas line/exception, balance, tanggal jadwal,
+  hari, recognized/remaining, alasan exception, serta menjumlah ulang period
+  JSON dan seluruh total dari baris;
+- FIN38 mematok coverage dan nilai unrealized/realized/unposted, total per mata
+  uang, exchange-move evidence, dan baris GL per currency tanpa netting silang;
+- nominal XLSX wajib berupa numeric cell dan nominal nested JSON wajib berupa
+  JSON number. Sebelas counterexample offline menolak offset yang tetap
+  seimbang, mutasi period, extra line, nominal teks, pergantian exchange move,
+  dan netting dua mata uang.
+
+[BU] Render workbook asli dan tie-out native slice ini menunggu Finance I0 pada
+exact SHA PR. Bukti fixture tetap bukan workbook live atau sign-off Controller.
+
 **Unit (tanpa database):** `tests/test_finance_i2c_schedules.py`, 20 tes —
 penolakan metadata hilang/terbalik, pengakuan penuh/parsial/sebelum mulai,
 keseimbangan jadwal, empat kasus realized (gain, loss, parsial, mata uang

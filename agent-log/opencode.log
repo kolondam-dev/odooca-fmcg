@@ -1,4 +1,4 @@
-[2026-10-31T12:15:00+07:00] [INFO] PWA taking order multi-UoM + perbaikan alur sesi
+﻿[2026-10-31T12:15:00+07:00] [INFO] PWA taking order multi-UoM + perbaikan alur sesi
 - Branch agen/pwa-taking-order-multiuom-v1 dari origin/main 09be9f4; belum commit/push saat entri ini ditulis.
 - Shell: logo 116 px, topbar 56 px, bottom nav navy dengan pil putih aktif, overscroll-behavior-y none, guard beforeunload saat form/antrean belum aman.
 - Multi-UoM: product-units.ts + order-pricing.ts; label satuan opsional (carton_label/pack_label/unit_label) di SnapshotSchema.products dan CatalogRowSchema; enum wire tetap carton|pack|pcs; contracts/openapi.json diregenerasi.
@@ -12,7 +12,7 @@
 
 [2026-10-31T12:53:38+07:00] [INFO] e2e browser lokal PASS 134/134 + gate final
 - Playwright 134/134 PASS (67 phone + 67 tablet, 14 file) memakai PWA_CHROMIUM_EXECUTABLE=chromium-1248.
-- 5 kegagalan awal diperbaiki pada spec: label peta/geofence, tombol sibuk Memproses…, pesan gate Sales, notice outlet demo; tidak ada pelonggaran aturan domain.
+- 5 kegagalan awal diperbaiki pada spec: label peta/geofence, tombol sibuk Memprosesâ€¦, pesan gate Sales, notice outlet demo; tidak ada pelonggaran aturan domain.
 - Gate final: contracts:check PASS; typecheck PASS; test 18/18 suite 327/327 PASS; build:demo, build, build:staging, check:build PASS (demo JS gzip 80.4 KiB; live 34.5; staging 30.6; font 47.1).
 - VisitPanel: efek auto-locate dihapus; start() tetap mengambil ulang fix basi. docs/HANDOFF.md status diperbarui menjadi e2e PASS.
 - Task managed by Agent Opencode at 2026-10-31T12:53:38+07:00
@@ -66,7 +66,7 @@
 [2026-11-13T12:15:51+07:00] [INFO] PR #123 HOLD: aktifkan sanitasi HTML hasil laporan + bukti tulis langsung
 - [F] Review #5886476944: result_html memakai sanitize=False sementara ACL wizard memberi grup Accounting Readonly create/write; readonly hanya mengunci UI, jadi penulisan ORM langsung melewati escape di _render().
 - [F] Perbaikan: result_html sanitize=True (default non-overridable) + komentar pertahanan berlapis di wizard. Preview tetap memakai html.escape.
-- [F] Tes baru di verify_finance_i2_exposure.py: sebagai Finance Reader tulis langsung <script>, <img onerror>, href=javascript: — hasil baca tidak memuat ketiganya; <table> dan teks sel tetap ada; preview laporan reader tetap memuat tabel.
+- [F] Tes baru di verify_finance_i2_exposure.py: sebagai Finance Reader tulis langsung <script>, <img onerror>, href=javascript: â€” hasil baca tidak memuat ketiganya; <table> dan teks sel tetap ada; preview laporan reader tetap memuat tabel.
 - [F] Odoo 19 html_sanitize: kill_tags script/style, safe_attrs_only, allow_tags mencakup table/thead/tbody/tr/th/td/div/p/pre dan atribut class, sehingga tabel laporan tidak terpotong.
 - [BU] Bukti CI dengan komponen sanitization menunggu run pada SHA hasil sinkronisasi dengan origin/main (branch tertinggal 4 commit).
 - [F] Katalog tetap 58/58 BELUM_DITERIMA; tanpa merge/deploy/verdict.
@@ -109,7 +109,7 @@
 
 [2026-11-14T17:37:13+07:00] [INFO] I2-2 P2: bukti CI exact-SHA fe26a28 (5/5 workflow hijau, completeness 3/3)
 - [F] P2 review #5902486524 dikoreksi di 54c316f; main 6fe9f2c di-merge ke cabang sebagai fe26a28 (konflik hanya docs/HANDOFF.md).
-- [F] Bukti CI exact-SHA fe26a28: CI 43584001596, Upgrade Runtime 43584001555, Finance I0 candidate spike 43584001640 (job 132414505091), Seed supervision 43584001537, PWA quality 43584001651 — semuanya success.
+- [F] Bukti CI exact-SHA fe26a28: CI 43584001596, Upgrade Runtime 43584001555, Finance I0 candidate spike 43584001640 (job 132414505091), Seed supervision 43584001537, PWA quality 43584001651 â€” semuanya success.
 - [F] FINANCE_I2_EXPOSURE=PASS; completeness 3/3 (payload_cap_valid_json, nested_completeness, cell_truncation_disclosed); xlsx 12 PASS + sales_export_denied; runs 8/8; sanitization 2/2; surface 9/9; roles 1 izin + 5 penolakan.
 - [F] docs/finance/I2_XLSX_EXPORT.md memuat run/job exact-SHA dan keluaran completeness.
 - [BU] Excel/LibreOffice, volume demo, PDF, tie-out, sign-off tetap terbuka. Katalog 58/58 BELUM_DITERIMA; tidak ada merge/deploy.
@@ -324,7 +324,7 @@
 - [BU] Tidak ada XLSX/CSV live yang direkonsiliasi; sign-off Finance Controller+QA, source provenance, role negatif, staging/restore dan frozen close tetap blocker sebelum FIN04 DITERIMA. Katalog tidak diubah.
 - Task managed by Agent-Opencode at 2026-11-19T09:21:41+07:00
 
-[2026-11-19T11:22:54+07:00] [INFO] Slice I2a: FIN04 XLSX ↔ AML terhubung fixture native; satu PR per paket
+[2026-11-19T11:22:54+07:00] [INFO] Slice I2a: FIN04 XLSX â†” AML terhubung fixture native; satu PR per paket
 - [F] Koreksi append-only path prototipe sebelumnya: pembanding scripts/ops/verify_finance_fin04_workbook.py; unit tests/test_finance_fin04_workbook.py; kedua path terpilih finance, test juga seed menurut .ci/test-impact.yml.
 - [F] scripts/ops/verify_finance_i2_ledgers_core.py kini mengekspor wizard FIN04 pada fixture disposable dua company, membaca AML independen, dan tie-out XLSX per ID/nominal + total oracle, dengan temporary files dibersihkan; belum dieksekusi native sampai CI exact SHA.
 - [F] SESUAIKAN: unit offline 8/8 PASS; manifests 14 addon PASS; diff --check PASS. Planner pada HEAD uncommitted memberi suite kosong (bukan bukti bebas gate); ruff lokal tidak ada.
@@ -381,3 +381,24 @@
 - [F] 7 counterexample baru (59 total unit XLSX); ruff, manifest, dan test bertarget PASS lokal.
 - [BU] Exact-SHA Finance I0 menunggu push; katalog dan penerimaan live tetap HOLD.
 - Task managed by opencode at 2026-11-22T08:31:26+07:00
+
+[2026-11-22T15:14:30+07:00] [INFO] I2c-a XLSX tie-out FIN37-FIN38 pada fixture disposable
+- [F] PR #178 merged: head 4993a40, merge cc9ecb6, review PASS/CUKUP, 22 success dan 6 skipped.
+- [F] Comparator FIN37/FIN38 mematok accrual rows/exceptions/periods dan FX realized/unrealized/evidence/GL per currency terhadap oracle independen.
+- [F] 9 counterexample baru; 71 unit I2c PASS lokal.
+- [BU] Finance I0 exact-SHA belum berjalan; FIN36/55/56 dan acceptance live tetap HOLD; katalog tidak berubah.
+- Task managed by opencode at 2026-11-22T15:14:30+07:00
+
+[2026-11-22T15:45:06+07:00] [FIX] PR #185 Finance I0: presisi rate XLSX
+- [F] Head 61c34c9 gagal hanya pada FIN38 unrealized_rows; FIN37 export sudah terlewati, suite non-finance hijau.
+- [A] Rate IEEE Odoo dapat dibulatkan ke presisi efektif Excel oleh xlsxwriter; toleransi relatif 1e-12 diterapkan hanya pada rate_as_of, bukan nominal.
+- [F] Dua unit baru: representasi setara diterima, beda material ditolak; 73 unit I2c PASS lokal.
+- [BU] Exact-SHA Finance I0 menunggu rerun.
+- Task managed by opencode at 2026-11-22T15:45:06+07:00
+
+[2026-11-23T07:47:59+07:00] [FIX] PR #185 oracle FIN38 residual reconstruction
+- [F] b850939: FIN38 unrealized coverage 9 vs 15; FIN37 XLSX lolos, non-finance hijau.
+- [F] Oracle now scopes partials through all posted monetary lines, reconstructs residuals from dated partials, excludes over-reconciled lines, and classifies realized/unposted independently.
+- [F] 73 I2c unit tests PASS, Ruff PASS, diff-check PASS.
+- [BU] Exact-SHA Finance I0 rerun pending; catalog unchanged 58/58 BELUM_DITERIMA.
+- Task managed by opencode at 2026-11-23T07:47:59+07:00

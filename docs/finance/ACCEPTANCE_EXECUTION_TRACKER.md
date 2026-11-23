@@ -156,6 +156,20 @@ menutup 31 kasus I2b (59 total pada berkas XLSX); [BU] render native hanya
 dijalankan Finance I0 CI pada exact SHA. Tidak ada workbook bisnis, AML live,
 atau status katalog yang berubah.
 
+### I2c-a: tie-out XLSX FIN37/FIN38 pada fixture disposable (bukan bukti live)
+
+FIN37/FIN38 sudah memiliki snapshot dan oracle native AML/partial independen.
+Slice I2c-a menambahkan pembanding workbook wizard nyata untuk coverage line,
+exception bernominal, alokasi period accrual, realized/unrealized FX, exchange
+move evidence, dan tie-out GL per mata uang tanpa netting silang. Nilai numerik
+bertipe teks dan nested JSON non-numerik ditolak. [BU] Exact-SHA Finance I0
+harus membuktikan render XLSX dan comparator baru; bukti live/non-sintetis,
+negative ACL produksi, dan sign-off Controller tetap terbuka.
+
+FIN36/FIN55/FIN56 tidak dicampur ke slice ini: masing-masing masih menunggu
+aset OCA, parameter kontrak bertanggal, atau sumber payroll/statutory resmi.
+`REPORT_CATALOG.csv` tetap tidak berubah.
+
 ### FIN04: pembanding XLSX ↔ AML independen (belum dijalankan pada live)
 
 `scripts/ops/verify_finance_fin04_workbook.py` membandingkan **semua** `aml_id`, debit,
