@@ -97,6 +97,42 @@ describe("mustCollectToday (aturan pemilik: jatuh tempo < 7 hari dari hari bisni
         expect([r.count, r.total]).toEqual([50, 5000]);
         expect(r.complete).toBe(false);
     });
+    it("BE-20a: agregat server dipakai apa adanya walau daftar terpotong (lengkap)", () => {
+        const loaded = Array.from({ length: 50 }, (_, i) =>
+            inv(`F${i}`, "2026-11-22", 100),
+        );
+        const r = mustCollectToday(
+            entry(loaded, {
+                open_count: 60,
+                outstanding_total: 6000,
+                truncated: true,
+                collect_today: {
+                    window_days: 7,
+                    count: 60,
+                    total: 6000,
+                    overdue_count: 60,
+                },
+            }),
+            TODAY,
+        );
+        expect([r.count, r.total, r.overdueCount]).toEqual([60, 6000, 60]);
+        expect(r.complete).toBe(true);
+    });
+    it("BE-20a: agregat server 0 berarti memang tidak ada (bukan Belum diketahui)", () => {
+        const r = mustCollectToday(
+            entry([inv("N", null, 50)], {
+                truncated: true,
+                collect_today: {
+                    window_days: 7,
+                    count: 0,
+                    total: 0,
+                    overdue_count: 0,
+                },
+            }),
+            TODAY,
+        );
+        expect([r.count, r.complete]).toEqual([0, true]);
+    });
     it("terpotong tetapi faktur termuat sudah melewati jendela (+7) → semua faktur jendela termuat, lengkap", () => {
         const r = mustCollectToday(
             entry(

@@ -52,7 +52,8 @@ export type CollectToday = {
 };
 
 /**
- * Faktur yang wajib ditagih hari ini untuk satu outlet (urutan server: jatuh tempo tertua dulu).
+ * Faktur yang wajib ditagih hari ini untuk satu outlet. Memakai agregat server `collect_today` (BE-20a)
+ * bila ada; kalau tidak (server lama), dihitung dari daftar (urutan server: jatuh tempo tertua dulu).
  * Daftar server dipotong 50, jadi hasil bisa tidak lengkap: bila terpotong dan faktur dengan jatuh tempo
  * terjauh yang dimuat belum keluar dari jendela, `complete` = false. Bila faktur termuat sudah melewati
  * jendela, semua faktur jendela pasti sudah termuat (urutan tertua dulu) sehingga hasil lengkap.
@@ -63,6 +64,20 @@ export function mustCollectToday(
     today: string,
 ): CollectToday {
     const loaded = entry?.invoices ?? [];
+    const server = entry?.collect_today;
+    if (server) {
+        // BE-20a: agregat server dari semua faktur terbuka, selalu lengkap walau daftar dipotong.
+        return {
+            invoices: loaded.filter((i) => {
+                const d = daysUntilDue(i.due_date, today);
+                return d !== null && d < server.window_days;
+            }),
+            count: server.count,
+            total: server.total,
+            overdueCount: server.overdue_count,
+            complete: true,
+        };
+    }
     const days = loaded.map((i) => daysUntilDue(i.due_date, today));
     const invoices = loaded.filter((_, idx) => {
         const d = days[idx];
