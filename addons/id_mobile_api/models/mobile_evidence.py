@@ -161,7 +161,7 @@ class MobileEvidence(models.Model):
                 raise MobileReadConflict(_("Evidence UUID cannot be reused for different content."))
             return json.loads(existing.receipt_json), False
         assignment, day = self.env["id.mobile.workday"]._current_assignment()
-        snapshot = self.env["id.mobile.workday"]._snapshot_payload(include_approval_tiers=False)
+        snapshot = self.env["id.mobile.workday"]._snapshot_payload(include_volatile=False)
         if metadata["business_date"] != day.isoformat() or metadata["snapshot_version"] != snapshot["version"]:
             raise MobileReadConflict(_("The assignment changed; synchronize again."))
         outlet = assignment.outlet_ids.filtered(lambda row: str(row.id) == metadata["outlet_id"])

@@ -452,3 +452,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-22T22:42:27+07:00] [INFO] FE-12 fix review PR #186 putaran 2
 - openHistory menunggu baris siap; hilangkan flaky count
 - Task managed by claude-design agent at 2026-11-22T22:42:27+07:00
+
+[2026-11-23T07:39:00+07:00] [INFO] BE-7 outlet_receivables
+- piutang + faktur terbuka di snapshot, di luar digest; include_volatile; kontrak, tes ORM
+- Task managed by claude-design agent at 2026-11-23T07:39:00+07:00
