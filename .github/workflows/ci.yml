@@ -171,6 +171,9 @@ jobs:
           if grep -E " (ERROR|CRITICAL) |Traceback" odoo.log; then
             echo "Ditemukan ERROR/Traceback pada log"; exit 1
           fi
+      - name: Vendor carton backfill operator smoke on disposable DB
+        if: needs.changes.outputs.odoo_install == 'true'
+        run: bash scripts/ui/vendor_carton_backfill_smoke.sh
       - name: Start Odoo for warehouse PDF smoke
         if: needs.changes.outputs.odoo_install == 'true'
         run: |

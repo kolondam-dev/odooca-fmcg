@@ -311,7 +311,7 @@ def run_vendor_carton_backfill(mode):
             cr.execute("SELECT pg_try_advisory_xact_lock(%s, %s)", (1961318, company.id))
             if not cr.fetchone()[0]:
                 raise RuntimeError(f"[vendor_carton] Backfill already running for company {company.id}")
-        planned, preserved = backfill_vendor_cartons(env.with_company(company), apply=mode == "apply")
+        planned, preserved = backfill_vendor_cartons(company.with_company(company).env, apply=mode == "apply")
         for code, vals in planned:
             print(f"[vendor_carton] {mode} {code} {vals}")
         if mode == "apply":
