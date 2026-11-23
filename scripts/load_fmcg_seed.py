@@ -211,7 +211,7 @@ def load_hierarchical_categories():
     return leaf_cat_map
 
 
-def ensure_vendor_carton(product, principal, row):
+def ensure_vendor_carton(product, principal, row, lead_times):
     """Seed a vendor offer in the SKU's native carton UoM."""
     if not row.get("purchase_uom"):
         return
@@ -230,6 +230,10 @@ def ensure_vendor_carton(product, principal, row):
     if existing:
         return
 
+    delay = int(lead_times[principal.code])
+    if delay < 0:
+        raise ValueError(f"[seed_loader] Invalid vendor lead time for principal {principal.code}")
+
     carton = product.fmcg_carton_uom_id
     supplierinfo.create({
         "partner_id": principal.partner_id.id,
@@ -239,7 +243,7 @@ def ensure_vendor_carton(product, principal, row):
         "product_uom_id": carton.id,
         "min_qty": 1,
         "price": product.uom_id._compute_price(float(row["cost_price"]), carton),
-        "delay": principal.lead_time_days,
+        "delay": delay,
     })
 
 
@@ -271,6 +275,12 @@ def load_products():
 
     principal_map = {p.code: p for p in Principal.search([])}
     brand_map = {b.code: b for b in Brand.search([])}
+
+    lead_times = {}
+    principal_file = seed_dir / "principals_4.csv"
+    if principal_file.is_file():
+        with principal_file.open(encoding="utf-8") as stream:
+            lead_times = {row["code"]: row["lead_time_days"] for row in csv.DictReader(stream)}
 
     count_created = 0
     count_updated = 0
@@ -368,7 +378,7 @@ def load_products():
                 inner_qty=int(row.get("inner_qty", 1)),
                 carton_qty=int(row.get("carton_qty", 1)),
             )
-            ensure_vendor_carton(prod, prin, row)
+            ensure_vendor_carton(prod, prin, row, lead_times)
 
     print(
         f"    Selesai: {count_created} dibuat, {count_updated} diperbarui "

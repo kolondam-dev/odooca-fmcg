@@ -14,7 +14,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
         super().setUpClass()
         cls.principal = cls.env["id.principal"].create({
             "name": "PT Mayora Indah",
-            "code": "PRIN-MAYORA",
+            "code": "TEST-FMCG-DIMENSIONS",
         })
         cls.brand = cls.env["id.brand"].create({
             "name": "Roma",
@@ -96,6 +96,12 @@ class TestFMCGDimensionsUoM(TransactionCase):
                 writer.writeheader()
                 writer.writerows(rows)
 
+            with (seed_dir / "principals_4.csv").open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.writer(stream)
+                writer.writerow(("code", "lead_time_days"))
+                for code in sorted({row["principal_code"] for row in rows}):
+                    writer.writerow((code, 12))
+
             namespace = {"env": self.env, "__file__": str(loader_path)}
             exec(compile(source, str(loader_path), "exec"), namespace)
             namespace["seed_dir"] = seed_dir
@@ -140,6 +146,8 @@ class TestFMCGDimensionsUoM(TransactionCase):
         self.assertEqual(offer.product_uom_id, product.fmcg_carton_uom_id)
         self.assertEqual(offer.price, 150000)
         self.assertEqual(offer.company_id, self.env.company)
+        self.assertEqual(offer.currency_id, self.env.company.currency_id)
+        self.assertEqual(offer.delay, 12)
         first_qty = sum(quant_model.search([
             ("product_id", "=", variant.id),
             ("location_id", "=", location.id),
@@ -161,6 +169,53 @@ class TestFMCGDimensionsUoM(TransactionCase):
         self.assertEqual(product.fmcg_base_uom_id.id, first_base_uom_id)
         self.assertEqual(product.fmcg_inner_uom_id.id, first_inner_uom_id)
         self.assertEqual(product.fmcg_carton_uom_id.id, first_carton_uom_id)
+
+    def test_seed_preserves_existing_vendor_offers_by_company_scope(self):
+        vendor = self.env["res.partner"].create({"name": "Existing Carton Vendor"})
+        self.principal.partner_id = vendor
+        product = self.env["product.template"].create({
+            "name": "Seed SKU with Custom Offer",
+            "default_code": "TEST-CUSTOM-OFFER",
+            "uom_id": self.uom_unit.id,
+        })
+        foreign = self.env["res.company"].create({"name": "Foreign Offer Company"})
+        row = {
+            "default_code": product.default_code,
+            "name": product.name,
+            "principal_code": self.principal.code,
+            "brand_code": self.brand.code,
+            "base_uom": "Pcs",
+            "inner_qty": "10",
+            "carton_qty": "120",
+            "purchase_uom": "Karton",
+            "cost_price": "1250",
+        }
+        seller_model = self.env["product.supplierinfo"].sudo()
+        offer = seller_model.create({
+            "partner_id": vendor.id,
+            "product_tmpl_id": product.id,
+            "company_id": False,
+            "product_uom_id": self.uom_unit.id,
+            "price": 9876,
+            "min_qty": 7,
+            "delay": 3,
+        })
+        fields = ["product_uom_id", "price", "min_qty", "delay", "company_id", "currency_id"]
+        domain = [("product_tmpl_id", "=", product.id), ("partner_id", "=", vendor.id)]
+
+        for company in (self.env.company, self.env["res.company"], foreign):
+            offer.company_id = company
+            before = offer.read(fields)
+            self._run_products_csv_loader([row])
+            self.assertEqual(offer.read(fields), before)
+            offers = seller_model.search(domain)
+            if company == foreign:
+                local = offers - offer
+                self.assertEqual(len(local), 1)
+                self.assertEqual(local.company_id, self.env.company)
+                self.assertEqual(local.product_uom_id, product.fmcg_carton_uom_id)
+            else:
+                self.assertEqual(offers, offer)
 
     def test_real_seed_loader_rejects_noncanonical_uom_before_product_write(self):
         sachet_uom = self.env.ref("id_base.uom_sch")
@@ -187,6 +242,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
             "base_uom": "Pcs",
             "inner_qty": "10",
             "carton_qty": "120",
+            "cost_price": "1250",
         }
         with self.assertRaisesRegex(ValidationError, "tidak akan mengubah UoM"):
             self._run_products_csv_loader([row])
