@@ -19,15 +19,15 @@ class AssetSpikeOracleTest(unittest.TestCase):
         self.move = SimpleNamespace(
             state="posted", company_id=self.company, date=date(2026, 7, 31),
             line_ids=[
-                SimpleNamespace(account_id=self.expense, debit=33334.0,
-                                credit=0.0, balance=33334.0),
+                SimpleNamespace(account_id=self.expense, debit=33333.67,
+                                credit=0.0, balance=33333.67),
                 SimpleNamespace(account_id=self.contra, debit=0.0,
-                                credit=33334.0, balance=-33334.0),
+                                credit=33333.67, balance=-33333.67),
             ],
         )
         self.line = SimpleNamespace(
             move_id=self.move, move_check=True, type="depreciate",
-            amount=33334.0, asset_id=self.asset, line_date=self.move.date,
+            amount=33333.67, asset_id=self.asset, line_date=self.move.date,
         )
 
     def verify(self):
@@ -39,8 +39,8 @@ class AssetSpikeOracleTest(unittest.TestCase):
             spike.BOARD[::-1],
             spike.BOARD + [spike.BOARD[-1]],
             spike.BOARD[:2] + [("2026-10-31", 33333.0)],
-            [spike.BOARD[0][:1] + (33333.0,),
-             spike.BOARD[1][:1] + (33335.0,), spike.BOARD[2]],
+            [spike.BOARD[0][:1] + (33332.67,),
+             spike.BOARD[1][:1] + (33334.67,), spike.BOARD[2]],
         ):
             with self.subTest(mutant=mutant), self.assertRaisesRegex(
                 AssertionError, "board mismatch",

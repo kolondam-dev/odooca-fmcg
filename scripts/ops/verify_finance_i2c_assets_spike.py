@@ -30,9 +30,9 @@ def require(condition, message):
 
 
 BOARD = [
-    ("2026-07-31", 33_334.0),
-    ("2026-08-31", 33_334.0),
-    ("2026-09-30", 33_333.0),
+    ("2026-07-31", 33_333.67),
+    ("2026-08-31", 33_333.67),
+    ("2026-09-30", 33_333.66),
 ]
 
 
@@ -52,8 +52,8 @@ def verify_posted_gl(move, first, expense, contra):
     gl = [(line.account_id.id, line.debit, line.credit, line.balance)
           for line in move.line_ids]
     expected = [
-        (expense.id, 33_334.0, 0.0, 33_334.0),
-        (contra.id, 0.0, 33_334.0, -33_334.0),
+        (expense.id, 33_333.67, 0.0, 33_333.67),
+        (contra.id, 0.0, 33_333.67, -33_333.67),
     ]
     require(len(gl) == 2 and sorted(gl) == sorted(expected),
             f"Depreciation GL posting mismatch: {gl}")
@@ -168,7 +168,8 @@ def run(env):
                 "Depreciation journal entry is unbalanced",
             )
             require(
-                asset.value_depreciated == 33_334 and asset.value_residual == 66_667,
+                asset.value_depreciated == 33_333.67
+                and asset.value_residual == 66_667.33,
                 "Asset posted/residual values do not match the depreciation line",
             )
             evidence["cases"].extend([
@@ -177,7 +178,7 @@ def run(env):
                 {"case": "posted_line_to_gl_provenance", "result": "PASS",
                  "line_id": first.id, "move_id": move.id, "amount": first.amount},
                 {"case": "posted_depreciation_gl_balanced", "result": "PASS",
-                 "debit": 33_334.0, "credit": 33_334.0},
+                 "debit": 33_333.67, "credit": 33_333.67},
             ])
             raise RollbackAssetSpike()
     except RollbackAssetSpike:

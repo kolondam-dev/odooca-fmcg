@@ -86,6 +86,12 @@ ini: jangan menyebutnya bukti additions→GL. Coverage populasi aset, additions,
 disposal, ACL, register/export, serta mapping Controller belum diuji; keputusan
 eksplisit lisensi AGPL-3 tetap diperlukan sebelum dependensi produksi. Tidak
 ada aktivasi demo, perubahan data live, atau perubahan katalog.
+
+[F] Exact-SHA awal `6717f0c` (run `45153062220`) menginstal dan meng-upgrade
+profil `assets`, namun verifier FAIL pada expected pembulatan: OCA/DB CI
+menghasilkan tiga periode `33.333,67 / 33.333,67 / 33.333,66`, bukan rupiah
+utuh. [BU] Perbaikan expected ke presisi DB dua desimal harus lolos CI baru
+termasuk bukti posted→GL dan rollback; `finance-gate` pada head awal FAIL.
 | P3 — I3: HPP dan stok | **FIN10, FIN11, FIN12, FIN13, FIN14, FIN15, FIN16, FIN17, FIN18, FIN53, FIN54, FIN58** (12) | Ikat stock.move→posted cost journal secara unik; opening+movement=closing qty/value; stock GL, HPP delivery−return, GRNI, landed cost sesudah jual, scrap/expiry, consignment/transit, purchase variance, delivered-not-invoiced dan margin invoice-cohort dipisah basisnya. Tidak ada selisih tak dijelaskan atau alokasi harga rekaan. | Diagnostik read-only demo pada 2026-11-19: 51 kategori (29 FIFO+real_time; 22 standard+periodic), 7 produk storable berbiaya standar nol, 3.091 move bernilai; **profil FIFO seragam adalah asumsi salah**. Controller harus menyetujui metode/mapping per kategori dan penyebab zero-cost sebelum oracle I3; jangan ubah kategori atau transaksi live untuk menyamakan asumsi. |
 | P4 — I4: statements/MIS | **FIN19, FIN20, FIN21, FIN22, FIN23, FIN31, FIN32, FIN33, FIN34, FIN35** (10) | BS balance; P&L ke GL/HPP; cashflow direct/indirect ke perubahan kas yang sama; equity rollforward; MIS KPI/rasio/budget/dimensi versioned, unallocated eksplisit dan pembagi nol unavailable. | `mis_builder` belum installed; template, budget/forecast approved, basis cash-equivalents dan alokasi cabang/principal/channel/warehouse belum disahkan. Menunggu I2+I3 dan keputusan Finance/Business Head. |
 | P5 — I5: bank/settlement | **FIN24, FIN25, FIN26, FIN27, FIN28, FIN29, FIN30, FIN39, FIN40** (9) | Statement, partial/overpayment, promise-to-pay hanya cash cocok, cash/bank book, BRS, clearing/transit, driver collection, credit hold dan rebate klaim ke posted GL. Duplicate import/unreconcile/refund/transfer diuji. | `account_reconcile_oca` belum installed; format bank, sumber POD vs kas riil, bukti settlement/approval, batas retensi rekening dan role belum disahkan. Sales tidak boleh match bank/approve kas. |
