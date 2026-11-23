@@ -1,3 +1,18 @@
+## 2026-11-23T08:16:25+07:00 — Agent Codex-Cloud1 — F4/PR #110: Paket A, alur receipt hingga pembayaran
+
+**Berubah:**
+- Sinkron ke `main` `683681a`. Loader mengurutkan lintas jenis transaksi berdasarkan tanggal WITA. Konfirmasi PO dan SO dipisahkan dari receipt dan dispatch. Dispatch menolak ketidakcukupan stok fisik per lot pada tanggal sumber. Invoice tidak lagi menyelesaikan delivery yang belum sah.
+- Golden chain mencakup PO, penerimaan native ber-lot, vendor bill dan pelunasan AP, approval dan kredit, delivery, invoice dan pelunasan AR. Rencana dan bukti per requirement tercatat di [matriks Paket A](reviews/PR110_PACKET_A_ACCEPTANCE.md).
+- F4 menambah oracle chronology dari register pembukaan, seluruh PO dan DO, serta pemeriksaan lot dan tanggal Odoo. Mini-pack menguji receipt-to-cash, future receipt, pembayaran ke invoice lain bernominal sama, replay dan rollback.
+**Diverifikasi:**
+- [F] Tes Odoo golden chain lulus dengan Buyer, Gudang, Sales, approver, dan Akuntansi sebagai pengguna eksplisit.
+- [F] 148 tes Python terarah lulus. Mini-pack Odoo pada master fixture lulus dengan shim hanya untuk setup kontinuitas Juli; action loader produksi dan check stok tetap dijalankan.
+- [F] Dampak test **TAMBAH**. Menggeser receipt melewati dispatch dengan kuantitas tetap harus gagal. Seluruh register Agustus dan carry-forward Juli menunjukkan nol kekurangan lot pada oracle sumber.
+**Belum diuji:**
+- [BU] Audit F4 dua DB dan rekonsiliasi baseline pada SHA integrasi. Bukti seluruh PJP, reservasi per event, serta likuiditas K5 masih terbuka.
+**Berikutnya:**
+- Periksa F4 pada SHA integrasi dan gunakan matriks untuk menutup cakupan Paket A yang tersisa.
+
 ## 2026-11-22T23:31:54+07:00 — Agent Codex-Cloud1 — F4/PR #110: Sinkronisasi PR gudang
 
 **Berubah:**

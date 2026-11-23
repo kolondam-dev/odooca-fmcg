@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import csv
 from collections import Counter
 from datetime import date, timedelta
 from decimal import Decimal
@@ -332,6 +333,26 @@ def _is_quarantine(location):
     return "quarantine" in name or "karantina" in name
 
 
+def source_dispatch_shortages(reader, opening, carry_lines):
+    """Compute lot availability from the source receipts, opening stock and dispatches."""
+    balances = Counter({key: Decimal(str(row["physical"])) for key, row in opening["stock"].items()})
+    arrivals = {row["po_number"]: row["arrival_maumbi_date"] for row in reader.po_headers}
+    dispatches = {row["so_number"]: row["scheduled_delivery_date"] for row in reader.deliveries}
+    carry_dates = {row["so_number"]: row["scheduled_delivery_date"] for row in opening["pending_dos"].values()}
+    events = [(arrivals[row["po_number"]], 0, row["po_number"], row) for row in reader.po_lines]
+    events.extend((dispatches[row["so_number"]], 1, row["so_number"], row) for row in reader.order_lines)
+    events.extend((carry_dates[row["so_number"]], 1, row["so_number"], row)
+                  for row in carry_lines if row["so_number"] in carry_dates)
+    shortages = []
+    for day, phase, reference, row in sorted(events, key=lambda item: item[:3]):
+        key = f"{row['sku_code']}||{row['lot_number']}"
+        amount = Decimal(row["qty_cartons"])
+        if phase and balances[key] < amount:
+            shortages.append((day, reference, key, str(balances[key]), str(amount)))
+        balances[key] += -amount if phase else amount
+    return shortages
+
+
 def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     """Execute comprehensive mathematical and accounting audit against oracle."""
     if env is None:
@@ -451,6 +472,33 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
         report["violations"].append(
             f"Delivery orders done mismatch: expected {oracle.expected_do_count}, found {do_count}"
         )
+
+    if oracle.manifest.period == "2026-08" and callable(getattr(getattr(env, "cr", None), "savepoint", None)):
+        register_dir = oracle.reader.pack_dir.parent.parent
+        opening = json.loads((register_dir / "state_20260801.json").read_text())
+        with (register_dir / "perpetual_order_lines.csv").open(encoding="utf-8-sig", newline="") as source:
+            shortages = source_dispatch_shortages(oracle.reader, opening, csv.DictReader(source))
+        expected_lines = {}
+        for row in oracle.reader.order_lines:
+            expected_lines.setdefault(row["so_number"], Counter())[
+                row["sku_code"], row["lot_number"]
+            ] += _dec(row["qty_cartons"]) * _dec(row["carton_qty"])
+        expected_dates = {row["so_number"]: row["scheduled_delivery_date"] for row in oracle.reader.deliveries}
+        actual = {}
+        for picking in pickings:
+            ref = picking.sale_id.client_order_ref
+            for line in picking.move_line_ids:
+                key = line.product_id.default_code, line.lot_id.name
+                actual.setdefault(ref, Counter())[key] += _dec(line.quantity_product_uom)
+                if str(line.date)[:10] != expected_dates.get(ref):
+                    report["violations"].append(f"Dispatch line date mismatch on {ref}/{key}")
+        mismatches = [ref for ref, lines in expected_lines.items() if lines != actual.get(ref)]
+        report["checks"]["dispatch_causality"] = {
+            "checked_orders": len(expected_lines), "source_shortages": len(shortages),
+            "first_shortage": shortages[0] if shortages else None, "native_lot_mismatches": len(mismatches),
+        }
+        if shortages or mismatches:
+            report["violations"].append(f"Dispatch chronology or lot mismatch: {shortages[:3]} {mismatches[:5]}")
 
     # 4. Invoices Count, Net DPP, PPN 12% on DPP Nilai Lain 11/12, and Seed Flag
     inv_recs = AccountMove.search(
@@ -1426,11 +1474,8 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             if loader_probe.reader.sales_orders
             else "CUST-RTL-006"
         )
-        valid_sku = (
-            loader_probe.reader.order_lines[0].get("sku_code", "MYR-CND-02")
-            if loader_probe.reader.order_lines
-            else "MYR-CND-02"
-        )
+        source_line = loader_probe.reader.order_lines[0] if loader_probe.reader.order_lines else {}
+        valid_sku = source_line.get("sku_code", "MYR-CND-02")
         corrupt_sku = "SKU-NONEXISTENT-FAULT-INJECTION"
 
         valid_so_num = "SO-202608-PROBE-VALID-01"
@@ -1459,6 +1504,7 @@ def run_period_pack_fault_injection_probes(env: Any, pack_dir: Path) -> Dict[str
             {
                 "so_number": valid_so_num,
                 "sku_code": valid_sku,
+                "lot_number": source_line.get("lot_number"),
                 "qty_cartons": "1",
                 "carton_qty": "10",
                 "unit_price_dpp": "5000.00",
@@ -1758,6 +1804,122 @@ def run_scenario_b_from_empty_database(
     return res
 
 
+def verify_august_receipt_to_cash_slice(env, pack_dir):
+    """Replay a source-linked August slice and its future-receipt mutation in savepoints."""
+    source = PeriodPackReader(pack_dir)
+    selections = {
+        "po_headers": ("po_number", "PO-2026-08-16"),
+        "po_lines": ("po_number", "PO-2026-08-16"),
+        "sales_orders": ("so_number", "SO-202608-1059"),
+        "order_lines": ("so_number", "SO-202608-1059"),
+        "deliveries": ("so_number", "SO-202608-1059"),
+        "invoices": ("invoice_number", "INV-202608-1059"),
+        "ar_collections": ("payment_id", "PAY-AR-02066"),
+    }
+    overrides = {
+        f"{name}.csv": [row for row in source.read_csv(f"{name}.csv") if row[key] == value]
+        for name, (key, value) in selections.items()
+    }
+    overrides.update({f"{name}.csv": [] for name in ("rejections", "ap_payments", "opex")})
+
+    def apply(rows):
+        reader = PeriodPackReader(pack_dir, overrides=rows)
+        loader = GenericPeriodPackLoader(env, pack_dir, dry_run=False, strict=True, reader=reader)
+        return loader.execute_apply()
+
+    class RollbackSlice(Exception):
+        pass
+
+    baseline = capture_period_state_snapshot(env)["digest"]
+    try:
+        with env.cr.savepoint():
+            negative = dict(overrides)
+            negative["po_headers.csv"] = [
+                dict(row, arrival_maumbi_date="2026-08-29") for row in overrides["po_headers.csv"]
+            ]
+            apply(negative)
+            raise RuntimeError("Mini-pack allowed a dispatch against a future receipt.")
+    except StateInconsistencyError as error:
+        if "Dispatch SO-202608-1059 on 2026-08-28" not in str(error) or "only 0 on hand" not in str(error):
+            raise
+
+    if capture_period_state_snapshot(env)["digest"] != baseline:
+        raise RuntimeError("Rejected mini-pack left writes after rollback.")
+
+    try:
+        with env.cr.savepoint():
+            summary = apply(overrides)
+            if any(summary[key] != 1 for key in (
+                "po_processed", "so_processed", "deliveries_processed", "invoices_processed", "ar_reconciled",
+            )):
+                raise RuntimeError(f"Receipt-to-cash mini-pack did not post one of each document: {summary}")
+
+            purchase = env["purchase.order"].search([("name", "=", "PO-2026-08-16")])
+            sale = env["sale.order"].search([("client_order_ref", "=", "SO-202608-1059")])
+            invoice = env["account.move"].search([("payment_reference", "=", "INV-202608-1059")])
+            payment = env["account.payment"].search([("memo", "=", "PAY-AR-02066")])
+            line = sale.picking_ids.move_line_ids
+            received = purchase.picking_ids.move_line_ids.filtered(lambda item: item.lot_id == line.lot_id)
+            checks = (
+                len(purchase) == len(sale) == len(invoice) == len(payment) == 1,
+                len(line) == len(received) == 1,
+                line.lot_id.name == "LOT-SGD-202608-NEW-01",
+                str(received.date)[:10] == "2026-08-27" and str(line.date)[:10] == "2026-08-28",
+                _dec(received.quantity_product_uom) == Decimal("4800"),
+                _dec(line.quantity_product_uom) == Decimal("48"),
+                abs(_dec(received.move_id.value)) == Decimal("88800000"),
+                abs(_dec(line.move_id.value)) == Decimal("888000"),
+                _dec(env["stock.quant"]._get_available_quantity(
+                    line.product_id, line.location_id, lot_id=line.lot_id,
+                )) == Decimal("4752"),
+                invoice.invoice_line_ids.sale_line_ids == sale.order_line,
+                payment.reconciled_invoice_ids == invoice,
+                _dec(invoice.amount_total) == Decimal("1158094.08") and not invoice.amount_residual,
+                _dec(purchase.invoice_ids.amount_residual) == Decimal("197136000.00"),
+                purchase.invoice_ids.invoice_line_ids.purchase_line_id == purchase.order_line,
+            )
+            if not all(checks):
+                raise RuntimeError(f"Receipt-to-cash mini-pack oracle mismatch: {checks}")
+            after = capture_period_state_snapshot(env)["digest"]
+            apply(overrides)
+            if capture_period_state_snapshot(env)["digest"] != after:
+                raise RuntimeError("Receipt-to-cash mini-pack replay changed the business snapshot.")
+            try:
+                with env.cr.savepoint():
+                    decoy = invoice.copy({
+                        "payment_reference": "F4-MINI-OTHER-SAME-AMOUNT",
+                        "ref": "F4-MINI-OTHER-SAME-AMOUNT",
+                        "invoice_date": invoice.invoice_date,
+                        "is_fmcg_seed_invoice": False,
+                        "fmcg_seed_batch": False,
+                    })
+                    decoy.action_post()
+                    if decoy.amount_total != invoice.amount_total:
+                        raise RuntimeError("The payment decoy must have the same amount as the source invoice.")
+                    wrong_payment = dict(overrides)
+                    wrong_payment["ar_collections.csv"] = [
+                        dict(row, invoice_number=decoy.payment_reference) for row in overrides["ar_collections.csv"]
+                    ]
+                    apply(wrong_payment)
+                    raise RuntimeError("Mini-pack accepted a payment against the wrong same-amount invoice.")
+            except StateInconsistencyError as error:
+                if "not reconciled to target invoice F4-MINI-OTHER-SAME-AMOUNT" not in str(error):
+                    raise
+
+            if capture_period_state_snapshot(env)["digest"] != after:
+                raise RuntimeError("The wrong-target payment probe changed the mini-pack snapshot.")
+            raise RollbackSlice
+    except RollbackSlice:
+        pass
+
+    if capture_period_state_snapshot(env)["digest"] != baseline:
+        raise RuntimeError("Completed mini-pack left writes after rollback.")
+    return {
+        "status": "PASS", "sale": "SO-202608-1059",
+        "future_receipt": "REJECTED", "wrong_payment_target": "REJECTED",
+    }
+
+
 def run_full_disposable_period_verification(
     env: Any,
     pack_dir: Path,
@@ -1789,6 +1951,8 @@ def run_full_disposable_period_verification(
     comparison_snapshot = None
     # 1. Fault-Injection Recovery Probes on Baseline July (Batch write, tamper, rollback, real apply recovery)
     if scenario in ("all", "A"):
+        if oracle.manifest.period == "2026-08" and callable(getattr(getattr(env, "cr", None), "savepoint", None)):
+            report["receipt_to_cash_slice"] = verify_august_receipt_to_cash_slice(env, pack_dir)
         _logger.info("Executing Fault-Injection Recovery Probes on Baseline July...")
         ensure_idr_currency_active(env)
         report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)

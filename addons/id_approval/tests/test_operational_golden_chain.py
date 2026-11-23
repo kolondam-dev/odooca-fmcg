@@ -1,4 +1,4 @@
-from odoo import Command
+from odoo import Command, fields
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import tagged
@@ -28,6 +28,18 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
             ).ids)],
             "company_id": cls.company.id, "company_ids": [Command.set(cls.company.ids)],
         })
+        cls.accountant = cls.env["res.users"].sudo().create({
+            "name": "Golden Chain Accountant", "login": "golden_chain_accountant",
+            "group_ids": [Command.set((
+                cls.env.ref("account.group_account_manager") | cls.env.ref("purchase.group_purchase_user")
+            ).ids)],
+            "company_id": cls.company.id, "company_ids": [Command.set(cls.company.ids)],
+        })
+        cls.buyer = cls.env["res.users"].sudo().create({
+            "name": "Golden Chain Buyer", "login": "golden_chain_buyer",
+            "group_ids": [Command.set(cls.env.ref("purchase.group_purchase_manager").ids)],
+            "company_id": cls.company.id, "company_ids": [Command.set(cls.company.ids)],
+        })
         cls.warehouse_user = cls.env["res.users"].sudo().create({
             "name": "Golden Chain Warehouse", "login": "golden_chain_warehouse",
             "group_ids": [Command.set(cls.env.ref("stock.group_stock_user").ids)],
@@ -44,7 +56,32 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         lot = self.env["stock.lot"].create({
             "name": "GOLDEN-CHAIN-LOT", "product_id": product.id, "company_id": self.company.id,
         })
-        self.env["stock.quant"]._update_available_quantity(product, warehouse.lot_stock_id, 10, lot_id=lot)
+        self.assertEqual(
+            self.env["stock.quant"]._get_available_quantity(product, warehouse.lot_stock_id, lot_id=lot), 0,
+        )
+        purchase = self.env["purchase.order"].with_user(self.buyer).create({
+            "partner_id": self.partner_b.id,
+            "picking_type_id": warehouse.in_type_id.id,
+            "order_line": [Command.create({
+                "product_id": product.id, "product_qty": 10, "price_unit": 10_000,
+                "tax_ids": [Command.clear()],
+            })],
+        })
+        purchase.button_confirm()
+        receipt = purchase.picking_ids.with_user(self.warehouse_user)
+        receipt.move_ids.quantity = 10
+        receipt.move_line_ids.lot_id = lot
+        receipt.move_line_ids.picked = True
+        receipt.button_validate()
+        self.assertEqual(receipt.state, "done")
+        self.assertEqual(purchase.order_line.qty_received, 10)
+        self.assertEqual(receipt.move_ids.purchase_line_id, purchase.order_line)
+        purchase.with_user(self.accountant).action_create_invoice()
+        bill = purchase.with_user(self.accountant).invoice_ids
+        bill.invoice_date = fields.Date.today()
+        bill.action_post()
+        self.assertEqual(bill.invoice_line_ids.purchase_line_id, purchase.order_line)
+        self.assertEqual(bill.amount_residual, 100_000)
         partner = self.partner_a
         partner.write({"credit_mode": "limit", "credit_limit": 1_000})
 
@@ -107,8 +144,9 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
             8,
         )
 
-        invoice = order._create_invoices().with_user(self.env.user)
+        invoice = order._create_invoices().with_user(self.accountant)
         invoice.action_post()
+        self.assertEqual(invoice.invoice_line_ids.sale_line_ids, order.order_line)
         self.assertFalse(invoice.is_fmcg_seed_invoice)
         self.assertEqual(invoice.state, "posted")
         self.assertEqual(invoice.amount_total, 16_000)
@@ -116,9 +154,19 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         bank = self.env["account.journal"].search([
             ("company_id", "=", self.company.id), ("type", "=", "bank"),
         ], limit=1)
+        supplier_method = bank.outbound_payment_method_line_ids[:1]
+        supplier_method.sudo().payment_account_id = bank.default_account_id
+        supplier_payment = self.env["account.payment.register"].with_user(self.accountant).with_context(
+            active_model="account.move", active_ids=bill.ids,
+        ).create({
+            "journal_id": bank.id, "payment_method_line_id": supplier_method.id,
+        })._create_payments()
+        self.assertEqual(supplier_payment.reconciled_bill_ids, bill)
+        self.assertEqual(bill.amount_residual, 0)
+
         method = bank.inbound_payment_method_line_ids[:1]
         method.sudo().payment_account_id = bank.default_account_id
-        payment = self.env["account.payment.register"].with_context(
+        payment = self.env["account.payment.register"].with_user(self.accountant).with_context(
             active_model="account.move", active_ids=invoice.ids,
         ).create({
             "journal_id": bank.id, "payment_method_line_id": method.id,

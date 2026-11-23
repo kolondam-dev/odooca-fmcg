@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+from datetime import date, timedelta
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import json
@@ -598,33 +599,37 @@ class GenericPeriodPackLoader:
         if hasattr(self, "company") and self.company:
             domain_base.append(("company_id", "=", self.company.id))
 
-        # 1. payment_reference
-        inv = AccountMove.search(domain_base + [("payment_reference", "=", inv_num)], limit=1)
-        if inv:
-            return inv
-        # 2. name
-        inv = AccountMove.search(domain_base + [("name", "=", inv_num)], limit=1)
-        if inv:
-            return inv
-        # 3. ref (July carry-forward convention)
-        inv = AccountMove.search(domain_base + [("ref", "=", inv_num)], limit=1)
-        if inv:
-            return inv
+        native = bool(getattr(getattr(self.env, "cr", None), "dbname", None))
+        if native:
+            candidates = AccountMove.search(domain_base + [
+                ("move_type", "=", "out_invoice"), ("state", "=", "posted"),
+                "|", "|", ("payment_reference", "=", inv_num), ("name", "=", inv_num), ("ref", "=", inv_num),
+            ])
+            if len(candidates) > 1:
+                raise StateInconsistencyError(f"Ambiguous posted customer invoice {inv_num}.")
+            if candidates:
+                return candidates
+
+        if not native:
+            # 1. payment_reference
+            inv = AccountMove.search(domain_base + [("payment_reference", "=", inv_num)], limit=1)
+            if inv:
+                return inv
+            # 2. name
+            inv = AccountMove.search(domain_base + [("name", "=", inv_num)], limit=1)
+            if inv:
+                return inv
+            # 3. ref (July carry-forward convention)
+            inv = AccountMove.search(domain_base + [("ref", "=", inv_num)], limit=1)
+            if inv:
+                return inv
 
         # Fallback for prior period carry-forward (e.g. 48 carry-forward July orders dispatched on 2026-08-01)
         if inv_num.startswith("INV-202607-") and not self.dry_run and not getattr(self, "_cf_fallback_attempted", False):
             self._cf_fallback_attempted = True
             _logger.info(f"Invoice '{inv_num}' not found; resolving prior period carry-forward up to 2026-08-01...")
             self._apply_prior_period_carry_forward()
-            inv = AccountMove.search(domain_base + [("ref", "=", inv_num)], limit=1)
-            if inv:
-                return inv
-            inv = AccountMove.search(domain_base + [("name", "=", inv_num)], limit=1)
-            if inv:
-                return inv
-            inv = AccountMove.search(domain_base + [("payment_reference", "=", inv_num)], limit=1)
-            if inv:
-                return inv
+            return self._resolve_ar_invoice(inv_num)
 
         return None
 
@@ -1185,16 +1190,6 @@ class GenericPeriodPackLoader:
                                 f"Drift detected on existing PO {po_num} SKU {sku}: price mismatch {act_price} vs {exp_price}"
                             )
 
-        if not self.dry_run:
-            pickings = getattr(existing, "picking_ids", None)
-            if pickings:
-                for pick in pickings:
-                    if getattr(pick, "state", "") not in ("done", "cancel"):
-                        self._assign_lots_to_picking(pick, lines)
-                        self._validate_picking_safely(
-                            pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
-                        )
-
     def _validate_existing_so(
         self, existing: Any, so_row: Dict[str, str], lines: List[Dict[str, str]]
     ) -> None:
@@ -1275,18 +1270,6 @@ class GenericPeriodPackLoader:
                     if abs(exp_disc - act_disc) > 0.01:
                         raise StateInconsistencyError(
                             f"Drift detected on existing {so_num} SKU {sku}: discount mismatch {act_disc} vs {exp_disc}"
-                        )
-
-        if not self.dry_run:
-            pickings = getattr(existing, "picking_ids", None)
-            if pickings:
-                for pick in pickings:
-                    if getattr(pick, "state", "") not in ("done", "cancel"):
-                        self._assign_lots_to_picking(pick, lines)
-                        self._validate_picking_safely(
-                            pick,
-                            effective_date=self.do_date_map.get(so_num, so_row.get("date_order")),
-                            ref_num=so_num,
                         )
 
     def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
@@ -1769,48 +1752,85 @@ class GenericPeriodPackLoader:
             "po_processed": 0,
             "so_processed": 0,
             "deliveries_processed": 0,
+            "rejections_processed": 0,
             "invoices_processed": 0,
             "ar_reconciled": 0,
             "ap_reconciled": 0,
             "opex_processed": 0,
         }
 
+        event_days = self._period_event_days()
+
         # Step 0: Ensure prior period carry-forward (48 July orders dispatched on 2026-08-01) is complete
         self._apply_prior_period_carry_forward()
 
-        # Step 1: Inbound POs & Vendor Bills
-        results["po_processed"] = self._apply_inbound_pos()
-
-        # Step 2: Sales Orders & Outbound Deliveries
-        so_cnt, do_cnt = self._apply_sales_orders_and_deliveries()
-        results["so_processed"] = so_cnt
-        results["deliveries_processed"] = do_cnt
-
-        # Step 2b: Rejections & Quarantine Return Transfers (P2-H)
-        results["rejections_processed"] = self._apply_rejections_and_quarantine()
-
-        # Step 3: Invoices (Tax Code 04, DPP Nilai Lain)
-        results["invoices_processed"] = self._apply_invoices()
-
-        # Step 4: AR Collections
-        results["ar_reconciled"] = self._apply_ar_collections()
-
-        # Step 5: AP Payments (Cross-period July Unilever Bill)
-        results["ap_reconciled"] = self._apply_ap_payments()
-
-        # Step 6: OPEX & Payroll
-        results["opex_processed"] = self._apply_opex()
+        for phases in event_days:
+            self._apply_inbound_pos(phases["po"], receive=False)
+            results["po_processed"] += self._apply_inbound_pos(phases["receipt"], create=False)
+            so_cnt, _ = self._apply_sales_orders_and_deliveries(phases["so"], dispatch=False)
+            results["so_processed"] += so_cnt
+            _, do_cnt = self._apply_sales_orders_and_deliveries(phases["dispatch"], create=False)
+            results["deliveries_processed"] += do_cnt
+            results["rejections_processed"] += self._apply_rejections_and_quarantine(phases["rejections"])
+            results["invoices_processed"] += self._apply_invoices(phases["invoices"])
+            results["ar_reconciled"] += self._apply_ar_collections(phases["ar"])
+            results["ap_reconciled"] += self._apply_ap_payments(phases["ap"])
+            results["opex_processed"] += self._apply_opex(phases["opex"])
 
         _logger.info(f"=== Finished Applying Period Pack {self.manifest.period} ===")
         return results
+
+    def _period_event_days(self):
+        """Schedule source dates in WITA; apply dependencies in fixed order within each date."""
+        days = {}
+        streams = (
+            ("po", self.reader.po_headers, "order_date", "po_number"),
+            ("receipt", self.reader.po_headers, "arrival_maumbi_date", "po_number"),
+            ("so", self.reader.sales_orders, "date_order", "so_number"),
+            ("dispatch", self.reader.deliveries, "scheduled_delivery_date", "so_number"),
+            ("rejections", self.reader.rejections, "rejection_date", "rejection_id"),
+            ("invoices", self.reader.invoices, "date_invoice", "invoice_number"),
+            ("ar", self.reader.ar_collections, "payment_date", "payment_id"),
+            ("ap", self.reader.ap_payments, "payment_date", "ap_payment_id"),
+            ("opex", self.reader.opex, "date", "description"),
+        )
+        for phase, rows, date_field, business_key in streams:
+            for row in sorted(rows, key=lambda row: row[business_key]):
+                day = row[date_field]
+                days.setdefault(day, {}).setdefault(phase, []).append(row)
+
+        for row in self.reader.po_headers:
+            if row["arrival_maumbi_date"] < row["order_date"]:
+                raise StateInconsistencyError(f"Receipt {row['po_number']} predates the purchase order.")
+        orders = {row["so_number"]: row for row in self.reader.sales_orders}
+        dispatches = {}
+        for row in self.reader.deliveries:
+            ref = row["so_number"]
+            day = row["scheduled_delivery_date"]
+            if ref not in orders or day < orders[ref]["date_order"] or ref in dispatches:
+                raise StateInconsistencyError(f"Invalid or ambiguous dispatch date {day} for {ref}.")
+            dispatches[ref] = day
+        for row in self.reader.invoices:
+            ref = row["so_number"]
+            if ref not in dispatches or row["date_invoice"] < dispatches[ref]:
+                raise StateInconsistencyError(f"Invoice {row['invoice_number']} predates or lacks dispatch for {ref}.")
+        return [
+            {
+                phase: [orders[row["so_number"]] for row in phases.get(phase, [])]
+                if phase == "dispatch" else phases.get(phase, [])
+                for phase, *_ in streams
+            }
+            for _, phases in sorted(days.items())
+        ]
 
     # -----------------------------------------------------------------------
     # Step-by-Step Helpers (Native Odoo)
     # -----------------------------------------------------------------------
 
-    def _apply_inbound_pos(self) -> int:
+    def _apply_inbound_pos(self, po_headers=None, *, receive=True, create=True) -> int:
         """Create and validate Inbound POs and register incoming lots."""
-        po_headers = self.reader.po_headers
+        if po_headers is None:
+            po_headers = self.reader.po_headers
         if not po_headers:
             return 0
 
@@ -1835,21 +1855,14 @@ class GenericPeriodPackLoader:
             )
             if existing:
                 self._validate_existing_po(existing, po_row, po_lines)
-                if hasattr(existing, "picking_ids"):
-                    for pick in existing.picking_ids:
-                        if getattr(pick, "state", "") not in ("done", "cancel"):
-                            self._align_picking_locations(
-                                pick,
-                                expected_src_loc=getattr(self, "seed_supplier_loc", None),
-                                expected_dest_loc=getattr(self, "wh_stock_loc", None),
-                            )
-                            self._assign_lots_to_picking(pick, po_lines)
-                            self._validate_picking_safely(
-                                pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
-                            )
-                if native_accounting:
-                    self._ensure_purchase_bill(existing, po_row, input_tax, payable, interim)
+                if receive:
+                    received = self._receive_period_purchase(existing, po_row, po_lines)
+                    if native_accounting:
+                        self._ensure_purchase_bill(existing, po_row, input_tax, payable, interim)
+                    processed += int(received)
                 continue
+            if not create:
+                raise StateInconsistencyError(f"Receipt {po_num} has no earlier purchase order.")
 
             prin_code = po_row["principal_code"]
             vendor = Partner.search(
@@ -1888,23 +1901,26 @@ class GenericPeriodPackLoader:
             po_rec = PurchaseOrder.create(po_vals)
             po_rec.button_confirm()
 
-            if hasattr(po_rec, "picking_ids"):
-                for pick in po_rec.picking_ids:
-                    if getattr(pick, "state", "") not in ("done", "cancel"):
-                        self._align_picking_locations(
-                            pick,
-                            expected_src_loc=getattr(self, "seed_supplier_loc", None),
-                            expected_dest_loc=getattr(self, "wh_stock_loc", None),
-                        )
-                        self._assign_lots_to_picking(pick, po_lines)
-                        self._validate_picking_safely(
-                            pick, effective_date=po_row.get("arrival_maumbi_date"), ref_num=po_num
-                        )
-            if native_accounting:
-                self._ensure_purchase_bill(po_rec, po_row, input_tax, payable, interim)
+            if receive:
+                self._receive_period_purchase(po_rec, po_row, po_lines)
+                if native_accounting:
+                    self._ensure_purchase_bill(po_rec, po_row, input_tax, payable, interim)
             processed += 1
 
         return processed
+
+    def _receive_period_purchase(self, order, row, lines):
+        pending = [
+            pick for pick in getattr(order, "picking_ids", [])
+            if pick.state not in ("done", "cancel")
+        ]
+        for pick in pending:
+            self._align_picking_locations(pick, self.seed_supplier_loc, self.wh_stock_loc)
+            self._assign_lots_to_picking(pick, lines)
+            self._validate_picking_safely(
+                pick, effective_date=row["arrival_maumbi_date"], ref_num=row["po_number"],
+            )
+        return bool(pending)
 
     def _resolve_purchase_bill_accounts(self):
         """Resolve the dedicated seed input tax and payable control account."""
@@ -2753,9 +2769,10 @@ class GenericPeriodPackLoader:
         if values:
             order.write(values)
 
-    def _apply_sales_orders_and_deliveries(self) -> Tuple[int, int]:
+    def _apply_sales_orders_and_deliveries(self, so_rows=None, *, dispatch=True, create=True) -> Tuple[int, int]:
         """Create and validate Sales Orders and Outbound Deliveries."""
-        so_rows = self.reader.sales_orders
+        if so_rows is None:
+            so_rows = self.reader.sales_orders
         if not so_rows:
             return 0, 0
 
@@ -2810,22 +2827,11 @@ class GenericPeriodPackLoader:
                 self._validate_existing_so(existing, so_row, so_lines)
                 if getattr(existing, "fmcg_seed_batch", None) == f"PERIOD_{self.period}":
                     self._sync_seed_order_header(existing, so_row, owner_id)
-                if hasattr(existing, "picking_ids"):
-                    for pick in existing.picking_ids:
-                        if getattr(pick, "state", "") not in ("done", "cancel"):
-                            self._align_picking_locations(
-                                pick,
-                                expected_src_loc=getattr(self, "wh_stock_loc", None),
-                                expected_dest_loc=getattr(self, "seed_customer_loc", None),
-                            )
-                            self._assign_lots_to_picking(pick, so_lines)
-                            self._validate_picking_safely(
-                                pick,
-                                effective_date=self.do_date_map.get(so_num, so_row.get("date_order")),
-                                ref_num=so_num,
-                            )
-                            do_count += 1
+                if dispatch:
+                    do_count += self._dispatch_period_sale(existing, so_row, so_lines)
                 continue
+            if not create:
+                raise StateInconsistencyError(f"Dispatch {so_num} has no earlier sales order.")
 
             partner = Partner.search([("ref", "=", cust_ref)], limit=1) or Partner.search(
                 [("name", "ilike", cust_ref)], limit=1
@@ -2905,28 +2911,74 @@ class GenericPeriodPackLoader:
             self._sync_seed_order_header(so_rec, so_row, owner_id)
             so_count += 1
 
-            # Validate picking delivery if present
-            if hasattr(so_rec, "picking_ids"):
-                for pick in so_rec.picking_ids:
-                    if getattr(pick, "state", "") not in ("done", "cancel"):
-                        self._align_picking_locations(
-                            pick,
-                            expected_src_loc=getattr(self, "wh_stock_loc", None),
-                            expected_dest_loc=getattr(self, "seed_customer_loc", None),
-                        )
-                        self._assign_lots_to_picking(pick, so_lines)
-                        self._validate_picking_safely(
-                            pick,
-                            effective_date=self.do_date_map.get(so_num, so_row.get("date_order")),
-                            ref_num=so_num,
-                        )
-                        do_count += 1
+            if dispatch:
+                do_count += self._dispatch_period_sale(so_rec, so_row, so_lines)
 
         return so_count, do_count
 
-    def _apply_rejections_and_quarantine(self) -> int:
+    def _dispatch_period_sale(self, order, row, lines):
+        pending = [
+            pick for pick in getattr(order, "picking_ids", [])
+            if pick.state not in ("done", "cancel")
+        ]
+        reference = row["so_number"]
+        day = self.do_date_map.get(reference, row["date_order"])
+        for pick in pending:
+            self._align_picking_locations(pick, self.wh_stock_loc, self.seed_customer_loc)
+            self._assign_lots_to_picking(pick, lines)
+            self._check_dispatch_stock(pick, day, reference)
+            self._validate_picking_safely(pick, effective_date=day, ref_num=reference)
+        return len(pending)
+
+    def _check_dispatch_stock(self, picking, day, reference):
+        """Reject forced seed dispatch when the selected lots were unavailable that day."""
+        if not getattr(getattr(self.env, "cr", None), "dbname", None):
+            return
+        demands = {}
+        for line in picking.move_line_ids:
+            if line.product_id.is_storable and line.quantity_product_uom > 0:
+                key = (line.product_id.id, line.location_id.id, line.lot_id.id or False)
+                demands[key] = demands.get(key, 0.0) + line.quantity_product_uom
+        if not demands:
+            return
+        products, locations, lots = (list(set(values)) for values in zip(*demands))
+        Quant = self.env["stock.quant"].sudo()
+        balance = dict.fromkeys(demands, 0.0)
+        for quant in Quant.search([
+            ("company_id", "=", self.company.id), ("product_id", "in", products),
+            ("location_id", "in", locations), ("lot_id", "in", lots),
+        ]):
+            key = (quant.product_id.id, quant.location_id.id, quant.lot_id.id or False)
+            if key in balance:
+                balance[key] += quant.quantity
+
+        next_day = date.fromisoformat(day) + timedelta(days=1)
+        future_lines = self.env["stock.move.line"].sudo().search([
+            ("company_id", "=", self.company.id), ("state", "=", "done"),
+            ("date", ">=", f"{next_day} 00:00:00"), ("product_id", "in", products),
+            ("lot_id", "in", lots), "|",
+            ("location_id", "in", locations), ("location_dest_id", "in", locations),
+        ])
+        for line in future_lines:
+            for location, sign in ((line.location_id, 1), (line.location_dest_id, -1)):
+                key = (line.product_id.id, location.id, line.lot_id.id or False)
+                if key in balance:
+                    balance[key] += sign * line.quantity_product_uom
+
+        for (product, location, lot), required in demands.items():
+            available = balance[product, location, lot]
+            if available + 1e-6 < required:
+                sku = self.env["product.product"].browse(product).default_code
+                lot_name = self.env["stock.lot"].browse(lot).name if lot else "<untracked>"
+                raise StateInconsistencyError(
+                    f"Dispatch {reference} on {day}: {sku}/{lot_name} requires {required:g}, "
+                    f"but only {available:g} on hand at location {location}."
+                )
+
+    def _apply_rejections_and_quarantine(self, rejection_rows=None) -> int:
         """Create and validate return transfers to Quarantine for rejected delivery items (P2-H)."""
-        rejection_rows = getattr(self.reader, "rejections", [])
+        if rejection_rows is None:
+            rejection_rows = getattr(self.reader, "rejections", [])
         if not rejection_rows or not self.env:
             return 0
 
@@ -3054,9 +3106,10 @@ class GenericPeriodPackLoader:
 
         return processed
 
-    def _apply_invoices(self) -> int:
+    def _apply_invoices(self, invoices=None) -> int:
         """Create and post out_invoice records with tax code 04 and DPP Nilai Lain."""
-        invoices = self.reader.invoices
+        if invoices is None:
+            invoices = self.reader.invoices
         if not invoices:
             return 0
 
@@ -3142,52 +3195,42 @@ class GenericPeriodPackLoader:
             if not so:
                 raise PreflightContinuityError(f"SO {so_num} not found for invoice {inv_num}")
 
-            # Ensure all deliveries for SO are validated and completed before creating/posting invoice
-            if hasattr(so, "picking_ids"):
-                so_lines = lines_by_so.get(so_num, [])
-                for pick in so.picking_ids:
-                    if getattr(pick, "state", "") not in ("done", "cancel"):
-                        self._align_picking_locations(
-                            pick,
-                            expected_src_loc=getattr(self, "wh_stock_loc", None),
-                            expected_dest_loc=getattr(self, "seed_customer_loc", None),
-                        )
-                        self._assign_lots_to_picking(pick, so_lines)
-                        self._validate_picking_safely(
-                            pick, effective_date=inv_row.get("date_invoice"), ref_num=so_num
-                        )
-                    if hasattr(pick, "move_ids"):
-                        for sm in pick.move_ids:
-                            sm_st = getattr(sm, "state", "")
-                            if sm_st != "done":
-                                sm_lbl = getattr(sm, "name", getattr(sm, "id", "move"))
-                                sku = getattr(getattr(sm, "product_id", None), "default_code", "")
-                                raise StateInconsistencyError(
-                                    f"Delivery move '{sm_lbl}' (ID {getattr(sm, 'id', '')}, SKU {sku}) "
-                                    f"for {so_num} / DO '{getattr(pick, 'name', '')}' is not done "
-                                    f"(state: '{sm_st}') before posting invoice {inv_num}!"
-                                )
-                            # Pastikan move telah tersinkronisasi akuntansi dan tanggalnya konsisten dengan jurnal valuasi
-                            self._sync_native_stock_accounting(
-                                sm,
-                                str(getattr(sm, "date", "")) or inv_row.get("date_invoice"),
-                                str(getattr(sm, "date", ""))[:10] if getattr(sm, "date", None) else inv_row.get("date_invoice"),
+            if any(pick.state not in ("done", "cancel") for pick in getattr(so, "picking_ids", [])):
+                raise StateInconsistencyError(f"Invoice {inv_num} has an incomplete dispatch for {so_num}.")
+
+            for pick in getattr(so, "picking_ids", []):
+                if hasattr(pick, "move_ids"):
+                    for sm in pick.move_ids:
+                        sm_st = getattr(sm, "state", "")
+                        if sm_st != "done":
+                            sm_lbl = getattr(sm, "name", getattr(sm, "id", "move"))
+                            sku = getattr(getattr(sm, "product_id", None), "default_code", "")
+                            raise StateInconsistencyError(
+                                f"Delivery move '{sm_lbl}' (ID {getattr(sm, 'id', '')}, SKU {sku}) "
+                                f"for {so_num} / DO '{getattr(pick, 'name', '')}' is not done "
+                                f"(state: '{sm_st}') before posting invoice {inv_num}!"
                             )
-                            cogs_am = getattr(sm, "account_move_id", None)
-                            if cogs_am and getattr(cogs_am, "date", None):
-                                target_cogs_date = str(cogs_am.date)[:10]
-                                if str(getattr(sm, "date", ""))[:10] != target_cogs_date:
-                                    if callable(getattr(sm, "write", None)):
+                        # Pastikan move telah tersinkronisasi akuntansi dan tanggalnya konsisten dengan jurnal valuasi
+                        self._sync_native_stock_accounting(
+                            sm,
+                            str(getattr(sm, "date", "")) or inv_row.get("date_invoice"),
+                            str(getattr(sm, "date", ""))[:10] if getattr(sm, "date", None) else inv_row.get("date_invoice"),
+                        )
+                        cogs_am = getattr(sm, "account_move_id", None)
+                        if cogs_am and getattr(cogs_am, "date", None):
+                            target_cogs_date = str(cogs_am.date)[:10]
+                            if str(getattr(sm, "date", ""))[:10] != target_cogs_date:
+                                if callable(getattr(sm, "write", None)):
+                                    try:
+                                        sm.write({"date": f"{target_cogs_date} 00:00:00"})
+                                    except Exception:
+                                        pass
+                                if hasattr(sm, "move_line_ids") and sm.move_line_ids:
+                                    if callable(getattr(sm.move_line_ids, "write", None)):
                                         try:
-                                            sm.write({"date": f"{target_cogs_date} 00:00:00"})
+                                            sm.move_line_ids.write({"date": f"{target_cogs_date} 00:00:00"})
                                         except Exception:
                                             pass
-                                    if hasattr(sm, "move_line_ids") and sm.move_line_ids:
-                                        if callable(getattr(sm.move_line_ids, "write", None)):
-                                            try:
-                                                sm.move_line_ids.write({"date": f"{target_cogs_date} 00:00:00"})
-                                            except Exception:
-                                                pass
 
             # Ensure SO lines carry canonical Tax Code 04
             if canonical_tax_04 and hasattr(so, "order_line"):
@@ -3563,9 +3606,10 @@ class GenericPeriodPackLoader:
 
         return processed
 
-    def _apply_ar_collections(self) -> int:
+    def _apply_ar_collections(self, ar_collections=None) -> int:
         """Reconcile customer cash / bank collections with invoices."""
-        ar_collections = self.reader.ar_collections
+        if ar_collections is None:
+            ar_collections = self.reader.ar_collections
         if not ar_collections:
             return 0
 
@@ -3599,6 +3643,18 @@ class GenericPeriodPackLoader:
                     f"not found in non-strict mode. Skipping."
                 )
                 continue
+
+            if getattr(getattr(self.env, "cr", None), "dbname", None):
+                customer = extract_ref(ar_row.get("customer", ""))
+                if (
+                    inv.state != "posted" or inv.move_type != "out_invoice"
+                    or str(inv.date) > ar_row["payment_date"]
+                    or (customer and inv.partner_id.ref != customer)
+                    or not 0 < _dec(amt) <= _dec(inv.amount_residual) + CENT
+                ):
+                    raise StateInconsistencyError(
+                        f"AR collection {pay_ref}: invalid target, date, customer or residual for {inv_num}."
+                    )
 
             if bank_journal:
                 pay_vals = {
@@ -3641,9 +3697,10 @@ class GenericPeriodPackLoader:
 
         return reconciled
 
-    def _apply_ap_payments(self) -> int:
+    def _apply_ap_payments(self, ap_payments=None) -> int:
         """Reconcile vendor payments against existing vendor bills (e.g. July Unilever bill)."""
-        ap_payments = self.reader.ap_payments
+        if ap_payments is None:
+            ap_payments = self.reader.ap_payments
         if not ap_payments:
             return 0
 
@@ -3730,6 +3787,9 @@ class GenericPeriodPackLoader:
                     f"not found for AP payment {pay_ref}"
                 )
 
+            if getattr(getattr(self.env, "cr", None), "dbname", None) and str(bill.date) > ap_row["payment_date"]:
+                raise StateInconsistencyError(f"AP payment {pay_ref} predates bill {po_num}.")
+
             # Validate residual amount before payment (NO fallback to amount_total)
             bill_residual = _dec(getattr(bill, "amount_residual", Decimal(0)))
             if abs(bill_residual - amt_dec) > Decimal("1.00"):
@@ -3781,9 +3841,10 @@ class GenericPeriodPackLoader:
 
         return reconciled
 
-    def _apply_opex(self) -> int:
+    def _apply_opex(self, opex_rows=None) -> int:
         """Create period OPEX and payroll journal entries with explicit account mapping."""
-        opex_rows = self.reader.opex
+        if opex_rows is None:
+            opex_rows = self.reader.opex
         if not opex_rows:
             return 0
 

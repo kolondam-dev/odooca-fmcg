@@ -2867,3 +2867,36 @@ class TestCascadingAndFooterDiscountSpecification(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPeriodEventChronology(unittest.TestCase):
+    def setUp(self):
+        self.loader = GenericPeriodPackLoader(env=None, pack_dir=AUG_PACK_DIR, dry_run=False)
+        self.loader.reader = SimpleNamespace(
+            po_headers=[{"po_number": "PO1", "order_date": "2026-08-24", "arrival_maumbi_date": "2026-08-27"}],
+            po_lines=[{"po_number": "PO1", "sku_code": "SKU1", "lot_number": "LOT1", "qty_cartons": "10"}],
+            sales_orders=[{"so_number": "SO1", "date_order": "2026-08-25"}],
+            order_lines=[{"so_number": "SO1", "sku_code": "SKU1", "lot_number": "LOT1", "qty_cartons": "2"}],
+            deliveries=[{"so_number": "SO1", "scheduled_delivery_date": "2026-08-27"}],
+            rejections=[],
+            invoices=[{"so_number": "SO1", "invoice_number": "INV1", "date_invoice": "2026-08-27"}],
+            ar_collections=[{"payment_id": "PAY1", "payment_date": "2026-08-28"}],
+            ap_payments=[],
+            opex=[],
+        )
+
+    def test_dispatcher_interleaves_order_receipt_and_finance(self):
+        events = [(phase, rows) for day in self.loader._period_event_days() for phase, rows in day.items() if rows]
+        self.assertEqual([phase for phase, _ in events], ["po", "so", "receipt", "dispatch", "invoices", "ar"])
+        self.assertEqual(events[3][1], self.loader.reader.sales_orders)
+
+    def test_oracle_detects_future_receipt_with_same_closing_quantity(self):
+        from scripts.ops.verify_disposable_period_pack import source_dispatch_shortages
+
+        opening = {"stock": {}, "pending_dos": {}}
+        self.assertEqual(source_dispatch_shortages(self.loader.reader, opening, []), [])
+        self.loader.reader.po_headers[0]["arrival_maumbi_date"] = "2026-08-29"
+        self.assertEqual(
+            source_dispatch_shortages(self.loader.reader, opening, []),
+            [("2026-08-27", "SO1", "SKU1||LOT1", "0", "2")],
+        )
