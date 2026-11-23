@@ -1,3 +1,9 @@
+## 2026-11-23 — [F] FE-8 baca: tutup P2 PR #189, total Wajib ditagih dari daftar terpotong (claude-design)
+
+- [F] `mustCollectToday` kini mengembalikan `complete`; daftar server terpotong (50 faktur) dan faktur termuat terakhir masih di jendela 7 hari ⇒ angka hanya minimum. VisitPanel menampilkan "Minimal Rp … · N+ faktur (daftar terpotong)" atau "Belum diketahui (daftar terpotong)" plus catatan; "Tidak ada" hanya bila lengkap. Piutang berjalan/jatuh tempo tetap agregat server.
+- [F] Tes: 6 unit baru (60 faktur terlambat/50 terkirim, terpotong lewat +7, +6, tanpa jatuh tempo) dan e2e phone+tablet >50 faktur. Docstring `creditRoom` diselaraskan (piutang tidak diketahui dianggap 0).
+- [BU] Total lengkap menunggu agregat jendela dari server (BE-20).
+
 ## 2026-11-23 — PR #190 backfill offer karton vendor existing (codex)
 
 - [F] Mode dry-run dan apply memvalidasi SKU, principal serta rasio karton. Apply membuat hanya offer baru pada company yang dipilih.

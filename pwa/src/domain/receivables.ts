@@ -43,22 +43,40 @@ export type CollectToday = {
     count: number;
     total: number;
     overdueCount: number;
+    /**
+     * false = angka hanya SUBTOTAL/MINIMUM dari faktur yang dimuat: server memotong daftar (`truncated`,
+     * urut jatuh tempo tertua dulu) dan faktur terakhir yang dimuat masih di dalam jendela, sehingga masih
+     * ada faktur jendela yang tidak terkirim. Jumlah dan nominal tidak boleh disajikan sebagai total lengkap.
+     */
+    complete: boolean;
 };
 
-/** Faktur yang wajib ditagih hari ini untuk satu outlet (urutan server: jatuh tempo tertua dulu). */
+/**
+ * Faktur yang wajib ditagih hari ini untuk satu outlet (urutan server: jatuh tempo tertua dulu).
+ * Daftar server dipotong 50, jadi hasil bisa tidak lengkap: bila terpotong dan faktur dengan jatuh tempo
+ * terjauh yang dimuat belum keluar dari jendela, `complete` = false. Bila faktur termuat sudah melewati
+ * jendela, semua faktur jendela pasti sudah termuat (urutan tertua dulu) sehingga hasil lengkap.
+ * Saldo sisa TIDAK diturunkan dari `outstanding_total` (faktur masa depan bisa di luar jendela).
+ */
 export function mustCollectToday(
     entry: OutletReceivable | undefined,
     today: string,
 ): CollectToday {
-    const invoices = (entry?.invoices ?? []).filter((i) => {
-        const days = daysUntilDue(i.due_date, today);
-        return days !== null && days < COLLECT_WINDOW_DAYS;
+    const loaded = entry?.invoices ?? [];
+    const days = loaded.map((i) => daysUntilDue(i.due_date, today));
+    const invoices = loaded.filter((_, idx) => {
+        const d = days[idx];
+        return d !== null && d < COLLECT_WINDOW_DAYS;
     });
+    const beyondWindow = days.some(
+        (d) => d !== null && d >= COLLECT_WINDOW_DAYS,
+    );
     return {
         invoices,
         count: invoices.length,
         total: invoices.reduce((s, i) => s + i.balance, 0),
         overdueCount: invoices.filter((i) => i.overdue).length,
+        complete: !entry?.truncated || beyondWindow,
     };
 }
 

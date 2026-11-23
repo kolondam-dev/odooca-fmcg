@@ -69,9 +69,69 @@ describe("mustCollectToday (aturan pemilik: jatuh tempo < 7 hari dari hari bisni
         expect(r.total).toBe(600);
         expect(r.overdueCount).toBe(1);
     });
-    it("outlet tanpa piutang atau blok tidak ada → kosong", () => {
+    it("outlet tanpa piutang atau blok tidak ada → kosong dan lengkap", () => {
         const r = mustCollectToday(undefined, TODAY);
         expect([r.count, r.total, r.overdueCount]).toEqual([0, 0, 0]);
+        expect(r.complete).toBe(true);
+    });
+    it("daftar tidak terpotong selalu lengkap", () => {
+        expect(
+            mustCollectToday(entry([inv("A", "2026-11-22", 100)]), TODAY)
+                .complete,
+        ).toBe(true);
+    });
+    it("60 faktur terlambat, server hanya kirim 50: subtotal BUKAN total lengkap", () => {
+        const loaded = Array.from({ length: 50 }, (_, i) =>
+            inv(`F${i}`, "2026-11-22", 100),
+        );
+        const r = mustCollectToday(
+            entry(loaded, {
+                open_count: 60,
+                outstanding_total: 6000,
+                overdue_count: 60,
+                overdue_total: 6000,
+                truncated: true,
+            }),
+            TODAY,
+        );
+        expect([r.count, r.total]).toEqual([50, 5000]);
+        expect(r.complete).toBe(false);
+    });
+    it("terpotong tetapi faktur termuat sudah melewati jendela (+7) → semua faktur jendela termuat, lengkap", () => {
+        const r = mustCollectToday(
+            entry(
+                [
+                    inv("A", "2026-11-01", 100),
+                    inv("B", "2026-11-29", 200), // +6
+                    inv("C", "2026-11-30", 300), // +7 di luar
+                ],
+                { truncated: true },
+            ),
+            TODAY,
+        );
+        expect([r.count, r.total]).toEqual([2, 300]);
+        expect(r.complete).toBe(true);
+    });
+    it("terpotong dengan faktur terakhir +6 masih di jendela → tidak lengkap; tanpa jatuh tempo tidak membuktikan lengkap", () => {
+        const e = entry(
+            [
+                inv("A", "2026-11-01", 100),
+                inv("B", "2026-11-29", 200),
+                inv("N", null, 50),
+            ],
+            { truncated: true },
+        );
+        const r = mustCollectToday(e, TODAY);
+        expect([r.count, r.total]).toEqual([2, 300]);
+        expect(r.complete).toBe(false);
+    });
+    it("terpotong tanpa faktur jendela sama sekali → count 0 tetapi tidak lengkap (bukan 'Tidak ada')", () => {
+        const r = mustCollectToday(
+            entry([inv("N", null, 50)], { truncated: true }),
+            TODAY,
+        );
+        expect(r.count).toBe(0);
+        expect(r.complete).toBe(false);
     });
 });
 

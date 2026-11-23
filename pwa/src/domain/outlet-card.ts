@@ -62,8 +62,9 @@ export function creditExceeded(commercial?: CreditCommercial | null):
 
 /**
  * Sisa limit kredit untuk pemeriksaan total order (null = tanpa pemeriksaan nominal): limit tidak ada
- * atau 0, mode strict (memeriksa faktur jatuh tempo), atau piutang tidak diketahui. Sama dengan
- * `_compute_credit_limit_exceeded` yang memeriksa nominal hanya bila limit > 0.
+ * atau 0, atau mode strict (memeriksa faktur jatuh tempo). Sama dengan `_compute_credit_limit_exceeded`
+ * yang memeriksa nominal hanya bila limit > 0. Piutang yang tidak diketahui (`null`) dianggap 0, jadi
+ * hanya total order yang dibandingkan dengan limit (perilaku lama OrderScreen dipertahankan).
  */
 export function creditRoom(
     commercial: CreditCommercial | null | undefined,

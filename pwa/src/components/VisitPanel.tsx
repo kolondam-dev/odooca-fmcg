@@ -611,8 +611,12 @@ export function VisitPanel({
                             label="Wajib ditagih hari ini"
                             value={
                                 collect.count
-                                    ? `${money(collect.total)} · ${collect.count} faktur`
-                                    : "Tidak ada"
+                                    ? collect.complete
+                                        ? `${money(collect.total)} · ${collect.count} faktur`
+                                        : `Minimal ${money(collect.total)} · ${collect.count}+ faktur (daftar terpotong)`
+                                    : collect.complete
+                                      ? "Tidak ada"
+                                      : "Belum diketahui (daftar terpotong)"
                             }
                             tone={collect.count ? "warn" : undefined}
                         />
@@ -663,6 +667,14 @@ export function VisitPanel({
                         Menampilkan {Math.min(8, receivable.invoices.length)}{" "}
                         dari {receivable.open_count} faktur terbuka (jatuh tempo
                         tertua lebih dulu).
+                    </span>
+                ) : null}
+                {receivable && !collect.complete ? (
+                    <span class="ui-row__sub">
+                        Daftar faktur dari server dipotong: angka wajib ditagih
+                        hari ini hanya dari faktur yang dimuat, bukan total
+                        lengkap. Piutang berjalan dan jatuh tempo memakai total
+                        server.
                     </span>
                 ) : null}
                 <span class="ui-row__sub">

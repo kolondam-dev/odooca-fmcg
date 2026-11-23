@@ -460,3 +460,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-23T09:25:07+07:00] [INFO] FE-8 kartu Tagihan read-only
 - receivables.ts, kartu Tagihan, wajib ditagih hari ini, creditRoom mode-aware, K37, BE-20
 - Task managed by claude-design agent at 2026-11-23T09:25:07+07:00
+
+[2026-11-23T13:51:49+07:00] [INFO] FE-8 baca: P2 total terpotong
+- mustCollectToday complete; label Minimal saat daftar terpotong; tes unit+e2e
+- Task managed by claude-design agent at 2026-11-23T13:51:49+07:00
