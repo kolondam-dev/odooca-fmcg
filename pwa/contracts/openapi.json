@@ -6071,6 +6071,109 @@
               "additionalProperties": false
             }
           },
+          "outlet_receivables": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "outstanding_total": {
+                  "type": "number"
+                },
+                "open_count": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "overdue_count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "overdue_total": {
+                  "type": "number"
+                },
+                "oldest_due": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "truncated": {
+                  "type": "boolean"
+                },
+                "invoices": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "reference": {
+                        "type": "string"
+                      },
+                      "partner": {
+                        "type": "string"
+                      },
+                      "invoice_date": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "due_date": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "total": {
+                        "type": "number"
+                      },
+                      "balance": {
+                        "type": "number"
+                      },
+                      "overdue": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "reference",
+                      "partner",
+                      "invoice_date",
+                      "due_date",
+                      "total",
+                      "balance",
+                      "overdue"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "outstanding_total",
+                "open_count",
+                "overdue_count",
+                "overdue_total",
+                "oldest_due",
+                "truncated",
+                "invoices"
+              ],
+              "additionalProperties": false
+            }
+          },
           "approval_tiers": {
             "type": "object",
             "properties": {

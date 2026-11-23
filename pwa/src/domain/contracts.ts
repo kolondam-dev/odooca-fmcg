@@ -273,6 +273,37 @@ export const SnapshotSchema = z
             )
             .optional(),
         /**
+         * Piutang berjalan dan faktur terbuka per id outlet (BE-7), di luar digest versi (berubah tiap
+         * pembayaran). Perimeter = commercial partner (parent) dalam perusahaan sesi: faktur outlet saudara
+         * ikut (lihat `partner`). Total dari SEMUA faktur terbuka; `invoices` dipotong server (jatuh tempo
+         * tertua dulu) dengan `truncated`. Nominal rupiah (mata uang perusahaan). Outlet tidak tercantum =
+         * tidak ada piutang; blok tidak ada = tidak diketahui (server lama).
+         */
+        outlet_receivables: z
+            .record(
+                z.string(),
+                z.object({
+                    outstanding_total: z.number(),
+                    open_count: z.number().int().positive(),
+                    overdue_count: z.number().int().nonnegative(),
+                    overdue_total: z.number(),
+                    oldest_due: z.string().nullable(),
+                    truncated: z.boolean(),
+                    invoices: z.array(
+                        z.object({
+                            reference: z.string(),
+                            partner: z.string(),
+                            invoice_date: z.string().nullable(),
+                            due_date: z.string().nullable(),
+                            total: z.number(),
+                            balance: z.number(),
+                            overdue: z.boolean(),
+                        }),
+                    ),
+                }),
+            )
+            .optional(),
+        /**
          * Tata kelola approval diskon (BE-18): hanya untuk pratinjau di POS. Server tetap menentukan
          * perlu/tidaknya approval saat order dikirim. Batas zona bebas dan tier bisa khusus principal.
          */

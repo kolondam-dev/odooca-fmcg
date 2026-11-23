@@ -1,6 +1,8 @@
 """BE-19: kebijakan kredit efektif dan tunggakan faktur pada snapshot, dibuktikan dengan faktur nyata."""
 from datetime import timedelta
 
+from unittest.mock import patch
+
 from freezegun import freeze_time
 
 from odoo import Command
@@ -206,7 +208,82 @@ class TestMobileCreditSnapshot(TransactionCase):
         after = self._snapshot()
         self.assertEqual(after["outlet_credit"], {})
         self.assertEqual(before["version"], after["version"])
-        self.assertNotIn("outlet_credit", self._snapshot(include_approval_tiers=False))
+        self.assertNotIn("outlet_credit", self._snapshot(include_volatile=False))
+
+    # ---- BE-7: piutang berjalan dan daftar faktur terbuka ----------------------------------------
+    def _receivables(self, outlet):
+        return self._snapshot()["outlet_receivables"].get(str(outlet.id))
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_receivables_totals_list_order_and_isolation(self):
+        day = business_date()
+        parent = self._partner("Credit Parent Recv", is_company=True, credit_mode="strict")
+        child = self._partner("Credit Child Recv", parent_id=parent.id, type="contact")
+        sibling = self._partner("Credit Sibling Recv", parent_id=parent.id, type="contact")
+        unrelated = self._partner("Credit Unrelated Recv", is_company=True)
+        self._assign(child)
+        oldest = self._invoice(child, day - timedelta(days=20), 100000)
+        self._invoice(sibling, day - timedelta(days=5), 50000)
+        partial = self._invoice(parent, day - timedelta(days=2), 80000)
+        self._settle(partial, 30000)
+        self._settle(self._invoice(parent, day - timedelta(days=9), 70000), 0)  # lunas: tidak ikut
+        self._invoice(parent, day, 999999)  # terbuka, belum overdue
+        self._invoice(parent, day - timedelta(days=4), 777777, post=False)  # draft
+        self._invoice(unrelated, day - timedelta(days=4), 555555)  # parent lain
+        self._invoice(parent, day - timedelta(days=4), 444444, company=self.foreign)  # perusahaan lain
+
+        recv = self._receivables(child)
+        self.assertEqual(recv["outstanding_total"], 1179999.0)  # 100000 + 50000 + 30000 + 999999
+        self.assertEqual((recv["open_count"], recv["overdue_count"], recv["overdue_total"]), (4, 3, 180000.0))
+        self.assertEqual(recv["oldest_due"], (day - timedelta(days=20)).isoformat())
+        self.assertFalse(recv["truncated"])
+        invoices = recv["invoices"]
+        self.assertEqual([i["due_date"] for i in invoices], sorted(i["due_date"] for i in invoices),
+                         "urut jatuh tempo tertua dulu")
+        self.assertEqual(invoices[0]["reference"], oldest.name)
+        self.assertEqual(invoices[0]["partner"], child.display_name)
+        self.assertEqual([i["overdue"] for i in invoices], [True, True, True, False])
+        self.assertEqual({i["balance"] for i in invoices if i["reference"] == partial.name}, {30000.0})
+        self.assertEqual(
+            {i["reference"]: i["total"] for i in invoices if i["reference"] == partial.name}, {partial.name: 80000.0})
+        for invoice in invoices:
+            self.assertEqual(set(invoice), {
+                "reference", "partner", "invoice_date", "due_date", "total", "balance", "overdue"})
+        self.assertNotIn(str(sibling.id), self._snapshot()["outlet_receivables"], "hanya outlet ditugaskan")
+        # Konsisten dengan blok BE-19 untuk fakta overdue yang sama.
+        credit = self._credit(child)
+        self.assertEqual(
+            (credit["overdue_count"], credit["overdue_total"]), (recv["overdue_count"], recv["overdue_total"]))
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_receivables_list_is_capped_but_totals_are_complete(self):
+        day = business_date()
+        outlet = self._partner("Credit Cap Outlet", is_company=True)
+        self._assign(outlet)
+        for offset in (10, 8, 6, 4):
+            self._invoice(outlet, day - timedelta(days=offset), 1000)
+        with patch.object(type(self.env["id.mobile.workday"]), "RECEIVABLE_INVOICE_CAP", 2):
+            recv = self._receivables(outlet)
+        self.assertTrue(recv["truncated"])
+        self.assertEqual(len(recv["invoices"]), 2)
+        self.assertEqual((recv["open_count"], recv["outstanding_total"]), (4, 4000.0))
+        self.assertEqual(recv["invoices"][0]["due_date"], (day - timedelta(days=10)).isoformat())
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_receivables_outside_digest_and_follow_payments(self):
+        outlet = self._partner("Credit Pay Recv", is_company=True)
+        self._assign(outlet)
+        self.assertEqual(self._snapshot()["outlet_receivables"], {})
+        invoice = self._invoice(outlet, business_date() + timedelta(days=5), 100000)  # belum jatuh tempo
+        before = self._snapshot()
+        recv = before["outlet_receivables"][str(outlet.id)]
+        self.assertEqual((recv["outstanding_total"], recv["overdue_count"]), (100000.0, 0))
+        self.assertNotIn(str(outlet.id), before["outlet_credit"], "belum overdue: bukan tunggakan BE-19")
+        self._settle(invoice, 40000)
+        after = self._snapshot()
+        self.assertEqual(after["outlet_receivables"][str(outlet.id)]["outstanding_total"], 40000.0)
+        self.assertEqual(before["version"], after["version"])
+        self.assertNotIn("outlet_receivables", self._snapshot(include_volatile=False))
 
     # ---- tanggal overdue: satu definisi hari bisnis WITA dengan server -------------------------
     def _consistency(self, utc_now, due_offset_from_wita_day):

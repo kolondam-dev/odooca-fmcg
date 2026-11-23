@@ -208,8 +208,57 @@ class MobileWorkday(models.Model):
                 }
         return result
 
+    # Batas faktur terbuka per outlet pada snapshot (urut jatuh tempo tertua); sisanya hanya masuk total.
+    RECEIVABLE_INVOICE_CAP = 50
+
     @api.model
-    def _snapshot_payload(self, include_approval_tiers=True):
+    def _outlet_receivables(self, partners, company, day):
+        """BE-7: piutang berjalan dan daftar faktur terbuka per outlet ditugaskan (baca-saja).
+
+        Perimeter dan kriteria sama dengan `_outlet_overdue` (BE-19): faktur pelanggan terposting, belum
+        lunas, perusahaan sesi, commercial partner (parent) outlet; faktur outlet saudara ikut dan
+        ditandai lewat `partner`. Total dihitung dari SEMUA faktur terbuka; daftar dipotong
+        `RECEIVABLE_INVOICE_CAP` (jatuh tempo tertua dulu) dengan `truncated`. Nominal dalam mata uang
+        perusahaan (`*_signed`). Dibaca sudo dan hanya field ringkas (akun mobile tidak otomatis boleh
+        membaca faktur). Hanya outlet yang punya piutang dimuat ({} = server membaca, tidak ada piutang)."""
+        commercial = {p.id: (p.commercial_partner_id or p).id for p in partners}
+        if not commercial:
+            return {}
+        moves = self.env["account.move"].sudo().search([
+            ("company_id", "=", company.id), ("commercial_partner_id", "in", list(set(commercial.values()))),
+            ("move_type", "=", "out_invoice"), ("state", "=", "posted"),
+            ("payment_state", "not in", ["paid", "in_payment", "reversed"]),
+        ], order="invoice_date_due asc, id asc")
+        by_commercial = {}
+        for move in moves:
+            by_commercial.setdefault(move.commercial_partner_id.id, []).append(move)
+        result = {}
+        for outlet_id, partner_id in commercial.items():
+            rows = by_commercial.get(partner_id)
+            if not rows:
+                continue
+            overdue = [m for m in rows if m.invoice_date_due and m.invoice_date_due < day]
+            result[str(outlet_id)] = {
+                "outstanding_total": round(sum(m.amount_residual_signed for m in rows), 2),
+                "open_count": len(rows),
+                "overdue_count": len(overdue),
+                "overdue_total": round(sum(m.amount_residual_signed for m in overdue), 2),
+                "oldest_due": next((m.invoice_date_due.isoformat() for m in rows if m.invoice_date_due), None),
+                "truncated": len(rows) > self.RECEIVABLE_INVOICE_CAP,
+                "invoices": [{
+                    "reference": m.name,
+                    "partner": m.partner_id.display_name,
+                    "invoice_date": m.invoice_date.isoformat() if m.invoice_date else None,
+                    "due_date": m.invoice_date_due.isoformat() if m.invoice_date_due else None,
+                    "total": round(m.amount_total_signed, 2),
+                    "balance": round(m.amount_residual_signed, 2),
+                    "overdue": bool(m.invoice_date_due and m.invoice_date_due < day),
+                } for m in rows[:self.RECEIVABLE_INVOICE_CAP]],
+            }
+        return result
+
+    @api.model
+    def _snapshot_payload(self, include_volatile=True):
         assignment, day = self._current_assignment()
         assignment = assignment.with_company(assignment.company_id)
         company = assignment.company_id
@@ -299,7 +348,7 @@ class MobileWorkday(models.Model):
         # Sengaja DI LUAR digest versi: pemakaian berubah setiap order dan konfigurasi bisa berubah kapan
         # saja; bila ikut digest, command offline berikutnya ditolak 'Stale catalog snapshot version'.
         category_model = self.env.registry.get("fmcg.approval.category")
-        if include_approval_tiers and category_model is not None \
+        if include_volatile and category_model is not None \
                 and hasattr(category_model, "_mobile_snapshot_payload"):
             tiers = self.env["fmcg.approval.category"]._mobile_snapshot_payload(
                 principal_ids=products.mapped("principal_id").ids,
@@ -309,7 +358,9 @@ class MobileWorkday(models.Model):
             if tiers:
                 result["approval_tiers"] = {"discount": tiers}
         # BE-19: tunggakan faktur outlet berubah setiap pembayaran → di luar digest, sama alasannya.
-        if include_approval_tiers:
+        if include_volatile:
             result["outlet_credit"] = self._outlet_overdue(partners, company, day)
+            # BE-7: piutang berjalan + faktur terbuka (juga berubah tiap pembayaran → di luar digest).
+            result["outlet_receivables"] = self._outlet_receivables(partners, company, day)
         assignment._assert_day(day)
         return result
