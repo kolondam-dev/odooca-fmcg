@@ -1,9 +1,12 @@
 from datetime import datetime, time, timedelta
+from decimal import Decimal, InvalidOperation, ROUND_DOWN
+from hashlib import sha256
+import json
 
 import pytz
 
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 
 APPROVAL_WORK_TZ = "Asia/Makassar"  # hari/bulan kerja WITA, selaras PWA (WORK_TZ)
@@ -158,7 +161,8 @@ class SaleOrder(models.Model):
             raise UserError("Kategori persetujuan 'tactical_discount' tidak ditemukan.")
 
         decision = self._approval_discount_decision(category)
-        req = self.env["fmcg.approval.request"].create({
+        self.check_access("write")
+        req = self.env["fmcg.approval.request"].sudo().create({
             "category_id": category.id,
             "res_model": "sale.order",
             "res_id": self.id,
@@ -350,6 +354,111 @@ class SaleOrder(models.Model):
                 manual += line.price_unit * line.product_uom_qty * (line.discount or 0.0) / 100.0
         return manual, program
 
+    commercial_tactical_components = fields.Json(readonly=True, copy=False)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.su and any("commercial_tactical_components" in vals for vals in vals_list):
+            raise AccessError("Rincian diskon komersial hanya dapat ditetapkan oleh action server.")
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if "commercial_tactical_components" in vals and not self.env.su:
+            raise AccessError("Rincian diskon komersial hanya dapat ditetapkan oleh action server.")
+        return super().write(vals)
+
+    def action_apply_tactical_components(self, line_steps, footer_amount=0):
+        """Apply native tactical line percentages and a fixed order footer."""
+        self.ensure_one()
+        self.check_access("write")
+        if self.state not in ("draft", "sent"):
+            raise UserError("Diskon bertingkat hanya dapat diterapkan pada penawaran.")
+        if self._has_program_discount():
+            raise UserError("Kombinasi program dengan diskon bertingkat memerlukan kalkulasi program-first.")
+        lines = self.order_line.filtered(lambda line: not line.display_type and line.product_id
+                                         and line.price_unit > 0 and line.product_uom_qty > 0)
+        if not lines or not isinstance(line_steps, dict) or set(line_steps) - {str(line.id) for line in lines}:
+            raise UserError("Rincian diskon harus merujuk ke baris penjualan yang berlaku.")
+
+        def value(raw):
+            try:
+                number = Decimal(str(raw))
+                if number.is_finite() and number >= 0:
+                    return number
+            except InvalidOperation:
+                pass
+            raise UserError("Nilai diskon tidak valid.")
+
+        def money(amount):
+            return Decimal(str(self.currency_id.round(float(amount))))
+
+        gross, net, steps_by_line = {}, {}, {}
+        for line in lines:
+            key = str(line.id)
+            steps = line_steps.get(key, [])
+            if not isinstance(steps, list) or len(steps) > 4:
+                raise UserError("Maksimal empat tingkat diskon per baris.")
+            eligible_steps = [value(step) for step in steps]
+            if any(step > 100 for step in eligible_steps):
+                raise UserError("Persentase diskon tidak boleh melebihi 100%.")
+            steps_by_line[key] = [str(step) for step in eligible_steps]
+            gross[key] = money(value(line.price_unit) * value(line.product_uom_qty))
+            net[key] = gross[key]
+            for step in eligible_steps:
+                net[key] = money(net[key] * (1 - step / 100))
+
+        footer = money(value(footer_amount))
+        base = sum(net.values())
+        if footer > base:
+            raise UserError("Diskon footer melebihi nilai setelah diskon baris.")
+        quantum = value(self.currency_id.rounding)
+        quotas = {key: footer * amount / base if base else Decimal(0) for key, amount in net.items()}
+        allocated = {key: (quota / quantum).to_integral_value(rounding=ROUND_DOWN) * quantum
+                     for key, quota in quotas.items()}
+        remainder = int((footer - sum(allocated.values())) / quantum)
+        for key in sorted(net, key=lambda key: (-(quotas[key] - allocated[key]), int(key)))[:remainder]:
+            allocated[key] += quantum
+
+        with self.env.cr.savepoint():
+            for line in lines:
+                key = str(line.id)
+                final = net[key] - allocated[key]
+                line.discount = float((gross[key] - final) * 100 / gross[key]) if gross[key] else 0
+                if money(line.price_subtotal) != final:
+                    raise UserError("Alokasi diskon tidak dapat direpresentasikan dengan presisi diskon Odoo.")
+            self.sudo().write({"commercial_tactical_components": {
+                "steps": steps_by_line, "footer": str(footer),
+                "allocations": {key: str(amount) for key, amount in allocated.items()},
+                "basis": {str(line.id): [line.price_unit, line.product_uom_qty, line.discount]
+                          for line in lines},
+            }})
+        return True
+
+    def _check_tactical_component_basis(self):
+        self.ensure_one()
+        if self.commercial_tactical_components:
+            basis = {str(line.id): [line.price_unit, line.product_uom_qty, line.discount]
+                     for line in self.order_line if not line.display_type and line.product_id
+                     and line.price_unit > 0 and line.product_uom_qty > 0}
+            if basis != self.commercial_tactical_components["basis"]:
+                raise UserError("Basis diskon bertingkat berubah. Terapkan ulang diskon sebelum melanjutkan.")
+
+    def _commercial_approval_fingerprint(self):
+        """Bind the approval to the commercial composition as submitted."""
+        self.ensure_one()
+        self._check_tactical_component_basis()
+        lines = [
+            (line.id, line.product_id.id, line.product_uom_id.id, line.product_uom_qty,
+             line.price_unit, line.discount, sorted(line.tax_ids.ids),
+             getattr(getattr(line, "promo_program_id", False), "id", False),
+             getattr(getattr(line, "reward_id", False), "id", False))
+            for line in self.order_line.sorted("id") if not line.display_type
+        ]
+        payload = (self.company_id.id, self.partner_id.id, self.user_id.id, self.pricelist_id.id,
+                   self.currency_id.id, self.tactical_analytic_account_id.id,
+                   self.commercial_tactical_components or {}, lines)
+        return sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
     def _approval_snapshot_vals(self):
         """Nilai diskon saat pengajuan dibuat, untuk mendeteksi perubahan setelah disetujui."""
         self.ensure_one()
@@ -454,7 +563,7 @@ class SaleOrder(models.Model):
 
     def action_confirm(self):
         """Guard konfirmasi penjualan untuk harga < HPP dan diskon taktikal."""
-        is_seed_load = (
+        is_seed_load = self.env.su and (
             self.env.context.get("fmcg_seed_load")
             or self.env.context.get("fmcg_seed_batch")
             or self.env.context.get("install_mode")
@@ -490,12 +599,17 @@ class SaleOrder(models.Model):
 
         - Promo resmi (wajib): tanpa pengajuan, menunggu, atau ditolak -> diblokir; hanya disetujui yang lolos.
           Pesanan campuran dengan pengajuan taktikal cukup satu rantai taktikal (tanpa pengajuan promo kedua).
-        - Diskon taktikal: bila sudah ada pengajuan yang berlaku, harus disetujui (zona bebas Tier 0
-          menghasilkan pengajuan yang langsung disetujui). SO lama tanpa pengajuan tidak diblokir.
+        - Diskon taktikal di atas zona bebas perlu pengajuan yang berlaku dan sudah disetujui.
         Penolakan lama tidak memblokir bila pengajuan pengganti yang berlaku sudah disetujui.
         """
         self.ensure_one()
+        self._check_tactical_component_basis()
         tactical = self._approval_effective_request("tactical_discount")
+        if self.has_tactical_discount and not tactical:
+            category = self.env.ref("id_approval.cat_tactical_discount")
+            if not self._approval_discount_decision(category)["within_free_zone"]:
+                raise UserError("Ajukan persetujuan diskon taktikal sebelum konfirmasi.")
+        self._check_commercial_approval_revision(tactical)
         manual_now, program_now = self._approval_discount_amounts()
         eps = 0.5  # toleransi pembulatan (Rp)
         # Pengajuan yang sudah disetujui hanya berlaku untuk isi pesanan saat diajukan.
@@ -519,6 +633,7 @@ class SaleOrder(models.Model):
                     f"Pesanan {self.name} memakai promo resmi dan belum diajukan untuk pemantauan Supervisor. "
                     f"Gunakan tombol 'Ajukan Pemantauan Promo' sebelum konfirmasi."
                 )
+            self._check_commercial_approval_revision(req)
             if req.snapshot_taken and program_now > req.program_discount_amount + eps:
                 raise UserError(
                     f"Pesanan {self.name} tidak dapat dikonfirmasi: nilai promo bertambah setelah pengajuan "
@@ -527,6 +642,11 @@ class SaleOrder(models.Model):
             self._raise_unless_approved(req, "pemantauan promo resmi")
         if tactical:
             self._raise_unless_approved(tactical, "diskon taktikal")
+
+    def _check_commercial_approval_revision(self, request):
+        if (request and request.commercial_fingerprint
+                and request.commercial_fingerprint != self._commercial_approval_fingerprint()):
+            raise UserError("Komposisi komersial berubah setelah pengajuan. Ajukan ulang persetujuan.")
 
     def _raise_unless_approved(self, req, label):
         if req.state == "approved":
@@ -570,6 +690,7 @@ class SaleOrder(models.Model):
     def action_request_promo_usage_approval(self):
         """Tombol: ajukan pemantauan promo resmi (hingga Supervisor)."""
         self.ensure_one()
+        self.check_access("write")
         if not self._has_program_discount():
             raise UserError("Pesanan ini tidak memuat diskon program resmi.")
         req = self._create_promo_usage_request()

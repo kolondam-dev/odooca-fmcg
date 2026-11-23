@@ -2653,25 +2653,6 @@ class TestSantosPromoDateConflict(unittest.TestCase):
         self.assertEqual(len(santos_rows), 143)
         self.assertEqual(len(santos_before_aug15), 65)
 
-    def test_resolve_promo_program_date_validation_mock(self):
-        """_resolve_promo_program must reject binding if SO date is before program date_from."""
-        santos_prog = MockRecord(
-            id=91,
-            name="Santos - Semarak Kopi Kapal Api Bersama MDU",
-            date_from="2026-08-15",
-            date_to="2026-12-31",
-        )
-        mock_env = MockEnv({"loyalty.program": MockModel(records=[santos_prog])})
-        loader = GenericPeriodPackLoader(env=mock_env, pack_dir=AUG_PACK_DIR, dry_run=True)
-
-        # Before program start -> None (rejected)
-        res_early = loader._resolve_promo_program("PROMO-2026-SANTOS-KOPI", "2026-08-01", "KPA-01", "SO-202608-0001")
-        self.assertIsNone(res_early)
-
-        # On or after program start -> Bound
-        res_valid = loader._resolve_promo_program("PROMO-2026-SANTOS-KOPI", "2026-08-16", "KPA-01", "SO-202608-0500")
-        self.assertIsNotNone(res_valid)
-        self.assertEqual(res_valid.id, 91)
 
 
 class TestRejectionsReturnQuarantine(unittest.TestCase):
@@ -2900,3 +2881,20 @@ class TestPeriodEventChronology(unittest.TestCase):
             source_dispatch_shortages(self.loader.reader, opening, []),
             [("2026-08-27", "SO1", "SKU1||LOT1", "0", "2")],
         )
+
+
+class TestHistoricalCommercialOracle(unittest.TestCase):
+    def test_rejects_same_total_discount_swap_and_unverified_promo_binding(self):
+        from scripts.ops.verify_disposable_period_pack import commercial_line_differences
+
+        source = [
+            {"so_number": "SO1", "sku_code": sku, "qty_cartons": "1", "carton_qty": "1",
+             "unit_price_dpp": "100", "discount_pct": discount, "promo_id": promo}
+            for sku, discount, promo in (("A", "8", "SOURCE-A"), ("B", "2", ""))
+        ]
+        first = ("SO1", "A", Decimal(1), Decimal(100), Decimal(8), "SOURCE-A", False)
+        second = ("SO1", "B", Decimal(1), Decimal(100), Decimal(2), "", False)
+        self.assertFalse(any(commercial_line_differences(source, [first, second])))
+        swapped = [first[:4] + (Decimal(2),) + first[5:], second[:4] + (Decimal(8),) + second[5:]]
+        self.assertTrue(all(commercial_line_differences(source, swapped)))
+        self.assertTrue(all(commercial_line_differences(source, [first[:-1] + (True,), second])))

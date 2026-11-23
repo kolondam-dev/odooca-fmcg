@@ -353,6 +353,26 @@ def source_dispatch_shortages(reader, opening, carry_lines):
     return shortages
 
 
+def commercial_line_differences(source_rows, actual_rows):
+    """Compare frozen commercial components as a multiset before testing totals."""
+    expected = Counter(
+        (row["so_number"], row["sku_code"], _dec(row["qty_cartons"]) * _dec(row["carton_qty"]),
+         _dec(row["unit_price_dpp"]), _dec(row["discount_pct"]), row.get("promo_id") or "", False)
+        for row in source_rows
+    )
+    actual = Counter(actual_rows)
+    return expected - actual, actual - expected
+
+
+def native_commercial_lines(orders):
+    return [
+        (order.client_order_ref, line.product_id.default_code, _dec(line.product_uom_qty),
+         _dec(line.price_unit), _dec(line.discount), line.fmcg_seed_promo_ref or "",
+         bool(getattr(line, "promo_program_id", False)))
+        for order in orders for line in order.order_line if not line.display_type
+    ]
+
+
 def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     """Execute comprehensive mathematical and accounting audit against oracle."""
     if env is None:
@@ -454,6 +474,18 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             report["violations"].append(
                 f"SO header drift: dates={len(date_errors)} {date_errors[:5]}, "
                 f"owners={len(owner_errors)} {owner_errors[:5]}"
+            )
+
+    if oracle.manifest.period == "2026-08" and callable(getattr(getattr(env, "cr", None), "savepoint", None)):
+        missing, unexpected = commercial_line_differences(oracle.reader.order_lines, native_commercial_lines(so_recs))
+        report["checks"]["historical_commercial_lines"] = {
+            "expected_lines": len(oracle.reader.order_lines),
+            "unmapped_source_promo_lines": sum(bool(row.get("promo_id")) for row in oracle.reader.order_lines),
+            "missing": sum(missing.values()), "unexpected": sum(unexpected.values()),
+        }
+        if missing or unexpected:
+            report["violations"].append(
+                f"Frozen commercial line mismatch: {list(missing.items())[:3]} {list(unexpected.items())[:3]}"
             )
 
     # 3. Outbound Deliveries (DO Picking) Count & Status Done
@@ -1262,7 +1294,9 @@ def capture_period_state_snapshot(
         for soline in getattr(s, "order_line", []):
             so_hashes.append(
                 f"SOL:{s.client_order_ref}:{getattr(getattr(soline, 'product_id', None), 'default_code', '')}:"
-                f"{getattr(soline, 'product_uom_qty', 0)}:{getattr(soline, 'price_unit', 0)}:{getattr(soline, 'discount', 0)}"
+                f"{getattr(soline, 'product_uom_qty', 0)}:{getattr(soline, 'price_unit', 0)}:{getattr(soline, 'discount', 0)}:"
+                f"{getattr(soline, 'fmcg_seed_promo_ref', None) or ''}:"
+                f"{getattr(getattr(soline, 'promo_program_id', None), 'name', None) or ''}"
             )
     so_hashes.sort()
 
@@ -1920,6 +1954,71 @@ def verify_august_receipt_to_cash_slice(env, pack_dir):
     }
 
 
+def verify_august_commercial_slice(env, pack_dir):
+    """Preserve a promo-coded frozen sale through native delivery, invoice and payment."""
+    source = PeriodPackReader(pack_dir)
+    selections = {
+        "po_headers": ("po_number", "PO-2026-08-01"),
+        "po_lines": ("po_number", "PO-2026-08-01"),
+        "sales_orders": ("so_number", "SO-202608-1007"),
+        "order_lines": ("so_number", "SO-202608-1007"),
+        "deliveries": ("so_number", "SO-202608-1007"),
+        "invoices": ("invoice_number", "INV-202608-1007"),
+        "ar_collections": ("payment_id", "PAY-AR-02000"),
+    }
+    overrides = {
+        f"{name}.csv": [row for row in source.read_csv(f"{name}.csv") if row[key] == value]
+        for name, (key, value) in selections.items()
+    }
+    overrides.update({f"{name}.csv": [] for name in ("rejections", "ap_payments", "opex")})
+
+    class RollbackCommercialSlice(Exception):
+        pass
+
+    before = capture_period_state_snapshot(env)["digest"]
+    try:
+        with env.cr.savepoint():
+            reader = PeriodPackReader(pack_dir, overrides=overrides)
+            loader = GenericPeriodPackLoader(env, pack_dir, dry_run=False, strict=True, reader=reader)
+            loader.execute_apply()
+            sale = env["sale.order"].search([("client_order_ref", "=", "SO-202608-1007")])
+            invoice = env["account.move"].search([("payment_reference", "=", "INV-202608-1007")])
+            payment = env["account.payment"].search([("memo", "=", "PAY-AR-02000")])
+            actual = native_commercial_lines(sale)
+            if any(commercial_line_differences(overrides["order_lines.csv"], actual)):
+                raise RuntimeError(f"Historical commercial oracle rejected SO-202608-1007: {actual}")
+            source_invoice, = overrides["invoices.csv"]
+            if (len(invoice) != 1 or len(payment) != 1 or invoice.invoice_line_ids.sale_line_ids != sale.order_line
+                    or payment.reconciled_invoice_ids != invoice or invoice.amount_residual
+                    or _dec(invoice.amount_total) != _dec(source_invoice["total_invoice_with_ppn"])):
+                raise RuntimeError("Historical commercial slice invoice, amount, or payment binding failed.")
+            applied = capture_period_state_snapshot(env)["digest"]
+            before_total = sale.amount_total
+            try:
+                with env.cr.savepoint():
+                    sale.order_line.fmcg_seed_promo_ref = "WRONG-REFERENCE"
+                    if sale.amount_total != before_total or not any(commercial_line_differences(
+                        overrides["order_lines.csv"], native_commercial_lines(sale),
+                    )):
+                        raise RuntimeError("Historical commercial oracle missed same-total promo substitution.")
+                    raise RollbackCommercialSlice
+            except RollbackCommercialSlice:
+                pass
+            if capture_period_state_snapshot(env)["digest"] != applied:
+                raise RuntimeError("Promo substitution rollback left commercial drift.")
+            loader.execute_apply()
+            if capture_period_state_snapshot(env)["digest"] != applied:
+                raise RuntimeError("Historical commercial slice changed during replay.")
+            raise RollbackCommercialSlice
+    except RollbackCommercialSlice:
+        pass
+
+    if capture_period_state_snapshot(env)["digest"] != before:
+        raise RuntimeError("Historical commercial slice left writes after rollback.")
+    return {"status": "PASS", "sale": "SO-202608-1007", "invoice": "INV-202608-1007",
+            "payment": "PAY-AR-02000", "same_total_promo_mutation": "REJECTED"}
+
+
 def run_full_disposable_period_verification(
     env: Any,
     pack_dir: Path,
@@ -1953,6 +2052,7 @@ def run_full_disposable_period_verification(
     if scenario in ("all", "A"):
         if oracle.manifest.period == "2026-08" and callable(getattr(getattr(env, "cr", None), "savepoint", None)):
             report["receipt_to_cash_slice"] = verify_august_receipt_to_cash_slice(env, pack_dir)
+            report["historical_commercial_slice"] = verify_august_commercial_slice(env, pack_dir)
         _logger.info("Executing Fault-Injection Recovery Probes on Baseline July...")
         ensure_idr_currency_active(env)
         report["fault_injection"] = run_period_pack_fault_injection_probes(env, pack_dir)

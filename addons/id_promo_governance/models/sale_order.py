@@ -1,4 +1,44 @@
 from odoo import api, fields, models
+from odoo.exceptions import UserError
+
+
+class SaleOrder(models.Model):
+    _inherit = "sale.order"
+
+    def _fmcg_governed_promo_domain(self, prefix=""):
+        """Limit governed programmes to their company and the order principal."""
+        self.ensure_one()
+        products = self.order_line.filtered(
+            lambda line: not line.display_type and not line.reward_id
+        ).product_id
+        principals = products.principal_id
+        principal = principals.id if len(principals) == 1 else False
+        historical = self.env.su and (self.fmcg_seed_batch or "").startswith("PERIOD_")
+        generic = (prefix + "principal_id", "=", False)
+        if (historical or getattr(self, "commercial_tactical_components", False)
+                or not principal or any(not product.principal_id for product in products)):
+            return [generic]
+        return [
+            "|", generic, "&", "&", (prefix + "principal_id", "=", principal),
+            (prefix + "company_id", "=", self.company_id.id),
+            (prefix + "governance_state", "in", ("approved", "active")),
+        ]
+
+    def _get_program_domain(self):
+        return super()._get_program_domain() + self._fmcg_governed_promo_domain()
+
+    def _get_trigger_domain(self):
+        return super()._get_trigger_domain() + self._fmcg_governed_promo_domain("program_id.")
+
+    def action_confirm(self):
+        for order in self:
+            programs = order.order_line.reward_id.program_id.filtered("principal_id")
+            if programs and programs - programs.filtered_domain(order._get_program_domain()):
+                raise UserError("Program promo pada pesanan sudah tidak memenuhi eligibility.")
+        return super().action_confirm()
+
+    def _get_program_timezone(self):
+        return "Asia/Makassar"
 
 
 class SaleOrderLine(models.Model):

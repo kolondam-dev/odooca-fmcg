@@ -2258,7 +2258,7 @@ class CanonicalPerpetualAdapter:
                 self.stats["so_created"] += 1
 
             if so.state in ("draft", "sent"):
-                so.action_confirm()
+                so.with_context(fmcg_seed_load=True).action_confirm()
                 self.stats["so_confirmed"] += 1
                 if header_p.get("date_order"):
                     so.write({"date_order": header_p["date_order"]})

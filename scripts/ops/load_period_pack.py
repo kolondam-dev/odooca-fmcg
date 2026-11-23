@@ -633,59 +633,6 @@ class GenericPeriodPackLoader:
 
         return None
 
-    def _resolve_promo_program(
-        self, promo_id_csv: str, so_date_str: str, sku_code: str, so_num: str
-    ) -> Any:
-        """Resolve loyalty.program from register promo code with date validity checking (P2-C).
-
-        Prevents retro-fitting: e.g. Santos promo rows prior to Aug 15 are not bound
-        to Santos program starting Aug 15.
-        """
-        if not promo_id_csv or not self.env or "loyalty.program" not in self.env:
-            return None
-        LoyaltyProgram = self.env["loyalty.program"].sudo()
-        prog = LoyaltyProgram.search([("name", "ilike", promo_id_csv)], limit=1)
-        if not prog:
-            clean_term = promo_id_csv.replace("PROMO-2026-", "").replace("TIER-VOL-", "").replace("-", " ")
-            prog = LoyaltyProgram.search([("name", "ilike", clean_term)], limit=1)
-        if not prog:
-            for term in promo_id_csv.replace("PROMO-2026-", "").replace("TIER-VOL-", "").split("-"):
-                if len(term) >= 4:
-                    prog = LoyaltyProgram.search([("name", "ilike", term)], limit=1)
-                    if prog:
-                        break
-        if not prog:
-            return None
-
-        # Validate date range
-        if so_date_str:
-            from datetime import date as _date
-            try:
-                so_d = _date.fromisoformat(str(so_date_str)[:10])
-                date_from = getattr(prog, "date_from", None)
-                date_to = getattr(prog, "date_to", None)
-                if date_from:
-                    df = date_from if isinstance(date_from, _date) else _date.fromisoformat(str(date_from)[:10])
-                    if so_d < df:
-                        _logger.warning(
-                            f"[PROMO_DATE_MISMATCH] SO {so_num}: Promo {promo_id_csv} date {so_date_str} "
-                            f"is before program '{getattr(prog, 'name', '')}' date_from {date_from}. "
-                            f"Not binding promo_program_id to preserve register integrity."
-                        )
-                        return None
-                if date_to:
-                    dt = date_to if isinstance(date_to, _date) else _date.fromisoformat(str(date_to)[:10])
-                    if so_d > dt:
-                        _logger.warning(
-                            f"[PROMO_DATE_MISMATCH] SO {so_num}: Promo {promo_id_csv} date {so_date_str} "
-                            f"is after program '{getattr(prog, 'name', '')}' date_to {date_to}."
-                        )
-                        return None
-            except Exception as e:
-                _logger.warning(f"Error checking promo date for SO {so_num}: {e}")
-
-        return prog
-
     # -----------------------------------------------------------------------
     # Preflight Check & Continuity Verification
     # -----------------------------------------------------------------------
@@ -1271,6 +1218,16 @@ class GenericPeriodPackLoader:
                         raise StateInconsistencyError(
                             f"Drift detected on existing {so_num} SKU {sku}: discount mismatch {act_disc} vs {exp_disc}"
                         )
+
+                if (
+                    getattr(existing, "fmcg_seed_batch", None) == f"PERIOD_{self.period}"
+                    and "fmcg_seed_promo_ref" in _safe_fields(sol)
+                    and ((sol.fmcg_seed_promo_ref or "") != (exp_l.get("promo_id") or "")
+                         or getattr(sol, "promo_program_id", False))
+                ):
+                    raise StateInconsistencyError(
+                        f"Drift detected on existing {so_num} SKU {sku}: unverified historical promotion binding."
+                    )
 
     def _validate_existing_invoice(self, existing: Any, inv_row: Dict[str, str]) -> None:
         """Validate existing Invoice matches period pack specification with zero drift."""
@@ -1892,6 +1849,7 @@ class GenericPeriodPackLoader:
                             "product_id": prod.id,
                             "name": prod.name,
                             "product_qty": float(lrow["qty_cartons"]) * float(lrow["carton_qty"]),
+                            "product_uom_id": _rec_id(getattr(prod, "uom_id", None)),
                             "price_unit": float(lrow["unit_cost_price"]),
                             "date_planned": po_row["arrival_maumbi_date"],
                         },
@@ -2866,15 +2824,13 @@ class GenericPeriodPackLoader:
                 }
                 sol_fields = getattr(self.env.get("sale.order.line"), "_fields", None)
 
-                # P2-C: Resolve promo_program_id with date validity verification (no retroactive binding)
-                if sol_fields is None or "promo_program_id" in sol_fields:
-                    promo_code = lrow.get("promo_id")
-                    if promo_code:
-                        promo_prog = self._resolve_promo_program(
-                            promo_code, so_row.get("date_order", ""), sku, so_num
-                        )
-                        if promo_prog:
-                            sol_vals["promo_program_id"] = promo_prog.id
+                promo_ref = lrow.get("promo_id")
+                if promo_ref and (sol_fields is None or "fmcg_seed_promo_ref" in sol_fields):
+                    sol_vals["fmcg_seed_promo_ref"] = promo_ref
+                    _logger.info(
+                        "[HISTORICAL_PROMO_UNMAPPED] SO %s SKU %s source code %s; frozen effective discount retained.",
+                        so_num, sku, promo_ref,
+                    )
 
                 if canonical_tax_04:
                     tax_cmd = [(6, 0, [canonical_tax_04.id])]

@@ -1,3 +1,16 @@
+## 2026-11-23T11:29:37+07:00 — Agent Codex-Cloud1 — F4/PR #110: Paket B komersial
+
+**Berubah:**
+- Sinkron dengan `main` `b37a502`. PO historis mengunci UoM dasar setelah #188. Konfirmasi seed Juli memakai konteks historis eksplisit melalui sudo.
+- Guard komersial memeriksa role keputusan dan mengikat approval pada komposisi saat submit. Aksi tactical menghitung line berurutan dan footer teralokasi. Promo resmi native mengikuti eligibility governance dan tetap meminta monitoring Supervisor.
+- Loader menyimpan kode promo frozen tanpa binding fuzzy. Audit membandingkan 2.350 line dan mini-pack `SO-202608-1007` menguji replay, rollback dan mutasi promo yang mempertahankan total. [Matriks Paket B](reviews/PR110_PACKET_B_ACCEPTANCE.md)
+**Diverifikasi:**
+- [F] Golden native Odoo tiga tes lulus, termasuk alur tactical sampai rekonsiliasi dan promo native hingga konfirmasi Supervisor. Mini-pack lokal lulus. Dampak test **TAMBAH** untuk role, mutasi total tetap dan referensi promo historis.
+**Belum diuji:**
+- [BU] Full F4 pada SHA integrasi. Program-first dengan stack/footer, budget rupiah, dimensi outlet/channel dan command backend v2 masih terbuka.
+**Berikutnya:**
+- Pantau F4 dan serahkan bukti integrasi ke reviewer. Aktivasi mobile v2 mengikuti dependency tersendiri.
+
 ## 2026-11-23T08:16:25+07:00 — Agent Codex-Cloud1 — F4/PR #110: Paket A, alur receipt hingga pembayaran
 
 **Berubah:**
