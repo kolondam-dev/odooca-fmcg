@@ -3,7 +3,7 @@
 - [F] Exact-SHA `b850939` gagal pada `FIN38 unrealized_rows coverage mismatch`: workbook 9 baris, oracle 15. FIN37 XLSX sudah lolos; suite non-finance hijau.
 - [F] Penyebab: oracle hanya menerapkan partial bila kedua leg berada di basis mata uang asing, sehingga pembayaran/write-off/functional counterpart di luar basis tidak mengurangi residual, dan baris over-reconciled tidak dikecualikan.
 - [F] Oracle kini mengambil partial dari seluruh baris moneter posted <= cutoff, merekonstruksi residual dari partial bertanggal, mengecualikan baris over-reconciled, dan mengklasifikasikan realized/unposted secara independen (functional counterpart, write-off, reversal mirror, rate per leg).
-- [F] 73 unit I2c PASS, Ruff PASS, `git diff --check` PASS. [BU] Exact-SHA Finance I0 menunggu rerun; katalog tetap 58/58 `BELUM_DITERIMA`.
+- [F] 73 unit I2c PASS, Ruff PASS, `git diff --check` PASS. [F] Exact-SHA `6557b819a5e2f86f174e55bb6a0523346ebac105`: 22 check sukses, 6 skipped, 0 gagal; `FINANCE_I2C_SCHEDULES=PASS` dengan 9 kasus FIN37 dan 2 kasus FIN38 XLSX vs oracle AML. Katalog tetap 58/58 `BELUM_DITERIMA`.
 
 ## 2026-11-22 — [BU] PR #185 Finance I0: normalisasi presisi rate XLSX (opencode)
 
