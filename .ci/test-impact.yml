@@ -89,6 +89,11 @@ rules:
       - "scripts/ops/verify_mobile_*.py"
     suites: [odoo_install, mobile, upgrade]
 
+  - name: AR collection (Surat Jalan Penagihan)
+    paths:
+      - "addons/id_ar_collection/**"
+    suites: [odoo_install, upgrade]
+
   - name: PWA client and hosting
     paths:
       - "pwa/**"

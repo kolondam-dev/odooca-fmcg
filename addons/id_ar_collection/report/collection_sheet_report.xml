@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_collection_sheet" model="ir.actions.report">
+        <field name="name">Surat Jalan Penagihan</field>
+        <field name="model">id.collection.sheet</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">id_ar_collection.report_collection_sheet</field>
+        <field name="report_file">id_ar_collection.report_collection_sheet</field>
+        <field name="print_report_name">'SJP-%s' % (object.name or '').replace('/', '-')</field>
+        <field name="binding_model_id" ref="model_id_collection_sheet"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_collection_sheet">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="sheet">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Surat Jalan Penagihan <span t-field="sheet.name"/></h2>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div><strong>Kolektor:</strong> <span t-field="sheet.collector_id"/></div>
+                                <div><strong>Rute:</strong> <span t-field="sheet.route"/></div>
+                            </div>
+                            <div class="col-6">
+                                <div><strong>Tanggal penagihan:</strong> <span t-field="sheet.collect_date"/></div>
+                                <div><strong>Jatuh tempo sampai:</strong> <span t-field="sheet.due_until"/></div>
+                            </div>
+                        </div>
+                        <table class="table table-sm o_main_table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Pelanggan</th>
+                                    <th>Faktur</th>
+                                    <th>Jatuh Tempo</th>
+                                    <th class="text-end">Sisa Tagihan</th>
+                                    <th>Diterima</th>
+                                    <th>Status (Lunas/Sebagian/Tidak)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="sheet.line_ids" t-as="line">
+                                    <tr>
+                                        <td><span t-esc="line_index + 1"/></td>
+                                        <td><span t-field="line.commercial_partner_id"/></td>
+                                        <td><span t-field="line.move_id"/></td>
+                                        <td><span t-field="line.due_date"/></td>
+                                        <td class="text-end">
+                                            <span t-field="line.amount_due"
+                                                  t-options='{"widget": "monetary", "display_currency": line.currency_id}'/>
+                                        </td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Total</strong></td>
+                                    <td class="text-end">
+                                        <span t-field="sheet.amount_total"
+                                              t-options='{"widget": "monetary", "display_currency": sheet.currency_id}'/>
+                                    </td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <p class="mt-4">
+                            Uang disetor ke kasir; rekap SJP dan copy faktur (faktur asli bila tidak tertagih)
+                            diserahkan ke Finance AR Control.
+                        </p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

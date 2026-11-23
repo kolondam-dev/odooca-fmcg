@@ -1,0 +1,20 @@
+# Translation of FMCG AR Collection.
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo 19.0\n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: id_ar_collection
+#: model:ir.actions.act_window,name:id_ar_collection.action_collection_sheet
+#: model:ir.model,name:id_ar_collection.model_id_collection_sheet
+msgid "Surat Jalan Penagihan"
+msgstr "Surat Jalan Penagihan"
+
+#. module: id_ar_collection
+#: model:ir.actions.act_window,name:id_ar_collection.action_collection_sheet_generate
+msgid "Generate SJP"
+msgstr "Generate SJP"

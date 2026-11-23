@@ -1,3 +1,16 @@
+## 2026-11-23 — [F] BE-20a: agregat "wajib ditagih hari ini" dari server (claude-design)
+
+- [F] `_outlet_receivables` menambah `collect_today` {window_days 7, count, total, overdue_count} dari SEMUA faktur terbuka (commercial partner, perusahaan sesi, jatuh tempo < hari bisnis WITA + 7); outlet = `outlet_ids` penugasan hari itu (PJP). Volatil, di luar digest. 3 tes Odoo baru (+6/+7, cap daftar tidak membatasi agregat, parent/saudara, WITA) [BU: hanya CI, tidak ada Odoo di sandbox].
+- [F] PWA: kontrak `collect_today` opsional, `mustCollectToday` memakai agregat server (lengkap) dan tetap fallback "Minimal" untuk server lama; e2e dua varian, `openapi.json` diekspor.
+- [BU] BE-20b (penugasan penagihan/kolektor/surat jalan penagihan) dan BE-20c (`collection.receipt.submit`, `collection.settlement.submit`) butuh keputusan pemilik: siapa penugas, apakah faktur ditugaskan per faktur atau per outlet, otoritas terima uang.
+
+## 2026-11-23 — [F] BE-20b: addon id_ar_collection (SJP: model, Generate, PDF) (claude-design)
+
+- [F] Addon baru `id_ar_collection` (depends id_base, id_mobile_api, account): `id.collection.sheet` (SJP, sequence `SJP/<tahun>/`, state draf/diterbitkan/dikembalikan/ditutup/dibatalkan, banyak SJP per hari), `id.collection.sheet.line` (satu faktur satu SJP aktif, outcome pending/paid/partial/unpaid, dokumen dikembalikan), wizard Generate (jatuh tempo sampai, salesman via PJP penugasan + commercial partner, rute `delivery_route`), PDF QWeb, grup `group_ar_admin`/`group_ar_control`, aturan perusahaan dan kolektor-hanya-baca-miliknya, menu Penagihan.
+- [F] Keputusan D9 dicatat di `docs/ui/BE20_SJP_DESIGN.md` (banyak SJP, unpaid kembali kandidat, kasir→accounting berurutan, PDF wajib). Daftar install dan tag tes CI diperbarui.
+- [BU] Tes Odoo (13) hanya terverifikasi lewat CI; belum ada integrasi mobile (BE-20c), penerimaan (BE-20d), validasi kasir/accounting (BE-20e). Addon belum dimasukkan ke `INIT_MODULES` LIVE.
+
+
 ## 2026-11-23 — [F] BE-20: keputusan pemilik D8 dan rancangan SJP (claude-design)
 
 - [F] Jawaban pemilik dicatat: SJP dibuat finance/AR admin dari AR terbuka (Generate SJP: tanggal jatuh tempo + salesman/rute); pelaksana salesman/delivery/supervisor/branch manager; hasil paid/partial/unpaid wajib diposting lalu divalidasi kasir dan accounting; setoran uang ke admin kasir, rekap SJP dan copy/asli faktur ke finance AR control.
