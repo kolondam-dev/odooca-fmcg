@@ -187,6 +187,25 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         self.assertIn("verify_revision platform-tools 37.0.3", smoke)
         self.assertIn("verify_revision emulator 37.3.10", smoke)
 
+    def test_ui_smoke_removes_smoke_apk_before_gradle_installs_the_fixture(self):
+        smoke = (ANDROID / "tools" / "emulator_smoke.sh").read_text(encoding="utf-8")
+        steps = (
+            ":app:assembleDebug",
+            "-Podooca.baseUrl=https://ci.invalid -Podooca.uiFixture=false",
+            "record login_ui PASS",
+            'timeout 30 "$adb" uninstall "$package"',
+            'timeout 10 "$adb" shell pm list packages "$package"',
+            "record fixture_reset PASS",
+            ":app:connectedDebugAndroidTest -Podooca.uiFixture=true",
+            "python3 android/tools/ui_smoke_report.py",
+            'test "$test_result" -eq 0',
+            "record instrumentation PASS",
+        )
+        offsets = [smoke.index(step) for step in steps]
+        self.assertEqual(offsets, sorted(offsets))
+        self.assertNotIn("shell pm clear", smoke)
+        self.assertEqual(1, smoke.count("-Podooca.uiFixture=true"))
+
     def test_contract_validator_has_four_negative_schema_controls(self):
         source = (ANDROID / "tools" / "validate_contract.py").read_text(encoding="utf-8")
         self.assertEqual(source.count('check("[negatif]'), 4)

@@ -1,3 +1,13 @@
+## 2026-11-23T11:31:06+07:00 — Codex — Integrasi reset APK fixture PR #177
+**Basis:** main `b37a502`, Dev `f1ed07fbecf21f771e058afdf75039bb97dcd7d8`. Konflik HANDOFF dan log diselesaikan dengan mempertahankan riwayat kedua sisi.
+**Dampak test SESUAIKAN:** kegagalan instalasi ulang API 24 menjadi counterexample. Skrip mempertahankan bukti Login, menghapus APK smoke, memeriksa paket sudah hilang, dan tetap mewajibkan exit Gradle serta laporan UI lulus. Tes kontrak pada `tests/test_android_ci.py` dan matriks Android opt-in API 24/35 memverifikasi transisi; bukti runtime pada SHA integrasi masih terbuka.
+
+## 2026-11-22T22:46:50+07:00 — Codex Android Dev — Bersihkan transisi smoke ke fixture
+**Basis:** [F] Dev `4e832de`, arahan `237675e`, PR #177 `fef6f3e`. [Run UI](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45038999868) membuktikan Login API 24 sebelum Gradle gagal memasang target `INSTALL_FAILED_ALREADY_EXISTS`. API 35 lulus pada run tersebut.
+**Berubah:** [F] Smoke selalu membangun APK reguler dan menyimpan screenshot Login. Tahap `fixture_reset` menghapus paket dari satu-satunya AVD terhubung dan memverifikasi paket tidak lagi terpasang. Gradle kemudian memasang APK fixture dan APK instrumentation via `:app:connectedDebugAndroidTest -Podooca.uiFixture=true`. Oracle laporan dan exit Gradle tetap wajib lulus.
+**Bukti dan dampak test:** **TAMBAH** — tes kontrak mengunci urutan reset dan oracle. Simulasi host mereproduksi paket yang tetap terpasang setelah `pm clear`, membuktikan penghapusan sebelum instalasi fixture, dan memeriksa penghentian saat uninstall gagal, paket tertinggal, atau query gagal. Build Gradle offline menghasilkan APK reguler, fixture loopback, dan APK tes. Pemeriksaan resource dan checksum membedakan kedua APK app. Bash syntax dan 32 tes kontrak CI lulus. Tes kontrol CI memilih full regression 11 suite.
+**Belum diuji:** [BU] Instalasi fixture dan UI pada emulator nyata untuk SHA perbaikan. Cloud tidak memiliki KVM. Percobaan software gagal memberi bukti instalasi karena daemon ADB tidak dapat menulis home. Lead menjalankan ulang matriks setelah integrasi.
+
 ## 2026-11-23 — UoM pembelian vendor FMCG (codex)
 
 - [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.

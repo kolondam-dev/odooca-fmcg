@@ -629,3 +629,13 @@
 [2026-11-23T07:44:32+07:00] [INFO] UoM pembelian vendor FMCG
 - Seed offer native per SKU dan vendor, pertahankan basis UoM PO historis, tambah kontrak PO-receipt-bill pada CI.
 - Task managed by codex agent at 2026-11-23T07:44:32+07:00
+
+[2026-11-22T22:46:50+07:00] [INFO] DEV-01B bersihkan APK smoke sebelum instalasi fixture UI
+- [F] Run 45038999868 pada fef6f3e menunjukkan Login lulus dan instalasi ulang target API 24 ditolak INSTALL_FAILED_ALREADY_EXISTS.
+- [F] Smoke memakai APK reguler. Mode UI uninstall dan verifikasi absensi sebelum Gradle memasang fixture. Simulasi host, dua build APK dan guard urutan lulus.
+- [BU] Eksekusi API 24/35 pada SHA perbaikan menunggu Lead. Cloud tanpa KVM; daemon ADB tidak bisa menulis ke home.
+- Task managed by codex agent at 2026-11-22T22:46:50+07:00
+
+[2026-11-23T11:31:06+07:00] [INFO] Integrasi reset APK fixture PR #177
+- Main b37a502, Dev f1ed07f. Bukti runtime menunggu.
+- Task managed by codex agent at 2026-11-23T11:31:06+07:00
