@@ -2,7 +2,9 @@ import csv
 import pathlib
 import tempfile
 
+from odoo import Command
 from odoo.exceptions import ValidationError
+from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
 
@@ -87,7 +89,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
             csv_path = seed_dir / "products_150.csv"
             fieldnames = [
                 "default_code", "name", "principal_code", "brand_code",
-                "fmcg_category", "base_uom", "inner_qty", "carton_qty",
+                "fmcg_category", "base_uom", "inner_qty", "carton_qty", "purchase_uom", "cost_price",
             ]
             with csv_path.open("w", encoding="utf-8", newline="") as stream:
                 writer = csv.DictWriter(stream, fieldnames=fieldnames)
@@ -113,6 +115,8 @@ class TestFMCGDimensionsUoM(TransactionCase):
         quant_model = self.env["stock.quant"]
         quant_model._update_available_quantity(variant, location, 37.0)
 
+        vendor = self.env["res.partner"].create({"name": "Seed Carton Vendor"})
+        self.principal.partner_id = vendor
         row = {
             "default_code": product.default_code,
             "name": "Existing Seed SKU Loader Replay",
@@ -122,6 +126,8 @@ class TestFMCGDimensionsUoM(TransactionCase):
             "base_uom": "Pcs",
             "inner_qty": "10",
             "carton_qty": "120",
+            "purchase_uom": "Karton",
+            "cost_price": "1250",
         }
         self._run_products_csv_loader([row])
         product.invalidate_recordset()
@@ -129,6 +135,11 @@ class TestFMCGDimensionsUoM(TransactionCase):
         first_base_uom_id = product.fmcg_base_uom_id.id
         first_inner_uom_id = product.fmcg_inner_uom_id.id
         first_carton_uom_id = product.fmcg_carton_uom_id.id
+        offer = product.seller_ids.filtered(lambda seller: seller.partner_id == vendor)
+        self.assertEqual(len(offer), 1)
+        self.assertEqual(offer.product_uom_id, product.fmcg_carton_uom_id)
+        self.assertEqual(offer.price, 150000)
+        self.assertEqual(offer.company_id, self.env.company)
         first_qty = sum(quant_model.search([
             ("product_id", "=", variant.id),
             ("location_id", "=", location.id),
@@ -142,6 +153,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
             ("location_id", "=", location.id),
         ]).mapped("quantity"))
 
+        self.assertEqual(product.seller_ids.filtered(lambda seller: seller.partner_id == vendor), offer)
         self.assertEqual(product.uom_id, self.uom_unit)
         self.assertEqual(first_qty, 37.0)
         self.assertEqual(second_qty, first_qty)
@@ -376,3 +388,59 @@ class TestFMCGDimensionsUoM(TransactionCase):
         partner.action_assign_matrix_pricelist()
         self.assertEqual(partner.property_product_pricelist.id, pl.id)
 
+
+@tagged("-at_install", "post_install")
+class TestFMCGVendorCartonPurchase(TransactionCase):
+    _run_products_csv_loader = TestFMCGDimensionsUoM._run_products_csv_loader
+
+    def test_vendor_carton_order_receipt_and_bill_line(self):
+        if "purchase.order" not in self.env or "purchase_line_id" not in self.env["stock.move"]._fields:
+            self.skipTest("Requires purchase_stock, installed by the Odoo CI job")
+
+        vendor = self.env["res.partner"].create({"name": "Carton Purchase Vendor"})
+        principal = self.env["id.principal"].create({
+            "code": "TEST-CARTON",
+            "name": "Carton Purchase Principal",
+            "partner_id": vendor.id,
+        })
+        brand = self.env["id.brand"].create({
+            "code": "TEST-CARTON",
+            "name": "Carton Purchase Brand",
+            "principal_id": principal.id,
+        })
+        code = "TEST-VENDOR-CARTON"
+        self._run_products_csv_loader([{
+            "default_code": code,
+            "name": "Carton Purchase Product",
+            "principal_code": principal.code,
+            "brand_code": brand.code,
+            "base_uom": "Pcs",
+            "inner_qty": "10",
+            "carton_qty": "120",
+            "purchase_uom": "Karton",
+            "cost_price": "1250",
+        }])
+        product = self.env["product.product"].search([("default_code", "=", code)])
+        product.write({"tracking": "none", "purchase_method": "receive"})
+        order = self.env["purchase.order"].create({
+            "partner_id": vendor.id,
+            "order_line": [Command.create({"product_id": product.id, "product_qty": 2})],
+        })
+        line = order.order_line
+        self.assertEqual(line.product_uom_id, product.fmcg_carton_uom_id)
+        self.assertEqual(line.price_unit, 150000)
+        self.assertEqual(line.price_subtotal, 300000)
+        order.button_confirm()
+        receipt = order.picking_ids
+        move = receipt.move_ids
+        self.assertEqual(move.product_qty, 240)
+        move.quantity = move.product_uom_qty
+        move.picked = True
+        receipt.button_validate()
+        self.assertEqual(receipt.state, "done")
+        self.assertEqual(line.qty_received, 2)
+
+        bill_line = line._prepare_account_move_line()
+        self.assertEqual(bill_line["product_uom_id"], product.fmcg_carton_uom_id.id)
+        self.assertEqual(bill_line["quantity"], 2)
+        self.assertEqual(bill_line["price_unit"], 150000)

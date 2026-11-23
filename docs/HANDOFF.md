@@ -1,3 +1,9 @@
+## 2026-11-23 — UoM pembelian vendor FMCG (codex)
+
+- [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.
+- [F] Loader PO kanonik menetapkan UoM inventaris secara eksplisit agar kuantitas dan harga historis berbasis unit tetap sepadan.
+- [BU] Tes Odoo untuk replay, PO karton, receipt, dan data baris vendor bill menunggu CI. Aktivasi master pada basis data yang sudah memakai marker seed tetap terpisah.
+
 ## 2026-11-22 — PR #135: katalog QWeb dan PDF DO parsial (codex)
 
 - [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.

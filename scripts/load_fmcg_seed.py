@@ -211,6 +211,38 @@ def load_hierarchical_categories():
     return leaf_cat_map
 
 
+def ensure_vendor_carton(product, principal, row):
+    """Seed a vendor offer in the SKU's native carton UoM."""
+    if not row.get("purchase_uom"):
+        return
+    if row["purchase_uom"] != "Karton" or not product.fmcg_carton_uom_id:
+        raise ValueError(f"[seed_loader] Invalid purchase UoM for SKU {product.default_code}")
+    if not principal or not principal.partner_id:
+        raise ValueError(f"[seed_loader] Missing vendor for SKU {product.default_code}")
+
+    company = env.company
+    supplierinfo = env["product.supplierinfo"].sudo()
+    existing = supplierinfo.search_count([
+        ("product_tmpl_id", "=", product.id),
+        ("partner_id", "=", principal.partner_id.id),
+        ("company_id", "in", [False, company.id]),
+    ])
+    if existing:
+        return
+
+    carton = product.fmcg_carton_uom_id
+    supplierinfo.create({
+        "partner_id": principal.partner_id.id,
+        "product_tmpl_id": product.id,
+        "company_id": company.id,
+        "currency_id": company.currency_id.id,
+        "product_uom_id": carton.id,
+        "min_qty": 1,
+        "price": product.uom_id._compute_price(float(row["cost_price"]), carton),
+        "delay": principal.lead_time_days,
+    })
+
+
 def load_products():
     """Memuat 150 Master SKU FMCG ke product.template beserta UoM dan hierarki kemasan native Odoo 19."""
     csv_file = seed_dir / "products_150.csv"
@@ -336,6 +368,7 @@ def load_products():
                 inner_qty=int(row.get("inner_qty", 1)),
                 carton_qty=int(row.get("carton_qty", 1)),
             )
+            ensure_vendor_carton(prod, prin, row)
 
     print(
         f"    Selesai: {count_created} dibuat, {count_updated} diperbarui "
