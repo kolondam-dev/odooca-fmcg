@@ -1,4 +1,5 @@
 import { creditExceeded } from "../domain/outlet-card";
+import { strictCreditBlock, strictCreditMessage } from "../domain/credit-block";
 import { VisitPhotoField } from "./VisitPhotoField";
 import { BiayaTokoScreen } from "./BiayaTokoScreen";
 import { CloseVisitScreen } from "./CloseVisitScreen";
@@ -330,6 +331,7 @@ export function VisitPanel({
     const money = (value?: number | null) =>
         value != null ? idr.format(value) : "—";
     const overCredit = creditExceeded(commercial);
+    const strictBlock = strictCreditBlock(outlet, snapshot.outlet_credit);
     const checkinBlocked =
         !info ||
         !!info.active ||
@@ -557,6 +559,11 @@ export function VisitPanel({
                         value={money(commercial.ar_outstanding)}
                     />
                 ) : null}
+                {strictBlock ? (
+                    <Callout tone="bad" icon="warning" alert>
+                        {strictCreditMessage(strictBlock, money)}
+                    </Callout>
+                ) : null}
                 {overCredit ? (
                     <Callout tone="bad" icon="clock">
                         Melebihi limit kredit {money(overCredit.limit)}
@@ -564,8 +571,9 @@ export function VisitPanel({
                     </Callout>
                 ) : null}
                 <span class="ui-row__sub">
-                    Daftar faktur dan penagihan di aplikasi belum aktif. Order
-                    tidak menunggu tagihan pada versi ini.
+                    {strictBlock
+                        ? "Daftar faktur dan penagihan di aplikasi belum aktif; minta pelunasan lewat Supervisor atau tim penagihan. Kunjungan tetap dapat diselesaikan tanpa order."
+                        : "Daftar faktur dan penagihan di aplikasi belum aktif. Order tidak menunggu tagihan pada versi ini."}
                 </span>
             </Card>
             <Card tight>

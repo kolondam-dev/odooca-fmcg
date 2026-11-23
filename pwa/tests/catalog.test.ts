@@ -556,3 +556,55 @@ it("snapshot menerima credit_mode dan outlet_credit opsional (BE-19)", () => {
         }).success,
     ).toBe(false);
 });
+
+it("snapshot menerima outlet_receivables opsional (BE-7)", () => {
+    const base = catalog();
+    expect(base.outlet_receivables).toBeUndefined();
+    const entry = {
+        outstanding_total: 180000,
+        open_count: 2,
+        overdue_count: 1,
+        overdue_total: 100000,
+        oldest_due: "2026-10-01",
+        truncated: false,
+        invoices: [
+            {
+                reference: "INV/2026/0001",
+                partner: "Toko Uji",
+                invoice_date: "2026-09-01",
+                due_date: "2026-10-01",
+                total: 100000,
+                balance: 100000,
+                overdue: true,
+            },
+            {
+                reference: "INV/2026/0002",
+                partner: "Toko Uji",
+                invoice_date: null,
+                due_date: null,
+                total: 80000,
+                balance: 80000,
+                overdue: false,
+            },
+        ],
+    };
+    const parsed = SnapshotSchema.parse({
+        ...base,
+        outlet_receivables: { "5": entry },
+    });
+    expect(parsed.outlet_receivables?.["5"].invoices).toHaveLength(2);
+    expect(
+        SnapshotSchema.safeParse({
+            ...base,
+            outlet_receivables: { "5": { ...entry, open_count: 0 } },
+        }).success,
+    ).toBe(false);
+    expect(
+        SnapshotSchema.safeParse({
+            ...base,
+            outlet_receivables: {
+                "5": { ...entry, invoices: [{ reference: "X" }] },
+            },
+        }).success,
+    ).toBe(false);
+});

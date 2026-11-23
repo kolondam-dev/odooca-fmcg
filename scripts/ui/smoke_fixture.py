@@ -4,7 +4,8 @@ import json
 from lxml import etree
 
 admin = env.ref('base.user_admin')  # noqa: F821
-admin.write({'login': 'admin', 'password': 'ci-ui'})
+# The browser smoke locates English UI labels even when CI installs Indonesian.
+admin.write({'lang': 'en_US', 'login': 'admin', 'password': 'ci-ui'})
 env['res.users.settings']._find_or_create_for_user(admin).set_res_users_settings(  # noqa: F821
     {'id_ui_shell': 'sidebar'})
 partner = env['res.partner'].create({'name': 'UI Smoke Customer'})  # noqa: F821

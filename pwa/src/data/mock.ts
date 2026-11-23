@@ -146,6 +146,15 @@ export class MockProvider implements FieldProvider {
                     latitude: 1.456,
                     longitude: 124.84,
                     radius: 10,
+                    commercial: {
+                        max_order: null,
+                        previous_visit_total: null,
+                        top_sku: null,
+                        payment_terms: "Tunai (wajib lunas)",
+                        credit_limit: null,
+                        contact: null,
+                        credit_mode: "strict" as const,
+                    },
                     ...(this.relaxedLocation
                         ? { demo_unrestricted: true as const }
                         : {}),
@@ -247,6 +256,52 @@ export class MockProvider implements FieldProvider {
                     product_ids: ["demo-product-1", "demo-product-2"],
                 },
             ],
+            outlet_credit: {
+                "demo-outlet-3": {
+                    overdue_count: 2,
+                    overdue_total: 1250000,
+                    oldest_due: "2026-10-20",
+                },
+            },
+            outlet_receivables: {
+                "demo-outlet-3": {
+                    outstanding_total: 1550000,
+                    open_count: 3,
+                    overdue_count: 2,
+                    overdue_total: 1250000,
+                    oldest_due: "2026-10-20",
+                    truncated: false,
+                    invoices: [
+                        {
+                            reference: "INV/2026/0412",
+                            partner: "Minimarket Pelangi",
+                            invoice_date: "2026-09-20",
+                            due_date: "2026-10-20",
+                            total: 750000,
+                            balance: 750000,
+                            overdue: true,
+                        },
+                        {
+                            reference: "INV/2026/0455",
+                            partner: "Minimarket Pelangi",
+                            invoice_date: "2026-10-05",
+                            due_date: "2026-11-05",
+                            total: 500000,
+                            balance: 500000,
+                            overdue: true,
+                        },
+                        {
+                            reference: "INV/2026/0501",
+                            partner: "Minimarket Pelangi",
+                            invoice_date: "2026-11-10",
+                            due_date: "2026-12-10",
+                            total: 300000,
+                            balance: 300000,
+                            overdue: false,
+                        },
+                    ],
+                },
+            },
             approval_tiers: {
                 discount: {
                     scope: "outlet_month" as const,

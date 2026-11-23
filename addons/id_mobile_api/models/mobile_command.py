@@ -195,7 +195,7 @@ class MobileCommand(models.Model):
         snapshot_version = payload.get("snapshot_version")
         if not snapshot_version:
             raise UserError(_("Snapshot version wajib disertakan."))
-        current_snapshot = Workday._snapshot_payload(include_approval_tiers=False)
+        current_snapshot = Workday._snapshot_payload(include_volatile=False)
         if snapshot_version != current_snapshot.get("version"):
             raise MobileReadConflict(_("Stale catalog snapshot version."))
 

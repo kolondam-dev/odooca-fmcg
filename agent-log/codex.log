@@ -585,3 +585,47 @@
 - Main 16b909e. Pertahankan desugar 2.1.5 dan dependency instrumentation.
 - Run 44986280681: smoke API 24 lulus, API 35 gagal pada resolusi Gradle.
 - Task managed by codex agent at 2026-11-22T15:55:53+07:00
+
+[2026-11-16 00:25:00+07:00] [INFO] PR #135 sync main 4cb81ce + PO/model_terms id_ID
+- Main CI impact planner/targeted workflows retained; WMS report files overlaid without reverting newer main changes.
+- Added model_terms occurrences per QWeb report template and id_ID HTML assertions; exact-SHA CI pending, no merge/deploy.
+- Task managed by Codex supervisor.
+
+[2026-11-21] [INFO] Supervisor sync PR #135 with latest main
+- Main 34ba18e83aa7470cde601b742d2510ba411f7e92; pre-sync PR HEAD a71d79002f27e5983283a2f9a27289796473c749; backup branch backup/pr-135-before-main-sync-20261121.
+- Preserved WMS addon/report/i18n/test/PDF-smoke changes and merged CI changes three-way; main's newer PWA, DS, HANDOFF and Claude log history retained.
+- Exact-SHA CI and report rendering remain pending; no PR merge or deployment.
+
+
+[2026-11-21] [INFO] Supervisor PR #135 — follow-up on completed CI (HEAD b06c481)
+- CI failures: install-test (4 assertions: legacy tax error locale + 3 report-render subtests), domain-tests (contract sample FileNotFoundError), android-gate (aggregate failure from domain-tests).
+- Root causes: final recordset branch still asserted English error; report table headers/signature blocks lacked explicit QWeb t-translation; Gradle did not declare generated contract-samples as task output, so FROM-CACHE omitted generated JSON.
+- Follow-up patch: localize final legacy test assertions; mark all report table headers and signature blocks t-translation="on"; declare Gradle contract-samples output to make cache restore payload samples. No weakened assertions, no Android production code change, no merge/deploy. Exact-SHA validation pending.
+
+2026-11-21 — PR #135 QWeb translation follow-up
+- Reviewed exact failed install-test log for run 44886788120 / checked out merge SHA d080d549eaf11435980992518e7b276685574cba (PR head 43124a572802607e917691d963eff5fe25ea7b00).
+- Failures: Picklist "Disiapkan oleh"; Packlist and Delivery Order "Lot / Nomor Seri".
+- Root causes: PO occurrence for "Lot / Serial" only named Picklist; signature label was embedded in a compound translated div rather than a standalone span.
+- Changed id_ID.po occurrence references, explicit translation spans for signature labels in all three reports, and importer-chain expected term matrix. No assertion weakened, no runtime/business logic changed.
+- Await exact-SHA CI. Do not merge/deploy.
+
+2026-11-21 — PR #135 importer mapping correction
+- CI run 44892571364 failed install-test in test_00_picklist_translation_importer_chain and report-render subtests for Packlist/Delivery Order.
+- Exact runtime importer-chain diagnostics for /opt/id-addons/id_base/i18n/id_ID.po showed only the Picklist mapping for "Lot / Serial" despite multiple #: occurrences.
+- Corrected by using a unique source term "Lot / Serial Number" for Packlist and Delivery Order while retaining Indonesian msgstr "Lot / Nomor Seri"; Picklist retains "Lot / Serial". Updated PO entries and importer-chain expected matrix to assert explicit per-report mappings. No assertions removed or weakened.
+- Await fresh exact-HEAD CI and PDF render smoke; no merge/deploy.
+
+
+[2026-11-22T09:30:00+07:00] [INFO] PR #135 isolate warehouse translation terms per report view
+- [F] Exact CI run 44913505693 / install-test at HEAD 724b2f4 failed three report translation assertions; parser marked shared PO msgid "Lot / Serial Number" with Packlist + Delivery Order occurrences obsolete and imported no mapping.
+- [F] Android, Seed, PWA, Full Dataset Runtime, Upgrade Runtime and Finance I0 workflows passed at that SHA; CI install-test failed, PDF smoke skipped as a consequence.
+- [F] Corrected XML/PO/test matrix: Picklist "Lot / Serial"; Packlist "Lot / Serial Number"; Delivery Order "Lot / Batch / Serial"; each source term has one view occurrence and Indonesian translation "Lot / Nomor Seri".
+- [F] No assertions weakened/removed; no business logic, inventory behavior, merge or deployment changed. Exact-SHA CI + live HTTP PDF smoke pending.
+
+[2026-11-22T22:01:20+07:00] [INFO] PR #135: sinkronisasi dan verifikasi dokumen gudang
+- Sinkron main, lengkapi POT, dan uji PDF DO selesai parsial; runtime menunggu CI.
+- Task managed by codex agent at 2026-11-22T22:01:20+07:00
+
+[2026-11-23T07:44:32+07:00] [INFO] UoM pembelian vendor FMCG
+- Seed offer native per SKU dan vendor, pertahankan basis UoM PO historis, tambah kontrak PO-receipt-bill pada CI.
+- Task managed by codex agent at 2026-11-23T07:44:32+07:00

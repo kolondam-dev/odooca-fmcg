@@ -198,14 +198,14 @@ class TestMobileRead(MobileFixture, TransactionCase):
             self.skipTest("id_approval tidak terpasang")
         before = self.service()._snapshot_payload()
         self.assertIn("approval_tiers", before)
-        self.assertNotIn("approval_tiers", self.service()._snapshot_payload(include_approval_tiers=False))
+        self.assertNotIn("approval_tiers", self.service()._snapshot_payload(include_volatile=False))
         self.env.ref("id_approval.rule_tactical_tier0").sudo().max_discount = 9.0
         after = self.service()._snapshot_payload()
         self.assertNotEqual(before["approval_tiers"], after["approval_tiers"])
         self.assertEqual(before["version"], after["version"])
         self.assertEqual(
             before["version"],
-            self.service()._snapshot_payload(include_approval_tiers=False)["version"])
+            self.service()._snapshot_payload(include_volatile=False)["version"])
 
     def test_snapshot_commercial_carries_credit_mode(self):
         """BE-19: kebijakan kredit outlet dikirim agar PWA dapat memblokir mode strict."""
@@ -215,7 +215,7 @@ class TestMobileRead(MobileFixture, TransactionCase):
 
     def test_outlet_credit_block_is_empty_without_overdue_invoices(self):
         self.assertEqual(self.service()._snapshot_payload()["outlet_credit"], {})
-        self.assertNotIn("outlet_credit", self.service()._snapshot_payload(include_approval_tiers=False))
+        self.assertNotIn("outlet_credit", self.service()._snapshot_payload(include_volatile=False))
 
     def test_outlet_credit_reports_overdue_outside_digest(self):
         """BE-19: tunggakan berubah tiap pembayaran → di luar digest; kriteria sama dengan sale.order."""
@@ -226,7 +226,7 @@ class TestMobileRead(MobileFixture, TransactionCase):
             seen["domain"], seen["groupby"], seen["aggregates"] = domain, list(groupby), list(aggregates)
             return [(self.outlet, 2, 150000.0, business_date() - timedelta(days=9))]
 
-        before = self.service()._snapshot_payload(include_approval_tiers=False)
+        before = self.service()._snapshot_payload(include_volatile=False)
         with patch.object(account_move, "_read_group", fake_read_group):
             snapshot = self.service()._snapshot_payload()
         self.assertEqual(snapshot["outlet_credit"], {str(self.outlet.id): {

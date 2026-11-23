@@ -1,3 +1,41 @@
+## 2026-11-23 — UoM pembelian vendor FMCG (codex)
+
+- [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.
+- [F] Loader PO kanonik menetapkan UoM inventaris secara eksplisit agar kuantitas dan harga historis berbasis unit tetap sepadan.
+- [BU] Tes Odoo untuk replay, PO karton, receipt, dan data baris vendor bill menunggu CI. Aktivasi master pada basis data yang sudah memakai marker seed tetap terpisah.
+
+## 2026-11-23 — [F] BE-7: piutang berjalan dan daftar faktur terbuka pada snapshot (claude-design)
+
+- `id_mobile_api/models/mobile_workday.py`: blok baru top-level `outlet_receivables` = `{outlet_id: {outstanding_total, open_count, overdue_count, overdue_total, oldest_due, truncated, invoices[{reference, partner, invoice_date, due_date, total, balance, overdue}]}}`. Perimeter dan kriteria sama dengan `outlet_credit` (BE-19): commercial partner (parent) dalam perusahaan sesi, `out_invoice` terposting belum lunas; faktur outlet saudara ikut dan ditandai lewat `partner`. Total dari SEMUA faktur terbuka; daftar dipotong 50 (jatuh tempo tertua dulu) dengan `truncated`. `{}` = tidak ada piutang, blok tidak ada = tidak diketahui. Nominal mata uang perusahaan (`*_signed`).
+- Di luar digest versi (berubah tiap pembayaran), sama alasannya dengan `outlet_credit`/`approval_tiers`. Flag `include_approval_tiers` diganti nama `include_volatile` karena kini mengatur tiga blok; command dan evidence tetap memanggil dengan False.
+- Nama kunci sengaja `total`/`balance` (bukan `amount_residual`) agar penjaga tes snapshot "tanpa field mentah" tetap utuh.
+- Dibaca dengan `sudo()` terbatas (perimeter outlet ditugaskan + perusahaan sesi, field ringkas), keputusan yang sama dengan BE-19 dan sudah lulus review.
+- Kontrak: `contracts.ts` (`outlet_receivables`), `openapi.json`, tes katalog; data demo Minimarket Pelangi (3 faktur, 2 overdue). `commercial.ar_outstanding` tetap tidak dikirim; FE-8 membaca dari `outlet_receivables`.
+- Tes Odoo `test_credit_snapshot.py` (faktur nyata): total/urutan/daftar/isolasi, pemotongan 50, di luar digest dan mengikuti pembayaran, konsistensi dengan `outlet_credit`. Hanya terverifikasi di CI; pembayaran disimulasikan lewat SQL seperti BE-19.
+- Belum dikerjakan: jadwal penagihan/kolektor ("Wajib ditagih hari ini"), command `collection.receipt.submit`/`collection.settlement.submit` (backend KOSONG), FE-8 (UI). Utang `credit_limit` commercial partner (BE-19) masih terbuka.
+
+## 2026-11-22 — PR #135: katalog QWeb dan PDF DO parsial (codex)
+
+- [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.
+- [BU] Instalasi Odoo, terjemahan QWeb, dan PDF menunggu verifikasi runtime pada commit ini.
+
+## 2026-11-22 — [BU] FE-12 perbaikan review PR #186 (putaran 2): assertion Riwayat menunggu data dimuat (claude-design)
+
+- Penyebab flaky: `.count()` dibaca segera setelah region Riwayat muncul. Kini helper `openHistory(page, ready)` menunggu baris `ready` tampil dulu. Kasus positif menunggu baris "Order • " dan `toHaveCount(1)` (auto-retry); kasus nol menunggu baris "Tutup kunjungan • " (bukti Riwayat sudah dimuat) baru `toHaveCount(0)`. Source produksi tidak berubah. Terverifikasi lokal 24/24 lulus dengan `--repeat-each=3`.
+
+## 2026-11-22 — [BU] FE-12 perbaikan review PR #186: bukti e2e guard kredit (claude-design)
+
+- Tidak ada perubahan source produksi; hanya penguatan bukti. `tests/browser/credit-block.spec.ts` kini 4 skenario (phone + tablet): (1) strict overdue dengan keranjang valid DAN foto display tersimpan, tombol "Kirim order" nonaktif dan caption "Foto display wajib" tidak ada, jadi penyebabnya hanya guard kredit; (2) `send()` dipaksa dijalankan lewat klik pada tombol yang atributnya dilepas sementara: alert "wajib lunas" muncul, tidak ada Hasil kirim, draft tetap utuh; (3) strict overdue: Selesai kunjungan tanpa order dengan foto check-out + catatan, kunjungan ditutup lokal dan Riwayat tidak memuat "Order • "; (4) outlet tanpa blokir: tombol aktif, order terkirim (Hasil kirim) dan tercatat di Riwayat.
+- Uji mutasi (lokal): menghapus `|| !!strictBlock` dari `disabled` → skenario 1 gagal; menghapus guard di `send()` → skenario 2 gagal. Sumber dipulihkan sebelum commit.
+- Tes unit berbasis regex source dihapus (bukan bukti eksekusi); `credit-block.test.ts` kini 5 tes fungsi murni.
+
+## 2026-11-22 — [F] FE-12: pemblokiran order mode kredit strict di PWA (claude-design)
+
+- `domain/credit-block.ts` (`strictCreditBlock`, `strictCreditMessage`): blokir hanya bila `credit_mode` = `strict` dan outlet ada di `snapshot.outlet_credit`; tidak diketahui (null/absen/blok absen) tidak memblokir. Server tetap otoritatif.
+- OrderScreen: Callout merah di atas katalog, tombol "Kirim order" dinonaktifkan dengan keterangan, dan `send()` menolak sebelum langkah lain. Draft keranjang tetap dapat disusun. VisitPanel: kartu "Tagihan jatuh tempo" menampilkan penjelasan dan arahan minta pelunasan lewat Supervisor/tim penagihan; kunjungan tetap dapat diselesaikan tanpa order.
+- Data demo: Minimarket Pelangi mode strict dengan 2 faktur jatuh tempo (Rp1.250.000).
+- Tes: vitest `credit-block.test.ts` (6, termasuk penjaga regresi), e2e `credit-block.spec.ts` (phone + tablet). Utang: K36 (snapshot basi setelah pelunasan, `limit_due` belum diblokir, daftar faktur/penagihan menunggu BE-7/FE-8, `credit_limit` commercial partner).
+
 ## 2026-11-22T15:55:53+07:00 — Codex — Sinkronisasi dan review PR #177
 **Basis:** main `16b909e416eb42d89ac3269d261d2d78581ad230`. Konflik catalog mempertahankan desugar 2.1.5 dari main dan dependency instrumentation DEV-01. Riwayat HANDOFF kedua sisi dipertahankan.
 **Bukti historis:** [Smoke c9585c8](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44986280681): API 24 lulus; API 35 gagal saat resolusi dependency Gradle sebelum boot. Runtime dan instrumentation masih HOLD. PR diajukan untuk review sesuai arahan pemilik.
@@ -5879,3 +5917,46 @@ Docs `docs/ui/id_ui_shell.md` dan `e2e/smoke_ui.py` diperbarui; log `agent-log/c
 **Berubah:** addon baru `id_ui` (tema, urutan dan nama menu inti menurut glosarium, aktivasi `en_US`+`id_ID`), `id_ui_shell` (sidebar aplikasi dengan ikon bawaan Odoo, topbar: judul besar + tab seksi + cari menu + nama/role, hotkey Alt+M/Alt+B, mode sidebar/klasik per pengguna), `id_ui_form` (chatter jadi tab terakhir notebook). Docs: `docs/ui/*` (jejak kompatibilitas per addon, usulan istilah glosarium, `e2e/smoke_ui.py`). Log: `agent-log/claude-design.log`. Tidak menyentuh addon lain, CI, `init.sh`, Dockerfile.
 **Diverifikasi (bagaimana):** di sandbox, Odoo `f4378f29` (sama dengan SANDBOX.md), DB kosong `-i id_base,id_ui_form --without-demo=true`: 0 failed dari 8 uji; `ruff check .` dan `check_manifests.py` lolos; `docs/ui/e2e/smoke_ui.py` (Playwright/Chromium) 10/10; terjemahan `id_ID` tampil di browser. Performa lokal (1 form, 6 muat ulang): form siap 893Ã¢â‚¬
 ... [truncated for diff preview]
+
+
+## 2026-11-21 — Supervisor — PR #135 disinkronkan ke main terbaru
+**Konteks:** Main diverifikasi pada `34ba18e83aa7470cde601b742d2510ba411f7e92`; HEAD PR sebelum sync `a71d79002f27e5983283a2f9a27289796473c749`. Backup dibuat pada `backup/pr-135-before-main-sync-20261121`.
+**Berubah:** Integrasi mempertahankan kedua parent commit. HANDOFF dan log agen main yang lebih baru dipertahankan; catatan PR #135 Codex dibawa masuk. Perubahan WMS (report templates, Indonesian translations, tests, PDF smoke) dipertahankan. File PWA yang sudah identik/lebih baru di main tidak di-revert.
+**Verifikasi:** Sinkronisasi source saja; seluruh CI exact-SHA wajib dijalankan ulang. Belum ada klaim tes/PDF smoke lulus, merge PR, atau deployment.
+
+
+## 2026-11-21 — Supervisor follow-up: PR #135 CI failure analysis
+
+**Exact tested HEAD:** `b06c481786e35ed3c2cfad0b0c85bb3cbeda0f7f` (before the follow-up fixes below).
+
+**Observed failed checks:** `install-test`, `domain-tests`, and aggregate `android-gate`. The install job reports four failed assertions: the legacy tax-number test's final recordset loop still expected an English error string, and the three Picklist/Packlist/Delivery Order rendering subtests missed Indonesian labels. The Android aggregate gate fails because `domain-tests` fails.
+
+**Root causes identified:**
+- The final legacy tax-number assertion loop had not been updated with the Indonesian `id_ID` error context; earlier assertions in the same test were already localized.
+- QWeb translation entries existed in `id_ID.po`, but static table-header and signature-block nodes in the report XML were not explicitly marked with `t-translation="on"`. This explains untranslated `Lot / Serial` headers and Picklist signature labels at render time.
+- Android domain tests were `FROM-CACHE`; the tests emit OpenAPI contract JSON into `build/contract-samples`, but that directory was not declared as a Gradle task output, so the cache restored test results without restoring the generated JSON files. The subsequent validator then failed with FileNotFoundError.
+
+**Follow-up changes committed after this analysis:** update the remaining legacy assertion loop to validate the localized UserError; explicitly enable QWeb translation on table headers and signature blocks; declare `contract-samples` as an output of the Gradle `test` task so cache restores generated samples. No assertions were weakened, no Android code was changed, and no merge/deploy was performed. Exact-SHA CI must verify these fixes.
+
+
+## 2026-11-21 — PR #135 follow-up: QWeb translation render failure
+
+- Exact failing run: CI run 44886788120 at PR head `43124a572802607e917691d963eff5fe25ea7b00`; 28 other checks/workflows passed, while `install-test` failed on three rendered-label assertions.
+- Root cause: the `Lot / Serial` PO entry referenced only `report_fmcg_picklist`, so its translation was not imported for Packlist and Delivery Order. The Picklist signature wrapped several line-breaks and underscores in one translated div; that made the expected standalone `Prepared by` term unreliable in rendered QWeb.
+- Fix in this follow-up: extend the PO occurrence list for `Lot / Serial` to all three report views; wrap each signature label in its own explicit `t-translation="on"` span; extend the importer-chain test matrix to assert the three-view term mapping and Picklist signature mapping.
+- Also made the remaining Packlist and Delivery Order signature labels explicit translation spans, matching their existing PO entries.
+- Pending: exact-HEAD CI, including the Odoo runtime install-test and live HTTP PDF render smoke. No merge or deployment authorized.
+
+
+### Correction to 2026-11-21 PR #135 translation diagnosis
+
+The previous attempt's assumption that one PO entry with multiple view occurrences would be imported for all views was disproved by the runtime importer-chain test: the parser yielded only the Picklist mapping. Avoid relying on multi-view occurrence expansion for this term. The Packlist and Delivery Order source label is now made distinct ("Lot / Serial Number") while both retain the Indonesian translation "Lot / Nomor Seri"; the Picklist retains "Lot / Serial". The PO and importer-chain test matrix now map each source term to the relevant report views explicitly. This keeps the rendered Indonesian labels consistent and makes the import mapping unambiguous. Validate via fresh install-test and live HTTP PDF render.
+
+
+## 2026-11-22 — PR #135: isolate translation terms per report view
+
+- Exact failing CI: run `44913505693`, job `install-test`, tested HEAD `724b2f4ddda7b5353f8ab4b4843e7dff0d76f171`.
+- Three failures were confirmed: importer-chain matrix and rendered Indonesian lot labels in Packlist and Delivery Order. Runtime importer diagnostics marked the shared `Lot / Serial Number` PO entry obsolete and returned no imported mapping for it.
+- Corrective approach: do not share one PO msgid across report views. Picklist keeps `Lot / Serial`; Packlist uses `Lot / Serial Number`; Delivery Order now uses the distinct `Lot / Batch / Serial`. Each PO entry has exactly one report-view occurrence and maps to `Lot / Nomor Seri`.
+- Updated the importer-chain matrix to assert all three source terms against their individual view XML IDs. No assertion was removed or weakened; no business/runtime stock logic changed.
+- New exact-HEAD CI, including install-test and live HTTP PDF render smoke, is required. No merge or deployment.
