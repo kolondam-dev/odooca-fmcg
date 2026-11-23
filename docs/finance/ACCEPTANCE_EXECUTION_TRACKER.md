@@ -162,8 +162,12 @@ FIN37/FIN38 sudah memiliki snapshot dan oracle native AML/partial independen.
 Slice I2c-a menambahkan pembanding workbook wizard nyata untuk coverage line,
 exception bernominal, alokasi period accrual, realized/unrealized FX, exchange
 move evidence, dan tie-out GL per mata uang tanpa netting silang. Nilai numerik
-bertipe teks dan nested JSON non-numerik ditolak. [BU] Exact-SHA Finance I0
-harus membuktikan render XLSX dan comparator baru; bukti live/non-sintetis,
+bertipe teks dan nested JSON non-numerik ditolak. [F] Run `45094187557` pada
+head `7a1ade9` merender wizard nyata dan lolos, tetapi review menemukan P2:
+tanggal/hari dan redistribusi nominal period FIN37 yang totalnya tetap sama
+belum dibandingkan dengan oracle. [BU] Perbaikan kini membandingkan setiap
+period terhadap konstruksi AML independen dan menambah fixture lintas bulan;
+exact-SHA Finance I0 perbaikan masih harus PASS. Bukti live/non-sintetis,
 negative ACL produksi, dan sign-off Controller tetap terbuka.
 
 FIN36/FIN55/FIN56 tidak dicampur ke slice ini: masing-masing masih menunggu

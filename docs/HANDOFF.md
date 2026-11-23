@@ -1,3 +1,10 @@
+## 2026-11-23 — [BU] PR #185 HOLD: tutup P2 period JSON FIN37 (opencode)
+
+- [F] Review supervisor pada exact head `7a1ade9` memberi HOLD/TAMBAH: mutasi tanggal/hari period dan redistribusi nominal period dengan total tetap masih mendapat PASS; finding berada pada verifier, bukan bukti workbook produksi salah.
+- [F] Oracle AML independen kini membangun bucket bulanan lengkap; comparator mematok coverage/urutan, rentang, hari inklusif, `recognized_days`/flag, `amount`, dan `recognized_amount` per period.
+- [F] Dua reproduksi reviewer kini ditolak dengan `periods mismatch`; fixture native baru melintasi 20 Juli–10 Agustus, cutoff parsial 25 Juli, dan remainder pembulatan pada period terakhir. 75 unit I2c, Ruff, 14 manifest, dan diff-check PASS lokal.
+- [BU] Finance I0 exact-SHA setelah sinkronisasi `main` masih menunggu CI; PR tetap HOLD, belum merge/deploy. Katalog tetap 58/58 `BELUM_DITERIMA`; bukti live dan sign-off tetap terbuka.
+
 ## 2026-11-23 — [BU] PR #185 Finance I0: oracle FIN38 merekonstruksi residual penuh (opencode)
 
 - [F] Exact-SHA `b850939` gagal pada `FIN38 unrealized_rows coverage mismatch`: workbook 9 baris, oracle 15. FIN37 XLSX sudah lolos; suite non-finance hijau.
@@ -17,92 +24,6 @@
 - [F] Slice berikutnya menambahkan comparator offline FIN37/FIN38 dan wiring ekspor wizard nyata ke Finance I0: line/exception accrual + period JSON, realized/unrealized/unposted FX, exchange move evidence, dan GL per currency tanpa netting silang.
 - [F] 9 counterexample XLSX baru; 71 unit I2c PASS lokal. FIN36/55/56 tetap terpisah karena blocker aset, kontrak bertanggal, dan payroll/statutory.
 - [BU] Render/tie-out workbook native menunggu exact-SHA CI; katalog tetap 58/58 `BELUM_DITERIMA`, tanpa perubahan data/deploy.
-
-## 2026-11-22 — PR #135: katalog QWeb dan PDF DO parsial (codex)
-
-- [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.
-- [BU] Instalasi Odoo, terjemahan QWeb, dan PDF menunggu verifikasi runtime pada commit ini.
-
-## 2026-11-22 — [BU] FE-12 perbaikan review PR #186 (putaran 2): assertion Riwayat menunggu data dimuat (claude-design)
-
-- Penyebab flaky: `.count()` dibaca segera setelah region Riwayat muncul. Kini helper `openHistory(page, ready)` menunggu baris `ready` tampil dulu. Kasus positif menunggu baris "Order • " dan `toHaveCount(1)` (auto-retry); kasus nol menunggu baris "Tutup kunjungan • " (bukti Riwayat sudah dimuat) baru `toHaveCount(0)`. Source produksi tidak berubah. Terverifikasi lokal 24/24 lulus dengan `--repeat-each=3`.
-
-## 2026-11-22 — [BU] FE-12 perbaikan review PR #186: bukti e2e guard kredit (claude-design)
-
-- Tidak ada perubahan source produksi; hanya penguatan bukti. `tests/browser/credit-block.spec.ts` kini 4 skenario (phone + tablet): (1) strict overdue dengan keranjang valid DAN foto display tersimpan, tombol "Kirim order" nonaktif dan caption "Foto display wajib" tidak ada, jadi penyebabnya hanya guard kredit; (2) `send()` dipaksa dijalankan lewat klik pada tombol yang atributnya dilepas sementara: alert "wajib lunas" muncul, tidak ada Hasil kirim, draft tetap utuh; (3) strict overdue: Selesai kunjungan tanpa order dengan foto check-out + catatan, kunjungan ditutup lokal dan Riwayat tidak memuat "Order • "; (4) outlet tanpa blokir: tombol aktif, order terkirim (Hasil kirim) dan tercatat di Riwayat.
-- Uji mutasi (lokal): menghapus `|| !!strictBlock` dari `disabled` → skenario 1 gagal; menghapus guard di `send()` → skenario 2 gagal. Sumber dipulihkan sebelum commit.
-- Tes unit berbasis regex source dihapus (bukan bukti eksekusi); `credit-block.test.ts` kini 5 tes fungsi murni.
-
-## 2026-11-22 — [F] FE-12: pemblokiran order mode kredit strict di PWA (claude-design)
-
-- `domain/credit-block.ts` (`strictCreditBlock`, `strictCreditMessage`): blokir hanya bila `credit_mode` = `strict` dan outlet ada di `snapshot.outlet_credit`; tidak diketahui (null/absen/blok absen) tidak memblokir. Server tetap otoritatif.
-- OrderScreen: Callout merah di atas katalog, tombol "Kirim order" dinonaktifkan dengan keterangan, dan `send()` menolak sebelum langkah lain. Draft keranjang tetap dapat disusun. VisitPanel: kartu "Tagihan jatuh tempo" menampilkan penjelasan dan arahan minta pelunasan lewat Supervisor/tim penagihan; kunjungan tetap dapat diselesaikan tanpa order.
-- Data demo: Minimarket Pelangi mode strict dengan 2 faktur jatuh tempo (Rp1.250.000).
-- Tes: vitest `credit-block.test.ts` (6, termasuk penjaga regresi), e2e `credit-block.spec.ts` (phone + tablet). Utang: K36 (snapshot basi setelah pelunasan, `limit_due` belum diblokir, daftar faktur/penagihan menunggu BE-7/FE-8, `credit_limit` commercial partner).
-
-## 2026-11-22 — [BU] BE-19 perbaikan review PR #184: kebijakan efektif parent, hari bisnis WITA bersama, tes faktur nyata (claude-design)
-
-- P2 kebijakan: `commercial.credit_mode` kini memakai commercial partner (parent) seperti `sale.order._compute_credit_limit_exceeded`; parent yang tidak boleh dibaca → `null` (tidak diketahui, PWA tidak memblokir). Karena ikut digest, mengubah kebijakan parent mengubah versi outlet anak.
-- P2 tanggal: helper tunggal `id_base/models/business_day.py` (`business_date()` WITA). Validasi kredit server (`id_base/models/sale_order.py`) memakai `business_date()` menggantikan `fields.Date.today()` (UTC); `mobile_workday.business_date` mendelegasikan ke helper yang sama. Perilaku server berubah selama 00.00–08.00 WITA: faktur jatuh tempo "kemarin" menurut WITA kini overdue pada validasi server.
-- Perimeter: `outlet_credit` = commercial parent dalam perusahaan sesi; faktur outlet saudara (satu parent, tidak ditugaskan) ikut terhitung, kunci hasil hanya outlet ditugaskan. Bukan "faktur outlet individual".
-- Tes ORM nyata `id_mobile_api/tests/test_credit_snapshot.py` (faktur posted/draft, parent/anak/saudara, parent lain, perusahaan lain, jatuh tempo hari ini, parsial/lunas, user mobile tanpa hak baca faktur, versi, frozen-clock 23:59:59 WITA, 01:00 WITA, 08:00 WITA). Pembayaran parsial/lunas disimulasikan lewat SQL pada `account_move` karena perusahaan uji tanpa jurnal bank. Tes Odoo hanya terverifikasi di CI.
-- Utang baru: `credit_limit` pada snapshot masih dibaca dari outlet, sedangkan server memakai commercial partner (kelas selisih sama; tidak diubah di PR ini agar tidak melebar). Dicatat untuk BE-7/FE-12.
-
-## 2026-11-22 — [F] BE-19: credit_mode dan tunggakan faktur outlet pada snapshot (claude-design)
-
-- `id_mobile_api/models/mobile_workday.py`: `commercial.credit_mode` (`strict|limit|limit_due|approval`, default `limit`) ikut digest karena jarang berubah. Blok baru top-level `outlet_credit` = `{outlet_id: {overdue_count, overdue_total, oldest_due}}` hanya untuk outlet yang punya faktur jatuh tempo; `{}` berarti server membaca dan tidak ada tunggakan, blok tidak ada berarti tidak diketahui (server lama).
-- `outlet_credit` SENGAJA di luar digest versi (sama seperti `approval_tiers`, ikut `include_approval_tiers`): tiap pembayaran mengubahnya, bila ikut digest command offline ditolak "Stale catalog snapshot version". Command dan evidence tidak memuatnya.
-- Kriteria sama dengan `sale.order._compute_credit_limit_exceeded`: `out_invoice` terposting, `payment_state` bukan paid/in_payment/reversed, `invoice_date_due` < hari bisnis, filter perusahaan sesi. Dibaca sebagai agregat dengan `sudo()` (akun mobile tidak otomatis boleh membaca faktur), dibatasi pada outlet yang lolos `check_access`; tidak ada field faktur lain yang keluar.
-- Kontrak: `contracts.ts` (`credit_mode`, `outlet_credit`), `openapi.json`, tes katalog. Tes Odoo di `test_read_api.py` (mock `_read_group` untuk memeriksa domain dan di luar digest; faktur nyata tidak dibuat karena perusahaan uji tanpa bagan akun). Tes Odoo hanya terverifikasi di CI.
-- Utang: server menghitung "jatuh tempo" dengan `fields.Date.today()` (UTC), snapshot memakai hari bisnis WITA; selisih hanya 00:00–08:00 WITA. Server tetap otoritatif saat order dikirim. FE-12 (pemblokiran di PWA) belum dikerjakan.
-
-## 2026-11-23 — [F] BE-7: piutang berjalan dan daftar faktur terbuka pada snapshot (claude-design)
-
-- `id_mobile_api/models/mobile_workday.py`: blok baru top-level `outlet_receivables` = `{outlet_id: {outstanding_total, open_count, overdue_count, overdue_total, oldest_due, truncated, invoices[{reference, partner, invoice_date, due_date, total, balance, overdue}]}}`. Perimeter dan kriteria sama dengan `outlet_credit` (BE-19): commercial partner (parent) dalam perusahaan sesi, `out_invoice` terposting belum lunas; faktur outlet saudara ikut dan ditandai lewat `partner`. Total dari SEMUA faktur terbuka; daftar dipotong 50 (jatuh tempo tertua dulu) dengan `truncated`. `{}` = tidak ada piutang, blok tidak ada = tidak diketahui. Nominal mata uang perusahaan (`*_signed`).
-- Di luar digest versi (berubah tiap pembayaran), sama alasannya dengan `outlet_credit`/`approval_tiers`. Flag `include_approval_tiers` diganti nama `include_volatile` karena kini mengatur tiga blok; command dan evidence tetap memanggil dengan False.
-- Nama kunci sengaja `total`/`balance` (bukan `amount_residual`) agar penjaga tes snapshot "tanpa field mentah" tetap utuh.
-- Dibaca dengan `sudo()` terbatas (perimeter outlet ditugaskan + perusahaan sesi, field ringkas), keputusan yang sama dengan BE-19 dan sudah lulus review.
-- Kontrak: `contracts.ts` (`outlet_receivables`), `openapi.json`, tes katalog; data demo Minimarket Pelangi (3 faktur, 2 overdue). `commercial.ar_outstanding` tetap tidak dikirim; FE-8 membaca dari `outlet_receivables`.
-- Tes Odoo `test_credit_snapshot.py` (faktur nyata): total/urutan/daftar/isolasi, pemotongan 50, di luar digest dan mengikuti pembayaran, konsistensi dengan `outlet_credit`. Hanya terverifikasi di CI; pembayaran disimulasikan lewat SQL seperti BE-19.
-- Belum dikerjakan: jadwal penagihan/kolektor ("Wajib ditagih hari ini"), command `collection.receipt.submit`/`collection.settlement.submit` (backend KOSONG), FE-8 (UI). Utang `credit_limit` commercial partner (BE-19) masih terbuka.
-
-## 2026-11-22 — PR #135: katalog QWeb dan PDF DO parsial (codex)
-
-- [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.
-- [BU] Instalasi Odoo, terjemahan QWeb, dan PDF menunggu verifikasi runtime pada commit ini.
-
-## 2026-11-22 — [BU] FE-12 perbaikan review PR #186 (putaran 2): assertion Riwayat menunggu data dimuat (claude-design)
-
-- Penyebab flaky: `.count()` dibaca segera setelah region Riwayat muncul. Kini helper `openHistory(page, ready)` menunggu baris `ready` tampil dulu. Kasus positif menunggu baris "Order • " dan `toHaveCount(1)` (auto-retry); kasus nol menunggu baris "Tutup kunjungan • " (bukti Riwayat sudah dimuat) baru `toHaveCount(0)`. Source produksi tidak berubah. Terverifikasi lokal 24/24 lulus dengan `--repeat-each=3`.
-
-## 2026-11-22 — [BU] FE-12 perbaikan review PR #186: bukti e2e guard kredit (claude-design)
-
-- Tidak ada perubahan source produksi; hanya penguatan bukti. `tests/browser/credit-block.spec.ts` kini 4 skenario (phone + tablet): (1) strict overdue dengan keranjang valid DAN foto display tersimpan, tombol "Kirim order" nonaktif dan caption "Foto display wajib" tidak ada, jadi penyebabnya hanya guard kredit; (2) `send()` dipaksa dijalankan lewat klik pada tombol yang atributnya dilepas sementara: alert "wajib lunas" muncul, tidak ada Hasil kirim, draft tetap utuh; (3) strict overdue: Selesai kunjungan tanpa order dengan foto check-out + catatan, kunjungan ditutup lokal dan Riwayat tidak memuat "Order • "; (4) outlet tanpa blokir: tombol aktif, order terkirim (Hasil kirim) dan tercatat di Riwayat.
-- Uji mutasi (lokal): menghapus `|| !!strictBlock` dari `disabled` → skenario 1 gagal; menghapus guard di `send()` → skenario 2 gagal. Sumber dipulihkan sebelum commit.
-- Tes unit berbasis regex source dihapus (bukan bukti eksekusi); `credit-block.test.ts` kini 5 tes fungsi murni.
-
-## 2026-11-22 — [F] FE-12: pemblokiran order mode kredit strict di PWA (claude-design)
-
-- `domain/credit-block.ts` (`strictCreditBlock`, `strictCreditMessage`): blokir hanya bila `credit_mode` = `strict` dan outlet ada di `snapshot.outlet_credit`; tidak diketahui (null/absen/blok absen) tidak memblokir. Server tetap otoritatif.
-- OrderScreen: Callout merah di atas katalog, tombol "Kirim order" dinonaktifkan dengan keterangan, dan `send()` menolak sebelum langkah lain. Draft keranjang tetap dapat disusun. VisitPanel: kartu "Tagihan jatuh tempo" menampilkan penjelasan dan arahan minta pelunasan lewat Supervisor/tim penagihan; kunjungan tetap dapat diselesaikan tanpa order.
-- Data demo: Minimarket Pelangi mode strict dengan 2 faktur jatuh tempo (Rp1.250.000).
-- Tes: vitest `credit-block.test.ts` (6, termasuk penjaga regresi), e2e `credit-block.spec.ts` (phone + tablet). Utang: K36 (snapshot basi setelah pelunasan, `limit_due` belum diblokir, daftar faktur/penagihan menunggu BE-7/FE-8, `credit_limit` commercial partner).
-
-## 2026-11-22 — [BU] BE-19 perbaikan review PR #184: kebijakan efektif parent, hari bisnis WITA bersama, tes faktur nyata (claude-design)
-
-- P2 kebijakan: `commercial.credit_mode` kini memakai commercial partner (parent) seperti `sale.order._compute_credit_limit_exceeded`; parent yang tidak boleh dibaca → `null` (tidak diketahui, PWA tidak memblokir). Karena ikut digest, mengubah kebijakan parent mengubah versi outlet anak.
-- P2 tanggal: helper tunggal `id_base/models/business_day.py` (`business_date()` WITA). Validasi kredit server (`id_base/models/sale_order.py`) memakai `business_date()` menggantikan `fields.Date.today()` (UTC); `mobile_workday.business_date` mendelegasikan ke helper yang sama. Perilaku server berubah selama 00.00–08.00 WITA: faktur jatuh tempo "kemarin" menurut WITA kini overdue pada validasi server.
-- Perimeter: `outlet_credit` = commercial parent dalam perusahaan sesi; faktur outlet saudara (satu parent, tidak ditugaskan) ikut terhitung, kunci hasil hanya outlet ditugaskan. Bukan "faktur outlet individual".
-- Tes ORM nyata `id_mobile_api/tests/test_credit_snapshot.py` (faktur posted/draft, parent/anak/saudara, parent lain, perusahaan lain, jatuh tempo hari ini, parsial/lunas, user mobile tanpa hak baca faktur, versi, frozen-clock 23:59:59 WITA, 01:00 WITA, 08:00 WITA). Pembayaran parsial/lunas disimulasikan lewat SQL pada `account_move` karena perusahaan uji tanpa jurnal bank. Tes Odoo hanya terverifikasi di CI.
-- Utang baru: `credit_limit` pada snapshot masih dibaca dari outlet, sedangkan server memakai commercial partner (kelas selisih sama; tidak diubah di PR ini agar tidak melebar). Dicatat untuk BE-7/FE-12.
-
-## 2026-11-22 — [F] BE-19: credit_mode dan tunggakan faktur outlet pada snapshot (claude-design)
-
-- `id_mobile_api/models/mobile_workday.py`: `commercial.credit_mode` (`strict|limit|limit_due|approval`, default `limit`) ikut digest karena jarang berubah. Blok baru top-level `outlet_credit` = `{outlet_id: {overdue_count, overdue_total, oldest_due}}` hanya untuk outlet yang punya faktur jatuh tempo; `{}` berarti server membaca dan tidak ada tunggakan, blok tidak ada berarti tidak diketahui (server lama).
-- `outlet_credit` SENGAJA di luar digest versi (sama seperti `approval_tiers`, ikut `include_approval_tiers`): tiap pembayaran mengubahnya, bila ikut digest command offline ditolak "Stale catalog snapshot version". Command dan evidence tidak memuatnya.
-- Kriteria sama dengan `sale.order._compute_credit_limit_exceeded`: `out_invoice` terposting, `payment_state` bukan paid/in_payment/reversed, `invoice_date_due` < hari bisnis, filter perusahaan sesi. Dibaca sebagai agregat dengan `sudo()` (akun mobile tidak otomatis boleh membaca faktur), dibatasi pada outlet yang lolos `check_access`; tidak ada field faktur lain yang keluar.
-- Kontrak: `contracts.ts` (`credit_mode`, `outlet_credit`), `openapi.json`, tes katalog. Tes Odoo di `test_read_api.py` (mock `_read_group` untuk memeriksa domain dan di luar digest; faktur nyata tidak dibuat karena perusahaan uji tanpa bagan akun). Tes Odoo hanya terverifikasi di CI.
-- Utang: server menghitung "jatuh tempo" dengan `fields.Date.today()` (UTC), snapshot memakai hari bisnis WITA; selisih hanya 00:00–08:00 WITA. Server tetap otoritatif saat order dikirim. FE-12 (pemblokiran di PWA) belum dikerjakan.
 
 ## 2026-11-23 — UoM pembelian vendor FMCG (codex)
 

@@ -409,3 +409,11 @@
 - [F] FIN38 31 Jul: 9 unrealized/2 realized/7 unposted; 31 Agu: 11/2/10.
 - [BU] Menunggu review independen dan otorisasi merge pemilik; katalog tetap 58/58 BELUM_DITERIMA; penerimaan live HOLD.
 - Task managed by opencode at 2026-11-23T08:22:00+07:00
+
+[2026-11-23T10:46:26+07:00] [FIX] PR #185 P2 FIN37 period oracle
+- [F] Review head 7a1ade9 HOLD/TAMBAH: tanggal/hari period dan redistribusi nominal bertotal sama lolos comparator lama.
+- [F] Oracle AML independen kini membangun setiap bucket bulanan; comparator mematok urutan/rentang, hari, recognized_days/flag, amount, dan recognized_amount per period.
+- [F] Dua reproduksi reviewer ditolak; fixture native lintas 20 Jul-10 Agu memiliki cutoff parsial 25 Jul dan remainder pembulatan pada period terakhir.
+- [F] 75 unit I2c, Ruff, 14 manifest, dan diff-check PASS lokal.
+- [BU] Finance I0 exact-SHA menunggu CI; PR tetap HOLD dan katalog 58/58 BELUM_DITERIMA.
+- Task managed by opencode at 2026-11-23T10:46:26+07:00

@@ -105,39 +105,83 @@ def verify_accrual_schedule(workbook, expected_rows, expected_exceptions,
             periods = nested.get("periods")
             require(isinstance(periods, list) and periods,
                     f"{where} line {line_id}: periods are missing")
+            observed_periods = []
             allocated = recognized = Decimal(0)
             for position, period in enumerate(periods, start=1):
                 require(isinstance(period, dict),
                         f"{where} line {line_id} period {position}: not an object")
+                period_where = f"{where} line {line_id} period {position}"
+                start = period.get("start")
+                end = period.get("end")
+                require(isinstance(start, str) and isinstance(end, str),
+                        f"{period_where}: start/end are not text")
+                days = period.get("days")
+                recognized_days = period.get("recognized_days")
+                require(isinstance(days, int) and not isinstance(days, bool) and days > 0,
+                        f"{period_where}: days is not a positive integer")
+                require(isinstance(recognized_days, int)
+                        and not isinstance(recognized_days, bool)
+                        and 0 <= recognized_days <= days,
+                        f"{period_where}: recognized_days is invalid")
+                recognized_flag = period.get("recognized")
+                require(isinstance(recognized_flag, bool),
+                        f"{period_where}: recognized flag is not boolean")
                 amount = _numeric_json(period.get("amount"),
-                                       f"{where} line {line_id} period amount")
+                                       f"{period_where} amount")
                 recognized_amount = _numeric_json(
                     period.get("recognized_amount"),
-                    f"{where} line {line_id} period recognized",
+                    f"{period_where} recognized amount",
                 )
                 allocated += amount
                 recognized += recognized_amount
+                observed_periods.append({
+                    "start": start,
+                    "end": end,
+                    "days": days,
+                    "amount": amount,
+                    "recognized_days": recognized_days,
+                    "recognized_amount": recognized_amount,
+                    "recognized": recognized_flag,
+                })
             require(allocated == values["balance"],
                     f"{where} line {line_id}: periods do not equal balance")
             require(recognized == values["recognized"],
                     f"{where} line {line_id}: periods do not equal recognized total")
             require(values["balance"] == values["recognized"] + values["remaining"],
                     f"{where} line {line_id}: recognized plus remaining differs")
+            values["periods"] = observed_periods
             observed[line_id] = values
     else:
         require(xlsx._empty_list(sheets["rows"], f"{where} rows"),  # noqa: SLF001
                 f"{where} rows must be empty")
         observed = {}
 
-    wanted = {
-        int(line_id): {
+    wanted = {}
+    for line_id, values in expected_rows.items():
+        expected = {
             key: (xlsx.decimal(value, f"expected {line_id} {key}")
                   if key in {"balance", "recognized", "remaining"} else value)
-            for key, value in values.items()
+            for key, value in values.items() if key != "periods"
         }
-        for line_id, values in expected_rows.items()
-    }
-    require(observed == wanted, f"{where} schedule rows mismatch")
+        expected["periods"] = [{
+            **period,
+            "amount": xlsx.decimal(
+                period["amount"], f"expected {line_id} period {position} amount",
+            ),
+            "recognized_amount": xlsx.decimal(
+                period["recognized_amount"],
+                f"expected {line_id} period {position} recognized amount",
+            ),
+        } for position, period in enumerate(values["periods"], start=1)]
+        wanted[int(line_id)] = expected
+    require(set(observed) == set(wanted), f"{where} schedule row coverage mismatch")
+    for line_id, expected in wanted.items():
+        require(observed[line_id]["periods"] == expected["periods"],
+                f"{where} line {line_id}: periods mismatch")
+        require({key: value for key, value in observed[line_id].items()
+                 if key != "periods"}
+                == {key: value for key, value in expected.items() if key != "periods"},
+                f"{where} schedule rows mismatch")
 
     if expected_exceptions:
         index, columns = _header(

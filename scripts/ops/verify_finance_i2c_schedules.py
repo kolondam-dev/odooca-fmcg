@@ -47,6 +47,19 @@ def _cutoff(value):
     return value if isinstance(value, date) else date.fromisoformat(str(value)[:10])
 
 
+def _independent_month_ranges(start, end):
+    """Yield inclusive calendar-month slices without production helpers."""
+    cursor = start
+    while cursor <= end:
+        if cursor.month == 12:
+            next_month = date(cursor.year + 1, 1, 1)
+        else:
+            next_month = date(cursor.year, cursor.month + 1, 1)
+        month_end = date.fromordinal(next_month.toordinal() - 1)
+        yield cursor, min(month_end, end)
+        cursor = next_month
+
+
 def independent_accrual(env, company, account, as_of):
     """Rebuild FIN37 without the production helper.
 
@@ -83,13 +96,37 @@ def independent_accrual(env, company, account, as_of):
             exceptions[line.id] = {**identity, "reason": "invalid_schedule_range"}
             continue
         total_days = (end - start).days + 1
-        elapsed = min(max((min(cutoff, end) - start).days + 1, 0), total_days)
-        recognized = round_amt(balance * elapsed / total_days)
+        periods = []
+        allocated = recognized = 0.0
+        month_ranges = list(_independent_month_ranges(start, end))
+        for position, (period_start, period_end) in enumerate(month_ranges):
+            days = (period_end - period_start).days + 1
+            if position == len(month_ranges) - 1:
+                amount = round_amt(balance - allocated)
+            else:
+                amount = round_amt(balance * days / total_days)
+            allocated = round_amt(allocated + amount)
+            recognized_days = min(
+                max((min(cutoff, period_end) - period_start).days + 1, 0),
+                days,
+            )
+            recognized_amount = round_amt(amount * recognized_days / days)
+            recognized = round_amt(recognized + recognized_amount)
+            periods.append({
+                "start": period_start.isoformat(),
+                "end": period_end.isoformat(),
+                "days": days,
+                "amount": amount,
+                "recognized_days": recognized_days,
+                "recognized_amount": recognized_amount,
+                "recognized": recognized_days == days,
+            })
         rows[line.id] = {
             **identity,
             "start_date": start.isoformat(),
             "end_date": end.isoformat(),
             "total_days": total_days,
+            "periods": periods,
             "recognized": recognized,
             "remaining": round_amt(balance - recognized),
         }
@@ -776,16 +813,15 @@ def build_schedule_fixture(env, suffix):
     """Posted schedule lines with and without OCA date metadata.
 
     The OCA ``account_invoice_start_end_dates`` module (pinned in ``oca.lock``)
-    adds ``start_date``/``end_date`` to ``account.move.line``. Three extra
+    adds ``start_date``/``end_date`` to ``account.move.line``. Four extra
     expense lines on an I2a fixture company cover the native cases:
 
     - July window 310000 over 2026-07-01..2026-07-31: 15 of 31 days elapsed at
       2026-07-15, so 150000 is recognised and 160000 remains;
     - a June window that closed before every cutoff: fully recognised;
+    - a 100001 cross-month window over 2026-07-20..2026-08-10: two monthly
+      periods, a partial July cutoff, and a final-period rounding remainder;
     - a posted line without dates: an exception for itself only.
-
-    Every fixture line sits inside a single calendar month on purpose, so the
-    production month buckets and the oracle's day-proration agree exactly.
     """
     company, accounts, journals, partner, scale, docs = i2a.build_i2a_fixture(
         env, suffix, 1,
@@ -825,6 +861,17 @@ def build_schedule_fixture(env, suffix):
             "debit": 0, "credit": 30_000 * scale,
         }),
     ])
+    cross_month = entry("SCHEDULE-CROSS-MONTH", "2026-07-01", [
+        (0, 0, {
+            "name": "Cross-month accrual", "account_id": accounts["expense"].id,
+            "debit": 100_001 * scale, "credit": 0,
+            "start_date": "2026-07-20", "end_date": "2026-08-10",
+        }),
+        (0, 0, {
+            "name": "Cross-month accrual", "account_id": accounts["cash"].id,
+            "debit": 0, "credit": 100_001 * scale,
+        }),
+    ])
     bare = entry("SCHEDULE-BARE", "2026-07-20", [
         (0, 0, {
             "name": "Metadata-less accrual", "account_id": accounts["expense"].id,
@@ -848,9 +895,11 @@ def build_schedule_fixture(env, suffix):
         "docs": docs,
         "july_move": july,
         "june_move": june,
+        "cross_month_move": cross_month,
         "bare_move": bare,
         "july_line": expense_line(july),
         "june_line": expense_line(june),
+        "cross_month_line": expense_line(cross_month),
         "bare_line": expense_line(bare),
     }
 
@@ -861,7 +910,7 @@ def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
     accounts = fixture["accounts"]
     scale = fixture["scale"]
     models = env(context=dict(env.context, allowed_company_ids=[company.id]))
-    for as_of in ("2026-07-15", "2026-07-31", "2026-08-31"):
+    for as_of in ("2026-07-15", "2026-07-25", "2026-07-31", "2026-08-31"):
         oracle = independent_accrual(env, company, accounts["expense"], as_of)
         snapshot = models["id.finance.accrual.schedule"]._snapshot(
             company.id, as_of, account_ids=[accounts["expense"].id],
@@ -888,9 +937,10 @@ def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
         exceptions = {row["line_id"]: row["reason"] for row in snapshot["exceptions"]}
         july_id = fixture["july_line"].id
         june_id = fixture["june_line"].id
+        cross_month_id = fixture["cross_month_line"].id
         bare_id = fixture["bare_line"].id
         require(
-            july_id in rows and june_id in rows,
+            july_id in rows and june_id in rows and cross_month_id in rows,
             f"FIN37 must allocate the metadata-bearing lines: rows={sorted(rows)} "
             f"exceptions={sorted(exceptions)}",
         )
@@ -901,6 +951,8 @@ def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
             "july_balance": rows[july_id]["balance"],
             "july_recognized": rows[july_id]["recognized_to_date"],
             "june_recognized": rows[june_id]["recognized_to_date"],
+            "cross_month_recognized": rows[cross_month_id]["recognized_to_date"],
+            "cross_month_periods": rows[cross_month_id]["periods"],
             "recognized_total": snapshot["recognized_total"],
             "exception_total": snapshot["exception_total"],
             "unexplained_difference": snapshot["unexplained_difference"],
@@ -916,6 +968,27 @@ def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
             rows[june_id]["recognized_to_date"] == 30_000 * scale,
             f"FIN37 must recognise a closed window in full: {rows[june_id]}",
         )
+        cross_periods = rows[cross_month_id]["periods"]
+        require(
+            [(period["start"], period["end"], period["days"], period["amount"])
+             for period in cross_periods] == [
+                ("2026-07-20", "2026-07-31", 12, 54_546 * scale),
+                ("2026-08-01", "2026-08-10", 10, 45_455 * scale),
+            ],
+            "FIN37 must split the cross-month schedule and put rounding drift "
+            f"in its final period: {cross_periods}",
+        )
+        expected_cross_recognized = {
+            "2026-07-15": 0,
+            "2026-07-25": 27_273 * scale,
+            "2026-07-31": 54_546 * scale,
+            "2026-08-31": 100_001 * scale,
+        }[as_of]
+        require(
+            rows[cross_month_id]["recognized_to_date"] == expected_cross_recognized,
+            "FIN37 cross-month partial recognition mismatch: "
+            f"{rows[cross_month_id]}",
+        )
         if as_of == "2026-07-15":
             require(
                 rows[july_id]["recognized_to_date"] == 150_000 * scale,
@@ -930,6 +1003,17 @@ def check_fin37_schedule(env, fixture, evidence, check_hard_coded=False):
             require(
                 bare_id not in exceptions,
                 "FIN37 must not include a line dated after the cutoff",
+            )
+        elif as_of == "2026-07-25":
+            require(
+                rows[july_id]["recognized_to_date"] == 250_000 * scale,
+                "FIN37 must prorate the July window at the partial cutoff: "
+                f"{rows[july_id]}",
+            )
+            require(
+                exceptions.get(bare_id) == MISSING_SCHEDULE,
+                "FIN37 must retain the in-scope metadata-less line as an exception: "
+                f"{exceptions}",
             )
         else:
             require(

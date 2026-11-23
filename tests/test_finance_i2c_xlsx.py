@@ -32,11 +32,18 @@ class I2CXlsxTest(unittest.TestCase):
         self.xlsx = Path(self.temp.name) / "i2c.xlsx"
 
     def accrual_sheets(self):
-        periods = [{
-            "start": "2026-07-01", "end": "2026-07-31", "days": 31,
-            "amount": 310, "recognized_days": 15, "recognized_amount": 150,
-            "recognized": False,
-        }]
+        periods = [
+            {
+                "start": "2026-07-20", "end": "2026-07-31", "days": 12,
+                "amount": 54545, "recognized_days": 6,
+                "recognized_amount": 27273, "recognized": False,
+            },
+            {
+                "start": "2026-08-01", "end": "2026-08-10", "days": 10,
+                "amount": 45455, "recognized_days": 0,
+                "recognized_amount": 0, "recognized": False,
+            },
+        ]
         return [
             ("Summary", [{"A": "Finance report export"}]),
             ("rows", [
@@ -44,9 +51,9 @@ class I2CXlsxTest(unittest.TestCase):
                  "D": "partner_id", "E": "balance", "F": "start_date",
                  "G": "end_date", "H": "total_days", "I": "recognized_to_date",
                  "J": "remaining", "K": "__nested"},
-                {"A": 11, "B": 21, "C": 31, "D": 7, "E": 310,
-                 "F": "2026-07-01", "G": "2026-07-31", "H": 31,
-                 "I": 150, "J": 160, "K": json.dumps({"periods": periods})},
+                {"A": 11, "B": 21, "C": 31, "D": 7, "E": 100000,
+                 "F": "2026-07-20", "G": "2026-08-10", "H": 22,
+                 "I": 27273, "J": 72727, "K": json.dumps({"periods": periods})},
             ]),
             ("exceptions", [
                 {"A": "line_id", "B": "move_id", "C": "account_id",
@@ -60,13 +67,21 @@ class I2CXlsxTest(unittest.TestCase):
         return oracle.verify_accrual_schedule(
             self.xlsx.read_bytes(),
             {11: {"move_id": 21, "account_id": 31, "partner_id": 7,
-                  "balance": 310, "start_date": "2026-07-01",
-                  "end_date": "2026-07-31", "total_days": 31,
-                  "recognized": 150, "remaining": 160}},
+                   "balance": 100000, "start_date": "2026-07-20",
+                   "end_date": "2026-08-10", "total_days": 22,
+                   "recognized": 27273, "remaining": 72727,
+                   "periods": [
+                       {"start": "2026-07-20", "end": "2026-07-31", "days": 12,
+                        "amount": 54545, "recognized_days": 6,
+                        "recognized_amount": 27273, "recognized": False},
+                       {"start": "2026-08-01", "end": "2026-08-10", "days": 10,
+                        "amount": 45455, "recognized_days": 0,
+                        "recognized_amount": 0, "recognized": False},
+                   ]}},
             {12: {"move_id": 22, "account_id": 31, "partner_id": 0,
                   "balance": 40, "reason": "missing_schedule_metadata"}},
-            {"control_total": 350, "recognized_total": 150,
-             "remaining_total": 160, "exception_total": 40},
+            {"control_total": 100040, "recognized_total": 27273,
+             "remaining_total": 72727, "exception_total": 40},
         )
 
     def test_accrual_matches(self):
@@ -76,12 +91,12 @@ class I2CXlsxTest(unittest.TestCase):
     def test_accrual_consistent_row_offset_rejected(self):
         sheets = self.accrual_sheets()
         row = sheets[1][1][1]
-        row.update({"E": 311, "I": 151, "J": 160})
+        row.update({"E": 100001, "I": 27274, "J": 72727})
         periods = json.loads(row["K"])
-        periods["periods"][0].update({"amount": 311, "recognized_amount": 151})
+        periods["periods"][0].update({"amount": 54546, "recognized_amount": 27274})
         row["K"] = json.dumps(periods)
         write_workbook(self.xlsx, sheets)
-        with self.assertRaisesRegex(ValueError, "schedule rows mismatch"):
+        with self.assertRaisesRegex(ValueError, "periods mismatch"):
             self.verify_accrual()
 
     def test_accrual_period_mutation_rejected(self):
@@ -92,6 +107,33 @@ class I2CXlsxTest(unittest.TestCase):
         row["K"] = json.dumps(periods)
         write_workbook(self.xlsx, sheets)
         with self.assertRaisesRegex(ValueError, "periods do not equal recognized"):
+            self.verify_accrual()
+
+    def test_accrual_period_dates_and_days_mutation_rejected(self):
+        sheets = self.accrual_sheets()
+        row = sheets[1][1][1]
+        periods = json.loads(row["K"])
+        periods["periods"][0].update({
+            "start": "2099-01-01", "end": "2099-12-31", "days": 999,
+            "recognized_days": 999, "recognized": True,
+        })
+        row["K"] = json.dumps(periods)
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "periods mismatch"):
+            self.verify_accrual()
+
+    def test_accrual_period_redistribution_with_same_totals_rejected(self):
+        sheets = self.accrual_sheets()
+        row = sheets[1][1][1]
+        periods = json.loads(row["K"])
+        periods["periods"][0].update({"amount": 1, "recognized_amount": 1})
+        periods["periods"][1].update({
+            "amount": 99999, "recognized_days": 0,
+            "recognized_amount": 27272,
+        })
+        row["K"] = json.dumps(periods)
+        write_workbook(self.xlsx, sheets)
+        with self.assertRaisesRegex(ValueError, "periods mismatch"):
             self.verify_accrual()
 
     def test_accrual_exception_reason_rejected(self):

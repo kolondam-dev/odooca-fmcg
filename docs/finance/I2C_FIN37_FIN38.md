@@ -91,17 +91,21 @@ membandingkannya dengan AML/partial-reconcile yang dibaca langsung oleh
 `verify_finance_i2c_schedules.py`.
 
 - FIN37 mematok coverage dan identitas line/exception, balance, tanggal jadwal,
-  hari, recognized/remaining, alasan exception, serta menjumlah ulang period
-  JSON dan seluruh total dari baris;
+  hari, recognized/remaining, alasan exception, serta setiap period JSON
+  (urutan/rentang, hari inklusif, recognized days/flag, amount dan recognized
+  amount) terhadap konstruksi AML independen; penjumlahan total saja tidak cukup;
 - FIN38 mematok coverage dan nilai unrealized/realized/unposted, total per mata
   uang, exchange-move evidence, dan baris GL per currency tanpa netting silang;
 - nominal XLSX wajib berupa numeric cell dan nominal nested JSON wajib berupa
-  JSON number. Sebelas counterexample offline menolak offset yang tetap
-  seimbang, mutasi period, extra line, nominal teks, pergantian exchange move,
-  dan netting dua mata uang.
+  JSON number. Tiga belas kasus offline mencakup baseline dan menolak offset
+  yang tetap seimbang, mutasi tanggal/hari period, redistribusi nominal period
+  dengan total tetap, extra line, nominal teks, pergantian exchange move, dan
+  netting dua mata uang.
 
-[BU] Render workbook asli dan tie-out native slice ini menunggu Finance I0 pada
-exact SHA PR. Bukti fixture tetap bukan workbook live atau sign-off Controller.
+[F] Run `45094187557` pada head `7a1ade9` merender workbook asli, tetapi review
+menemukan celah comparator period FIN37. [BU] Fixture lintas bulan dan comparator
+per-period perbaikan menunggu Finance I0 pada exact SHA baru. Bukti fixture tetap
+bukan workbook live atau sign-off Controller.
 
 **Unit (tanpa database):** `tests/test_finance_i2c_schedules.py`, 20 tes —
 penolakan metadata hilang/terbalik, pengakuan penuh/parsial/sebelum mulai,
@@ -115,9 +119,10 @@ membaca AML posted, `account.partial.reconcile`, dan akun exchange perusahaan
 tanpa memanggil helper produksi. Fixture FX membentuk faktur 100 USD @15.000 dan
 pembayaran 100 USD @16.000 yang direkonsiliasi penuh, sehingga Odoo memposting
 exchange gain −100.000. Sejak pin metadata (2026-11-12) skrip juga membangun
-tiga baris beban ber-jadwal untuk FIN37 (jendela Juli, jendela Juni, dan baris
-tanpa metadata) dan membuktikan alokasi 150.000/160.000 pada 15 Juli secara
-native; lihat "Pin metadata OCA".
+baris beban ber-jadwal FIN37 (jendela Juli, jendela Juni, lintas bulan 20
+Juli–10 Agustus dengan cutoff parsial dan remainder pembulatan, serta baris
+tanpa metadata) dan membuktikan alokasi lewat wizard nyata; lihat "Pin metadata
+OCA".
 
 Counterexample wajib: tamper seimbang ditolak FIN37 lalu rollback memulihkan
 baseline; Finance Reader ditolak untuk perusahaan/jurnal/partner lain; Sales
@@ -149,9 +154,8 @@ ditolak pada kedua model.
 - [F] Counterexample constraint modul: baris dengan satu tanggal saja atau
   `start > end` ditolak `ValidationError` sebelum masuk ledger (savepoint per
   percobaan) — sama dengan ekspektasi test modul itu sendiri.
-- [F] Aritmetika produksi (bucket bulanan) dan oracle skrip (prorata harian)
-  dibuktikan identik pada ketiga as-of untuk fixture ini (semua jendela berada
-  dalam satu bulan kalender).
+- [BU] Bukti exact-SHA baru untuk fixture lintas bulan (dua bucket, cutoff
+  parsial, dan remainder pembulatan pada period terakhir) menunggu Finance I0.
 - [BU] Tetap terbuka: FIN38 pada data exchange non-sintetis; bukti XLSX/PDF
   dan negatif ACL sesuai `ACCEPTANCE_CONTRACT.md` §E; sign-off Finance
   Controller; `REPORT_CATALOG.csv` `FIN37`/`FIN38` tetap `BELUM_DITERIMA`.
