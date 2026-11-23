@@ -1,7 +1,35 @@
-## 2026-11-23 — Backfill offer karton vendor existing (codex)
+## 2026-11-23 — PR #190 backfill offer karton vendor existing (codex)
 
-- [F] Tambah mode dry-run dan apply dengan company eksplisit. Memvalidasi SKU, principal, serta rasio karton. Apply membuat hanya offer vendor yang belum ada.
-- [BU] Verifikasi native menunggu CI. Belum dijalankan pada demo existing.
+- [F] Mode dry-run dan apply memvalidasi SKU, principal serta rasio karton. Apply membuat hanya offer baru pada company yang dipilih.
+- [F] Entrypoint memakai environment dari recordset company yang sudah di-scope. CI shell memakai salinan database untuk memeriksa dry-run, apply, rollback dan replay.
+- [BU] Smoke shell perlu verifikasi ulang pada SHA integrasi. Belum dijalankan pada demo existing.
+
+## 2026-11-23 — [BU] PR #185 HOLD: tutup P2 period JSON FIN37 (opencode)
+
+- [F] Review supervisor pada exact head `7a1ade9` memberi HOLD/TAMBAH: mutasi tanggal/hari period dan redistribusi nominal period dengan total tetap masih mendapat PASS; finding berada pada verifier, bukan bukti workbook produksi salah.
+- [F] Oracle AML independen kini membangun bucket bulanan lengkap; comparator mematok coverage/urutan, rentang, hari inklusif, `recognized_days`/flag, `amount`, dan `recognized_amount` per period.
+- [F] Dua reproduksi reviewer kini ditolak dengan `periods mismatch`; fixture native baru melintasi 20 Juli–10 Agustus, cutoff parsial 25 Juli, dan remainder pembulatan pada period terakhir. 75 unit I2c, Ruff, 14 manifest, dan diff-check PASS lokal.
+- [BU] Finance I0 exact-SHA setelah sinkronisasi `main` masih menunggu CI; PR tetap HOLD, belum merge/deploy. Katalog tetap 58/58 `BELUM_DITERIMA`; bukti live dan sign-off tetap terbuka.
+
+## 2026-11-23 — [BU] PR #185 Finance I0: oracle FIN38 merekonstruksi residual penuh (opencode)
+
+- [F] Exact-SHA `b850939` gagal pada `FIN38 unrealized_rows coverage mismatch`: workbook 9 baris, oracle 15. FIN37 XLSX sudah lolos; suite non-finance hijau.
+- [F] Penyebab: oracle hanya menerapkan partial bila kedua leg berada di basis mata uang asing, sehingga pembayaran/write-off/functional counterpart di luar basis tidak mengurangi residual, dan baris over-reconciled tidak dikecualikan.
+- [F] Oracle kini mengambil partial dari seluruh baris moneter posted <= cutoff, merekonstruksi residual dari partial bertanggal, mengecualikan baris over-reconciled, dan mengklasifikasikan realized/unposted secara independen (functional counterpart, write-off, reversal mirror, rate per leg).
+- [F] 73 unit I2c PASS, Ruff PASS, `git diff --check` PASS. [F] Exact-SHA `6557b819a5e2f86f174e55bb6a0523346ebac105`: 22 check sukses, 6 skipped, 0 gagal; `FINANCE_I2C_SCHEDULES=PASS` dengan 9 kasus FIN37 dan 2 kasus FIN38 XLSX vs oracle AML. Katalog tetap 58/58 `BELUM_DITERIMA`.
+
+## 2026-11-22 — [BU] PR #185 Finance I0: normalisasi presisi rate XLSX (opencode)
+
+- [F] Exact-SHA `61c34c9` gagal hanya pada Finance I0: FIN37 XLSX lolos sampai FIN38, lalu `unrealized_rows` berbeda saat membandingkan rate float. Install/init/seed/upgrade dan gate lain hijau.
+- [A] Odoo dapat menghasilkan rate IEEE seperti `15999.999999999998`, sementara xlsxwriter menyimpan presisi efektif Excel sebagai `16000`. Comparator kini memberi toleransi relatif `1e-12` **hanya** untuk `rate_as_of`; nominal residual/revalued/difference tetap exact.
+- [F] Dua unit baru mengunci representasi rate setara diterima dan beda material ditolak (11 counterexample XLSX; 73 unit I2c lokal). [BU] Finance I0 exact-SHA perbaikan menunggu rerun.
+
+## 2026-11-22 — [BU] I2c-a XLSX tie-out FIN37/FIN38 pada fixture disposable (opencode)
+
+- [F] PR #178 di-merge pemilik: head `4993a403e39edc45814229b1245d15e05ce2a505`, merge `cc9ecb6c166971d17fa07b93f6641783e1b29688`; review PASS/CUKUP, 22 check sukses + 6 skipped sesuai impact plan. Penerimaan live FIN05–FIN09 tetap HOLD.
+- [F] Slice berikutnya menambahkan comparator offline FIN37/FIN38 dan wiring ekspor wizard nyata ke Finance I0: line/exception accrual + period JSON, realized/unrealized/unposted FX, exchange move evidence, dan GL per currency tanpa netting silang.
+- [F] 9 counterexample XLSX baru; 71 unit I2c PASS lokal. FIN36/55/56 tetap terpisah karena blocker aset, kontrak bertanggal, dan payroll/statutory.
+- [BU] Render/tie-out workbook native menunggu exact-SHA CI; katalog tetap 58/58 `BELUM_DITERIMA`, tanpa perubahan data/deploy.
 
 ## 2026-11-23 — UoM pembelian vendor FMCG (codex)
 
