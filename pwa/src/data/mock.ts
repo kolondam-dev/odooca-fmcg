@@ -278,6 +278,12 @@ export class MockProvider implements FieldProvider {
                     overdue_total: 1250000,
                     oldest_due: dayOffset(-34),
                     truncated: false,
+                    collect_today: {
+                        window_days: 7,
+                        count: 3,
+                        total: 1550000,
+                        overdue_count: 2,
+                    },
                     invoices: [
                         {
                             reference: "INV/2026/0412",

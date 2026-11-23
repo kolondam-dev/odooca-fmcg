@@ -289,6 +289,19 @@ export const SnapshotSchema = z
                     overdue_total: z.number(),
                     oldest_due: z.string().nullable(),
                     truncated: z.boolean(),
+                    /**
+                     * BE-20a: "wajib ditagih hari ini" dihitung server dari SEMUA faktur terbuka (jatuh tempo
+                     * kurang dari `window_days` dari hari bisnis; terlambat dan hari ini ikut), tidak bergantung
+                     * pada `invoices` yang dipotong. Tidak ada = server lama (klien menghitung dari daftar).
+                     */
+                    collect_today: z
+                        .object({
+                            window_days: z.number().int().positive(),
+                            count: z.number().int().nonnegative(),
+                            total: z.number(),
+                            overdue_count: z.number().int().nonnegative(),
+                        })
+                        .optional(),
                     invoices: z.array(
                         z.object({
                             reference: z.string(),
