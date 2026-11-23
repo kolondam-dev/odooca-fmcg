@@ -1,3 +1,9 @@
+## 2026-11-23 — [F] BE-20a: agregat "wajib ditagih hari ini" dari server (claude-design)
+
+- [F] `_outlet_receivables` menambah `collect_today` {window_days 7, count, total, overdue_count} dari SEMUA faktur terbuka (commercial partner, perusahaan sesi, jatuh tempo < hari bisnis WITA + 7); outlet = `outlet_ids` penugasan hari itu (PJP). Volatil, di luar digest. 3 tes Odoo baru (+6/+7, cap daftar tidak membatasi agregat, parent/saudara, WITA) [BU: hanya CI, tidak ada Odoo di sandbox].
+- [F] PWA: kontrak `collect_today` opsional, `mustCollectToday` memakai agregat server (lengkap) dan tetap fallback "Minimal" untuk server lama; e2e dua varian, `openapi.json` diekspor.
+- [BU] BE-20b (penugasan penagihan/kolektor/surat jalan penagihan) dan BE-20c (`collection.receipt.submit`, `collection.settlement.submit`) butuh keputusan pemilik: siapa penugas, apakah faktur ditugaskan per faktur atau per outlet, otoritas terima uang.
+
 ## 2026-11-23 — [F] FE-8 baca: tutup P2 PR #189, total Wajib ditagih dari daftar terpotong (claude-design)
 
 - [F] `mustCollectToday` kini mengembalikan `complete`; daftar server terpotong (50 faktur) dan faktur termuat terakhir masih di jendela 7 hari ⇒ angka hanya minimum. VisitPanel menampilkan "Minimal Rp … · N+ faktur (daftar terpotong)" atau "Belum diketahui (daftar terpotong)" plus catatan; "Tidak ada" hanya bila lengkap. Piutang berjalan/jatuh tempo tetap agregat server.

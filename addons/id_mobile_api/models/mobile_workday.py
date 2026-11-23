@@ -1,7 +1,7 @@
 import hashlib
 import json
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from odoo import api, fields, models, _
@@ -210,6 +210,9 @@ class MobileWorkday(models.Model):
 
     # Batas faktur terbuka per outlet pada snapshot (urut jatuh tempo tertua); sisanya hanya masuk total.
     RECEIVABLE_INVOICE_CAP = 50
+    # BE-20a: aturan pemilik "wajib ditagih hari ini" = jatuh tempo KURANG dari 7 hari dari hari bisnis
+    # (terlambat dan hari ini ikut; tanpa tanggal jatuh tempo tidak ikut).
+    COLLECT_WINDOW_DAYS = 7
 
     @api.model
     def _outlet_receivables(self, partners, company, day):
@@ -238,7 +241,17 @@ class MobileWorkday(models.Model):
             if not rows:
                 continue
             overdue = [m for m in rows if m.invoice_date_due and m.invoice_date_due < day]
+            window_end = day + timedelta(days=self.COLLECT_WINDOW_DAYS)
+            collect = [m for m in rows if m.invoice_date_due and m.invoice_date_due < window_end]
             result[str(outlet_id)] = {
+                # Agregat dari SEMUA faktur terbuka (bukan dari daftar yang dipotong). Outlet ada di
+                # `outlet_ids` penugasan hari ini = PJP hari itu milik pengguna sesi.
+                "collect_today": {
+                    "window_days": self.COLLECT_WINDOW_DAYS,
+                    "count": len(collect),
+                    "total": round(sum(m.amount_residual_signed for m in collect), 2),
+                    "overdue_count": sum(1 for m in collect if m.invoice_date_due < day),
+                },
                 "outstanding_total": round(sum(m.amount_residual_signed for m in rows), 2),
                 "open_count": len(rows),
                 "overdue_count": len(overdue),

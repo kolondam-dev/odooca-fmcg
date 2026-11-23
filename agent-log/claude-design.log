@@ -464,3 +464,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-23T13:51:49+07:00] [INFO] FE-8 baca: P2 total terpotong
 - mustCollectToday complete; label Minimal saat daftar terpotong; tes unit+e2e
 - Task managed by claude-design agent at 2026-11-23T13:51:49+07:00
+
+[2026-11-23T16:26:26+07:00] [INFO] BE-20a collect_today
+- agregat server wajib ditagih; PWA memakai; tes Odoo+unit+e2e
+- Task managed by claude-design agent at 2026-11-23T16:26:26+07:00
