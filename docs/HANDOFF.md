@@ -10,6 +10,13 @@
 - [F] Entrypoint memakai environment dari recordset company yang sudah di-scope. CI shell memakai salinan database untuk memeriksa dry-run, apply, rollback dan replay.
 - [BU] Smoke shell perlu verifikasi ulang pada SHA integrasi. Belum dijalankan pada demo existing.
 
+## 2026-11-23 — [BU] FIN36 prasyarat OCA aset pada fixture disposable (opencode)
+
+- [F] PR #185 merged ke `main` sebagai `23dc930` (head `0485f96`); review P2 FIN37 ditutup dengan dampak test CUKUP, CI 22 SUCCESS/6 SKIPPED, upgrade zero drift PASS. Katalog tetap 58/58 `BELUM_DITERIMA`; live sign-off tetap HOLD.
+- [F] `oca.lock` sudah memuat `account-financial-tools` `c23fd099` dan `reporting-engine` `b9e8c6c`; manifest upstream `account_asset_management` AGPL-3 mengecualikan `account_asset` dan membutuhkan `report_xlsx_helper` AGPL-3. Tidak ditambahkan ke `INIT_MODULES` atau dependensi custom.
+- [F] Profil `assets` di Finance I0 dipisah ke DB disposable dengan install/upgrade dan skrip verifikasi board 100.001, remainder, depresiasi posted→AML dua akun, serta rollback fixture. Mutasi offline menolak jurnal draft, baris GL ekstra, company/tanggal salah, dan periode duplikat/tertukar; [BU] runtime OCA exact-SHA belum diuji.
+- [F] Audit upstream: `type=create` bukan bukti jurnal akuisisi bila `move_id` kosong; `move_check` hanya menunjukkan ada `move_id`. FIN36 register/additions/disposal/ACL/export dan keputusan legal AGPL-3 serta coverage/mapping Controller tetap BLOCKED.
+
 ## 2026-11-23 — [BU] PR #185 HOLD: tutup P2 period JSON FIN37 (opencode)
 
 - [F] Review supervisor pada exact head `7a1ade9` memberi HOLD/TAMBAH: mutasi tanggal/hari period dan redistribusi nominal period dengan total tetap masih mendapat PASS; finding berada pada verifier, bukan bukti workbook produksi salah.
