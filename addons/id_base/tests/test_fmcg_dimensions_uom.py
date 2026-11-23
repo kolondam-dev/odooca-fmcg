@@ -74,7 +74,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
         self.assertEqual(product.uom_id, self.uom_unit)
 
 
-    def _run_products_csv_loader(self, rows):
+    def _run_products_csv_loader(self, rows, *, backfill=None):
         """Execute the real load_products() function against a temporary CSV in this Odoo test DB."""
         repo_root = next(
             parent for parent in pathlib.Path(__file__).resolve().parents
@@ -83,7 +83,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
         loader_path = repo_root / "scripts" / "load_fmcg_seed.py"
         source = loader_path.read_text(encoding="utf-8")
         # Import the script's definitions without invoking load_all() (which commits the test cursor).
-        source = source.rsplit("\nload_all()", 1)[0]
+        source = source.rsplit('\nif "FMCG_VENDOR_CARTON_MODE"', 1)[0]
         with tempfile.TemporaryDirectory(prefix="fmcg-seed-uom-") as tmp:
             seed_dir = pathlib.Path(tmp)
             csv_path = seed_dir / "products_150.csv"
@@ -105,7 +105,10 @@ class TestFMCGDimensionsUoM(TransactionCase):
             namespace = {"env": self.env, "__file__": str(loader_path)}
             exec(compile(source, str(loader_path), "exec"), namespace)
             namespace["seed_dir"] = seed_dir
-            namespace["load_products"]()
+            if backfill is None:
+                namespace["load_products"]()
+                return
+            return namespace["backfill_vendor_cartons"](self.env, apply=backfill)
 
     def test_real_seed_loader_replay_preserves_stock_uom_and_packaging(self):
         product = self.env["product.template"].create({
@@ -216,6 +219,40 @@ class TestFMCGDimensionsUoM(TransactionCase):
                 self.assertEqual(local.product_uom_id, product.fmcg_carton_uom_id)
             else:
                 self.assertEqual(offers, offer)
+
+    def test_existing_database_vendor_carton_backfill(self):
+        vendor = self.env["res.partner"].create({"name": "Backfill Vendor"})
+        self.principal.partner_id = vendor
+        row = {
+            "default_code": "TEST-BACKFILL",
+            "name": "Initially Seeded Product",
+            "principal_code": self.principal.code,
+            "brand_code": self.brand.code,
+            "base_uom": "Pcs",
+            "inner_qty": "10",
+            "carton_qty": "120",
+            "cost_price": "1250",
+        }
+        self._run_products_csv_loader([row])
+        product = self.env["product.template"].search([("default_code", "=", row["default_code"])])
+        backfill_row = dict(row, name="Must Not Be Renamed", purchase_uom="Karton")
+
+        with self.assertRaisesRegex(ValueError, "Carton conversion mismatch"):
+            self._run_products_csv_loader([dict(backfill_row, carton_qty="121")], backfill=True)
+
+        dry_run = self._run_products_csv_loader([backfill_row], backfill=False)
+        self.assertEqual(len(dry_run[0]), 1)
+        self.assertFalse(product.seller_ids)
+        self.assertEqual(self._run_products_csv_loader([backfill_row], backfill=True), dry_run)
+        self.assertEqual(product.name, row["name"])
+        self.assertEqual(len(product.seller_ids), 1)
+        self.assertEqual(product.seller_ids.product_uom_id, product.fmcg_carton_uom_id)
+        self.assertEqual(product.seller_ids.price, 150000)
+        self.assertEqual(
+            self._run_products_csv_loader([backfill_row], backfill=True),
+            ([], [row["default_code"]]),
+        )
+        self.assertEqual(len(product.seller_ids), 1)
 
     def test_real_seed_loader_rejects_noncanonical_uom_before_product_write(self):
         sachet_uom = self.env.ref("id_base.uom_sch")

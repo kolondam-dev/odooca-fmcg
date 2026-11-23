@@ -1,3 +1,9 @@
+## 2026-11-23 — PR #190 backfill offer karton vendor existing (codex)
+
+- [F] Mode dry-run dan apply memvalidasi SKU, principal serta rasio karton. Apply membuat hanya offer baru pada company yang dipilih.
+- [F] Entrypoint memakai environment dari recordset company yang sudah di-scope. CI shell memakai salinan database untuk memeriksa dry-run, apply, rollback dan replay.
+- [BU] Smoke shell perlu verifikasi ulang pada SHA integrasi. Belum dijalankan pada demo existing.
+
 ## 2026-11-23 — [BU] PR #185 HOLD: tutup P2 period JSON FIN37 (opencode)
 
 - [F] Review supervisor pada exact head `7a1ade9` memberi HOLD/TAMBAH: mutasi tanggal/hari period dan redistribusi nominal period dengan total tetap masih mendapat PASS; finding berada pada verifier, bukan bukti workbook produksi salah.
