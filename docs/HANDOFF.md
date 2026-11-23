@@ -77,6 +77,12 @@
 - [BU] Golden chain memakai fixture Odoo baru. Acceptance seed Agustus masih terbuka untuk ketersediaan harian, diskon bertingkat dan footer, promo/pricelist dengan eligibility, approval historis, PJP dan ownership, packlist/trip/driver/FEFO/ED, matriks pajak buyer, dan workflow biaya.
 **Berikutnya:**
 - Verifikasi ulang CI integrasi F4 pada SHA baru. Gunakan snapshot dan bukti sumber Agustus untuk menutup acceptance historis yang belum teruji.
+## 2026-11-23 — UoM pembelian vendor FMCG (codex)
+
+- [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.
+- [F] Loader PO kanonik menetapkan UoM inventaris secara eksplisit agar kuantitas dan harga historis berbasis unit tetap sepadan.
+- [BU] Tes Odoo untuk replay, PO karton, receipt, dan data baris vendor bill menunggu CI. Aktivasi master pada basis data yang sudah memakai marker seed tetap terpisah.
+
 ## 2026-11-23 — [F] BE-7: piutang berjalan dan daftar faktur terbuka pada snapshot (claude-design)
 
 - `id_mobile_api/models/mobile_workday.py`: blok baru top-level `outlet_receivables` = `{outlet_id: {outstanding_total, open_count, overdue_count, overdue_total, oldest_due, truncated, invoices[{reference, partner, invoice_date, due_date, total, balance, overdue}]}}`. Perimeter dan kriteria sama dengan `outlet_credit` (BE-19): commercial partner (parent) dalam perusahaan sesi, `out_invoice` terposting belum lunas; faktur outlet saudara ikut dan ditandai lewat `partner`. Total dari SEMUA faktur terbuka; daftar dipotong 50 (jatuh tempo tertua dulu) dengan `truncated`. `{}` = tidak ada piutang, blok tidak ada = tidak diketahui. Nominal mata uang perusahaan (`*_signed`).

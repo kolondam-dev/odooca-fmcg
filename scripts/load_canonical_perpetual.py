@@ -2073,6 +2073,7 @@ class CanonicalPerpetualAdapter:
                     order_lines.append((0, 0, {
                         "product_id": pr.id,
                         "product_qty": qty_units,
+                        "product_uom_id": pr.uom_id.id,
                         "price_unit": unit_cost,
                         "name": f"{ldata.get('product_name')} (Lot: {ldata.get('lot_number')})",
                     }))

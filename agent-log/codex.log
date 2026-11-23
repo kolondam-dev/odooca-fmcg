@@ -617,3 +617,6 @@
 [2026-11-23T08:17:07+07:00] [INFO] F4 Paket A: sinkron dengan BE-7 #187
 - Main c58ec3e dan riwayat handoff kedua cabang dipertahankan.
 - Task managed by codex agent at 2026-11-23T08:17:07+07:00
+[2026-11-23T07:44:32+07:00] [INFO] UoM pembelian vendor FMCG
+- Seed offer native per SKU dan vendor, pertahankan basis UoM PO historis, tambah kontrak PO-receipt-bill pada CI.
+- Task managed by codex agent at 2026-11-23T07:44:32+07:00
