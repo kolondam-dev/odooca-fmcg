@@ -41,6 +41,7 @@ for number in (1, 2):
     })
     product.configure_fmcg_packaging_uoms(env.ref("id_base.uom_pcs"), 10, 120)
 
+env.flush_all()
 env.cr.execute("""
     CREATE TABLE ci_backfill_snapshot (name text PRIMARY KEY, digest text);
     CREATE FUNCTION ci_backfill_digest(table_name text) RETURNS text LANGUAGE plpgsql AS $$
@@ -79,7 +80,8 @@ for offer in offers:
     assert offer.product_uom_id == offer.product_tmpl_id.fmcg_carton_uom_id
     assert offer.price == 150000 and offer.delay == 12
 env.cr.execute("SELECT name FROM ci_backfill_snapshot WHERE digest <> ci_backfill_digest(name)")
-assert not env.cr.fetchall(), "Backfill changed pre-existing master or transaction rows"
+changed = env.cr.fetchall()
+assert not changed, f"Backfill changed pre-existing master or transaction rows: {changed}"
 PY
 }
 
