@@ -19,7 +19,7 @@ Prioritas: **P0** blok bisnis, **P1** nilai tinggi dan bisa jalan sekarang, **P2
 | FE-5  | Saran order di POS                                                                                            | P1        | Sebagian (BE-6) |
 | FE-6  | Penyederhanaan layar Absen/Check-in                                                                           | P1        | Tidak           |
 | FE-7  | Layar Outlet_kosong aktif                                                                                     | P0        | Ya (BE-5)       |
-| FE-8  | Sisa Kunjungan_hub (faktur, tagihan, "Mulai penagihan")                                                       | P1        | Ya (BE-7)       |
+| FE-8  | Sisa Kunjungan_hub (faktur, tagihan, "Mulai penagihan")                                                       | P1        | Ya (BE-7)       | **Bagian baca selesai (PR FE-8): kartu Tagihan, daftar faktur, "Wajib ditagih hari ini" (K37); "Mulai penagihan" menunggu BE-20.**
 | FE-9  | Tata letak lama di layar persetujuan/koreksi (K32)                                                            | P2        | Tidak           |
 | FE-10 | Peninjauan tablet dan aksesibilitas                                                                           | P2        | Tidak           |
 
@@ -329,3 +329,4 @@ Catatan desain: karena batas berbeda per principal dan order dapat memuat bebera
 | BE-19 | `commercial.credit_mode` (ikut digest) dan blok `outlet_credit` jumlah/total/tertua faktur jatuh tempo per outlet (di luar digest) **Selesai (PR BE-19)** | P1        |
 | FE-12 | Mode kredit `strict`: PWA memblokir tombol Kirim order untuk outlet dengan faktur jatuh tempo, dengan penjelasan dan jalur penagihan **Selesai (PR FE-12); jalur penagihan menunggu BE-7/FE-8** | P1        |
 | BE-17 | (diperbarui) kategori `new_outlet` berantai Supervisor → Branch Manager; NOO dapat disubmit tanpa order                                             | P1        |
+| BE-20 | Modul "AR collection assignment" (surat jalan penagihan): penugasan penagihan per salesman/outlet/hari dari AR terbuka, jadwal/kolektor, command `collection.receipt.submit` dan `collection.settlement.submit`; menggantikan hitungan klien K37 | P1        |

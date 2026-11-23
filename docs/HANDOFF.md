@@ -37,6 +37,14 @@
 - [F] Loader PO kanonik menetapkan UoM inventaris secara eksplisit agar kuantitas dan harga historis berbasis unit tetap sepadan.
 - [BU] Tes Odoo untuk replay, PO karton, receipt, dan data baris vendor bill menunggu CI. Aktivasi master pada basis data yang sudah memakai marker seed tetap terpisah.
 
+## 2026-11-23 — [F] FE-8 (bagian baca): kartu Tagihan, daftar faktur, Wajib ditagih hari ini (claude-design)
+
+- `domain/receivables.ts`: `daysUntilDue`, `dueLabel`, `mustCollectToday` (jatuh tempo < 7 hari dari hari bisnis, termasuk yang terlambat; aturan pemilik 2026-11-23), `outstandingFor`. `outlet-card.ts`: `creditRoom` dan `creditExceeded` kini mengikuti `credit_mode` (strict tidak memeriksa nominal) dan limit 0 = tanpa pemeriksaan (memperbaiki OrderScreen yang menganggap limit 0 selalu melebihi).
+- VisitPanel: kartu "Tagihan" (menggantikan "Tagihan jatuh tempo / Segera tersedia") berisi status (Wajib ditagih hari ini / Piutang berjalan / Tidak ada tagihan / Belum tersedia), piutang berjalan, sudah jatuh tempo, wajib ditagih hari ini, daftar faktur (8 teratas, label jatuh tempo, nominal sisa), callout strict/limit. Tanpa blok `outlet_receivables` memakai perilaku lama (`ar_outstanding`).
+- Tidak ada tombol "Mulai penagihan" dan tidak ada pencatatan: command `collection.*` backend masih kosong. Modul backend "AR collection assignment" (surat jalan penagihan) dicatat sebagai BE-20.
+- Data demo relatif terhadap hari bisnis (Minimarket Pelangi 4 faktur); `outlet-daftar.spec` diperbarui (server lama tanpa blok piutang).
+- Tes: vitest `receivables.test.ts` (8), e2e `receivables.spec.ts` (phone + tablet). Utang: K37 (penafsiran "< 7 hari" termasuk terlambat perlu konfirmasi pemilik).
+
 ## 2026-11-23 — [F] BE-7: piutang berjalan dan daftar faktur terbuka pada snapshot (claude-design)
 
 - `id_mobile_api/models/mobile_workday.py`: blok baru top-level `outlet_receivables` = `{outlet_id: {outstanding_total, open_count, overdue_count, overdue_total, oldest_due, truncated, invoices[{reference, partner, invoice_date, due_date, total, balance, overdue}]}}`. Perimeter dan kriteria sama dengan `outlet_credit` (BE-19): commercial partner (parent) dalam perusahaan sesi, `out_invoice` terposting belum lunas; faktur outlet saudara ikut dan ditandai lewat `partner`. Total dari SEMUA faktur terbuka; daftar dipotong 50 (jatuh tempo tertua dulu) dengan `truncated`. `{}` = tidak ada piutang, blok tidak ada = tidak diketahui. Nominal mata uang perusahaan (`*_signed`).

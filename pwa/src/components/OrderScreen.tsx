@@ -10,6 +10,8 @@ import {
     ORDER_V2_UNSUPPORTED,
 } from "../domain/order-pricing";
 import { quoteV2 } from "../domain/order-discount";
+import { creditRoom } from "../domain/outlet-card";
+import { outstandingFor } from "../domain/receivables";
 import { strictCreditBlock, strictCreditMessage } from "../domain/credit-block";
 import {
     approvalPreviewText,
@@ -440,11 +442,14 @@ export function OrderScreen({
             return next;
         });
     }
-    const creditLimit = outlet?.commercial?.credit_limit ?? null;
-    const creditLeft =
-        creditLimit === null
-            ? null
-            : creditLimit - (outlet?.commercial?.ar_outstanding ?? 0);
+    const creditLeft = creditRoom(
+        outlet?.commercial,
+        outstandingFor(
+            outlet?.id ?? "",
+            snapshot.outlet_receivables,
+            outlet?.commercial?.ar_outstanding,
+        ),
+    );
     const overCredit = creditLeft !== null && totals.total > creditLeft;
     // FE-12: mode strict + faktur jatuh tempo → order baru diblokir (server tetap otoritatif).
     const strictBlock = strictCreditBlock(outlet, snapshot.outlet_credit);

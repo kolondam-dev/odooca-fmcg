@@ -1,5 +1,12 @@
 import { creditExceeded } from "../domain/outlet-card";
 import { strictCreditBlock, strictCreditMessage } from "../domain/credit-block";
+import {
+    daysUntilDue,
+    dueLabel,
+    mustCollectToday,
+    outstandingFor,
+} from "../domain/receivables";
+import { useBusinessDate } from "./useBusinessDate";
 import { VisitPhotoField } from "./VisitPhotoField";
 import { BiayaTokoScreen } from "./BiayaTokoScreen";
 import { CloseVisitScreen } from "./CloseVisitScreen";
@@ -330,7 +337,22 @@ export function VisitPanel({
     });
     const money = (value?: number | null) =>
         value != null ? idr.format(value) : "—";
-    const overCredit = creditExceeded(commercial);
+    const receivables = snapshot.outlet_receivables;
+    const receivable = receivables?.[outlet.id];
+    const today = useBusinessDate();
+    const collect = mustCollectToday(receivable, today);
+    const overCredit = creditExceeded(
+        commercial
+            ? {
+                  ...commercial,
+                  ar_outstanding: outstandingFor(
+                      outlet.id,
+                      receivables,
+                      commercial.ar_outstanding,
+                  ),
+              }
+            : commercial,
+    );
     const strictBlock = strictCreditBlock(outlet, snapshot.outlet_credit);
     const checkinBlocked =
         !info ||
@@ -550,14 +572,51 @@ export function VisitPanel({
             </Card>
             <Card>
                 <CardHead
-                    title="Tagihan jatuh tempo"
-                    status={{ tone: "neu", label: "Segera tersedia" }}
+                    title="Tagihan"
+                    status={
+                        receivables === undefined
+                            ? { tone: "neu", label: "Belum tersedia" }
+                            : collect.count
+                              ? {
+                                    tone: "warn",
+                                    label: "Wajib ditagih hari ini",
+                                }
+                              : receivable
+                                ? { tone: "info", label: "Piutang berjalan" }
+                                : { tone: "ok", label: "Tidak ada tagihan" }
+                    }
                 />
-                {commercial?.ar_outstanding ? (
+                {receivables === undefined && commercial?.ar_outstanding ? (
                     <KV
                         label="Piutang berjalan"
                         value={money(commercial.ar_outstanding)}
                     />
+                ) : null}
+                {receivable ? (
+                    <>
+                        <KV
+                            label="Piutang berjalan"
+                            value={money(receivable.outstanding_total)}
+                        />
+                        <KV
+                            label="Sudah jatuh tempo"
+                            value={
+                                receivable.overdue_count
+                                    ? `${money(receivable.overdue_total)} · ${receivable.overdue_count} faktur`
+                                    : "Tidak ada"
+                            }
+                            tone={receivable.overdue_count ? "warn" : undefined}
+                        />
+                        <KV
+                            label="Wajib ditagih hari ini"
+                            value={
+                                collect.count
+                                    ? `${money(collect.total)} · ${collect.count} faktur`
+                                    : "Tidak ada"
+                            }
+                            tone={collect.count ? "warn" : undefined}
+                        />
+                    </>
                 ) : null}
                 {strictBlock ? (
                     <Callout tone="bad" icon="warning" alert>
@@ -570,10 +629,50 @@ export function VisitPanel({
                         {overCredit.terms ? ` (${overCredit.terms})` : ""}.
                     </Callout>
                 ) : null}
+                {receivable ? (
+                    <ul class="ui-invoices" aria-label="Faktur terbuka">
+                        {receivable.invoices.slice(0, 8).map((inv) => {
+                            const days = daysUntilDue(inv.due_date, today);
+                            return (
+                                <li key={inv.reference}>
+                                    <div>
+                                        <strong>{inv.reference}</strong>
+                                        <span class="ui-row__sub">
+                                            {dueLabel(days)}
+                                            {inv.partner &&
+                                            inv.partner !== outlet.name
+                                                ? ` · ${inv.partner}`
+                                                : ""}
+                                        </span>
+                                    </div>
+                                    <strong
+                                        class={
+                                            inv.overdue ? "is-warn" : undefined
+                                        }
+                                    >
+                                        {money(inv.balance)}
+                                    </strong>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : null}
+                {receivable &&
+                (receivable.invoices.length > 8 || receivable.truncated) ? (
+                    <span class="ui-row__sub">
+                        Menampilkan {Math.min(8, receivable.invoices.length)}{" "}
+                        dari {receivable.open_count} faktur terbuka (jatuh tempo
+                        tertua lebih dulu).
+                    </span>
+                ) : null}
                 <span class="ui-row__sub">
-                    {strictBlock
-                        ? "Daftar faktur dan penagihan di aplikasi belum aktif; minta pelunasan lewat Supervisor atau tim penagihan. Kunjungan tetap dapat diselesaikan tanpa order."
-                        : "Daftar faktur dan penagihan di aplikasi belum aktif. Order tidak menunggu tagihan pada versi ini."}
+                    {receivables === undefined
+                        ? "Data piutang belum dikirim server pada versi ini. Order tidak menunggu tagihan."
+                        : !receivable
+                          ? "Tidak ada faktur terbuka untuk outlet ini."
+                          : strictBlock
+                            ? "Pencatatan penagihan di aplikasi belum aktif; minta pelunasan lewat Supervisor atau tim penagihan. Kunjungan tetap dapat diselesaikan tanpa order."
+                            : "Pencatatan penagihan di aplikasi belum aktif (menunggu modul penagihan backend); daftar ini hanya untuk dibaca."}
                 </span>
             </Card>
             <Card tight>

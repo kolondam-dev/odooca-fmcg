@@ -32,6 +32,7 @@ export function outletMeta(outlet: MetaSource): {
 export type CreditCommercial = {
     credit_limit?: number | null;
     ar_outstanding?: number | null;
+    credit_mode?: string | null;
     payment_terms?: string | null;
 };
 
@@ -48,6 +49,8 @@ export function creditExceeded(commercial?: CreditCommercial | null):
       }
     | undefined {
     if (!commercial) return undefined;
+    // Mode strict memeriksa faktur jatuh tempo, bukan nominal limit (sama dengan server).
+    if (commercial.credit_mode === "strict") return undefined;
     const { credit_limit: limit, ar_outstanding: outstanding } = commercial;
     if (limit == null || outstanding == null) return undefined;
     if (!Number.isFinite(limit) || !Number.isFinite(outstanding))
@@ -55,4 +58,19 @@ export function creditExceeded(commercial?: CreditCommercial | null):
     if (limit <= 0) return undefined;
     if (outstanding <= limit) return undefined;
     return { limit, outstanding, terms: text(commercial.payment_terms) };
+}
+
+/**
+ * Sisa limit kredit untuk pemeriksaan total order (null = tanpa pemeriksaan nominal): limit tidak ada
+ * atau 0, mode strict (memeriksa faktur jatuh tempo), atau piutang tidak diketahui. Sama dengan
+ * `_compute_credit_limit_exceeded` yang memeriksa nominal hanya bila limit > 0.
+ */
+export function creditRoom(
+    commercial: CreditCommercial | null | undefined,
+    outstanding: number | null,
+): number | null {
+    if (!commercial || commercial.credit_mode === "strict") return null;
+    const limit = commercial.credit_limit;
+    if (limit == null || !Number.isFinite(limit) || limit <= 0) return null;
+    return limit - (outstanding ?? 0);
 }
