@@ -4,6 +4,16 @@
 - [F] Loader PO kanonik menetapkan UoM inventaris secara eksplisit agar kuantitas dan harga historis berbasis unit tetap sepadan.
 - [BU] Tes Odoo untuk replay, PO karton, receipt, dan data baris vendor bill menunggu CI. Aktivasi master pada basis data yang sudah memakai marker seed tetap terpisah.
 
+## 2026-11-23 — [F] BE-7: piutang berjalan dan daftar faktur terbuka pada snapshot (claude-design)
+
+- `id_mobile_api/models/mobile_workday.py`: blok baru top-level `outlet_receivables` = `{outlet_id: {outstanding_total, open_count, overdue_count, overdue_total, oldest_due, truncated, invoices[{reference, partner, invoice_date, due_date, total, balance, overdue}]}}`. Perimeter dan kriteria sama dengan `outlet_credit` (BE-19): commercial partner (parent) dalam perusahaan sesi, `out_invoice` terposting belum lunas; faktur outlet saudara ikut dan ditandai lewat `partner`. Total dari SEMUA faktur terbuka; daftar dipotong 50 (jatuh tempo tertua dulu) dengan `truncated`. `{}` = tidak ada piutang, blok tidak ada = tidak diketahui. Nominal mata uang perusahaan (`*_signed`).
+- Di luar digest versi (berubah tiap pembayaran), sama alasannya dengan `outlet_credit`/`approval_tiers`. Flag `include_approval_tiers` diganti nama `include_volatile` karena kini mengatur tiga blok; command dan evidence tetap memanggil dengan False.
+- Nama kunci sengaja `total`/`balance` (bukan `amount_residual`) agar penjaga tes snapshot "tanpa field mentah" tetap utuh.
+- Dibaca dengan `sudo()` terbatas (perimeter outlet ditugaskan + perusahaan sesi, field ringkas), keputusan yang sama dengan BE-19 dan sudah lulus review.
+- Kontrak: `contracts.ts` (`outlet_receivables`), `openapi.json`, tes katalog; data demo Minimarket Pelangi (3 faktur, 2 overdue). `commercial.ar_outstanding` tetap tidak dikirim; FE-8 membaca dari `outlet_receivables`.
+- Tes Odoo `test_credit_snapshot.py` (faktur nyata): total/urutan/daftar/isolasi, pemotongan 50, di luar digest dan mengikuti pembayaran, konsistensi dengan `outlet_credit`. Hanya terverifikasi di CI; pembayaran disimulasikan lewat SQL seperti BE-19.
+- Belum dikerjakan: jadwal penagihan/kolektor ("Wajib ditagih hari ini"), command `collection.receipt.submit`/`collection.settlement.submit` (backend KOSONG), FE-8 (UI). Utang `credit_limit` commercial partner (BE-19) masih terbuka.
+
 ## 2026-11-22 — PR #135: katalog QWeb dan PDF DO parsial (codex)
 
 - [F] Sinkron dengan main dan pakai konfigurasi Gradle dari main. Tambahkan dua sumber terjemahan lot yang hilang pada template POT. Smoke PDF memakai picking selesai 3 dari 4 untuk DO, dengan 1 unit pada backorder.
