@@ -1,3 +1,9 @@
+## 2026-11-24 — [BU] FIN36 oracle seluruh board posted pada DB disposable (opencode)
+
+- [F] PR #193 merged ke `main` sebagai `54a1aff528c538bae8d5195e2f584d60bca94c40`, head integrasi `76342d75673238279aef93c2651fca21aca1d256`; supervisor PASS/CUKUP untuk prasyarat teknis saja. 28/28 CI SUCCESS; install/upgrade, satu depresiasi posted→GL dan rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.
+- [F] Pemilik memilih **oracle disposable dulu**, bukan izin dependensi/aktivasi produksi. Slice baru menguji ketiga periode board 100.001 posted, residual bertahap sampai nol, dan seluruh AML posted per cutoff, termasuk menolak missing/duplicate/extra balanced journals tanpa netting.
+- [F] Tes offline untuk cutoff dan reuse move ditambah; [BU] Finance I0 exact-SHA baru belum dijalankan. Akuisisi (`type=create` tanpa `move_id`) dan disposal, cakupan populasi aset, lisensi produksi, mapping Controller, UI/export/ACL/live serta sign-off tetap HOLD.
+
 ## 2026-11-24 — [F] BE-20b putaran 2: tutup P1/P2 review PR #194 (claude-design)
 
 - [F] P1: kolom `active_claim` + indeks unik parsial DB (satu faktur satu SJP aktif) dan pre-check sebelum INSERT/reaktivasi; reaktivasi `action_draft` ditolak atomik bila faktur aktif di SJP lain.

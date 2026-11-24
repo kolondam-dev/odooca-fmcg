@@ -1,5 +1,16 @@
 # Paket I2c — Discovery dan ADR sumber (FIN36–38, FIN55–56)
 
+> **Pembaruan status 2026-11-24:** klaim "belum di-pin/belum di-image"
+> pada audit awal di bawah adalah snapshot historis, bukan keadaan sekarang.
+> [F] PR #193 merged ke `main` sebagai `54a1aff` (head `76342d7`):
+> `account_asset_management` serta `report_xlsx_helper` terpasang dan di-upgrade
+> di **DB CI disposable saja**; satu baris depresiasi posted→GL dan rollback
+> fixture PASS pada exact SHA (28 checks SUCCESS). [BU] Slice berikutnya
+> menguji seluruh board posted dan GL per cutoff di DB disposable, tanpa
+> dependensi custom atau aktivasi demo/produksi. FIN36 tetap belum diterima;
+> lisensi untuk dependensi produksi, mapping Controller, akuisisi/disposal,
+> cakupan aset, ACL, ekspor dan sign-off tetap terbuka.
+
 ## Scope dan status
 
 - [F] Dokumen ini adalah **discovery + ADR**, bukan implementasi. Tidak ada

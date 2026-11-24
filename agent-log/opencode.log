@@ -429,3 +429,9 @@
 - [F] Expected board/GL/residual updated to observed currency precision without tolerances; 26 offline tests, Ruff, manifests PASS.
 - [BU] Posted GL and rollback await new exact-SHA CI. FIN36 acceptance and legal/Controller decisions HOLD.
 - Task managed by opencode at 2026-11-23T18:33:00+07:00
+
+[2026-11-24T19:38:30+07:00] [INFO] FIN36 oracle seluruh depresiasi posted disposable
+- [F] PR #193 merged 54a1aff/head 76342d7, supervisor PASS/CUKUP technical prerequisite dengan 28 checks SUCCESS; belum FIN36 acceptance.
+- [F] Pemilik memilih oracle disposable dulu. Slice ini membuktikan ketiga board period posted dan GL per cutoff termasuk mutasi missing/extra/duplicate/reuse, tanpa dependensi produksi.
+- [BU] Exact-SHA runtime CI belum diuji untuk slice baru. Akuisisi/disposal, mapping Controller, lisensi produksi, live dan sign-off tetap HOLD.
+- Task managed by opencode at 2026-11-24T19:38:30+07:00

@@ -48,12 +48,14 @@ def verify_posted_gl(move, first, expense, contra):
         first.move_id == move and first.move_check and first.type == "depreciate",
         "Depreciation line lost posted move provenance",
     )
-    require(first.amount == BOARD[0][1], "Depreciation amount differs from board")
+    expected_amount = dict(BOARD).get(first.line_date.isoformat())
+    require(expected_amount is not None and first.amount == expected_amount,
+            "Depreciation amount differs from board")
     gl = [(line.account_id.id, line.debit, line.credit, line.balance)
           for line in move.line_ids]
     expected = [
-        (expense.id, 33_333.67, 0.0, 33_333.67),
-        (contra.id, 0.0, 33_333.67, -33_333.67),
+        (expense.id, expected_amount, 0.0, expected_amount),
+        (contra.id, 0.0, expected_amount, -expected_amount),
     ]
     require(len(gl) == 2 and sorted(gl) == sorted(expected),
             f"Depreciation GL posting mismatch: {gl}")
@@ -61,6 +63,26 @@ def verify_posted_gl(move, first, expense, contra):
             "Depreciation journal company differs from asset")
     require(move.date == first.line_date,
             "Depreciation journal date differs from asset line")
+
+
+def verify_cutoff_gl(lines, source, expected_amounts, expense, contra):
+    """Reject missing, duplicated, or unrelated posted AML at each cutoff."""
+    require(len(source) == len(expected_amounts),
+            f"Depreciation source coverage mismatch: {len(source)}")
+    require(len({line.move_id.id for line in source}) == len(source),
+            "Depreciation sources reuse a journal move")
+    expected = []
+    for line, amount in zip(source, expected_amounts):
+        require(line.move_id and line.amount == amount,
+                "Depreciation source amount or posted move missing")
+        expected.extend([
+            (line.move_id.id, expense.id, amount, 0.0, amount),
+            (line.move_id.id, contra.id, 0.0, amount, -amount),
+        ])
+    observed = [(row.move_id.id, row.account_id.id, row.debit,
+                 row.credit, row.balance) for row in lines]
+    require(len(observed) == len(expected) and sorted(observed) == sorted(expected),
+            f"Depreciation cutoff GL coverage mismatch: {observed} != {expected}")
 
 
 def run(env):
@@ -155,30 +177,56 @@ def run(env):
             )
 
             asset.validate()
-            move_ids = depreciation[0].create_move()
-            require(len(move_ids) == 1, f"Expected one depreciation move: {move_ids}")
-            asset.invalidate_recordset()
-            first = depreciation[0]
-            first.invalidate_recordset()
-            move = env["account.move"].browse(move_ids[0])
-            verify_posted_gl(move, first, accounts["expense"], accounts["tax_input"])
-            require(first.parent_state == "open", "Asset must remain open after first posting")
-            require(
-                company.currency_id.round(sum(line.balance for line in move.line_ids)) == 0,
-                "Depreciation journal entry is unbalanced",
-            )
-            require(
-                asset.value_depreciated == 33_333.67
-                and asset.value_residual == 66_667.33,
-                "Asset posted/residual values do not match the depreciation line",
-            )
+            expected_residuals = (66_667.33, 33_333.66, 0.0)
+            postings = []
+            for index, line in enumerate(depreciation):
+                move_ids = line.create_move()
+                require(len(move_ids) == 1,
+                        f"Expected one depreciation move for period {index}: {move_ids}")
+                asset.invalidate_recordset()
+                line.invalidate_recordset()
+                move = env["account.move"].browse(move_ids[0])
+                verify_posted_gl(move, line, accounts["expense"], accounts["tax_input"])
+                require(
+                    company.currency_id.round(sum(row.balance for row in move.line_ids)) == 0,
+                    f"Depreciation journal {move.id} is unbalanced",
+                )
+                total = company.currency_id.round(sum(amount for _, amount in BOARD[:index + 1]))
+                require(
+                    asset.value_depreciated == total
+                    and asset.value_residual == expected_residuals[index]
+                    and asset.state == ("close" if index == 2 else "open"),
+                    f"Period {index} posted/residual/state mismatch: {asset.read(['state', 'value_residual', 'value_depreciated'])}",
+                )
+                postings.append({"line_id": line.id, "move_id": move.id,
+                                 "date": BOARD[index][0], "amount": line.amount})
+
+            # Search the fixture's actual posted ledger, not only source-linked
+            # moves: an unrelated or duplicate depreciation entry must fail.
+            for index, (cutoff, _amount) in enumerate(BOARD):
+                source = depreciation[:index + 1]
+                aml = env["account.move.line"].with_company(company).search([
+                    ("company_id", "=", company.id),
+                    ("journal_id", "=", journal.id),
+                    ("date", "<=", cutoff),
+                    ("parent_state", "=", "posted"),
+                    ("account_id", "in", [accounts["expense"].id,
+                                          accounts["tax_input"].id]),
+                ])
+                verify_cutoff_gl(aml, source, [amount for _, amount in BOARD[:index + 1]],
+                                 accounts["expense"], accounts["tax_input"])
+            require(not asset.depreciation_line_ids.filtered(
+                lambda line: line.type == "depreciate" and not line.move_check,
+            ),
+                "Unposted depreciation line remains after complete lifecycle")
             evidence["cases"].extend([
                 {"case": "monthly_board_with_final_remainder", "result": "PASS",
                  "periods": observed_board},
-                {"case": "posted_line_to_gl_provenance", "result": "PASS",
-                 "line_id": first.id, "move_id": move.id, "amount": first.amount},
-                {"case": "posted_depreciation_gl_balanced", "result": "PASS",
-                 "debit": 33_333.67, "credit": 33_333.67},
+                {"case": "all_posted_lines_to_gl_provenance", "result": "PASS",
+                 "postings": postings},
+                {"case": "posted_depreciation_gl_cutoffs", "result": "PASS",
+                 "totals": [33_333.67, 66_667.34, 100_001.0],
+                 "final_residual": 0.0},
             ])
             raise RollbackAssetSpike()
     except RollbackAssetSpike:
