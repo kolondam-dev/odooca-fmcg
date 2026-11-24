@@ -268,8 +268,7 @@ class CollectionSheetLine(models.Model):
         )
 
     def unlink(self):
-        if self.env.context.get("install_mode"):
-            return super().unlink()
+        # Tanpa jalur khusus berbasis context: context request bukan batas kepercayaan.
         if any(line.sheet_id.state != "draft" for line in self):
             raise UserError(_("Faktur hanya dapat dihapus dari SJP berstatus draf."))
         return super().unlink()

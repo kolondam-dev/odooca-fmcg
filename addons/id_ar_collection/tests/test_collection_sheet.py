@@ -397,6 +397,63 @@ class TestCollectionSheet(TransactionCase):
         self.assertEqual(line.amount_due, 100.0)
 
     @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_non_draft_line_unlink_is_refused_even_with_install_mode_context(self):
+        self._invoice(self._partner("SJP Unlink", is_company=True), business_date(), 321)
+        sheet = self._generate()
+        sheet.collector_id = self.collector
+        sheet.action_issue()
+        line = sheet.line_ids
+        admin_line = line.with_user(self.admin)
+        for context in ({}, {"install_mode": True}, {"install_mode": True, "module": "id_ar_collection"}):
+            with self.assertRaises(UserError):
+                admin_line.with_context(**context).unlink()
+        # Untuk status non-draft lain pun penghapusan ditolak (dengan dan tanpa flag).
+        for target in ("returned", "reconciled"):
+            sheet._apply_state(target)
+            for context in ({}, {"install_mode": True}):
+                with self.assertRaises(UserError):
+                    admin_line.with_context(**context).unlink()
+        # Baris dan nominal tetap utuh setelah semua penolakan.
+        sheet.invalidate_recordset()
+        line.invalidate_recordset()
+        self.assertTrue(line.exists())
+        self.assertEqual(line.sheet_id, sheet)
+        self.assertEqual(line.amount_due, 321.0)
+        self.assertEqual(sheet.line_ids, line)
+        # Setelah SJP ditutup klaim aktif memang lepas (reconciled), bukan karena penghapusan.
+        self.assertFalse(line.active_claim)
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_issued_and_cancelled_line_unlink_keep_claim_and_block_other_sheet(self):
+        move = self._invoice(self._partner("SJP Unlink Claim", is_company=True), business_date(), 654)
+        sheet = self._generate()
+        sheet.collector_id = self.collector
+        sheet.action_issue()
+        line = sheet.line_ids
+        with self.assertRaises(UserError):
+            line.with_user(self.admin).with_context(install_mode=True).unlink()
+        line.invalidate_recordset()
+        self.assertTrue(line.exists())
+        self.assertTrue(line.active_claim)
+        other = self.env["id.collection.sheet"].with_user(self.admin).create({"company_id": self.company.id})
+        with self.assertRaises(ValidationError):  # faktur tetap diklaim SJP terbit
+            self.env["id.collection.sheet.line"].with_user(self.admin).create(
+                {"sheet_id": other.id, "move_id": move.id})
+        sheet.action_cancel()
+        for context in ({}, {"install_mode": True}):
+            with self.assertRaises(UserError):
+                line.with_user(self.admin).with_context(**context).unlink()
+        self.assertTrue(line.exists())
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_draft_line_unlink_still_allowed(self):
+        self._invoice(self._partner("SJP Unlink Draft", is_company=True), business_date(), 10)
+        sheet = self._generate()
+        sheet.line_ids.with_user(self.admin).unlink()
+        self.assertFalse(sheet.line_ids)
+        sheet.unlink()  # SJP draf beserta barisnya dapat dihapus (cascade DB)
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
     def test_line_outcome_is_server_owned_and_amount_is_snapshot(self):
         move = self._invoice(self._partner("SJP Snapshot", is_company=True), business_date(), 500)
         sheet = self.env["id.collection.sheet"].with_user(self.admin).create({"company_id": self.company.id})
