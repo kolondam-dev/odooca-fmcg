@@ -1,5 +1,14 @@
 # Eksekusi penerimaan FIN01–FIN58 — snapshot 2026-11-19
 
+**Pembaruan FIN36, 2026-11-24:** [F] PR #193 merged sebagai `54a1aff`
+(head `76342d7`); full regression 28 SUCCESS, 0 SKIPPED, posted depreciation
+pertama→GL dan rollback PASS pada fixture disposable. [BU] Slice lanjutan
+mengikat **seluruh** baris board ke jurnal posted, residual sampai nol, dan
+AML GL per cutoff (termasuk penolakan duplikat/extra seimbang). Ini tetap
+bukan oracle akuisisi/disposal atau laporan FIN36 yang siap diterima. Pemilik
+memilih jalur *oracle disposable dulu*; dependensi produksi/aktivasi demo
+tidak diotorisasi, keputusan lisensi khusus dan mapping Controller masih perlu.
+
 **Status:** 0/58 `DITERIMA`; `REPORT_CATALOG.csv` tetap sumber status dan tidak
 diubah oleh inventaris ini. Dokumen ini adalah urutan kerja dan register blocker,
 bukan sign-off Finance/Tax atau persetujuan mengubah data production. Company

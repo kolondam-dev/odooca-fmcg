@@ -72,6 +72,47 @@ class AssetSpikeOracleTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "date"):
             self.verify()
 
+    def test_every_period_amount_and_cutoff_coverage(self):
+        from types import SimpleNamespace as Row
+
+        second = Row(
+            state="posted", company_id=self.company, date=date(2026, 8, 31),
+            line_ids=[
+                Row(account_id=self.expense, debit=33333.67, credit=0.0,
+                    balance=33333.67),
+                Row(account_id=self.contra, debit=0.0, credit=33333.67,
+                    balance=-33333.67),
+            ],
+        )
+        line2 = Row(move_id=second, move_check=True, type="depreciate",
+                    amount=33333.67, asset_id=self.asset, line_date=second.date)
+        # Stable IDs stand for ORM move IDs; the source does not supply the
+        # expected totals or the actual posted AML list.
+        self.move.id, second.id = 11, 12
+        spike.verify_posted_gl(second, line2, self.expense, self.contra)
+
+        def ledger_rows(moves):
+            return [Row(move_id=move, **vars(row))
+                    for move in moves for row in move.line_ids]
+
+        source = [self.line, line2]
+        rows = ledger_rows([self.move, second])
+        spike.verify_cutoff_gl(rows, source, [33333.67, 33333.67],
+                               self.expense, self.contra)
+        for mutant in (rows[:-1], rows + rows[:2], rows + [Row(
+            move_id=second, account_id=self.expense, debit=1.0,
+            credit=1.0, balance=0.0,
+        )]):
+            with self.subTest(mutant=mutant), self.assertRaisesRegex(
+                AssertionError, "cutoff GL coverage mismatch",
+            ):
+                spike.verify_cutoff_gl(mutant, source, [33333.67, 33333.67],
+                                       self.expense, self.contra)
+        line2.move_id = self.move
+        with self.assertRaisesRegex(AssertionError, "reuse a journal move"):
+            spike.verify_cutoff_gl(rows, source, [33333.67, 33333.67],
+                                   self.expense, self.contra)
+
 
 if __name__ == "__main__":
     unittest.main()
