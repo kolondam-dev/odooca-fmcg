@@ -460,7 +460,7 @@ class TestCollectionConcurrency(TransactionCase):
     scripts/ui/collection_sheet_pdf_smoke.py terhadap server HTTP hidup (wkhtmltopdf butuh server)."""
 
     def test_two_real_transactions_leave_a_single_active_claim(self):
-        """Dua transaksi PostgreSQL nyata (bukan satu cursor tes): yang kedua diblokir lalu ditolak."""
+        """Dua transaksi PostgreSQL nyata: pemulihan SJP B (SQL) menunggu transaksi A, lalu ditolak indeks unik."""
         db = sql_db.db_connect(self.env.cr.dbname)
         ids = self._commit_fixture(db)
         self.addCleanup(self._cleanup_fixture, db, ids)
@@ -471,9 +471,10 @@ class TestCollectionConcurrency(TransactionCase):
         def second_transaction():
             cr2 = db.cursor()
             try:
-                cr2.execute("SET LOCAL lock_timeout = '20s'")
-                env2 = api.Environment(cr2, SUPERUSER_ID, {})
-                env2["id.collection.sheet.line"].create({"sheet_id": ids["sheet_b"], "move_id": ids["move"]})
+                cr2.execute("SET LOCAL lock_timeout = '15s'")
+                # Setara pemulihan SJP B: mengaktifkan klaim baris B untuk faktur yang sama.
+                cr2.execute(
+                    "UPDATE id_collection_sheet_line SET active_claim = TRUE WHERE id = %s", (ids["line_b"],))
                 cr2.commit()
                 outcome["ok"] = True
             except Exception as exc:  # noqa: BLE001
@@ -482,9 +483,10 @@ class TestCollectionConcurrency(TransactionCase):
             finally:
                 cr2.close()
 
+        thread = threading.Thread(target=second_transaction, daemon=True)
         try:
             env1["id.collection.sheet.line"].create({"sheet_id": ids["sheet_a"], "move_id": ids["move"]})
-            thread = threading.Thread(target=second_transaction)
+            env1.flush_all()
             thread.start()
             time.sleep(1.5)
             self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu transaksi pertama")
@@ -494,14 +496,14 @@ class TestCollectionConcurrency(TransactionCase):
         thread.join(30)
         self.assertFalse(thread.is_alive())
         self.assertNotIn("ok", outcome)
-        self.assertIsInstance(outcome.get("error"), (IntegrityError, ValidationError))
+        self.assertIsInstance(outcome.get("error"), IntegrityError)
         with db.cursor() as cr:
             cr.execute(
                 "SELECT sheet_id FROM id_collection_sheet_line WHERE move_id = %s AND active_claim",
                 (ids["move"],))
             self.assertEqual([row[0] for row in cr.fetchall()], [ids["sheet_a"]])
-            cr.execute("SELECT count(*) FROM id_collection_sheet_line WHERE sheet_id = %s", (ids["sheet_b"],))
-            self.assertEqual(cr.fetchone()[0], 0)
+            cr.execute("SELECT active_claim FROM id_collection_sheet_line WHERE id = %s", (ids["line_b"],))
+            self.assertFalse(cr.fetchone()[0])  # B tidak berubah, tidak ada state setengah jadi
 
     def _commit_fixture(self, db):
         """Fixture yang BENAR-BENAR di-commit supaya terlihat oleh transaksi lain."""
@@ -529,9 +531,13 @@ class TestCollectionConcurrency(TransactionCase):
                     "name": "x", "quantity": 1, "price_unit": 777, "account_id": income.id})]})
             move.action_post()
             sheets = env["id.collection.sheet"].create([{"company_id": company.id}, {"company_id": company.id}])
+            # B pernah memuat faktur lalu dibatalkan: barisnya tidak aktif dan siap "dipulihkan".
+            line_b = env["id.collection.sheet.line"].create({"sheet_id": sheets[1].id, "move_id": move.id})
+            sheets[1].action_cancel()
             return {
                 "company": company.id, "move": move.id, "partner": partner.id, "journal": journal.id,
                 "accounts": (receivable | income).ids, "sheet_a": sheets[0].id, "sheet_b": sheets[1].id,
+                "line_b": line_b.id,
             }
 
     def _cleanup_fixture(self, db, ids):
