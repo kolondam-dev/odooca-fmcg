@@ -557,6 +557,53 @@ it("snapshot menerima credit_mode dan outlet_credit opsional (BE-19)", () => {
     ).toBe(false);
 });
 
+it("snapshot menerima collection_sheets opsional (BE-20c)", () => {
+    const base = catalog();
+    expect(base.collection_sheets).toBeUndefined();
+    const line = {
+        id: "11",
+        reference: "INV/2026/0001",
+        partner: "Toko Uji",
+        partner_id: "5",
+        outlet_id: "5",
+        due_date: "2026-11-16",
+        overdue: false,
+        amount_due: 100000,
+        balance: 40000,
+        outcome: "pending",
+        document_return: "none",
+    };
+    const sheet = {
+        id: "3",
+        name: "SJP/2026/00003",
+        collect_date: "2026-11-16",
+        due_until: "2026-11-16",
+        route: null,
+        state: "issued",
+        line_count: 1,
+        amount_total: 100000,
+        truncated: false,
+        lines: [line],
+    };
+    const parsed = SnapshotSchema.parse({
+        ...base,
+        collection_sheets: { sheets: [sheet], truncated: false },
+    });
+    expect(parsed.collection_sheets?.sheets[0].lines[0].balance).toBe(40000);
+    const bad = (patch: object) =>
+        SnapshotSchema.safeParse({
+            ...base,
+            collection_sheets: {
+                sheets: [{ ...sheet, ...patch }],
+                truncated: false,
+            },
+        }).success;
+    expect(bad({ state: "draft" })).toBe(false);
+    expect(bad({ lines: [{ ...line, outcome: "settled" }] })).toBe(false);
+    expect(bad({ lines: [{ ...line, document_return: "x" }] })).toBe(false);
+    expect(bad({ line_count: -1 })).toBe(false);
+});
+
 it("snapshot menerima outlet_receivables opsional (BE-7)", () => {
     const base = catalog();
     expect(base.outlet_receivables).toBeUndefined();

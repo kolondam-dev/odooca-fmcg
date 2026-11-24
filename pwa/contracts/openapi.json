@@ -6204,6 +6204,157 @@
               "additionalProperties": false
             }
           },
+          "collection_sheets": {
+            "type": "object",
+            "properties": {
+              "sheets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "collect_date": {
+                      "type": "string"
+                    },
+                    "due_until": {
+                      "type": "string"
+                    },
+                    "route": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "state": {
+                      "type": "string",
+                      "const": "issued"
+                    },
+                    "line_count": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "amount_total": {
+                      "type": "number"
+                    },
+                    "truncated": {
+                      "type": "boolean"
+                    },
+                    "lines": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "reference": {
+                            "type": "string"
+                          },
+                          "partner": {
+                            "type": "string"
+                          },
+                          "partner_id": {
+                            "type": "string"
+                          },
+                          "outlet_id": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "due_date": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "overdue": {
+                            "type": "boolean"
+                          },
+                          "amount_due": {
+                            "type": "number"
+                          },
+                          "balance": {
+                            "type": "number"
+                          },
+                          "outcome": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "paid",
+                              "partial",
+                              "unpaid"
+                            ]
+                          },
+                          "document_return": {
+                            "type": "string",
+                            "enum": [
+                              "none",
+                              "copy",
+                              "original"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "reference",
+                          "partner",
+                          "partner_id",
+                          "outlet_id",
+                          "due_date",
+                          "overdue",
+                          "amount_due",
+                          "balance",
+                          "outcome",
+                          "document_return"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "collect_date",
+                    "due_until",
+                    "route",
+                    "state",
+                    "line_count",
+                    "amount_total",
+                    "truncated",
+                    "lines"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "truncated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "sheets",
+              "truncated"
+            ],
+            "additionalProperties": false
+          },
           "approval_tiers": {
             "type": "object",
             "properties": {
