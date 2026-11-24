@@ -34,9 +34,18 @@ Wizard: pilih `due_until` (default hari bisnis WITA) dan filter salesman/rute. S
 
 Flag `collection_v2` tetap OFF di LIVE sampai 20e lulus review.
 
-## 5. Pertanyaan terbuka
+## 5. Keputusan pemilik D9 (jawaban atas pertanyaan terbuka, 2026-11-23)
 
-1. Satu SJP per kolektor per tanggal, atau boleh beberapa SJP per hari?
-2. `unpaid`: faktur tetap pada SJP berikutnya otomatis, atau harus digenerate ulang oleh AR admin?
-3. Apakah kasir dan accounting dua langkah berurutan (kasir dulu), dan bolehkah satu orang memegang keduanya (segregasi tugas)?
-4. Cetak SJP: PDF (QWeb) wajib pada 20b atau menyusul?
+1. **Banyak SJP:** SJP boleh digenerate banyak (per kolektor/rute/tanggal) untuk fleksibilitas (salesman absen, penagihan di depan / advance collection). Satu faktur hanya pada satu SJP aktif (draf/diterbitkan); setelah SJP dibatalkan atau dikembalikan faktur kembali ke daftar kandidat. Model: SJP 1..n baris, satu faktur dapat punya banyak baris dari waktu ke waktu.
+2. **Unpaid:** faktur tak tertagih otomatis kembali menjadi kandidat (daftar terbuka secara default).
+3. **Kasir dan accounting:** dua langkah berurutan; role gabungan diperbolehkan (satu user memegang keduanya berurutan), idealnya beda role dan beda orang.
+4. **Cetak PDF SJP:** wajib sejak BE-20b (QWeb `id_ar_collection.report_collection_sheet`).
+
+Status: BE-20b diimplementasikan (addon `id_ar_collection`: model SJP + baris, wizard Generate, grup `group_ar_admin`/`group_ar_control`, tampilan, PDF, tes Odoo). Grup kasir/accounting dan transisi `returned`/`reconciled` menyusul di BE-20e. Catatan: perlindungan faktur dengan penerimaan yang menunggu validasi (agar tidak ditagih ganda) dikerjakan bersama penerimaan di BE-20d/e.
+
+## 6. Invarian server BE-20b (setelah review PR #194)
+
+- **Satu faktur, satu SJP aktif:** kolom tersimpan `active_claim` pada baris (true bila SJP draf/diterbitkan) dengan indeks unik parsial `id_collection_sheet_line_one_active_claim (move_id) WHERE active_claim`. Guard atomik DB; berlaku untuk create, reaktivasi `action_draft`, dan dua sesi paralel. Pesan bisnis dari pre-check ORM; indeks menjadi pagar terakhir.
+- **Mesin status di server:** `state` tidak dapat ditulis lewat `create`/`write`; hanya `_apply_state` (privat, tidak terjangkau RPC; bukan flag context) yang memvalidasi tabel transisi. Aksi publik BE-20b: terbit, batal, kembali ke draf. `returned`/`reconciled` hanya lewat seam privat sampai BE-20e.
+- **Immutability:** setelah diterbitkan, perusahaan/tanggal/jatuh tempo/kolektor/rute/baris tidak berubah (hanya `note`); baris tidak dapat di-write langsung, ditambah atau dihapus kecuali pada SJP draf; `amount_due` adalah snapshot milik server; kolom hasil penagihan hanya lewat seam `_apply_outcome`. Saat terbit: kolektor internal, aktif, anggota perusahaan; faktur masih terposting, terbuka, perusahaan sama.
+- **Mata uang:** SJP hanya mendukung faktur bermata uang perusahaan. Wizard mengecualikan faktur mata uang asing (jumlahnya ditampilkan) dan baris untuk faktur asing ditolak, sehingga total tidak pernah menjumlah lintas mata uang. Dukungan multi-mata-uang (per mata uang atau konversi bertanggal) adalah keputusan terpisah.
