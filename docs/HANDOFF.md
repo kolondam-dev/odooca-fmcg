@@ -2,7 +2,7 @@
 
 - [F] P1: kolom `active_claim` + indeks unik parsial DB (satu faktur satu SJP aktif) dan pre-check sebelum INSERT/reaktivasi; reaktivasi `action_draft` ditolak atomik bila faktur aktif di SJP lain.
 - [F] P2: mesin status dan immutability di server (create/write/unlink/O2M); `_apply_state` dan `_apply_outcome` privat sebagai seam; validasi kolektor/faktur saat terbit. P2: faktur mata uang asing dikecualikan dan ditolak (tidak ada penjumlahan lintas mata uang).
-- [F] Tes baru: reaktivasi/reparent, indeks DB, dua transaksi PostgreSQL nyata (fixture di-commit, cleanup best-effort), lifecycle/immutability, validasi kolektor, USD+IDR, smoke PDF (`_render_qweb_pdf`, dilewati dengan pesan bila wkhtmltopdf tidak ada).
+- [F] Tes baru: reaktivasi/reparent, indeks DB, dua transaksi PostgreSQL nyata (fixture di-commit, cleanup best-effort), lifecycle/immutability, validasi kolektor, USD+IDR, smoke PDF dipindah ke `scripts/ui/collection_sheet_pdf_smoke.py` + langkah CI terhadap server HTTP hidup (render dalam proses tes membuat wkhtmltopdf menggantung dan menghabiskan 30 menit job); tes dua transaksi di kelas terpisah dengan lock_timeout.
 - [BU] Tes Odoo hanya terverifikasi lewat CI exact SHA; BE-20c/d/e tetap di luar PR.
 
 ## 2026-11-23 — [F] BE-20a: agregat "wajib ditagih hari ini" dari server (claude-design)

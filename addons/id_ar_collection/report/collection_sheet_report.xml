@@ -19,6 +19,7 @@
                         <h2>Surat Jalan Penagihan <span t-field="sheet.name"/></h2>
                         <div class="row mb-3">
                             <div class="col-6">
+                                <div><strong>Perusahaan:</strong> <span t-field="sheet.company_id"/></div>
                                 <div><strong>Kolektor:</strong> <span t-field="sheet.collector_id"/></div>
                                 <div><strong>Rute:</strong> <span t-field="sheet.route"/></div>
                             </div>

@@ -1,5 +1,4 @@
 """BE-20b: Surat Jalan Penagihan (SJP): generate dari AR terbuka, banyak SJP, unpaid kembali ke kandidat."""
-import re
 import threading
 import time
 from datetime import timedelta
@@ -333,101 +332,6 @@ class TestCollectionSheet(TransactionCase):
             [("move_id", "=", move.id), ("active_claim", "=", True)])
         self.assertEqual(claims, 1)
 
-    def test_two_real_transactions_leave_a_single_active_claim(self):
-        """Dua transaksi PostgreSQL nyata (bukan satu cursor tes): yang kedua diblokir lalu ditolak."""
-        db = sql_db.db_connect(self.env.cr.dbname)
-        ids = self._commit_fixture(db)
-        self.addCleanup(self._cleanup_fixture, db, ids)
-        cr1 = db.cursor()
-        env1 = api.Environment(cr1, SUPERUSER_ID, {})
-        outcome = {}
-
-        def second_transaction():
-            cr2 = db.cursor()
-            try:
-                cr2.execute("SET LOCAL lock_timeout = '20s'")
-                env2 = api.Environment(cr2, SUPERUSER_ID, {})
-                env2["id.collection.sheet.line"].create({"sheet_id": ids["sheet_b"], "move_id": ids["move"]})
-                cr2.commit()
-                outcome["ok"] = True
-            except Exception as exc:  # noqa: BLE001
-                outcome["error"] = exc
-                cr2.rollback()
-            finally:
-                cr2.close()
-
-        try:
-            env1["id.collection.sheet.line"].create({"sheet_id": ids["sheet_a"], "move_id": ids["move"]})
-            thread = threading.Thread(target=second_transaction)
-            thread.start()
-            time.sleep(1.5)
-            self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu transaksi pertama")
-            cr1.commit()
-        finally:
-            cr1.close()
-        thread.join(30)
-        self.assertFalse(thread.is_alive())
-        self.assertNotIn("ok", outcome)
-        self.assertIsInstance(outcome.get("error"), (IntegrityError, ValidationError))
-        with db.cursor() as cr:
-            cr.execute(
-                "SELECT sheet_id FROM id_collection_sheet_line WHERE move_id = %s AND active_claim",
-                (ids["move"],))
-            self.assertEqual([row[0] for row in cr.fetchall()], [ids["sheet_a"]])
-            cr.execute("SELECT count(*) FROM id_collection_sheet_line WHERE sheet_id = %s", (ids["sheet_b"],))
-            self.assertEqual(cr.fetchone()[0], 0)
-
-    def _commit_fixture(self, db):
-        """Fixture yang BENAR-BENAR di-commit supaya terlihat oleh transaksi lain."""
-        with db.cursor() as cr:
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            idr = env.ref("base.IDR")
-            idr.active = True
-            company = env["res.company"].create({"name": "SJP Concurrency Co", "currency_id": idr.id})
-            env = env.with_company(company)
-            receivable = env["account.account"].create({
-                "name": "AR SJP Conc", "code": "113901", "account_type": "asset_receivable",
-                "company_ids": [Command.set(company.ids)]})
-            income = env["account.account"].create({
-                "name": "Income SJP Conc", "code": "420901", "account_type": "income",
-                "company_ids": [Command.set(company.ids)]})
-            journal = env["account.journal"].create({
-                "name": "Sales SJP Conc", "code": "SJC", "type": "sale", "company_id": company.id})
-            partner = env["res.partner"].create({"name": "SJP Conc Customer", "is_company": True})
-            partner.with_company(company).property_account_receivable_id = receivable
-            move = env["account.move"].create({
-                "move_type": "out_invoice", "company_id": company.id, "journal_id": journal.id,
-                "partner_id": partner.id, "invoice_date": business_date() - timedelta(days=30),
-                "invoice_date_due": business_date(),
-                "invoice_line_ids": [Command.create({
-                    "name": "x", "quantity": 1, "price_unit": 777, "account_id": income.id})]})
-            move.action_post()
-            sheets = env["id.collection.sheet"].create([{"company_id": company.id}, {"company_id": company.id}])
-            return {
-                "company": company.id, "move": move.id, "partner": partner.id, "journal": journal.id,
-                "accounts": (receivable | income).ids, "sheet_a": sheets[0].id, "sheet_b": sheets[1].id,
-            }
-
-    def _cleanup_fixture(self, db, ids):
-        """Best-effort pada DB uji sekali pakai: hapus data yang sengaja di-commit."""
-        try:
-            with db.cursor() as cr:
-                sheets = [ids["sheet_a"], ids["sheet_b"]]
-                cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = ANY(%s)", (sheets,))
-                cr.execute("DELETE FROM id_collection_sheet WHERE id = ANY(%s)", (sheets,))
-                env = api.Environment(cr, SUPERUSER_ID, {})
-                for model, key in (("account.move", "move"), ("account.journal", "journal")):
-                    try:
-                        with cr.savepoint():
-                            rec = env[model].browse(ids[key]).exists()
-                            if model == "account.move":
-                                rec.button_draft()
-                            rec.unlink()
-                    except Exception:  # noqa: BLE001
-                        pass
-        except Exception:  # noqa: BLE001
-            pass
-
     # ---- P2: lifecycle dan immutability dijaga server ------------------------------------------
     @freeze_time("2026-11-16 01:00:00", tick=True)
     def test_direct_create_and_write_cannot_bypass_state_machine(self):
@@ -548,28 +452,104 @@ class TestCollectionSheet(TransactionCase):
                 {"sheet_id": sheet.id, "move_id": usd_invoice.id})
         self.assertEqual(sheet.amount_total, 100000.0)
 
-    # ---- PDF (D9) --------------------------------------------------------------------------------
-    @freeze_time("2026-11-16 01:00:00", tick=True)
-    def test_report_pdf_smoke(self):
-        outlet = self._partner("SJP Pdf Outlet", is_company=True)
-        move = self._invoice(outlet, business_date(), 12345)
-        sheet = self._generate()
-        sheet.collector_id = self.collector
-        report = self.env["ir.actions.report"].with_context(force_report_rendering=True)
+
+@tagged("post_install", "-at_install")
+class TestCollectionConcurrency(TransactionCase):
+    """Dua transaksi PostgreSQL nyata. Kelas terpisah tanpa fixture tak ter-commit supaya tidak ada kunci baris
+    milik transaksi tes yang membuat cursor lain menunggu tanpa akhir. PDF diuji oleh
+    scripts/ui/collection_sheet_pdf_smoke.py terhadap server HTTP hidup (wkhtmltopdf butuh server)."""
+
+    def test_two_real_transactions_leave_a_single_active_claim(self):
+        """Dua transaksi PostgreSQL nyata (bukan satu cursor tes): yang kedua diblokir lalu ditolak."""
+        db = sql_db.db_connect(self.env.cr.dbname)
+        ids = self._commit_fixture(db)
+        self.addCleanup(self._cleanup_fixture, db, ids)
+        cr1 = db.cursor()
+        env1 = api.Environment(cr1, SUPERUSER_ID, {})
+        outcome = {}
+
+        def second_transaction():
+            cr2 = db.cursor()
+            try:
+                cr2.execute("SET LOCAL lock_timeout = '20s'")
+                env2 = api.Environment(cr2, SUPERUSER_ID, {})
+                env2["id.collection.sheet.line"].create({"sheet_id": ids["sheet_b"], "move_id": ids["move"]})
+                cr2.commit()
+                outcome["ok"] = True
+            except Exception as exc:  # noqa: BLE001
+                outcome["error"] = exc
+                cr2.rollback()
+            finally:
+                cr2.close()
+
         try:
-            pdf, report_format = report._render_qweb_pdf("id_ar_collection.report_collection_sheet", sheet.ids)
-        except UserError as exc:
-            if "wkhtmltopdf" in str(exc).lower():
-                self.skipTest("wkhtmltopdf tidak tersedia pada image CI ini: %s" % exc)
-            raise
-        self.assertEqual(report_format, "pdf")
-        self.assertTrue(pdf.startswith(b"%PDF"))
-        self.assertGreater(len(pdf), 1000)
-        import io
+            env1["id.collection.sheet.line"].create({"sheet_id": ids["sheet_a"], "move_id": ids["move"]})
+            thread = threading.Thread(target=second_transaction)
+            thread.start()
+            time.sleep(1.5)
+            self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu transaksi pertama")
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(30)
+        self.assertFalse(thread.is_alive())
+        self.assertNotIn("ok", outcome)
+        self.assertIsInstance(outcome.get("error"), (IntegrityError, ValidationError))
+        with db.cursor() as cr:
+            cr.execute(
+                "SELECT sheet_id FROM id_collection_sheet_line WHERE move_id = %s AND active_claim",
+                (ids["move"],))
+            self.assertEqual([row[0] for row in cr.fetchall()], [ids["sheet_a"]])
+            cr.execute("SELECT count(*) FROM id_collection_sheet_line WHERE sheet_id = %s", (ids["sheet_b"],))
+            self.assertEqual(cr.fetchone()[0], 0)
 
-        from pypdf import PdfReader
+    def _commit_fixture(self, db):
+        """Fixture yang BENAR-BENAR di-commit supaya terlihat oleh transaksi lain."""
+        with db.cursor() as cr:
+            cr.execute("SET LOCAL lock_timeout = '20s'")  # gagal cepat, bukan menggantung
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            currency = env.ref("base.main_company").currency_id  # sudah aktif dan ter-commit
+            company = env["res.company"].create({"name": "SJP Concurrency Co", "currency_id": currency.id})
+            env = env.with_company(company)
+            receivable = env["account.account"].create({
+                "name": "AR SJP Conc", "code": "113901", "account_type": "asset_receivable",
+                "company_ids": [Command.set(company.ids)]})
+            income = env["account.account"].create({
+                "name": "Income SJP Conc", "code": "420901", "account_type": "income",
+                "company_ids": [Command.set(company.ids)]})
+            journal = env["account.journal"].create({
+                "name": "Sales SJP Conc", "code": "SJC", "type": "sale", "company_id": company.id})
+            partner = env["res.partner"].create({"name": "SJP Conc Customer", "is_company": True})
+            partner.with_company(company).property_account_receivable_id = receivable
+            move = env["account.move"].create({
+                "move_type": "out_invoice", "company_id": company.id, "journal_id": journal.id,
+                "partner_id": partner.id, "invoice_date": business_date() - timedelta(days=30),
+                "invoice_date_due": business_date(),
+                "invoice_line_ids": [Command.create({
+                    "name": "x", "quantity": 1, "price_unit": 777, "account_id": income.id})]})
+            move.action_post()
+            sheets = env["id.collection.sheet"].create([{"company_id": company.id}, {"company_id": company.id}])
+            return {
+                "company": company.id, "move": move.id, "partner": partner.id, "journal": journal.id,
+                "accounts": (receivable | income).ids, "sheet_a": sheets[0].id, "sheet_b": sheets[1].id,
+            }
 
-        text = " ".join("\n".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf)).pages).split())
-        for needle in (sheet.name, "SJP Pdf Outlet", move.name, self.company.name):
-            self.assertIn(needle, text)
-        self.assertRegex(text, re.compile(r"12[.,]345"))
+    def _cleanup_fixture(self, db, ids):
+        """Best-effort pada DB uji sekali pakai: hapus data yang sengaja di-commit."""
+        try:
+            with db.cursor() as cr:
+                sheets = [ids["sheet_a"], ids["sheet_b"]]
+                cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = ANY(%s)", (sheets,))
+                cr.execute("DELETE FROM id_collection_sheet WHERE id = ANY(%s)", (sheets,))
+                env = api.Environment(cr, SUPERUSER_ID, {})
+                for model, key in (("account.move", "move"), ("account.journal", "journal")):
+                    try:
+                        with cr.savepoint():
+                            rec = env[model].browse(ids[key]).exists()
+                            if model == "account.move":
+                                rec.button_draft()
+                            rec.unlink()
+                    except Exception:  # noqa: BLE001
+                        pass
+        except Exception:  # noqa: BLE001
+            pass
