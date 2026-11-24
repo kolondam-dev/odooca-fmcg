@@ -510,7 +510,7 @@ class TestCollectionConcurrency(TransactionCase):
             env = api.Environment(cr, SUPERUSER_ID, {})
             currency = env.ref("base.main_company").currency_id  # sudah aktif dan ter-commit
             company = env["res.company"].create({"name": "SJP Concurrency Co", "currency_id": currency.id})
-            env = env.with_company(company)
+            env = env(context={**env.context, "allowed_company_ids": company.ids})
             receivable = env["account.account"].create({
                 "name": "AR SJP Conc", "code": "113901", "account_type": "asset_receivable",
                 "company_ids": [Command.set(company.ids)]})
