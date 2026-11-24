@@ -484,3 +484,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-24T19:04:49+07:00] [INFO] BE-20c snapshot SJP
 - collection_sheets pada snapshot: kolektor, perusahaan, hari WITA; kontrak zod; 7 tes Odoo
 - Task managed by claude-design agent at 2026-11-24T19:04:49+07:00
+
+[2026-11-25T06:18:57+07:00] [INFO] BE-20c P2 pergantian hari
+- Satu jangkar assignment/hari; _assert_day sesudah induk dan sesudah blok SJP; 3 tes ORM baru; hanya CI yang membuktikan
+- Task managed by claude-design agent at 2026-11-25T06:18:57+07:00

@@ -9,6 +9,7 @@ from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
 
 from odoo.addons.id_base.models.business_day import business_date
+from odoo.addons.id_mobile_api.models.mobile_workday import MobileReadConflict, MobileWorkday
 
 AFTER_WITA_MIDNIGHT_UTC = "2026-11-21 17:00:00"  # 01:00 WITA 22 November, tanggal UTC masih 21
 BEFORE_WITA_MIDNIGHT_UTC = "2026-11-21 15:59:59"  # 23:59:59 WITA 21 November
@@ -219,3 +220,48 @@ class TestCollectionSnapshot(TransactionCase):
         self.assertEqual(after["version"], before["version"])  # digest tidak berubah
         self.assertEqual(len(after["collection_sheets"]["sheets"]), 1)
         self.assertNotIn("collection_sheets", self._snapshot(include_volatile=False))
+
+    # ---- pergantian hari WITA di tengah request ----------------------------------------------
+    def _prepare_day_rollover(self):
+        day = business_date()
+        outlet = self._partner("SJP Snap Rollover", is_company=True)
+        self._assign(self.mobile, outlet)
+        self._sheet([self._invoice(outlet, day, 100)])
+        return day
+
+    def test_same_day_snapshot_still_includes_sheets_from_one_anchor(self):
+        with freeze_time(BEFORE_WITA_MIDNIGHT_UTC, tick=False):
+            self._prepare_day_rollover()
+            payload = self._snapshot()
+            self.assertEqual(len(payload["collection_sheets"]["sheets"]), 1)
+
+    def test_day_changes_after_parent_snapshot_before_sheet_lookup_is_rejected(self):
+        with freeze_time(BEFORE_WITA_MIDNIGHT_UTC, tick=False) as frozen:
+            self._prepare_day_rollover()
+            original = MobileWorkday._assert_day
+            calls = []
+
+            def assert_then_roll(record, day):
+                original(record, day)
+                calls.append(day)
+                if len(calls) == 1:  # pemeriksaan akhir induk lulus, lalu tengah malam WITA lewat
+                    frozen.move_to(AFTER_WITA_MIDNIGHT_UTC)
+
+            with patch.object(MobileWorkday, "_assert_day", assert_then_roll):
+                with self.assertRaises(MobileReadConflict):
+                    self._snapshot()
+
+    def test_day_changes_while_sheets_are_built_is_rejected(self):
+        with freeze_time(BEFORE_WITA_MIDNIGHT_UTC, tick=False) as frozen:
+            self._prepare_day_rollover()
+            sheet_model = type(self.env["id.collection.sheet"])
+            original = sheet_model._mobile_snapshot_payload
+
+            def build_then_roll(model, assignment, day):
+                result = original(model, assignment, day)
+                frozen.move_to(AFTER_WITA_MIDNIGHT_UTC)
+                return result
+
+            with patch.object(sheet_model, "_mobile_snapshot_payload", build_then_roll):
+                with self.assertRaises(MobileReadConflict):
+                    self._snapshot()

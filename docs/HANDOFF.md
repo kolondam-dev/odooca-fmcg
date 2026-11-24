@@ -7,7 +7,7 @@
 ## 2026-11-24 — [F] BE-20c: snapshot SJP untuk kolektor (claude-design)
 
 - [F] `id_ar_collection` memperluas `_snapshot_payload`: `collection_sheets {sheets, truncated}` hanya SJP `issued` milik pengguna sesi, perusahaan penugasan, `collect_date` = hari bisnis WITA. Baris membawa `amount_due` (snapshot) dan `balance` (sisa sekarang), `outlet_id` PJP, `overdue`. Volatil, di luar digest versi dan command/evidence; batas 10 SJP / 300 baris ditandai `truncated`.
-- [F] Kontrak zod opsional `collection_sheets`, `openapi.json` diekspor, tes katalog. 7 tes Odoo baru (cakupan kolektor/perusahaan/hari/status, batas WITA, isi baris, batas, digest) [BU: hanya CI].
+- [F] Kontrak zod opsional `collection_sheets`, `openapi.json` diekspor, tes katalog. 9 method tes Odoo (cakupan kolektor/perusahaan/hari/status, batas WITA, isi baris, batas, digest, kontrol hari sama, pergantian hari WITA dalam satu request ditolak MobileReadConflict) + satu tes vitest [BU: hanya CI]. P2 review #196: satu jangkar (assignment, hari) untuk seluruh snapshot, validasi sesudah induk dan sesudah blok SJP.
 - [BU] PWA belum membaca blok ini (FE-8b); BE-20d penerimaan dan BE-20e validasi/pembayaran berikutnya. `collection_v2` tetap OFF.
 
 ## 2026-11-24 — [F] BE-20b putaran 2: tutup P1/P2 review PR #194 (claude-design)
