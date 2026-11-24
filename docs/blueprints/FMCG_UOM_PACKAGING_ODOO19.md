@@ -78,6 +78,8 @@ modify purchase orders, inventory quantities or vendor bills.
 
 1. Run the same shell command with `FMCG_VENDOR_CARTON_MODE=uom-dry-run` and the
    verified company ID. The report lists SKU and units per carton for missing configurations.
+   Existing master ratios must match the CSV, even when packaging links are absent.
+   A mismatch, including a stored 1/1, stops the entire batch for reconciliation.
 2. In a disposable copy, repeat with `uom-apply`. This attaches packaging using the
    catalog ratios and keeps the inventory UoM. Existing vendor offers and transactions are retained.
    Repeat `uom-dry-run` and expect `planned=0`.

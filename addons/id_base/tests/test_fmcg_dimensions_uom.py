@@ -230,6 +230,8 @@ class TestFMCGDimensionsUoM(TransactionCase):
             "default_code": "TEST-LEGACY-CARTON",
             "principal_id": self.principal.id,
             "uom_id": self.uom_unit.id,
+            "inner_qty": 10,
+            "carton_qty": 120,
         })
         offer = self.env["product.supplierinfo"].create({
             "product_tmpl_id": product.id,
@@ -249,6 +251,10 @@ class TestFMCGDimensionsUoM(TransactionCase):
             "cost_price": "1250",
         }
         lookup = self._run_products_csv_loader
+        for apply in (False, True):
+            with self.assertRaisesRegex(ValueError, "existing=10/120 CSV=6/24"):
+                lookup([dict(row, inner_qty="6", carton_qty="24")], packaging=True, backfill=apply)
+        self.assertEqual((product.inner_qty, product.carton_qty), (10, 120))
         expected = ([(product.default_code, 120)], [])
         self.assertEqual(lookup([row], packaging=True, backfill=False), expected)
         self.assertFalse(product.fmcg_carton_uom_id)

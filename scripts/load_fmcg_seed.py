@@ -292,12 +292,15 @@ def backfill_carton_uoms(target_env, *, apply=False):
                 raise ValueError(f"[vendor_carton] Invalid base label for SKU {code}")
             if inner < 1 or quantity <= 1 or quantity % inner:
                 raise ValueError(f"[vendor_carton] Invalid packaging ratio for SKU {code}")
+            if (product.inner_qty, product.carton_qty) != (inner, quantity):
+                raise ValueError(
+                    f"[vendor_carton] Master ratio mismatch for SKU {code}: "
+                    f"existing={product.inner_qty}/{product.carton_qty} CSV={inner}/{quantity}"
+                )
             carton = product.fmcg_carton_uom_id
             if carton:
                 if (
                     product.fmcg_base_uom_id != base
-                    or product.inner_qty != inner
-                    or product.carton_qty != quantity
                     or carton not in product.uom_ids
                     or not isclose(carton._compute_quantity(1, inventory_uom, round=False), quantity)
                 ):

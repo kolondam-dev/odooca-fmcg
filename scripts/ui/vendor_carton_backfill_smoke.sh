@@ -7,9 +7,9 @@ trap 'rm -rf "$fixture"' EXIT
 chmod 755 "$fixture"
 mkdir -p "$fixture/data/seed"
 cat > "$fixture/data/seed/products_150.csv" <<'CSV'
-default_code,principal_code,purchase_uom,carton_qty,cost_price
-CI-CARTON-1,CI-CARTON,Karton,120,1250
-CI-CARTON-2,CI-CARTON,Karton,120,1250
+default_code,principal_code,purchase_uom,carton_qty,cost_price,base_uom,inner_qty
+CI-CARTON-1,CI-CARTON,Karton,120,1250,Pcs,10
+CI-CARTON-2,CI-CARTON,Karton,120,1250,Pcs,10
 CSV
 printf 'code,lead_time_days\nCI-CARTON,12\n' > "$fixture/data/seed/principals_4.csv"
 
@@ -38,8 +38,10 @@ for number in (1, 2):
         "company_id": target.id,
         "principal_id": principal.id,
         "uom_id": env.ref("uom.product_uom_unit").id,
+        "inner_qty": 10,
+        "carton_qty": 120,
     })
-    product.configure_fmcg_packaging_uoms(env.ref("id_base.uom_pcs"), 10, 120)
+
 
 env.flush_all()
 env.cr.execute("""
@@ -53,7 +55,8 @@ env.cr.execute("""
     END $$;
     INSERT INTO ci_backfill_snapshot
     SELECT name, ci_backfill_digest(name)
-    FROM unnest(ARRAY['product_template','uom_uom','stock_quant','purchase_order','purchase_order_line',
+    FROM unnest(ARRAY['product_template','product_product','product_supplierinfo','uom_uom','stock_quant',
+                      'stock_picking','stock_move','stock_move_line','purchase_order','purchase_order_line',
                       'account_move','account_move_line']) AS rows(name);
 """)
 env.cr.commit()
@@ -79,11 +82,68 @@ for offer in offers:
     assert offer.currency_id == target.currency_id
     assert offer.product_uom_id == offer.product_tmpl_id.fmcg_carton_uom_id
     assert offer.price == 150000 and offer.delay == 12
-env.cr.execute("SELECT name FROM ci_backfill_snapshot WHERE digest <> ci_backfill_digest(name)")
+env.cr.execute("SELECT name FROM ci_backfill_snapshot WHERE name <> 'product_supplierinfo' AND digest <> ci_backfill_digest(name)")
 changed = env.cr.fetchall()
 assert not changed, f"Backfill changed pre-existing master or transaction rows: {changed}"
 PY
 }
+
+operator uom-dry-run | tee "$fixture/uom-plan.log"
+grep -F "mode=uom-dry-run company=$company planned=2 preserved=0" "$fixture/uom-plan.log"
+verify 0
+
+sed -i 's/CI-CARTON-2,CI-CARTON,Karton,120,1250,Pcs,10/CI-CARTON-2,CI-CARTON,Karton,24,1250,Pcs,6/' "$fixture/data/seed/products_150.csv"
+for mode in uom-dry-run uom-apply; do
+    if operator "$mode" > "$fixture/uom-invalid.log" 2>&1; then exit 1; fi
+    grep -F 'Master ratio mismatch for SKU CI-CARTON-2: existing=10/120 CSV=6/24' "$fixture/uom-invalid.log"
+    verify 0
+done
+sed -i 's/CI-CARTON-2,CI-CARTON,Karton,24,1250,Pcs,6/CI-CARTON-2,CI-CARTON,Karton,120,1250,Pcs,10/' "$fixture/data/seed/products_150.csv"
+
+shell <<'PYTHON'
+env.cr.execute("""
+    CREATE FUNCTION ci_reject_second_packaging() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      IF NEW.default_code = 'CI-CARTON-2' AND NEW.fmcg_carton_uom_id IS NOT NULL THEN
+        RAISE EXCEPTION 'CI forced failure on second carton configuration';
+      END IF;
+      RETURN NEW;
+    END $$;
+    CREATE TRIGGER ci_reject_second_packaging AFTER UPDATE ON product_template
+    FOR EACH ROW EXECUTE FUNCTION ci_reject_second_packaging();
+    CREATE VIEW ci_backfill_product_identity AS
+    SELECT id, default_code, name, company_id, principal_id, uom_id, inner_qty, carton_qty
+    FROM product_template;
+    INSERT INTO ci_backfill_snapshot VALUES
+        ('ci_backfill_product_identity', ci_backfill_digest('ci_backfill_product_identity'));
+""")
+env.cr.commit()
+PYTHON
+if operator uom-apply > "$fixture/uom-rollback.log" 2>&1; then exit 1; fi
+grep -F 'CI forced failure on second carton configuration' "$fixture/uom-rollback.log"
+verify 0
+shell <<'PYTHON'
+env.cr.execute("DROP TRIGGER ci_reject_second_packaging ON product_template")
+env.cr.commit()
+PYTHON
+
+operator uom-apply | tee "$fixture/uom-apply.log"
+grep -F "mode=uom-apply company=$company planned=2 preserved=0" "$fixture/uom-apply.log"
+operator uom-dry-run | tee "$fixture/uom-replay.log"
+grep -F "mode=uom-dry-run company=$company planned=0 preserved=2" "$fixture/uom-replay.log"
+shell <<'PYTHON'
+env.cr.execute("""
+    SELECT name FROM ci_backfill_snapshot
+    WHERE name NOT IN ('product_template', 'uom_uom') AND digest <> ci_backfill_digest(name)
+""")
+assert not env.cr.fetchall(), "UoM backfill changed product identity, offers, or transaction data"
+env.cr.execute("""
+    UPDATE ci_backfill_snapshot SET digest = ci_backfill_digest(name)
+    WHERE name IN ('product_template', 'uom_uom')
+""")
+env.cr.commit()
+PYTHON
+verify 0
 
 operator dry-run | tee "$fixture/plan.log"
 grep -F "mode=dry-run company=$company planned=2 preserved=0" "$fixture/plan.log"
