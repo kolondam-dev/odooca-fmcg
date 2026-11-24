@@ -1,12 +1,17 @@
 """BE-20b: Surat Jalan Penagihan (SJP): generate dari AR terbuka, banyak SJP, unpaid kembali ke kandidat."""
+import re
+import threading
+import time
 from datetime import timedelta
 
 from freezegun import freeze_time
+from psycopg2 import IntegrityError
 
-from odoo import Command
+from odoo import SUPERUSER_ID, Command, api, sql_db
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
+from odoo.tools import mute_logger
 
 from odoo.addons.id_base.models.business_day import business_date
 
@@ -62,11 +67,12 @@ class TestCollectionSheet(TransactionCase):
             partner.with_company(company).property_account_receivable_id = self.acc_rec[company.id]
         return partner
 
-    def _invoice(self, partner, due, amount=100000.0, company=None):
+    def _invoice(self, partner, due, amount=100000.0, company=None, currency=None):
         company = company or self.company
         move = self.env["account.move"].with_company(company).create({
             "move_type": "out_invoice", "company_id": company.id, "journal_id": self.journal[company.id].id,
             "partner_id": partner.id, "invoice_date": due - timedelta(days=30), "invoice_date_due": due,
+            **({"currency_id": currency.id} if currency else {}),
             "invoice_line_ids": [Command.create({
                 "name": "SJP line", "quantity": 1.0, "price_unit": amount,
                 "account_id": self.acc_inc[company.id].id,
@@ -157,11 +163,11 @@ class TestCollectionSheet(TransactionCase):
         outlet = self._partner("SJP Unpaid", is_company=True)
         move = self._invoice(outlet, day, 100)
         sheet = self._generate()
-        sheet.line_ids.write({"outcome": "unpaid", "unpaid_reason": "Pemilik tidak ada"})
         sheet.collector_id = self.collector
         sheet.action_issue()
+        sheet.line_ids._apply_outcome({"outcome": "unpaid", "unpaid_reason": "Pemilik tidak ada"})
         self.assertEqual(self._wizard().candidate_count, 0)
-        sheet.write({"state": "returned"})  # transisi resmi menyusul di BE-20e
+        sheet._apply_state("returned")  # seam internal; aksi publik menyusul di BE-20e
         wizard = self._wizard()
         self.assertEqual(wizard.candidate_count, 1)
         self.assertEqual(wizard._candidates()[0], move)
@@ -279,3 +285,291 @@ class TestCollectionSheet(TransactionCase):
         self.assertIn("SJP Report Outlet", html)
         self.assertIn(move.name, html)
         self.assertIn("12,345", html.replace(".", ","))
+
+    # ---- P1: satu faktur, satu SJP aktif (reaktivasi dan indeks DB) ----------------------------
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_cancelled_sheet_cannot_be_reactivated_while_invoice_is_active_elsewhere(self):
+        move = self._invoice(self._partner("SJP Reactivate", is_company=True), business_date(), 100)
+        sheet_a = self._generate()
+        sheet_a.action_cancel()
+        sheet_b = self._generate()
+        self.assertEqual(sheet_b.line_ids.move_id, move)
+        with self.assertRaises(UserError):
+            sheet_a.action_draft()
+        # Atomik: A tetap dibatalkan, B tidak berubah, hanya satu klaim aktif.
+        (sheet_a | sheet_b).invalidate_recordset()
+        self.assertEqual(sheet_a.state, "cancelled")
+        self.assertEqual(sheet_b.state, "draft")
+        claims = self.env["id.collection.sheet.line"].search([("move_id", "=", move.id), ("active_claim", "=", True)])
+        self.assertEqual(claims.sheet_id, sheet_b)
+        # Setelah B dibatalkan, A boleh dipulihkan (jalur sah tetap PASS).
+        sheet_b.action_cancel()
+        sheet_a.action_draft()
+        self.assertEqual(sheet_a.state, "draft")
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_inactive_sheet_cannot_gain_lines_or_be_reparented(self):
+        move = self._invoice(self._partner("SJP Reparent", is_company=True), business_date(), 100)
+        sheet_a = self._generate()
+        sheet_a.action_cancel()
+        sheet_b = self._generate()
+        with self.assertRaises(UserError):  # tambah baris pada sheet tidak aktif
+            self.env["id.collection.sheet.line"].create({"sheet_id": sheet_a.id, "move_id": move.id})
+        with self.assertRaises(UserError):  # reparent baris lewat write langsung
+            sheet_b.line_ids.write({"sheet_id": sheet_a.id})
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_database_partial_unique_index_blocks_second_active_claim(self):
+        move = self._invoice(self._partner("SJP Index", is_company=True), business_date(), 100)
+        sheet_a = self._generate()
+        sheet_a.action_cancel()
+        self._generate()  # B aktif untuk faktur yang sama
+        line_a = sheet_a.line_ids
+        self.env.flush_all()
+        with mute_logger("odoo.sql_db"), self.assertRaises(IntegrityError), self.env.cr.savepoint():
+            self.env.cr.execute(
+                "UPDATE id_collection_sheet_line SET active_claim = TRUE WHERE id = %s", (line_a.id,))
+        claims = self.env["id.collection.sheet.line"].search_count(
+            [("move_id", "=", move.id), ("active_claim", "=", True)])
+        self.assertEqual(claims, 1)
+
+    def test_two_real_transactions_leave_a_single_active_claim(self):
+        """Dua transaksi PostgreSQL nyata (bukan satu cursor tes): yang kedua diblokir lalu ditolak."""
+        db = sql_db.db_connect(self.env.cr.dbname)
+        ids = self._commit_fixture(db)
+        self.addCleanup(self._cleanup_fixture, db, ids)
+        cr1 = db.cursor()
+        env1 = api.Environment(cr1, SUPERUSER_ID, {})
+        outcome = {}
+
+        def second_transaction():
+            cr2 = db.cursor()
+            try:
+                cr2.execute("SET LOCAL lock_timeout = '20s'")
+                env2 = api.Environment(cr2, SUPERUSER_ID, {})
+                env2["id.collection.sheet.line"].create({"sheet_id": ids["sheet_b"], "move_id": ids["move"]})
+                cr2.commit()
+                outcome["ok"] = True
+            except Exception as exc:  # noqa: BLE001
+                outcome["error"] = exc
+                cr2.rollback()
+            finally:
+                cr2.close()
+
+        try:
+            env1["id.collection.sheet.line"].create({"sheet_id": ids["sheet_a"], "move_id": ids["move"]})
+            thread = threading.Thread(target=second_transaction)
+            thread.start()
+            time.sleep(1.5)
+            self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu transaksi pertama")
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(30)
+        self.assertFalse(thread.is_alive())
+        self.assertNotIn("ok", outcome)
+        self.assertIsInstance(outcome.get("error"), (IntegrityError, ValidationError))
+        with db.cursor() as cr:
+            cr.execute(
+                "SELECT sheet_id FROM id_collection_sheet_line WHERE move_id = %s AND active_claim",
+                (ids["move"],))
+            self.assertEqual([row[0] for row in cr.fetchall()], [ids["sheet_a"]])
+            cr.execute("SELECT count(*) FROM id_collection_sheet_line WHERE sheet_id = %s", (ids["sheet_b"],))
+            self.assertEqual(cr.fetchone()[0], 0)
+
+    def _commit_fixture(self, db):
+        """Fixture yang BENAR-BENAR di-commit supaya terlihat oleh transaksi lain."""
+        with db.cursor() as cr:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            idr = env.ref("base.IDR")
+            idr.active = True
+            company = env["res.company"].create({"name": "SJP Concurrency Co", "currency_id": idr.id})
+            env = env.with_company(company)
+            receivable = env["account.account"].create({
+                "name": "AR SJP Conc", "code": "113901", "account_type": "asset_receivable",
+                "company_ids": [Command.set(company.ids)]})
+            income = env["account.account"].create({
+                "name": "Income SJP Conc", "code": "420901", "account_type": "income",
+                "company_ids": [Command.set(company.ids)]})
+            journal = env["account.journal"].create({
+                "name": "Sales SJP Conc", "code": "SJC", "type": "sale", "company_id": company.id})
+            partner = env["res.partner"].create({"name": "SJP Conc Customer", "is_company": True})
+            partner.with_company(company).property_account_receivable_id = receivable
+            move = env["account.move"].create({
+                "move_type": "out_invoice", "company_id": company.id, "journal_id": journal.id,
+                "partner_id": partner.id, "invoice_date": business_date() - timedelta(days=30),
+                "invoice_date_due": business_date(),
+                "invoice_line_ids": [Command.create({
+                    "name": "x", "quantity": 1, "price_unit": 777, "account_id": income.id})]})
+            move.action_post()
+            sheets = env["id.collection.sheet"].create([{"company_id": company.id}, {"company_id": company.id}])
+            return {
+                "company": company.id, "move": move.id, "partner": partner.id, "journal": journal.id,
+                "accounts": (receivable | income).ids, "sheet_a": sheets[0].id, "sheet_b": sheets[1].id,
+            }
+
+    def _cleanup_fixture(self, db, ids):
+        """Best-effort pada DB uji sekali pakai: hapus data yang sengaja di-commit."""
+        try:
+            with db.cursor() as cr:
+                sheets = [ids["sheet_a"], ids["sheet_b"]]
+                cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = ANY(%s)", (sheets,))
+                cr.execute("DELETE FROM id_collection_sheet WHERE id = ANY(%s)", (sheets,))
+                env = api.Environment(cr, SUPERUSER_ID, {})
+                for model, key in (("account.move", "move"), ("account.journal", "journal")):
+                    try:
+                        with cr.savepoint():
+                            rec = env[model].browse(ids[key]).exists()
+                            if model == "account.move":
+                                rec.button_draft()
+                            rec.unlink()
+                    except Exception:  # noqa: BLE001
+                        pass
+        except Exception:  # noqa: BLE001
+            pass
+
+    # ---- P2: lifecycle dan immutability dijaga server ------------------------------------------
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_direct_create_and_write_cannot_bypass_state_machine(self):
+        Sheet = self.env["id.collection.sheet"].with_user(self.admin)
+        with self.assertRaises(UserError):
+            Sheet.create({"company_id": self.company.id, "state": "issued"})
+        sheet = Sheet.create({"company_id": self.company.id})
+        for state in ("issued", "returned", "reconciled", "cancelled"):
+            with self.assertRaises(UserError):
+                sheet.write({"state": state})
+        for field in ("name", "generated_by"):
+            with self.assertRaises(UserError):
+                sheet.write({field: "x" if field == "name" else self.collector.id})
+        self.assertEqual(sheet.state, "draft")
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_illegal_transitions_and_context_flags_do_not_bypass(self):
+        self._invoice(self._partner("SJP Trans", is_company=True), business_date(), 100)
+        sheet = self._generate()
+        for new_state in ("returned", "reconciled", "draft"):
+            with self.assertRaises(UserError):
+                sheet._apply_state(new_state)
+        with self.assertRaises(UserError):
+            sheet.with_user(self.admin).with_context(force_state="issued", install_mode=True).write(
+                {"state": "issued"})
+        sheet.collector_id = self.collector
+        sheet.action_issue()
+        sheet._apply_state("returned")
+        sheet._apply_state("reconciled")
+        self.assertEqual(sheet.state, "reconciled")
+        with self.assertRaises(UserError):
+            sheet._apply_state("draft")
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_issued_sheet_is_frozen(self):
+        day = business_date()
+        first = self._invoice(self._partner("SJP Frozen A", is_company=True), day, 100)
+        extra = self._invoice(self._partner("SJP Frozen B", is_company=True), day + timedelta(days=1), 200)
+        sheet = self._generate(due_until=day)
+        sheet.collector_id = self.collector
+        sheet.action_issue()
+        admin_sheet = sheet.with_user(self.admin)
+        for vals in (
+            {"collector_id": self.other.id}, {"route": "RT-X"}, {"due_until": day + timedelta(days=1)},
+            {"collect_date": day + timedelta(days=1)}, {"company_id": self.foreign.id},
+        ):
+            with self.assertRaises(UserError):
+                admin_sheet.write(vals)
+        with self.assertRaises(UserError):
+            admin_sheet.write({"line_ids": [Command.clear()]})
+        admin_sheet.write({"note": "catatan boleh"})
+        line = sheet.line_ids
+        with self.assertRaises(UserError):
+            self.env["id.collection.sheet.line"].with_user(self.admin).create(
+                {"sheet_id": sheet.id, "move_id": extra.id})
+        with self.assertRaises(UserError):
+            line.with_user(self.admin).write({"amount_due": 1})
+        with self.assertRaises(UserError):
+            line.with_user(self.admin).write({"move_id": extra.id})
+        with self.assertRaises(UserError):
+            line.with_user(self.admin).unlink()
+        self.assertEqual(line.move_id, first)
+        self.assertEqual(line.amount_due, 100.0)
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_line_outcome_is_server_owned_and_amount_is_snapshot(self):
+        move = self._invoice(self._partner("SJP Snapshot", is_company=True), business_date(), 500)
+        sheet = self.env["id.collection.sheet"].with_user(self.admin).create({"company_id": self.company.id})
+        line = self.env["id.collection.sheet.line"].with_user(self.admin).create({
+            "sheet_id": sheet.id, "move_id": move.id, "amount_due": 1, "outcome": "paid",
+            "collected_amount": 500, "document_return": "original"})
+        self.assertEqual(line.amount_due, 500.0)
+        self.assertEqual((line.outcome, line.collected_amount, line.document_return), ("pending", 0.0, "none"))
+        with self.assertRaises(UserError):
+            line.with_user(self.admin).write({"outcome": "paid"})
+
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_issue_validates_collector_and_invoice_state(self):
+        day = business_date()
+        move = self._invoice(self._partner("SJP Issue Check", is_company=True), day, 100)
+        sheet = self._generate()
+        portal = new_test_user(self.env, login="sjp-portal", groups="base.group_portal", company_id=self.company.id)
+        foreign_user = new_test_user(
+            self.env, login="sjp-foreign-user", groups="base.group_user", company_id=self.foreign.id)
+        foreign_user.company_ids = [Command.set(self.foreign.ids)]
+        inactive = new_test_user(self.env, login="sjp-inactive", groups="base.group_user", company_id=self.company.id)
+        inactive.active = False
+        for bad in (portal, foreign_user, inactive):
+            sheet.collector_id = bad
+            with self.assertRaises(UserError):
+                sheet.action_issue()
+        sheet.collector_id = self.collector
+        self._settle(move, 0)  # faktur lunas sebelum terbit
+        with self.assertRaises(ValidationError):
+            sheet.action_issue()
+        self._settle(move, 100)
+        sheet.action_issue()
+        self.assertEqual(sheet.state, "issued")
+
+    # ---- P2: mata uang ---------------------------------------------------------------------------
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_foreign_currency_invoices_are_excluded_and_never_summed_raw(self):
+        usd = self.env.ref("base.USD")
+        usd.active = True
+        day = business_date()
+        outlet = self._partner("SJP Multi Currency", is_company=True)
+        idr_invoice = self._invoice(outlet, day, 100000)
+        usd_invoice = self._invoice(outlet, day, 100, currency=usd)
+        wizard = self._wizard()
+        self.assertEqual(wizard._candidates()[0], idr_invoice)
+        self.assertEqual(wizard.candidate_total, 100000.0)  # bukan 100100
+        self.assertEqual(wizard.foreign_count, 1)
+        sheet = self._generate()
+        self.assertEqual(sheet.line_ids.move_id, idr_invoice)
+        self.assertEqual(sheet.amount_total, 100000.0)
+        with self.assertRaises(ValidationError):  # tidak bisa diselundupkan lewat create baris
+            self.env["id.collection.sheet.line"].with_user(self.admin).create(
+                {"sheet_id": sheet.id, "move_id": usd_invoice.id})
+        self.assertEqual(sheet.amount_total, 100000.0)
+
+    # ---- PDF (D9) --------------------------------------------------------------------------------
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_report_pdf_smoke(self):
+        outlet = self._partner("SJP Pdf Outlet", is_company=True)
+        move = self._invoice(outlet, business_date(), 12345)
+        sheet = self._generate()
+        sheet.collector_id = self.collector
+        report = self.env["ir.actions.report"].with_context(force_report_rendering=True)
+        try:
+            pdf, report_format = report._render_qweb_pdf("id_ar_collection.report_collection_sheet", sheet.ids)
+        except UserError as exc:
+            if "wkhtmltopdf" in str(exc).lower():
+                self.skipTest("wkhtmltopdf tidak tersedia pada image CI ini: %s" % exc)
+            raise
+        self.assertEqual(report_format, "pdf")
+        self.assertTrue(pdf.startswith(b"%PDF"))
+        self.assertGreater(len(pdf), 1000)
+        import io
+
+        from pypdf import PdfReader
+
+        text = " ".join("\n".join(page.extract_text() for page in PdfReader(io.BytesIO(pdf)).pages).split())
+        for needle in (sheet.name, "SJP Pdf Outlet", move.name, self.company.name):
+            self.assertIn(needle, text)
+        self.assertRegex(text, re.compile(r"12[.,]345"))

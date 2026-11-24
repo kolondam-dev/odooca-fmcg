@@ -55,10 +55,10 @@
                         <page string="Faktur">
                             <field name="line_ids" readonly="state != 'draft'">
                                 <list editable="bottom">
-                                    <field name="move_id"/>
+                                    <field name="move_id" readonly="id"/>
                                     <field name="commercial_partner_id"/>
                                     <field name="due_date"/>
-                                    <field name="amount_due"/>
+                                    <field name="amount_due" readonly="True"/>
                                     <field name="currency_id" column_invisible="True"/>
                                     <field name="outcome" readonly="True"/>
                                     <field name="collected_amount" readonly="True"/>

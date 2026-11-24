@@ -1,3 +1,10 @@
+## 2026-11-24 — [F] BE-20b putaran 2: tutup P1/P2 review PR #194 (claude-design)
+
+- [F] P1: kolom `active_claim` + indeks unik parsial DB (satu faktur satu SJP aktif) dan pre-check sebelum INSERT/reaktivasi; reaktivasi `action_draft` ditolak atomik bila faktur aktif di SJP lain.
+- [F] P2: mesin status dan immutability di server (create/write/unlink/O2M); `_apply_state` dan `_apply_outcome` privat sebagai seam; validasi kolektor/faktur saat terbit. P2: faktur mata uang asing dikecualikan dan ditolak (tidak ada penjumlahan lintas mata uang).
+- [F] Tes baru: reaktivasi/reparent, indeks DB, dua transaksi PostgreSQL nyata (fixture di-commit, cleanup best-effort), lifecycle/immutability, validasi kolektor, USD+IDR, smoke PDF (`_render_qweb_pdf`, dilewati dengan pesan bila wkhtmltopdf tidak ada).
+- [BU] Tes Odoo hanya terverifikasi lewat CI exact SHA; BE-20c/d/e tetap di luar PR.
+
 ## 2026-11-23 — [F] BE-20a: agregat "wajib ditagih hari ini" dari server (claude-design)
 
 - [F] `_outlet_receivables` menambah `collect_today` {window_days 7, count, total, overdue_count} dari SEMUA faktur terbuka (commercial partner, perusahaan sesi, jatuh tempo < hari bisnis WITA + 7); outlet = `outlet_ids` penugasan hari itu (PJP). Volatil, di luar digest. 3 tes Odoo baru (+6/+7, cap daftar tidak membatasi agregat, parent/saudara, WITA) [BU: hanya CI, tidak ada Odoo di sandbox].

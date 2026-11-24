@@ -23,6 +23,7 @@
                     <field name="currency_id" invisible="True"/>
                     <field name="candidate_count"/>
                     <field name="candidate_total"/>
+                    <field name="foreign_count"/>
                     <field name="note"/>
                 </group>
                 <footer>

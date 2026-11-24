@@ -35,6 +35,11 @@ class CollectionSheetGenerate(models.TransientModel):
     candidate_count = fields.Integer(compute="_compute_candidates", string="Kandidat Faktur")
     candidate_total = fields.Monetary(compute="_compute_candidates", string="Total Kandidat")
     warning = fields.Char(compute="_compute_candidates")
+    foreign_count = fields.Integer(
+        compute="_compute_candidates",
+        string="Faktur Mata Uang Asing Dikecualikan",
+        help="Faktur bermata uang selain mata uang perusahaan tidak dimasukkan ke SJP.",
+    )
     currency_id = fields.Many2one(related="company_id.currency_id")
 
     def _candidates(self):
@@ -49,6 +54,7 @@ class CollectionSheetGenerate(models.TransientModel):
             ("move_type", "=", "out_invoice"),
             ("state", "=", "posted"),
             ("company_id", "=", self.company_id.id),
+            ("currency_id", "=", self.company_id.currency_id.id),
             ("payment_state", "in", OPEN_PAYMENT_STATES),
             ("amount_residual", ">", 0),
             ("invoice_date_due", "!=", False),
@@ -74,6 +80,18 @@ class CollectionSheetGenerate(models.TransientModel):
             )
         return Move.search(domain, order="invoice_date_due, id"), False
 
+    def _foreign_count(self):
+        self.ensure_one()
+        return self.env["account.move"].search_count([
+            ("move_type", "=", "out_invoice"),
+            ("state", "=", "posted"),
+            ("company_id", "=", self.company_id.id),
+            ("currency_id", "!=", self.company_id.currency_id.id),
+            ("payment_state", "in", OPEN_PAYMENT_STATES),
+            ("invoice_date_due", "!=", False),
+            ("invoice_date_due", "<=", self.due_until),
+        ])
+
     @api.depends("company_id", "collect_date", "due_until", "collector_id", "route")
     def _compute_candidates(self):
         for wiz in self:
@@ -81,6 +99,7 @@ class CollectionSheetGenerate(models.TransientModel):
             wiz.candidate_count = len(moves)
             wiz.candidate_total = sum(moves.mapped("amount_residual"))
             wiz.warning = warning
+            wiz.foreign_count = wiz._foreign_count()
 
     def action_generate(self):
         self.ensure_one()
