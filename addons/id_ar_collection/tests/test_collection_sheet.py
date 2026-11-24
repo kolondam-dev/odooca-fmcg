@@ -508,18 +508,21 @@ class TestCollectionConcurrency(TransactionCase):
             self.assertFalse(cr.fetchone()[0])  # B tidak berubah, tidak ada state setengah jadi
 
     def _commit_fixture(self, db):
-        """Fixture yang BENAR-BENAR di-commit supaya terlihat oleh transaksi lain."""
+        """Fixture yang BENAR-BENAR di-commit supaya terlihat oleh transaksi lain.
+
+        Memakai perusahaan utama (tanpa membuat perusahaan baru: langkah CI berikutnya mensyaratkan satu
+        perusahaan) dan dibersihkan penuh oleh `_cleanup_fixture`.
+        """
         with db.cursor() as cr:
             cr.execute("SET LOCAL lock_timeout = '20s'")  # gagal cepat, bukan menggantung
             env = api.Environment(cr, SUPERUSER_ID, {})
-            currency = env.ref("base.main_company").currency_id  # sudah aktif dan ter-commit
-            company = env["res.company"].create({"name": "SJP Concurrency Co", "currency_id": currency.id})
+            company = env.ref("base.main_company")
             env = env(context={**env.context, "allowed_company_ids": company.ids})
             receivable = env["account.account"].create({
-                "name": "AR SJP Conc", "code": "113901", "account_type": "asset_receivable",
+                "name": "AR SJP Conc", "code": "999801", "account_type": "asset_receivable",
                 "company_ids": [Command.set(company.ids)]})
             income = env["account.account"].create({
-                "name": "Income SJP Conc", "code": "420901", "account_type": "income",
+                "name": "Income SJP Conc", "code": "999802", "account_type": "income",
                 "company_ids": [Command.set(company.ids)]})
             journal = env["account.journal"].create({
                 "name": "Sales SJP Conc", "code": "SJC", "type": "sale", "company_id": company.id})
@@ -537,27 +540,22 @@ class TestCollectionConcurrency(TransactionCase):
             line_b = env["id.collection.sheet.line"].create({"sheet_id": sheets[1].id, "move_id": move.id})
             sheets[1].action_cancel()
             return {
-                "company": company.id, "move": move.id, "partner": partner.id, "journal": journal.id,
+                "move": move.id, "partner": partner.id, "journal": journal.id,
                 "accounts": (receivable | income).ids, "sheet_a": sheets[0].id, "sheet_b": sheets[1].id,
                 "line_b": line_b.id,
             }
 
     def _cleanup_fixture(self, db, ids):
-        """Best-effort pada DB uji sekali pakai: hapus data yang sengaja di-commit."""
-        try:
-            with db.cursor() as cr:
-                sheets = [ids["sheet_a"], ids["sheet_b"]]
-                cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = ANY(%s)", (sheets,))
-                cr.execute("DELETE FROM id_collection_sheet WHERE id = ANY(%s)", (sheets,))
-                env = api.Environment(cr, SUPERUSER_ID, {})
-                for model, key in (("account.move", "move"), ("account.journal", "journal")):
-                    try:
-                        with cr.savepoint():
-                            rec = env[model].browse(ids[key]).exists()
-                            if model == "account.move":
-                                rec.button_draft()
-                            rec.unlink()
-                    except Exception:  # noqa: BLE001
-                        pass
-        except Exception:  # noqa: BLE001
-            pass
+        """Hapus semua yang di-commit; kegagalan membersihkan SENGAJA tidak ditelan (mencemari langkah CI lain)."""
+        with db.cursor() as cr:
+            cr.execute("SET LOCAL lock_timeout = '20s'")
+            sheets = [ids["sheet_a"], ids["sheet_b"]]
+            cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = ANY(%s)", (sheets,))
+            cr.execute("DELETE FROM id_collection_sheet WHERE id = ANY(%s)", (sheets,))
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            move = env["account.move"].browse(ids["move"])
+            move.button_draft()
+            move.unlink()
+            env["account.journal"].browse(ids["journal"]).unlink()
+            env["account.account"].browse(ids["accounts"]).unlink()
+            env["res.partner"].browse(ids["partner"]).unlink()
