@@ -74,7 +74,7 @@ class TestFMCGDimensionsUoM(TransactionCase):
         self.assertEqual(product.uom_id, self.uom_unit)
 
 
-    def _run_products_csv_loader(self, rows, *, backfill=None):
+    def _run_products_csv_loader(self, rows, *, backfill=None, packaging=False, offer_status=None):
         """Execute the real load_products() function against a temporary CSV in this Odoo test DB."""
         repo_root = next(
             parent for parent in pathlib.Path(__file__).resolve().parents
@@ -108,7 +108,9 @@ class TestFMCGDimensionsUoM(TransactionCase):
             if backfill is None:
                 namespace["load_products"]()
                 return
-            return namespace["backfill_vendor_cartons"](self.env, apply=backfill)
+            if packaging:
+                return namespace["backfill_carton_uoms"](self.env, apply=backfill)
+            return namespace["backfill_vendor_cartons"](self.env, apply=backfill, offer_status=offer_status)
 
     def test_real_seed_loader_replay_preserves_stock_uom_and_packaging(self):
         product = self.env["product.template"].create({
@@ -219,6 +221,48 @@ class TestFMCGDimensionsUoM(TransactionCase):
                 self.assertEqual(local.product_uom_id, product.fmcg_carton_uom_id)
             else:
                 self.assertEqual(offers, offer)
+
+    def test_legacy_carton_uom_backfill_preserves_inventory_offer(self):
+        vendor = self.env["res.partner"].create({"name": "Legacy Vendor"})
+        self.principal.partner_id = vendor
+        product = self.env["product.template"].create({
+            "name": "Legacy SKU",
+            "default_code": "TEST-LEGACY-CARTON",
+            "principal_id": self.principal.id,
+            "uom_id": self.uom_unit.id,
+        })
+        offer = self.env["product.supplierinfo"].create({
+            "product_tmpl_id": product.id,
+            "partner_id": vendor.id,
+            "company_id": self.env.company.id,
+            "product_uom_id": self.uom_unit.id,
+            "price": 1250,
+            "min_qty": 7,
+        })
+        row = {
+            "default_code": product.default_code,
+            "principal_code": self.principal.code,
+            "base_uom": "Pcs",
+            "inner_qty": "10",
+            "carton_qty": "120",
+            "purchase_uom": "Karton",
+            "cost_price": "1250",
+        }
+        lookup = self._run_products_csv_loader
+        expected = ([(product.default_code, 120)], [])
+        self.assertEqual(lookup([row], packaging=True, backfill=False), expected)
+        self.assertFalse(product.fmcg_carton_uom_id)
+        self.assertEqual(lookup([row], packaging=True, backfill=True), expected)
+        carton = product.fmcg_carton_uom_id
+        self.assertEqual(carton._compute_quantity(1, self.uom_unit, round=False), 120)
+        self.assertEqual(lookup([row], packaging=True, backfill=True), ([], [product.default_code]))
+        self.assertEqual(product.fmcg_carton_uom_id, carton)
+        self.assertEqual(product.uom_id, self.uom_unit)
+        counts = dict.fromkeys(("carton", "inventory", "other"), 0)
+        self.assertEqual(lookup([row], backfill=False, offer_status=counts), ([], [product.default_code]))
+        self.assertEqual(counts, {"carton": 0, "inventory": 1, "other": 0})
+        self.assertEqual(product.seller_ids, offer)
+        self.assertEqual((offer.product_uom_id, offer.price, offer.min_qty), (self.uom_unit, 1250, 7))
 
     def test_existing_database_vendor_carton_backfill(self):
         vendor = self.env["res.partner"].create({"name": "Backfill Vendor"})
