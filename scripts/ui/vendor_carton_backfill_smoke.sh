@@ -53,9 +53,12 @@ env.cr.execute("""
                      table_name) INTO digest;
       RETURN digest;
     END $$;
+    CREATE VIEW ci_backfill_variant_identity AS
+    SELECT id, to_jsonb(product_product) - ARRAY['write_date','write_uid'] AS fields
+    FROM product_product;
     INSERT INTO ci_backfill_snapshot
     SELECT name, ci_backfill_digest(name)
-    FROM unnest(ARRAY['product_template','product_product','product_supplierinfo','uom_uom','stock_quant',
+    FROM unnest(ARRAY['product_template','ci_backfill_variant_identity','product_supplierinfo','uom_uom','stock_quant',
                       'stock_picking','stock_move','stock_move_line','purchase_order','purchase_order_line',
                       'account_move','account_move_line']) AS rows(name);
 """)
@@ -112,7 +115,9 @@ env.cr.execute("""
     CREATE TRIGGER ci_reject_second_packaging AFTER UPDATE ON product_template
     FOR EACH ROW EXECUTE FUNCTION ci_reject_second_packaging();
     CREATE VIEW ci_backfill_product_identity AS
-    SELECT id, default_code, name, company_id, principal_id, uom_id, inner_qty, carton_qty
+    SELECT id, to_jsonb(product_template) - ARRAY[
+        'write_date','write_uid','fmcg_base_uom_id','fmcg_inner_uom_id','fmcg_carton_uom_id'
+    ] AS fields
     FROM product_template;
     INSERT INTO ci_backfill_snapshot VALUES
         ('ci_backfill_product_identity', ci_backfill_digest('ci_backfill_product_identity'));
@@ -136,7 +141,8 @@ env.cr.execute("""
     SELECT name FROM ci_backfill_snapshot
     WHERE name NOT IN ('product_template', 'uom_uom') AND digest <> ci_backfill_digest(name)
 """)
-assert not env.cr.fetchall(), "UoM backfill changed product identity, offers, or transaction data"
+changed = env.cr.fetchall()
+assert not changed, f"UoM backfill changed product identity, offers, or transaction data: {changed}"
 env.cr.execute("""
     UPDATE ci_backfill_snapshot SET digest = ci_backfill_digest(name)
     WHERE name IN ('product_template', 'uom_uom')
