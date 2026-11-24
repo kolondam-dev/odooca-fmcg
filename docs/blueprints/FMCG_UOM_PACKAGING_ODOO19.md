@@ -73,3 +73,17 @@ company-local offers are preserved. With the same target and reviewed output, us
 `FMCG_VENDOR_CARTON_MODE=apply` to create the missing offers in one transaction.
 Run dry-run again and expect `planned=0`. The operation does not replay the master seed or
 modify purchase orders, inventory quantities or vendor bills.
+
+### Existing SKUs without carton packaging
+
+1. Run the same shell command with `FMCG_VENDOR_CARTON_MODE=uom-dry-run` and the
+   verified company ID. The report lists SKU and units per carton for missing configurations.
+2. In a disposable copy, repeat with `uom-apply`. This attaches packaging using the
+   catalog ratios and keeps the inventory UoM. Existing vendor offers and transactions are retained.
+   Repeat `uom-dry-run` and expect `planned=0`.
+3. Run the original `dry-run` for supplier offers. The `preserved_offers` counters
+   report existing rows in carton, inventory UoM, and other UoMs separately.
+   An inventory-UoM offer is not evidence of carton purchasing.
+
+The UoM dry-run validates the catalog and current SKU configuration. Only the disposable
+apply verifies that Odoo can create or reuse all required packaging records.
