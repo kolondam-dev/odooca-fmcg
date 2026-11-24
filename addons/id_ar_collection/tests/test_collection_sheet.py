@@ -484,16 +484,18 @@ class TestCollectionConcurrency(TransactionCase):
                 cr2.close()
 
         thread = threading.Thread(target=second_transaction, daemon=True)
-        try:
-            env1["id.collection.sheet.line"].create({"sheet_id": ids["sheet_a"], "move_id": ids["move"]})
-            env1.flush_all()
-            thread.start()
-            time.sleep(1.5)
-            self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu transaksi pertama")
-            cr1.commit()
-        finally:
-            cr1.close()
-        thread.join(30)
+        # Pelanggaran unik disengaja; CI mensyaratkan log Odoo bersih dari ERROR.
+        with mute_logger("odoo.sql_db"):
+            try:
+                env1["id.collection.sheet.line"].create({"sheet_id": ids["sheet_a"], "move_id": ids["move"]})
+                env1.flush_all()
+                thread.start()
+                time.sleep(1.5)
+                self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu transaksi pertama")
+                cr1.commit()
+            finally:
+                cr1.close()
+            thread.join(30)
         self.assertFalse(thread.is_alive())
         self.assertNotIn("ok", outcome)
         self.assertIsInstance(outcome.get("error"), IntegrityError)
