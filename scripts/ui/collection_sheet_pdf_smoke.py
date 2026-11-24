@@ -21,7 +21,7 @@ env["ir.config_parameter"].sudo().set_param("report.url", "http://127.0.0.1:8069
 idr = env.ref("base.IDR")
 idr.active = True
 company = env["res.company"].create({"name": "CI SJP PDF Co", "currency_id": idr.id})
-env = env.with_company(company)
+env = env(context={**env.context, "allowed_company_ids": company.ids})
 receivable = env["account.account"].create({
     "name": "AR SJP PDF", "code": "113951", "account_type": "asset_receivable",
     "company_ids": [Command.set(company.ids)],
