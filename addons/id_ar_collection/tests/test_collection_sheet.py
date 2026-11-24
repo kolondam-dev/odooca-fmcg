@@ -557,5 +557,5 @@ class TestCollectionConcurrency(TransactionCase):
             move.button_draft()
             move.unlink()
             env["account.journal"].browse(ids["journal"]).unlink()
+            env["res.partner"].browse(ids["partner"]).unlink()  # sebelum akun: properti piutang menunjuk akun
             env["account.account"].browse(ids["accounts"]).unlink()
-            env["res.partner"].browse(ids["partner"]).unlink()
