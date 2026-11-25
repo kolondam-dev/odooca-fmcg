@@ -9,6 +9,19 @@ bukan oracle akuisisi/disposal atau laporan FIN36 yang siap diterima. Pemilik
 memilih jalur *oracle disposable dulu*; dependensi produksi/aktivasi demo
 tidak diotorisasi, keputusan lisensi khusus dan mapping Controller masih perlu.
 
+**Pembaruan FIN36, 2026-11-25:** [F] PR #197 merged sebagai `3056f3f`
+(head `aed9150`), 22 SUCCESS/6 SKIPPED pada exact SHA; ketiga jurnal
+depresiasi posted, GL per cutoff, residual nol dan rollback PASS di DB
+disposable. [F] PR #199 head uji `b8631b9` (merge `273ab8e` + `main`
+`f0b3632`): 22 SUCCESS / 7 SKIPPED, artifact Finance I0 `15031647416`
+membuktikan vendor bill posted sebagai sumber `type=create` (`move_id` bill,
+satu baris kapitalisasi 100.001,00, tanggal bill/invoice, jurnal `purchase`,
+kredit payable) dan disposal via wizard `account.asset.remove` yang jurnal
+draft-nya diposting oracle (debit akumulasi = kredit biaya perolehan
+100.001,00). [BU] Masih tidak ada dependensi/aktivasi produksi; populasi aset,
+mapping Controller, lisensi AGPL-3, ACL/export/live dan sign-off tetap HOLD,
+dan PR belum di-merge.
+
 **Status:** 0/58 `DITERIMA`; `REPORT_CATALOG.csv` tetap sumber status dan tidak
 diubah oleh inventaris ini. Dokumen ini adalah urutan kerja dan register blocker,
 bukan sign-off Finance/Tax atau persetujuan mengubah data production. Company

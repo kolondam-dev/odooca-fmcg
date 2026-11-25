@@ -435,3 +435,22 @@
 - [F] Pemilik memilih oracle disposable dulu. Slice ini membuktikan ketiga board period posted dan GL per cutoff termasuk mutasi missing/extra/duplicate/reuse, tanpa dependensi produksi.
 - [BU] Exact-SHA runtime CI belum diuji untuk slice baru. Akuisisi/disposal, mapping Controller, lisensi produksi, live dan sign-off tetap HOLD.
 - Task managed by opencode at 2026-11-24T19:38:30+07:00
+
+[2026-11-25T20:32:25+07:00] [INFO] FIN36 lifecycle oracle akuisisi bill dan disposal wizard (disposable)
+- [F] PR #197 merged 3056f3f (head aed9150); 22 SUCCESS/6 SKIPPED, Full Dataset SKIPPED; katalog 58/58 BELUM_DITERIMA.
+- [BU] Verifier kini membuat aset dari vendor bill posted (create line wajib move_id bill, satu baris kapitalisasi) lalu disposal via account.asset.remove; jurnal draft wizard diposting oracle dan diikat ke akumulasi/biaya perolehan 100.001.
+- [F] Tes offline menolak bill draft/bukan in_invoice, base line tanpa bill, kapitalisasi ganda/nilai salah, residual removal bukan nol, jurnal removal draft/salah, dan GL ekstra.
+- [BU] Exact-SHA CI belum dijalankan. Populasi aset, mapping Controller, lisensi produksi, ACL/export/live, dan sign-off tetap HOLD.
+- Task managed by opencode at 2026-11-25T20:32:25+07:00
+
+[2026-11-25T21:02:41+07:00] [INFO] FIN36 P2 review #199: ikat lawan kredit dan tanggal akuisisi
+- [F] Oracle akuisisi kini menolak bill yang tanggal/invoice date bukan 2026-07-01, jurnal bukan purchase, akun kredit bukan payable atau nilai kredit bukan 100.001, dan tanggal baris kapitalisasi/payable yang menyimpang.
+- [F] Counterexample offline ditambah untuk setiap mutasi; 6 tes oracle dan Ruff lulus lokal.
+- [BU] Head baru setelah perbaikan belum memiliki bukti artifact Finance I0; bukti 8f2fb37 tidak berlaku untuk head ini.
+- Task managed by opencode at 2026-11-25T21:02:41+07:00
+
+[2026-11-25T21:41:12+07:00] [INFO] FIN36 PR #199: merge main dan bukti exact-SHA b8631b9
+- [F] PR sempat CONFLICTING/DIRTY sehingga nol check-run; merge origin/main f0b3632 ke 273ab8e menghasilkan b8631b9. Konflik hanya docs/HANDOFF.md; oracle dan tes byte-identik dengan 273ab8e; katalog 58/58 BELUM_DITERIMA.
+- [F] Exact-SHA b8631b9: 29 check unik, 22 SUCCESS / 7 SKIPPED (Full Dataset runtime SKIPPED). Finance I0 run 45631348851 SUCCESS; artifact 15031647416 memuat acquisition_bill_to_asset_gl (bill 1 -> create move 1, 100001.00), move depresiasi 2/3/4, cutoff 33333.67/66667.34/100001.00, disposal move 5 (debit akumulasi = kredit biaya perolehan = 100001.00), fixture_rollback PASS.
+- [BU] Populasi aset, mapping Controller, lisensi produksi, ACL/export/live, sign-off, merge/deploy tetap HOLD; menunggu re-review independen.
+- Task managed by opencode at 2026-11-25T21:41:12+07:00
