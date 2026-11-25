@@ -15,11 +15,13 @@
 > `3056f3f` (head `aed9150`); pada exact SHA 22 check SUCCESS dan 6 SKIPPED
 > (Full Dataset runtime tidak dijalankan). Artifact Finance I0 mencatat tiga
 > jurnal depresiasi berbeda (move 1/2/3), GL per cutoff, residual nol dan
-> rollback PASS di DB disposable. [BU] Slice berikutnya memakai vendor bill
-> posted sebagai sumber `type=create` (`move_id` wajib) dan wizard
-> `account.asset.remove` untuk disposal; jurnal draft wizard harus diposting
-> oracle lalu diikat ke akun akumulasi/biaya perolehan. Tetap tanpa dependensi
-> atau aktivasi produksi; FIN36 belum diterima.
+> rollback PASS di DB disposable. [F] PR #199 head uji `b8631b9` (merge
+> `273ab8e` + `main` `f0b3632`): 22 SUCCESS / 7 SKIPPED dan artifact Finance I0
+> `15031647416` memakai vendor bill posted sebagai sumber `type=create`
+> (`move_id` = bill, satu baris kapitalisasi 100.001,00) serta wizard
+> `account.asset.remove` yang jurnal draft-nya diposting oracle lalu diikat ke
+> akun akumulasi/biaya perolehan 100.001,00. Tetap tanpa dependensi atau
+> aktivasi produksi; FIN36 belum diterima dan PR belum di-merge.
 
 ## Scope dan status
 
