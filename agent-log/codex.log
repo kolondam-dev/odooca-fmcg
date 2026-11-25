@@ -634,3 +634,8 @@
 - Dashboard menggunakan approval tactical sesuai kebijakan; nominal KPI dipertahankan.
 - Golden native promo nominal tetap dibuktikan hingga rekonsiliasi. Sync main 2cf2626; log dan handoff kedua cabang dipertahankan.
 - Task managed by codex agent at 2026-11-25T15:24:34+07:00
+
+[2026-11-25T15:43:26+07:00] [INFO] PR #110: jalankan approval di fixture visual dashboard
+- GitHub: 337 tes addon lulus pada 582b7a1; tahap shell visual menemukan SO diskon belum disetujui.
+- Patch lokal pada DB kosong lulus hingga DASHBOARD_VISUAL_FIXTURE=PASS.
+- Task managed by codex agent at 2026-11-25T15:43:26+07:00

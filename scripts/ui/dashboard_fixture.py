@@ -30,6 +30,21 @@ order = env['sale.order'].create({  # noqa: F821
     'order_line': [(0, 0, {'product_id': p.id, 'product_uom_qty': 5, 'price_unit': 100000,
                            'discount': 10}) for p in products],
 })
+director_group = env.ref('id_approval.group_fmcg_approval_director', raise_if_not_found=False)  # noqa: F821
+if director_group:
+    director = env['res.users'].with_context(no_reset_password=True).create({  # noqa: F821
+        'name': 'Dashboard QA Approver',
+        'login': f'dashboard-qa-approver-{uuid.uuid4()}',
+        'company_id': company.id,
+        'company_ids': [(6, 0, company.ids)],
+        'group_ids': [(6, 0, director_group.ids)],
+    })
+    requests = order.with_user(admin)._mobile_auto_request_approvals('Dashboard visual fixture')
+    for request in requests.with_user(director):
+        for _ in request.line_ids:
+            if request.state == 'pending':
+                request.action_approve()
+        assert request.state == 'approved'
 order.action_confirm()
 order.date_order = datetime(2026, 7, 15, 3, 0)
 invoices = order._create_invoices()

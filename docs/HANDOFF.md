@@ -1,3 +1,15 @@
+## 2026-11-25T15:43:26+07:00 — Agent Codex-Cloud1 — PR #110: fixture visual dashboard
+
+**Berubah:**
+- Fixture visual dashboard memakai alur pengajuan dan keputusan tactical native untuk SO diskon 10%, dengan approver fixture eksplisit.
+**Diverifikasi:**
+- [F] GitHub menjalankan 337 tes addon tanpa gagal pada `582b7a1`. Langkah fixture visual berikutnya menemukan SO diskon yang masih langsung dikonfirmasi.
+- [F] Setelah koreksi, Odoo disposable menjalankan fixture UI dan `DASHBOARD_VISUAL_FIXTURE=PASS`. Dampak test **SESUAIKAN** untuk setup fixture visual.
+**Belum diuji:**
+- [BU] Langkah browser dan runtime exact-SHA masih menunggu CI GitHub.
+**Berikutnya:**
+- Pantau CI dan F4 pada SHA ini.
+
 ## 2026-11-25T15:24:34+07:00 — Agent Codex-Cloud1 — F4/PR #110: regresi CI dan golden chain komersial
 
 **Berubah:**
