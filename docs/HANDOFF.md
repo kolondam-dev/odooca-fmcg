@@ -1,3 +1,17 @@
+## 2026-11-25 — Rencana implementasi absensi PWA dan kalender kerja (ChatGPT-ABSENSI)
+
+- [F] Rencana di `docs/ui/ATTENDANCE_IMPLEMENTATION_PLAN.md`, branch `agen/absensi`, basis `f0b3632`.
+- [A] Tiga PR berurutan: posting PWA, kalender dan rekap, Time Off dan approval. Dokumen ikut PR pertama. Kalender meliputi libur nasional, cuti bersama, daerah, dan internal.
+- [F] Cakupan dokumen dan log. Sesuai impact map, gate static berlaku dan runtime no-op.
+- [BU] Validasi live, keputusan kebijakan HR, dan uji runtime menunggu milestone terkait.
+
+## 2026-11-25 — Discovery riwayat absensi Odoo dan PWA (codex)
+
+- [F] Basis `main` `f0b3632`. Clock-in/out PWA tersimpan lokal; dispatcher belum mendukung command HRIS. Attendance dan Time Off native tersedia sebagai dependensi `id_ui`.
+- [F] Kategori `hr_leave_2line` tersedia; penghubung status approval ke `hr.leave` belum ada.
+- [A] Usulan: addon `id_attendance` untuk integrasi PWA, alur pengecualian dan pelaporan periodik. Kebijakan kalender, istirahat, toleransi dan tanggal awal cakupan perlu disepakati.
+- [BU] Discovery berbasis kode dan riwayat Git. Runtime Odoo, riwayat live, serta penerimaan perangkat belum diverifikasi.
+
 ## 2026-11-25 — [BU] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
 
 - [F] PR #197 merged ke `main` sebagai `3056f3f0ce3bda8b4938d8aaa464e5be3de87e01`; head `aed9150c4af091b28f53c7ab97eed2a6f691c6d3`; 22 SUCCESS/6 SKIPPED, Full Dataset runtime SKIPPED. Artifact: tiga jurnal depresiasi (move 1/2/3), GL per cutoff, residual nol, rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.

@@ -647,3 +647,9 @@
 [2026-11-25T19:06:25+07:00] [INFO] Sinkronisasi PR 177 setelah review supervisor
 - Main 2cf2626. Log kedua sisi dipertahankan.
 - Task managed by codex agent at 2026-11-25T19:06:25+07:00
+
+[2026-11-25T20:57:33+07:00] [INFO] Discovery riwayat absensi Odoo dan PWA
+- [F] Basis main f0b3632; clock-in/out PWA lokal, dispatcher belum memproses command HRIS.
+- [F] Kategori approval cuti dua tingkat tersedia; adaptor hr.leave belum ada.
+- [A] Rencana: integrasi sumber PWA dan Time Off, lalu rekap periodik Odoo; belum mengubah aplikasi.
+- Task managed by codex agent at 2026-11-25T20:57:33+07:00
