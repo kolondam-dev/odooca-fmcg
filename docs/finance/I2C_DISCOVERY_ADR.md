@@ -20,8 +20,13 @@
 > `15031647416` memakai vendor bill posted sebagai sumber `type=create`
 > (`move_id` = bill, satu baris kapitalisasi 100.001,00) serta wizard
 > `account.asset.remove` yang jurnal draft-nya diposting oracle lalu diikat ke
-> akun akumulasi/biaya perolehan 100.001,00. Tetap tanpa dependensi atau
-> aktivasi produksi; FIN36 belum diterima dan PR belum di-merge.
+> akun akumulasi/biaya perolehan 100.001,00. [F] PR #199 merged ke `main`
+> sebagai `23a4108` (head uji `6ce53e6`), 22 SUCCESS / 7 SKIPPED; artifact
+> Finance I0 yang benar adalah `15034796540` (`15034796544` adalah artifact
+> Docker build). [BU] Slice berikutnya menguji rollforward register tiga aset
+> (opening/closing nonnol) dan early disposal ber-residual/gain-loss di DB
+> disposable. Tetap tanpa
+> dependensi atau aktivasi produksi; FIN36 belum diterima.
 
 ## Scope dan status
 
