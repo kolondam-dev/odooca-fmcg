@@ -15,14 +15,20 @@ class SaleOrder(models.Model):
         principal = principals.id if len(principals) == 1 else False
         historical = self.env.su and (self.fmcg_seed_batch or "").startswith("PERIOD_")
         generic = (prefix + "principal_id", "=", False)
-        if (historical or getattr(self, "commercial_tactical_components", False)
-                or not principal or any(not product.principal_id for product in products)):
+        components = getattr(self, "commercial_tactical_components", False) or {}
+        promo_basis = components.get("promo_basis") or []
+        if historical or (components and not promo_basis) or not principal or any(
+            not product.principal_id for product in products
+        ):
             return [generic]
-        return [
-            "|", generic, "&", "&", (prefix + "principal_id", "=", principal),
+        governed = [
+            "&", "&", (prefix + "principal_id", "=", principal),
             (prefix + "company_id", "=", self.company_id.id),
             (prefix + "governance_state", "in", ("approved", "active")),
         ]
+        if promo_basis:
+            governed = ["&", (prefix + "id", "=", promo_basis[0]), *governed]
+        return ["|", generic, *governed]
 
     def _get_program_domain(self):
         return super()._get_program_domain() + self._fmcg_governed_promo_domain()

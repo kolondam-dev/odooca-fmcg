@@ -70,7 +70,8 @@ class SaleOrder(models.Model):
             order.approval_request_ids = requests
             order.approval_count = len(requests)
 
-    @api.depends("order_line.discount", "order_line.price_unit", "order_line.product_id")
+    @api.depends("order_line.discount", "order_line.price_unit", "order_line.product_id",
+                 "order_line.product_uom_qty", "commercial_tactical_components")
     def _compute_discount_and_cost_flags(self):
         for order in self:
             tactical = False
@@ -81,6 +82,9 @@ class SaleOrder(models.Model):
                 if line.discount > 0.0:
                     tactical = True
                 net_price = line.price_unit * (1.0 - (line.discount / 100.0))
+                promo_basis = (order.commercial_tactical_components or {}).get("promo_basis")
+                if promo_basis and line.price_unit > 0 and line.product_uom_qty > 0:
+                    net_price -= promo_basis[2] / line.product_uom_qty
                 cost_price = line.product_id.standard_price
                 if cost_price > 0.0 and net_price < cost_price:
                     below_hpp = True
@@ -205,7 +209,10 @@ class SaleOrder(models.Model):
         """Principal sebuah baris: baris reward memakai principal program promo (bila ada),
         selain itu principal produk. 0/False = tanpa principal."""
         if line.price_subtotal < 0:
-            promo_principal = getattr(line, "promo_principal_id", False)
+            reward = getattr(line, "reward_id", False)
+            promo_principal = getattr(line, "promo_principal_id", False) or (
+                getattr(reward.program_id, "principal_id", False) if reward else False
+            )
             if promo_principal:
                 return promo_principal.id
         return line.product_id.principal_id.id or False
@@ -373,8 +380,6 @@ class SaleOrder(models.Model):
         self.check_access("write")
         if self.state not in ("draft", "sent"):
             raise UserError("Diskon bertingkat hanya dapat diterapkan pada penawaran.")
-        if self._has_program_discount():
-            raise UserError("Kombinasi program dengan diskon bertingkat memerlukan kalkulasi program-first.")
         lines = self.order_line.filtered(lambda line: not line.display_type and line.product_id
                                          and line.price_unit > 0 and line.product_uom_qty > 0)
         if not lines or not isinstance(line_steps, dict) or set(line_steps) - {str(line.id) for line in lines}:
@@ -392,6 +397,13 @@ class SaleOrder(models.Model):
         def money(amount):
             return Decimal(str(self.currency_id.round(float(amount))))
 
+        promo = Decimal(0)
+        promo_basis = self._tactical_promo_basis()
+        if self._has_program_discount():
+            if len(lines) != 1 or not promo_basis:
+                raise UserError("Stack/footer hanya mendukung satu line dan satu promo nominal tetap.")
+            promo = money(value(promo_basis[2]))
+
         gross, net, steps_by_line = {}, {}, {}
         for line in lines:
             key = str(line.id)
@@ -403,7 +415,9 @@ class SaleOrder(models.Model):
                 raise UserError("Persentase diskon tidak boleh melebihi 100%.")
             steps_by_line[key] = [str(step) for step in eligible_steps]
             gross[key] = money(value(line.price_unit) * value(line.product_uom_qty))
-            net[key] = gross[key]
+            net[key] = gross[key] - promo
+            if net[key] < 0:
+                raise UserError("Promo melebihi nilai baris.")
             for step in eligible_steps:
                 net[key] = money(net[key] * (1 - step / 100))
 
@@ -422,17 +436,33 @@ class SaleOrder(models.Model):
         with self.env.cr.savepoint():
             for line in lines:
                 key = str(line.id)
-                final = net[key] - allocated[key]
+                final = net[key] - allocated[key] + promo
                 line.discount = float((gross[key] - final) * 100 / gross[key]) if gross[key] else 0
                 if money(line.price_subtotal) != final:
                     raise UserError("Alokasi diskon tidak dapat direpresentasikan dengan presisi diskon Odoo.")
             self.sudo().write({"commercial_tactical_components": {
-                "steps": steps_by_line, "footer": str(footer),
+                "steps": steps_by_line, "footer": str(footer), "promo_basis": promo_basis,
                 "allocations": {key: str(amount) for key, amount in allocated.items()},
                 "basis": {str(line.id): [line.price_unit, line.product_uom_qty, line.discount]
                           for line in lines},
             }})
         return True
+
+    def _tactical_promo_basis(self):
+        """Allow native fixed rewards that retain their amount after line/footer deductions."""
+        self.ensure_one()
+        rewards = self.order_line.filtered(lambda line: getattr(line, "reward_id", False))
+        if len(rewards) != 1 or rewards.price_subtotal >= 0:
+            return []
+        reward = rewards.reward_id
+        program = reward.program_id
+        if (
+            reward.discount_mode != "per_order" or not getattr(program, "principal_id", False)
+            or program.currency_id != self.currency_id
+            or self.currency_id.compare_amounts(-rewards.price_subtotal, reward.discount) != 0
+        ):
+            return []
+        return [program.id, reward.id, -rewards.price_subtotal]
 
     def _check_tactical_component_basis(self):
         self.ensure_one()
@@ -440,7 +470,10 @@ class SaleOrder(models.Model):
             basis = {str(line.id): [line.price_unit, line.product_uom_qty, line.discount]
                      for line in self.order_line if not line.display_type and line.product_id
                      and line.price_unit > 0 and line.product_uom_qty > 0}
-            if basis != self.commercial_tactical_components["basis"]:
+            promo_basis = self._tactical_promo_basis()
+            if (basis != self.commercial_tactical_components["basis"]
+                    or promo_basis != self.commercial_tactical_components.get("promo_basis", [])
+                    or (self._has_program_discount() and not promo_basis)):
                 raise UserError("Basis diskon bertingkat berubah. Terapkan ulang diskon sebelum melanjutkan.")
 
     def _commercial_approval_fingerprint(self):

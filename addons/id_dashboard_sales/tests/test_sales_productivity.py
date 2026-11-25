@@ -48,6 +48,21 @@ class TestSalesProductivity(TransactionCase):
             "order_line": [(0, 0, {"product_id": p.id, "product_uom_qty": qty, "price_unit": 1000.0,
                                    "discount": discount, "tax_ids": [(5, 0, 0)]}) for p in products],
         })
+        director_group = self.env.ref("id_approval.group_fmcg_approval_director", raise_if_not_found=False)
+        if discount and director_group:
+            director = self.env["res.users"].with_context(no_reset_password=True).create({
+                "name": "Dashboard Fixture Approver",
+                "login": f"dash_approver_{uuid.uuid4()}",
+                "company_id": order.company_id.id,
+                "company_ids": [(6, 0, order.company_id.ids)],
+                "group_ids": [(6, 0, director_group.ids)],
+            })
+            requests = order.with_user(user)._mobile_auto_request_approvals()
+            for request in requests.with_user(director):
+                for _ in request.line_ids:
+                    if request.state == "pending":
+                        request.action_approve()
+                self.assertEqual(request.state, "approved")
         order.action_confirm()
         order.date_order = day
         return order

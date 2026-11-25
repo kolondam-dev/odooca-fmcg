@@ -629,3 +629,8 @@
 [2026-11-23T10:45:07+07:00] [INFO] Backfill offer karton vendor existing
 - Mode dry-run dan apply eksplisit, validasi SKU dan rasio; tidak dijalankan di demo.
 - Task managed by codex agent at 2026-11-23T10:45:07+07:00
+
+[2026-11-25T15:24:34+07:00] [INFO] PR #110: perbaiki setup KPI dan uji paket komersial gabungan
+- Dashboard menggunakan approval tactical sesuai kebijakan; nominal KPI dipertahankan.
+- Golden native promo nominal tetap dibuktikan hingga rekonsiliasi. Sync main 2cf2626; log dan handoff kedua cabang dipertahankan.
+- Task managed by codex agent at 2026-11-25T15:24:34+07:00

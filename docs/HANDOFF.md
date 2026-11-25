@@ -1,3 +1,16 @@
+## 2026-11-25T15:24:34+07:00 — Agent Codex-Cloud1 — F4/PR #110: regresi CI dan golden chain komersial
+
+**Berubah:**
+- Sinkron dengan `main` `2cf2626`. Konflik handoff dan log diselesaikan dengan mempertahankan entri kedua cabang.
+- Fixture KPI Sales mengajukan dan memutuskan approval tactical memakai pengguna eksplisit bila addon approval tersedia. Harga dan hasil KPI yang diharapkan tetap sama.
+- Golden chain native mencakup satu promo resmi nominal tetap, diskon tactical line, footer, approval berjenjang, delivery ber-lot, invoice, dan rekonsiliasi. Batas cakupan dicatat pada [matriks Paket B](reviews/PR110_PACKET_B_ACCEPTANCE.md).
+**Diverifikasi:**
+- [F] Pada `5df8ade` F4 lulus. Job install-test GitHub menemukan satu error fixture dashboard ketika guard tactical menolak konfirmasi sebelum pengajuan. Dampak test **SESUAIKAN** untuk fixture dashboard dan **TAMBAH** untuk golden chain gabungan.
+**Belum diuji:**
+- [BU] CI GitHub pada SHA integrasi. Cakupan promo multiproduk, budget, pengayaan sumber historis dan backend order v2 masih terbuka.
+**Berikutnya:**
+- Pantau suite exact-SHA melalui CI dan sertakan hasil F4 dalam re-review Paket B.
+
 ## 2026-11-24 — [BU] FIN36 oracle seluruh board posted pada DB disposable (opencode)
 
 - [F] PR #193 merged ke `main` sebagai `54a1aff528c538bae8d5195e2f584d60bca94c40`, head integrasi `76342d75673238279aef93c2651fca21aca1d256`; supervisor PASS/CUKUP untuk prasyarat teknis saja. 28/28 CI SUCCESS; install/upgrade, satu depresiasi posted→GL dan rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.

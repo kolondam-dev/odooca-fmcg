@@ -232,6 +232,9 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         order.action_apply_tactical_components(steps, 40_500)
         order.action_confirm()
 
+        self._settle_commercial_sale(order, lot)
+
+    def _settle_commercial_sale(self, order, lot):
         picking = order.picking_ids.with_user(self.warehouse_user)
         picking.action_assign()
         self.assertEqual(picking.move_line_ids.lot_id, lot)
@@ -328,3 +331,61 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         order.action_confirm()
         self.assertEqual(order.state, "sale")
         self.assertEqual(order.amount_untaxed, 950_000)
+
+    def test_fixed_official_promo_before_tactical_stack_and_footer(self):
+        if "loyalty.program" not in self.env:
+            self.skipTest("Sale loyalty is not installed for this focused module run")
+        principal = self.env.ref("id_base.principal_mayora")
+        product = self.product_a
+        product.write({
+            "principal_id": principal.id, "type": "consu", "is_storable": True,
+            "tracking": "lot", "invoice_policy": "delivery", "standard_price": 100_000,
+            "taxes_id": [Command.clear()],
+        })
+        warehouse = self.env["stock.warehouse"].search([("company_id", "=", self.company.id)], limit=1)
+        lot = self.env["stock.lot"].create({
+            "name": "MIXED-GOLDEN-LOT", "product_id": product.id, "company_id": self.company.id,
+        })
+        self.env["stock.quant"]._update_available_quantity(product, warehouse.lot_stock_id, 1, lot_id=lot)
+        program = self.env["loyalty.program"].sudo().create({
+            "name": "Fixed official amount", "program_type": "promotion",
+            "trigger": "with_code", "applies_on": "current", "company_id": self.company.id,
+            "principal_id": principal.id, "budget_source": "distributor",
+            "rule_ids": [Command.create({
+                "code": "GOLDEN-B-FIXED", "minimum_qty": 1,
+                "product_ids": [Command.set(product.ids)], "reward_point_amount": 1,
+            })],
+            "reward_ids": [Command.create({
+                "reward_type": "discount", "discount": 50_000, "discount_mode": "per_order",
+                "discount_applicability": "order", "required_points": 1,
+            })],
+        })
+        program.action_submit_approval()
+        program.action_approve()
+        program.action_activate()
+        order = self.env["sale.order"].with_user(self.salesperson).with_context(install_mode=False).create({
+            "partner_id": self.partner_a.id, "warehouse_id": warehouse.id,
+            "order_line": [Command.create({
+                "product_id": product.id, "product_uom_qty": 1, "price_unit": 1_000_000,
+            })],
+        })
+        self.env["sale.loyalty.coupon.wizard"].with_user(self.salesperson).create({
+            "order_id": order.id, "coupon_code": "GOLDEN-B-FIXED",
+        }).action_apply()
+        self.env["sale.loyalty.reward.wizard"].with_user(self.salesperson).create({
+            "order_id": order.id, "selected_reward_id": program.reward_ids.id,
+        }).action_apply()
+        self.assertEqual(order.amount_untaxed, 950_000)
+        line = order.order_line.filtered(lambda item: item.product_id == product)
+        order.action_apply_tactical_components({str(line.id): [1]}, 40_500)
+        self.assertEqual(order.amount_untaxed, 900_000)
+        requests = order._mobile_auto_request_approvals("Combined golden chain")
+        self.assertEqual(requests.mapped("category_code"), ["tactical_discount"])
+        self.assertEqual(len(requests.line_ids), 3)
+        with self.assertRaises(UserError):
+            order.action_confirm()
+        for approver in (self.supervisor, self.user_mgr, self.user_dir):
+            requests.with_user(approver).action_approve()
+        order.action_confirm()
+        self.assertEqual(order.order_line.filtered("reward_id").price_subtotal, -50_000)
+        self._settle_commercial_sale(order, lot)
