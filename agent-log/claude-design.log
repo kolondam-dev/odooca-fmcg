@@ -508,3 +508,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-25T19:06:10+07:00] [INFO] BE-20d Q5/Q6
 - Tengah malam WITA; meja kasir cashier_desk tanpa PWA; giro disetujui
 - Task managed by claude-design agent at 2026-11-25T19:06:10+07:00
+
+[2026-11-25T20:46:33+07:00] [INFO] BE-20d revisi custody
+- Custody dipisah dari alokasi; unpaid nol; metode campuran; cutoff per entrypoint; hanya dokumen
+- Task managed by claude-design agent at 2026-11-25T20:46:33+07:00

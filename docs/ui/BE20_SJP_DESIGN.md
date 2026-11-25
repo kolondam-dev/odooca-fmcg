@@ -57,7 +57,7 @@ Status: BE-20b diimplementasikan (addon `id_ar_collection`: model SJP + baris, w
 
 ## 8. BE-20d: penerimaan penagihan (rancangan revisi, belum diimplementasikan)
 
-Tujuan: kolektor mengirim hasil penagihan satu SJP lewat command offline-aman. Server mencatat penerimaan berstatus `posted` dan menandai baris SJP. **Tidak ada pembayaran, rekonsiliasi, atau perubahan saldo faktur** (itu BE-20e); `collection_v2` tetap OFF. Keputusan pemilik D10 (2026-11-25) ada di 8.8; dua hal turunannya (Q5 dan Q6) masih menunggu jawaban.
+Tujuan: kolektor mengirim hasil penagihan satu SJP lewat command offline-aman. Server mencatat penerimaan (custody uang/instrumen) berstatus `posted` dan menandai baris SJP. **Tidak ada pembayaran, rekonsiliasi, atau perubahan saldo faktur** (itu BE-20e); `collection_v2` tetap OFF. Keputusan pemilik D10 ada di 8.8. Konfirmasi accountant atas akun/jurnal giro tetap prasyarat terpisah untuk BE-20e giro.
 
 ### 8.1 Kontrak command `collection.receipt.submit`
 
@@ -99,7 +99,7 @@ Praktik FMCG: semua transaksi diselesaikan pada hari yang sama (kecuali kasbon d
 - **Penutupan akhir hari (job terjadwal, tengah malam WITA 00:00, diputuskan D10-Q5a):** untuk SJP `issued` dengan `collect_date` lewat: baris tanpa penerimaan ditandai `lapsed` (hasil baru, bukan `unpaid`, agar terbedakan dari tidak tertagih yang dilaporkan kolektor) dan melepas `active_claim`, sehingga faktur kembali menjadi kandidat tanpa lubang atau loop. SJP tanpa satu pun penerimaan menjadi `expired`; SJP dengan penerimaan lanjut ke validasi (20e) dan hanya baris `lapsed`-nya yang dilepas.
 - **Penerimaan yang sudah tersinkron (pending) tidak dibatalkan** oleh penutupan ini: proteksi 8.3 tetap berlaku sampai tervalidasi/ditolak. Yang "dibatalkan accordingly" hanyalah baris yang tidak pernah dilaporkan.
 - Command yang terlambat tiba setelah penutupan = `rejected` persisten dengan pesan jelas; HP boleh membuang antrean itu (tidak loop).
-- **Uang nyata yang sudah diterima tetapi tidak sempat tersinkron** tidak boleh masuk lewat command offline. Jalur utamanya adalah penerimaan di meja kasir (8.11), yang tidak bergantung pada PWA; setelah penutupan, penerimaan kasir hanya lewat pengecualian `group_ar_control` dengan alasan.
+- **Uang nyata yang sudah diterima tetapi tidak sempat tersinkron** tidak boleh masuk lewat command offline dan **tidak boleh ditolak** hanya karena faktur sudah dipindah. Jalurnya custody terkontrol (8.12): uang dicatat dahulu, alokasi ke faktur ditahan sampai konflik diselesaikan.
 
 ### 8.3 Proteksi penerimaan pending lintas SJP (kebijakan eksplisit)
 
@@ -185,7 +185,7 @@ Prinsip: **kebenaran uang ada di kasir, bukan di PWA.** PWA hanya klaim/pemberit
 
 **Dua jalan, satu model penerimaan** (`id.collection.receipt.source`):
 - `mobile`: command PWA (8.1), berstatus `posted`. Klaim kolektor; belum ada uang yang sah sampai kasir menghitung.
-- `cashier_desk`: kasir memilih SJP/kolektor di form back-office Odoo (tanpa PWA), memasukkan baris yang disetor (faktur, jumlah, metode) sambil menerima uang. Penerimaan langsung berstatus `cashier_validated` karena kasir menghitung uang fisik; accounting tetap langkah independen berikutnya.
+- `cashier_desk`: kasir memilih SJP/kolektor di form back-office Odoo (tanpa PWA), memasukkan baris yang disetor (faktur, jumlah, metode) sambil menerima uang. Untuk **tunai**, penerimaan langsung berstatus `cashier_validated` karena kasir menghitung uang fisik; accounting tetap langkah independen berikutnya. Transfer dan giro tidak memakai jalan pintas ini (8.13-3).
 - Jika penerimaan `mobile` sudah ada untuk baris itu, kasir **memvalidasi** yang ada (membandingkan klaim dengan hitungan fisik; selisih dicatat, penanganannya di 20e), bukan membuat yang baru. Jika tidak ada, kasir membuat `cashier_desk`. Indeks satu-pending-per-faktur (8.3) dan protokol lock (8.4) berlaku sama untuk kedua jalan, sehingga tidak mungkin dua penerimaan aktif atas faktur yang sama.
 
 **Kewajiban amankan dulu:**
@@ -194,8 +194,34 @@ Prinsip: **kebenaran uang ada di kasir, bukan di PWA.** PWA hanya klaim/pemberit
 - **Kontrol akhir hari:** job penutupan (tengah malam) menandai SJP yang masih memiliki klaim `mobile` tanpa validasi kasir sebagai **uang bermalam**, dengan notifikasi ke AR control. Klaim itu tidak dibatalkan (proteksi pending tetap).
 - Kasir menerima kolektor **dengan SJP dan faktur di tangan**; baris yang disetor harus merupakan baris SJP milik kolektor itu (identitas server sama dengan 8.1).
 
-**Setelah penutupan tengah malam:** penerimaan kasir atas baris `lapsed` atau SJP `expired` hanya lewat pengecualian oleh `group_ar_control` dengan alasan wajib dan jejak audit (`exception=true`); ia memakai model dan invarian yang sama sehingga tidak ada lubang atau loop (klaim dibuka kembali secara atomik bila faktur belum masuk SJP lain, dan ditolak bila sudah).
+**Setelah penutupan tengah malam:** uang fisik tetap dicatat lewat custody exception oleh `group_ar_control` (8.12). Yang ditahan adalah **alokasi ke faktur**, bukan pencatatan uangnya.
 
 **Metode:** tunai: kasir. Transfer: admin finance mencatat setelah memverifikasi mutasi (8.9). Giro: fisik giro diserahkan ke kasir/finance, dicatat di register (8.10). Semuanya tanpa PWA.
 
 **Pembagian fase:** 20d menyiapkan model dengan `source`, `exception`, dan seam pembuatan yang dipakai bersama; 20e memuat form meja kasir, validasi kasir/accounting, laporan uang di tangan kolektor, dan kontrol uang bermalam. Tes tambahan: penerimaan meja kasir tanpa command mobile; kasir memvalidasi klaim mobile (selisih tercatat); meja kasir vs command mobile paralel pada faktur yang sama (satu menang); SJP tidak dapat `returned` sebelum validasi kasir; pengecualian pasca-penutupan dengan alasan, termasuk ditolak bila faktur sudah di SJP lain; job uang bermalam idempoten.
+
+### 8.12 Custody uang dipisah dari alokasi ke faktur (konflik pasca-penutupan)
+
+Masalah: kolektor A menerima uang tetapi gagal sinkron/setor sebelum tengah malam; job melepas baris lama; faktur masuk SJP B (atau B sudah punya klaim pending); A datang membawa uang dan faktur. Menolak **alokasi** yang ambigu benar; menolak **pencatatan uang fisik** salah.
+
+**Dua konsep terpisah:**
+- **Custody** = uang/instrumen diterima, dari siapa (kolektor/sumber), nominal, metode, instrumen/referensi, waktu, siapa yang menerima, alasan, `source`, `exception`. Dibuat oleh penerimaan header (`id.collection.receipt`). Custody **selalu dapat dicatat** oleh pihak berwenang (kasir/finance, atau `group_ar_control` untuk pasca-penutupan), tidak bergantung pada keadaan faktur atau SJP lain, tepat satu kali (idempotensi: UUID command atau `desk_token` yang dibuat saat form dibuka, unik).
+- **Alokasi** = baris penerimaan yang mengaitkan custody ke faktur (dan mengurangi AR lewat 20e). Baris punya `allocation_state`: `allocated` (memegang proteksi pending, indeks 8.3 hanya berlaku di sini), `held` (ditahan karena konflik; tanpa `account.payment`, tanpa rekonsiliasi, tanpa proteksi pending, tanpa `active_claim` baru), `released` (dilepas, uang tetap dalam custody sebagai uang belum teralokasi).
+
+**Alur konflik (custody exception):**
+1. AR control mencatat custody dengan referensi kolektor, sumber, nominal, metode, waktu, alasan (wajib). Baris yang faktur-nya sedang dipegang SJP lain atau klaim pending lain dicatat `held`; sisanya `allocated` seperti biasa. Kasir tetap menghitung uang (custody), dan hitungan kas tidak bergantung pada alokasi.
+2. Resolusi oleh `group_ar_control`, selalu beralasan dan beraudit, atomik di bawah protokol lock 8.4:
+   - **B belum menagih dan tanpa klaim pending:** baris B dilepas oleh seam resmi (`lapsed`, alasan "digantikan custody X"), lalu baris custody A menjadi `allocated`. Tidak ada `active_claim` ganda dan indeks pending tidak dilanggar; B diberi tahu.
+   - **B sudah punya klaim pending:** hanya satu alokasi yang sah per faktur. Custody lain tetap `held` lalu `released`: uang tersimpan sebagai uang belum teralokasi (pembayaran tak teralokasi atas mitra di 20e, atau dikembalikan ke pelanggan), tidak menagih ulang dan tidak membuat receipt faktur kedua.
+3. Selisih setoran (kurang/lebih terhadap klaim asli) dicatat sebagai **selisih kas** pada custody; nominal klaim asli tidak pernah diubah untuk menutupinya. Penyelesaian selisih (tanggung jawab kolektor/kelebihan) dikerjakan di 20e.
+4. SJP tidak dapat `returned` sebelum kasir menghitung seluruh custody tunainya; baris `held` yang belum terselesaikan menahan penutupan SJP asal.
+
+**Tes tambahan:** A terlambat + faktur di B tanpa klaim (alokasi berpindah, B dilepas, jejak lengkap); A terlambat + B sudah punya klaim pending (custody A tercatat sekali, `held` lalu `released`, tidak ada double allocation/pengurangan AR); selisih kas tidak mengubah nominal klaim; custody tercatat tepat sekali pada retry/double-submit; baris `held` tidak mengambil indeks pending.
+
+### 8.13 Perjelasan kontrak sebelum coding
+
+1. **`unpaid` (amount = 0):** tidak ada kas dan tidak ada `account.payment` nol. Baris `unpaid` **tidak** masuk antrean validasi kasir/accounting dan **tidak** memegang proteksi pending (indeks pending hanya untuk `amount > 0`), sehingga tidak ada faktur macet menunggu pembayaran yang tidak ada. Alasan dicatat; `document_return` = `original` dikonfirmasi saat penutupan SJP oleh `group_ar_control` (20e) sebagai pengecekan dokumen, tidak menahan faktur. Faktur menjadi kandidat lagi saat SJP asal ditutup dan klaimnya dilepas (D9-2).
+2. **Metode campuran:** satu command dengan beberapa metode dipecah deterministik menjadi satu receipt per metode (urutan tetap: `cash`, `transfer`, `giro`), semuanya dalam satu savepoint sehingga atomik; `method` di header sama dengan semua barisnya; log command mencatat seluruh referensi dan retry mengembalikan hasil yang sama. Baris `unpaid` ikut receipt `cash`.
+3. **Validasi per metode:** jalan pintas `cashier_validated` hanya untuk **tunai**. Transfer: `posted` -> `finance_verified` (verifikasi mutasi oleh admin finance dengan referensi mutasi, pelaku, waktu) -> `accounting_validated`. Giro: `posted` -> `instrument_registered` (register giro) -> `accounting_validated`, lalu 8.10. Label status bersama hanya dipakai bila bukti verifikasi metode terkait tersedia. Semua status non-terminal = pending.
+4. **Cutoff tidak bergantung cron:** cutoff SJP = awal hari `collect_date + 1` WITA, dievaluasi **oleh setiap entrypoint** (command, meja kasir, validasi) dengan waktu server **pada saat memegang lock sheet**, bukan waktu request tiba. Bila cutoff terlewati dan job belum berjalan, entrypoint menerapkan penutupan (lapse) secara idempoten di dalam lock sebelum memutuskan. Job tengah malam hanyalah catch-up idempoten (lock yang sama, melewati yang sudah ditutup). Balapan cron vs submit/meja kasir: yang memegang lock lebih dulu menang; tidak ada efek ganda.
+5. **Tes tambahan:** custody vs alokasi late-conflict (8.12); alur `unpaid` nol (tanpa pending, tanpa pembayaran, kandidat lagi setelah SJP ditutup); atomisitas dan retry metode campuran; cron terlambat (submit setelah cutoff sebelum cron = `rejected`; cron catch-up idempoten; race cron vs submit); transfer/giro tidak dapat melompat ke `cashier_validated`.

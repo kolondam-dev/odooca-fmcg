@@ -9,6 +9,12 @@
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
+## 2026-11-25 — [F] BE-20d: revisi custody vs alokasi (re-review #198, claude-design)
+
+- [F] Bagian 8.12: custody (uang/instrumen diterima) dipisah dari alokasi ke faktur; uang fisik selalu dapat dicatat (exception AR control, beralasan, beraudit); konflik hanya menahan alokasi (`held`), tanpa `active_claim` ganda dan tanpa melanggar indeks pending; resolusi atomik; selisih kas tidak mengubah klaim asli.
+- [F] 8.13: `unpaid` nol tanpa pending/pembayaran; metode campuran dipecah satu receipt per metode dalam satu savepoint; jalan pintas validasi hanya untuk tunai; cutoff dievaluasi di setiap entrypoint dengan waktu server saat lock (cron hanya catch-up); kalimat awal §8 dibersihkan.
+- [BU] Hanya dokumen; konfirmasi accountant giro tetap prasyarat 20e. `collection_v2` tetap OFF.
+
 ## 2026-11-25 — [F] BE-20d: Q5/Q6 diputuskan, mekanisme meja kasir (claude-design)
 
 - [F] Q5a: penutupan SJP tengah malam WITA. Q5b: uang wajib diamankan di kasir dan dicatat tanpa bergantung PWA: bagian 8.11, penerimaan `source=cashier_desk` (langsung `cashier_validated`) atau kasir memvalidasi klaim `mobile`; invarian satu-pending-per-faktur dan lock sama; SJP tidak bisa `returned` sebelum kasir menghitung; laporan "uang di tangan kolektor" dan kontrol "uang bermalam"; setelah penutupan hanya pengecualian AR control dengan alasan.
