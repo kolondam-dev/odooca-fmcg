@@ -3,3 +3,9 @@
 - [A] Tiga PR berurutan: posting PWA, kalender dan rekap, lalu Time Off dan approval.
 - [F] Pemeriksaan manifest dan diff lulus. [BU] Ruff tidak tersedia. Implementasi dan runtime belum diuji.
 - Task managed by ChatGPT-ABSENSI at 2026-11-25T21:50:04+07:00
+
+[2026-11-25T22:10:32+07:00] [INFO] Implementasi PR 1 absensi PWA pilot
+- [F] Addon id_attendance menyimpan bukti kantor terverifikasi dan absensi resmi per karyawan pada Odoo. PWA menyimpan event pending untuk pengiriman ulang dengan UUID sama.
+- [F] Instal Odoo 19 id_ID, upgrade DB persisten, 10 tes ORM terpilih, 574 Vitest, dan acceptance retry browser phone/tablet lulus. Ruff, manifest, TypeScript, kontrak dan build gate lulus.
+- [BU] Dua skenario GPS outlet gagal pada Chromium alternatif di basis dan kandidat. CI exact SHA, browser resmi, dan acceptance perangkat staging belum dijalankan.
+- Task managed by ChatGPT-ABSENSI at 2026-11-25T22:10:32+07:00

@@ -37,17 +37,19 @@ def iso(value):
     return value.isoformat().replace("+00:00", "Z")
 
 
-def parse_metadata(value):
-    if not isinstance(value, dict) or not (KEYS <= set(value) <= KEYS | OPTIONAL_KEYS):
+def parse_metadata(value, keys=KEYS, optional_keys=OPTIONAL_KEYS):
+    if not isinstance(value, dict) or not (keys <= set(value) <= keys | optional_keys):
         raise EvidenceRejected("invalid_metadata")
     if "mode" in value and value["mode"] not in ("demo", "live"):
         raise EvidenceRejected("invalid_metadata")
     try:
         if str(UUID(value["client_uuid"])) != value["client_uuid"]:
             raise ValueError()
-        if not isinstance(value["outlet_id"], str) or not value["outlet_id"].isdigit():
+        if "outlet_id" in keys and (not isinstance(value["outlet_id"], str) or not value["outlet_id"].isdigit()):
             raise ValueError()
-        if not isinstance(value["snapshot_version"], str) or len(value["snapshot_version"]) > 128:
+        if "snapshot_version" in keys and (
+            not isinstance(value["snapshot_version"], str) or len(value["snapshot_version"]) > 128
+        ):
             raise ValueError()
         datetime.strptime(value["business_date"], "%Y-%m-%d")
         times = {}

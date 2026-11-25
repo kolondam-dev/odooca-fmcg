@@ -16,6 +16,16 @@ import { z } from "zod";
 import { DiscountProgramSchema } from "./order-discount.ts";
 import { CollectionReceiptSchema } from "./collection-contracts.ts";
 import { DeliveryPodSchema } from "./delivery-contracts.ts";
+export const OfficeMapSchema = z
+    .object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        radius: z.number().min(5).max(500),
+        coordinate_status: z.enum(["test", "unverified", "verified"]),
+    })
+    .strict();
 export const Role = z.enum(["sales", "delivery", "hris"]);
 export const IdentitySchema = z.object({
     id: z.string().min(1),
@@ -29,6 +39,7 @@ export const IdentitySchema = z.object({
         .optional(),
     businessDate: z.string(),
     csrfToken: z.string().optional(),
+    attendanceOffice: OfficeMapSchema.optional(),
 });
 export type Identity = z.infer<typeof IdentitySchema>;
 export const CommandType = z.enum([
@@ -54,6 +65,13 @@ const CommandEnvelope = {
     occurred_at: z.string().datetime(),
 };
 export const CommandSchema = z.discriminatedUnion("type", [
+    z
+        .object({
+            ...CommandEnvelope,
+            type: z.literal("hris.attendance.capture"),
+            payload: z.object({ evidence_uuid: z.uuid() }).strict(),
+        })
+        .strict(),
     z
         .object({
             ...CommandEnvelope,
@@ -113,6 +131,7 @@ export const CommandSchema = z.discriminatedUnion("type", [
     z.object({
         ...CommandEnvelope,
         type: CommandType.exclude([
+            "hris.attendance.capture",
             "delivery.trip.close",
             "delivery.cash_deposit.submit",
             "collection.settlement.submit",
@@ -141,16 +160,6 @@ export const ReceiptSchema = z.object({
     reference: z.string(),
 });
 export type Receipt = z.infer<typeof ReceiptSchema>;
-export const OfficeMapSchema = z
-    .object({
-        id: z.string().min(1),
-        name: z.string().min(1),
-        latitude: z.number().min(-90).max(90),
-        longitude: z.number().min(-180).max(180),
-        radius: z.number().min(5).max(500),
-        coordinate_status: z.enum(["test", "unverified", "verified"]),
-    })
-    .strict();
 const ApprovalTierBlockSchema = z.object({
     /** Batas zona bebas (%), null = tidak ada zona bebas. */
     free_zone_max: z.number().nonnegative().nullable(),

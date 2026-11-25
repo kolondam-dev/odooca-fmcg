@@ -97,6 +97,12 @@ class MobileCommand(models.Model):
             raise AccessError(_("Company access is not available."))
         return user, company
 
+    def _supported_commands(self):
+        return SUPPORTED_COMMANDS
+
+    def _dispatch_extra_command(self, cmd_type, payload, client_uuid):
+        raise UserError(_("Unsupported command handler for %s") % cmd_type)
+
     @api.model
     def process_command(self, command_data):
         """Dispatches an incoming PWA command idempotently and atomically."""
@@ -117,7 +123,7 @@ class MobileCommand(models.Model):
         cmd_type = command_data.get("type")
         if not cmd_type:
             raise UserError(_("Invalid command format: type is required."))
-        if cmd_type not in SUPPORTED_COMMANDS:
+        if not isinstance(cmd_type, str) or cmd_type not in self._supported_commands():
             raise UserError(_("Unsupported command type: %s") % cmd_type)
 
         payload = command_data.get("payload")
@@ -156,7 +162,7 @@ class MobileCommand(models.Model):
                 elif cmd_type in ("delivery.pod.submit", "delivery.trip.close", "delivery.proof.submit"):
                     status, message, reference = self._handle_delivery(cmd_type, payload, client_uuid)
                 else:
-                    raise UserError(_("Unsupported command handler for %s") % cmd_type)
+                    status, message, reference = self._dispatch_extra_command(cmd_type, payload, client_uuid)
 
                 record = self.sudo().create({
                     "client_uuid": client_uuid,

@@ -1,3 +1,10 @@
+## 2026-11-25 — PR 1 absensi PWA pilot (ChatGPT-ABSENSI)
+
+- [F] `agen/absensi`, basis `f0b3632`. Odoo merekam `hr.attendance` dari foto/GPS kantor terverifikasi untuk karyawan pilot. Mode sumber PWA dan tautan bukti tersimpan. PWA mengulang event pending dengan UUID sama setelah reload. Lihat `addons/id_attendance/README.md`.
+- [F] Instal DB kosong dengan id_ID dan persisted upgrade Odoo 19 lulus. Rangkaian akhir 10 tes ORM (absensi dan bukti outlet), 574 Vitest, dua tes browser retry (phone/tablet), Ruff, manifest, TypeScript, OpenAPI dan gate build lulus.
+- [F] Penambahan addon dan tag uji ke workflow install memicu full regression menurut aturan impact planner.
+- [BU] Dua skenario akurasi GPS outlet gagal di basis dan kandidat dengan Chromium alternatif. CI exact SHA, uji perangkat staging, dan aktivasi pilot menunggu. Kalender/rekap dan approval mengikuti PR 2 dan 3.
+
 ## 2026-11-25 — Rencana implementasi absensi PWA dan kalender kerja (ChatGPT-ABSENSI)
 
 - [F] Rencana di `docs/ui/ATTENDANCE_IMPLEMENTATION_PLAN.md`, branch `agen/absensi`, basis `f0b3632`.
