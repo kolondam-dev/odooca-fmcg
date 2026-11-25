@@ -54,3 +54,66 @@ Status: BE-20b diimplementasikan (addon `id_ar_collection`: model SJP + baris, w
 
 `GET /sync/snapshot` memuat `collection_sheets {sheets[], truncated}` (addon `id_ar_collection` memperluas `id.mobile.workday._snapshot_payload`). Ruang lingkup dikunci server tanpa selector HTTP: kolektor = pengguna sesi, perusahaan = perusahaan penugasan, `collect_date` = hari bisnis WITA, status `issued`. Draf, dikembalikan, ditutup, dibatalkan, SJP kolektor lain, hari lain, dan perusahaan lain tidak ikut. Baris: referensi faktur, pelanggan (commercial partner), `outlet_id` PJP hari itu (null di luar PJP), jatuh tempo, `overdue`, `amount_due` (snapshot SJP) dan `balance` (sisa sekarang), hasil, dokumen. Volatil: di luar digest versi dan tidak masuk command/evidence (`include_volatile=False`). Batas 10 SJP dan 300 baris per SJP ditandai `truncated`; `line_count` dan `amount_total` tetap angka dokumen. PWA (FE-8b) belum membacanya; kontrak zod opsional dan `openapi.json` diekspor.
 
+
+## 8. BE-20d: penerimaan penagihan (rancangan, belum diimplementasikan)
+
+Tujuan: kolektor mengirim hasil penagihan satu SJP lewat command offline-aman. Server mencatat penerimaan berstatus `posted` dan menandai baris SJP. **Tidak ada pembayaran, rekonsiliasi, atau perubahan saldo faktur** (itu BE-20e); `collection_v2` tetap OFF.
+
+### 8.1 Kontrak command `collection.receipt.submit`
+
+```json
+{ "client_uuid": "<uuid v4>", "type": "collection.receipt.submit",
+  "payload": { "sheet_id": 12, "occurred_at": "2026-11-25T10:15:00+08:00",
+    "lines": [ { "line_id": 301, "invoice_id": 8841, "outcome": "paid|partial|unpaid",
+                 "amount": 1250000, "expected_balance": 1250000,
+                 "unpaid_reason": "closed|no_cash|dispute|absent|other", "note": "" } ] } }
+```
+- Dikunci server: kolektor = pengguna sesi, perusahaan = perusahaan sesi. `outlet_id` (bila dikirim) hanya petunjuk tampilan dan **tidak pernah** dipakai sebagai kunci atau otorisasi.
+- **Identitas penerimaan** = SJP + baris + faktur + kolektor + perusahaan. Server memuat baris dari DB lalu menegaskan: `line.sheet_id = sheet_id`, `line.move_id = invoice_id`, `sheet.collector_id = user`, `sheet.company_id = company`, `sheet.state = issued`. Ketidakcocokan apa pun = `UserError` (tidak dicatat, bukan retry-able).
+- `amount` adalah angka perusahaan (IDR, dibulatkan sesuai mata uang). `paid`: `amount == saldo faktur sekarang`; `partial`: `0 < amount < saldo`; `unpaid`: `amount == 0` dan `unpaid_reason` wajib. `document_return` diturunkan server (`paid`/`partial` → `copy`, `unpaid` → `original`), nilai klien diabaikan. Metode terima: tunai saja pada 20d (lihat pertanyaan Q2).
+- Seluruh baris dalam satu command diproses **semua-atau-tidak-sama-sekali** (savepoint dispatcher yang ada). Satu baris yang gagal membatalkan seluruh command.
+- Hari: kolektor boleh mengirim untuk SJP `issued` miliknya walau `collect_date` sudah lewat (sinkronisasi offline); command tidak memakai `_assert_day`. Lihat Q1 untuk batas hari.
+
+### 8.2 Idempotensi dan retry/offline
+
+- Lapisan 1 (sudah ada): `UNIQUE(user_id, client_uuid)` pada `id.mobile.command` + sidik jari kanonik. Retry dengan UUID dan payload sama mengembalikan hasil lama tanpa efek samping; UUID sama dengan payload berbeda = `MobileReadConflict`.
+- Lapisan 2 (baru, penentu): indeks unik parsial `(sheet_line_id) WHERE state NOT IN ('rejected','cancelled')` pada `id.collection.receipt.line`. Menjamin **satu penerimaan aktif per baris SJP** meskipun dua UUID berbeda (perangkat ganda, antrean ganda, retry dengan UUID baru). Pre-check ORM memberi pesan bisnis; indeks menjadi pagar terakhir; `IntegrityError 23505` dipetakan menjadi hasil bisnis, bukan 500.
+- Hasil bisnis yang **dicatat** di log command (status `rejected`, pesan Indonesia, tidak mengulang efek) agar antrean offline tidak berputar: baris sudah punya penerimaan aktif (`Sudah ada penerimaan <RCP> untuk baris ini`), saldo berubah, SJP tidak lagi `issued`. Kesalahan malformed/otorisasi tetap `UserError`/`AccessError` (tidak dicatat).
+
+### 8.3 Proteksi saldo dan penagihan ganda
+
+- Penguncian: `SELECT ... FOR UPDATE` pada baris SJP (urut `id`) dan faktur terkait sebelum membaca saldo; saldo dibaca ulang di dalam kunci (`amount_residual`, mata uang perusahaan).
+- `expected_balance` dari klien dibandingkan dengan saldo terkunci. Berbeda (mis. pelunasan lewat jalur lain, kredit note) = `rejected` "saldo berubah, sinkronkan ulang"; tidak menebak jumlah.
+- `amount` tidak boleh melebihi saldo terkunci **dikurangi penerimaan menunggu validasi atas faktur yang sama**. Karena satu faktur hanya satu SJP aktif (indeks 20b) dan satu penerimaan aktif per baris, penerimaan menunggu pada faktur itu paling banyak satu; penjumlahan tetap dihitung sebagai pagar tambahan.
+- Sisa dari `partial`: baris tetap `partial`; sisanya kembali menjadi kandidat SJP berikutnya setelah SJP ini ditutup (BE-20e), bukan ditagih ulang pada SJP yang sama (Q3).
+- Penerimaan `posted` belum mengurangi `amount_residual`. Snapshot (FE-8b) harus menampilkan "menunggu validasi" dan tidak menghitung faktur itu lagi sebagai "wajib ditagih": 20d menambahkan `receipt_state` dan `receipt_amount` pada baris snapshot SJP.
+
+### 8.4 Model (di `id_ar_collection`)
+
+- `id.collection.receipt`: `name` (`RCP/<tahun>/`), `sheet_id`, `collector_id`, `company_id`, `command_uuid` (unik per kolektor), `occurred_at`, `submitted_at`, `state` (`posted` pada 20d; `cashier_validated`/`accounting_validated`/`rejected`/`cancelled` disiapkan untuk 20e), `amount_total` (stored compute), `line_ids`.
+- `id.collection.receipt.line`: `receipt_id`, `sheet_line_id`, `move_id`, `outcome`, `amount`, `balance_at_submit`, `unpaid_reason`, `document_return`, `state` (related/stored dari header untuk indeks parsial), `currency_id`.
+- Akses: model tanpa create/write/unlink untuk pengguna biasa; pembuatan hanya lewat seam privat yang dipanggil handler setelah semua pemeriksaan di atas. Kolektor membaca miliknya (rule); `group_ar_admin`/`group_ar_control` membaca perusahaan sendiri. Baris SJP diperbarui lewat seam `_apply_outcome` yang sudah ada (mengisi `outcome`, `collected_amount`, `document_return`, `receipt_id`).
+- SJP tetap `issued` sampai BE-20e (`returned`).
+
+### 8.5 Perubahan di `id_mobile_api` (kecil dan generik)
+
+`process_command` memeriksa `SUPPORTED_COMMANDS` dan memakai rantai if/elif. Diubah menjadi titik perluasan: `_supported_commands()` dan `_handle_extension(cmd_type, payload, client_uuid)` (default mengembalikan `None`; addon memperluas). Dispatcher, idempotensi, savepoint dan pemetaan `IntegrityError` tetap satu-satunya. `id_ar_collection` mendaftarkan `collection.receipt.submit`; tanpa addon, tipe itu tetap "Unsupported command type".
+
+### 8.6 Rencana tes (Odoo, dibuktikan lewat CI exact SHA)
+
+1. Kasus sukses paid/partial/unpaid; penerimaan, baris SJP, `document_return` diturunkan server.
+2. Retry UUID sama (hasil sama, satu penerimaan); UUID sama payload beda = konflik.
+3. UUID berbeda untuk baris yang sama = `rejected`, tetap satu penerimaan aktif; indeks unik dibuktikan dengan SQL langsung.
+4. Dua sesi paralel (thread SQL seperti tes 20b) untuk baris yang sama: tepat satu menang.
+5. Identitas: `line` dari SJP lain/kolektor lain/perusahaan lain, `invoice_id` tidak cocok, `outlet_id` palsu diabaikan.
+6. Saldo berubah (`expected_balance` basi, faktur dilunasi lewat jalur lain) = `rejected`, tanpa efek.
+7. Rollback atomik: satu baris invalid dalam command multi-baris membatalkan semuanya (tanpa receipt/baris/jejak outcome).
+8. SJP `draft/returned/cancelled` ditolak; SJP lewat hari tetap diterima selama `issued`.
+9. Jumlah: `paid` ≠ saldo, `partial` ≥ saldo, `unpaid` > 0, negatif/NaN/presisi mata uang ditolak.
+10. Tidak ada `account.payment` dan `amount_residual` tidak berubah; `collection_v2`/flag tidak disentuh; tanpa addon, command ditolak sebagai tidak didukung.
+
+### 8.7 Pertanyaan terbuka untuk pemilik (default dipakai bila tidak dijawab)
+
+- **Q1 Batas hari:** default tidak ada batas selama SJP `issued`; alternatif batas mundur N hari. 
+- **Q2 Metode terima:** default tunai saja; transfer/QRIS butuh bukti dan alur kasir berbeda (menyusul).
+- **Q3 Sisa partial:** default kembali sebagai kandidat setelah SJP ditutup; alternatif memperbolehkan penerimaan kedua pada baris yang sama (butuh perubahan indeks unik).
