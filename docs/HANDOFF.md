@@ -5,6 +5,10 @@
 - [F] Tes offline baru menolak bill draft/bukan `in_invoice`, base line tanpa bill, kapitalisasi ganda/nilai salah, removal residual ≠ 0, jurnal removal draft/jurnal salah, dan baris GL ekstra.
 - [BU] Populasi aset nyata, mapping Controller, lisensi dependensi produksi, ACL/export/live, dan sign-off tetap HOLD.
 
+## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
+**Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
+**Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
+
 ## 2026-11-24 — [BU] FIN36 oracle seluruh board posted pada DB disposable (opencode)
 
 - [F] PR #193 merged ke `main` sebagai `54a1aff528c538bae8d5195e2f584d60bca94c40`, head integrasi `76342d75673238279aef93c2651fca21aca1d256`; supervisor PASS/CUKUP untuk prasyarat teknis saja. 28/28 CI SUCCESS; install/upgrade, satu depresiasi posted→GL dan rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.
@@ -96,6 +100,16 @@
 - [F] 9 counterexample XLSX baru; 71 unit I2c PASS lokal. FIN36/55/56 tetap terpisah karena blocker aset, kontrak bertanggal, dan payroll/statutory.
 - [BU] Render/tie-out workbook native menunggu exact-SHA CI; katalog tetap 58/58 `BELUM_DITERIMA`, tanpa perubahan data/deploy.
 
+## 2026-11-23T11:31:06+07:00 — Codex — Integrasi reset APK fixture PR #177
+**Basis:** main `b37a502`, Dev `f1ed07fbecf21f771e058afdf75039bb97dcd7d8`. Konflik HANDOFF dan log diselesaikan dengan mempertahankan riwayat kedua sisi.
+**Dampak test SESUAIKAN:** kegagalan instalasi ulang API 24 menjadi counterexample. Skrip mempertahankan bukti Login, menghapus APK smoke, memeriksa paket sudah hilang, dan tetap mewajibkan exit Gradle serta laporan UI lulus. Tes kontrak pada `tests/test_android_ci.py` dan matriks Android opt-in API 24/35 memverifikasi transisi; bukti runtime pada SHA integrasi masih terbuka.
+
+## 2026-11-22T22:46:50+07:00 — Codex Android Dev — Bersihkan transisi smoke ke fixture
+**Basis:** [F] Dev `4e832de`, arahan `237675e`, PR #177 `fef6f3e`. [Run UI](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45038999868) membuktikan Login API 24 sebelum Gradle gagal memasang target `INSTALL_FAILED_ALREADY_EXISTS`. API 35 lulus pada run tersebut.
+**Berubah:** [F] Smoke selalu membangun APK reguler dan menyimpan screenshot Login. Tahap `fixture_reset` menghapus paket dari satu-satunya AVD terhubung dan memverifikasi paket tidak lagi terpasang. Gradle kemudian memasang APK fixture dan APK instrumentation via `:app:connectedDebugAndroidTest -Podooca.uiFixture=true`. Oracle laporan dan exit Gradle tetap wajib lulus.
+**Bukti dan dampak test:** **TAMBAH** — tes kontrak mengunci urutan reset dan oracle. Simulasi host mereproduksi paket yang tetap terpasang setelah `pm clear`, membuktikan penghapusan sebelum instalasi fixture, dan memeriksa penghentian saat uninstall gagal, paket tertinggal, atau query gagal. Build Gradle offline menghasilkan APK reguler, fixture loopback, dan APK tes. Pemeriksaan resource dan checksum membedakan kedua APK app. Bash syntax dan 32 tes kontrak CI lulus. Tes kontrol CI memilih full regression 11 suite.
+**Belum diuji:** [BU] Instalasi fixture dan UI pada emulator nyata untuk SHA perbaikan. Cloud tidak memiliki KVM. Percobaan software gagal memberi bukti instalasi karena daemon ADB tidak dapat menulis home. Lead menjalankan ulang matriks setelah integrasi.
+
 ## 2026-11-23 — UoM pembelian vendor FMCG (codex)
 
 - [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.
@@ -142,6 +156,10 @@
 - Data demo: Minimarket Pelangi mode strict dengan 2 faktur jatuh tempo (Rp1.250.000).
 - Tes: vitest `credit-block.test.ts` (6, termasuk penjaga regresi), e2e `credit-block.spec.ts` (phone + tablet). Utang: K36 (snapshot basi setelah pelunasan, `limit_due` belum diblokir, daftar faktur/penagihan menunggu BE-7/FE-8, `credit_limit` commercial partner).
 
+## 2026-11-22T15:55:53+07:00 — Codex — Sinkronisasi dan review PR #177
+**Basis:** main `16b909e416eb42d89ac3269d261d2d78581ad230`. Konflik catalog mempertahankan desugar 2.1.5 dari main dan dependency instrumentation DEV-01. Riwayat HANDOFF kedua sisi dipertahankan.
+**Bukti historis:** [Smoke c9585c8](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/44986280681): API 24 lulus; API 35 gagal saat resolusi dependency Gradle sebelum boot. Runtime dan instrumentation masih HOLD. PR diajukan untuk review sesuai arahan pemilik.
+
 ## 2026-11-22 — [BU] BE-19 perbaikan review PR #184: kebijakan efektif parent, hari bisnis WITA bersama, tes faktur nyata (claude-design)
 
 - P2 kebijakan: `commercial.credit_mode` kini memakai commercial partner (parent) seperti `sale.order._compute_credit_limit_exceeded`; parent yang tidak boleh dibaca → `null` (tidak diketahui, PWA tidak memblokir). Karena ikut digest, mengubah kebijakan parent mengubah versi outlet anak.
@@ -157,6 +175,16 @@
 - Kriteria sama dengan `sale.order._compute_credit_limit_exceeded`: `out_invoice` terposting, `payment_state` bukan paid/in_payment/reversed, `invoice_date_due` < hari bisnis, filter perusahaan sesi. Dibaca sebagai agregat dengan `sudo()` (akun mobile tidak otomatis boleh membaca faktur), dibatasi pada outlet yang lolos `check_access`; tidak ada field faktur lain yang keluar.
 - Kontrak: `contracts.ts` (`credit_mode`, `outlet_credit`), `openapi.json`, tes katalog. Tes Odoo di `test_read_api.py` (mock `_read_group` untuk memeriksa domain dan di luar digest; faktur nyata tidak dibuat karena perusahaan uji tanpa bagan akun). Tes Odoo hanya terverifikasi di CI.
 - Utang: server menghitung "jatuh tempo" dengan `fields.Date.today()` (UTC), snapshot memakai hari bisnis WITA; selisih hanya 00:00–08:00 WITA. Server tetap otoritatif saat order dikirim. FE-12 (pemblokiran di PWA) belum dikerjakan.
+
+## 2026-11-22T11:42:54+07:00 — Codex — Integrasi provisioning emulator PR #177
+**Basis:** main `f52734bd635618ef298babff0338fbddcb72697a`, Dev `4e832de9b322646a551dd394644f89683f4856f9`. Pertahankan entri HANDOFF dan log kedua pihak. Resolusi cache domain mempertahankan argument provider dengan output portabel lintas checkout.
+**Dampak test SESUAIKAN:** provisioning memasang arsip Google berpinned dan memverifikasi checksum. Bukti Dev mencakup dua SDK bersih dan AVD API 24/35 serta pemeriksaan revisi. Bukti boot, instalasi, Login dan instrumentation masih menunggu GitHub Actions.
+
+## 2026-11-22T11:28:39+07:00 — Codex Android Dev — Bekukan versi provisioning smoke
+**Basis:** [F] Dev `f23ea50`; arahan `5cbd64a`, run smoke `44881381326` pada kandidat Lead `a74613c`.
+**Berubah:** [F] Job opt-in memasang Platform Tools 37.0.3, emulator 37.3.10 (build 16970787), serta Google APIs x86_64 API 24 rev 27 dan API 35 rev 9 dari arsip versi tetap dengan checksum katalog Google. SDK Manager memasang platform compile 37.0 dan Build Tools 36.0.0. Registrasi emulator lokal memungkinkan AVD Manager memilih paket tanpa pemasangan emulator kedua. Skrip tetap mencatat dan memvalidasi semua revisi.
+**Bukti:** [F] Jalankan langkah provisioning workflow pada dua SDK Cloud kosong. Kedua arsip image cocok dengan checksum dan kedua AVD berhasil dibuat untuk platform/ABI masing-masing. `emulator -version` dan tahap toolchain pada smoke mengenali versi yang dipatok. [BU] Kedua smoke berhenti di KVM karena Cloud tidak memiliki `/dev/kvm`. Boot, instalasi APK, Login dan instrumentation menunggu run Lead.
+**Gate dan dampak test:** **TAMBAH** — tes kontrak mengunci jalur arsip dan mencegah paket runtime kembali dipasang dari kanal bergulir SDK Manager. Bash syntax, actionlint, Ruff, 31 tes kontrak CI lulus. Job wajib Android identik dengan `f23ea50`; perubahan workflow memilih full regression 11 suite.
 
 ## 2026-11-22 — [F] Pasca-merge toolchain Android: kebijakan Dependabot dan retry resolusi Gradle (codex)
 
@@ -266,6 +294,25 @@
 - Tes: `test_07`–`test_12` (id_approval), `test_free_zone_discount_is_accepted_without_approval` (mobile). Odoo tidak ada lokal; verifikasi lewat CI.
 - Belum: `approval_tiers` di snapshot (BE-18) dan pratinjau tier di PWA (FE-11).
 
+## 2026-11-21T13:00:02+07:00 — Codex — Integrasi perbaikan cache domain pada PR #177
+**Basis:** main `69c6e05`; perbaikan Dev `f23ea50204d13f018bc40872c01ce3b4d5bf288e`. Konflik HANDOFF dan log diselesaikan dengan mempertahankan kedua entri.
+**Dampak test CUKUP untuk delta ini:** bukti Dev mereproduksi sampel hilang sebelum perbaikan dan memulihkan tiga sampel identik pada cache hit lintas checkout setelah perbaikan. Validator OpenAPI tetap menjadi oracle. [BU] Hasil CI pada SHA integrasi dan runtime API 24/35.
+
+## 2026-11-21T10:22:32+07:00 — Codex Android Dev — Perbaiki cache sampel kontrak DEV-01
+**Basis:** [F] Branch Dev `7bcd5aa`; arahan `79f41bb` untuk CI PR #177 pada `27d7428`.
+**Berubah:** [F] Task `:core:domain:test` mendeklarasikan `build/contract-samples` sebagai output. Argument provider memasok lokasi checkout ke JVM tanpa mengikat cache ke path absolut. Assertion dan validator yang ada dipakai untuk pembuktian.
+**Verifikasi:** [F] Baseline Dev `7bcd5aa`: cold run dan validator lulus. Checkout bersih di path yang sama mendapat `:core:domain:test FROM-CACHE` dan validator gagal karena `check_in.json` hilang. Kandidat: cache awal kosong, 72 tes lulus. Checkout bersih di path berbeda dengan cache yang sama mendapat `:core:domain:test FROM-CACHE`; tiga sampel dipulihkan dengan SHA-256 identik dan tiga kontrol positif serta empat kontrol negatif OpenAPI lulus di kedua run.
+**Gate dan planner:** [F] Gate statis terhadap main `69c6e05` lulus (Ruff, 14 manifest, 30 tes kontrak, token). Delta perbaikan dari `7bcd5aa` hanya memilih `android`. Kandidat DEV-01 secara keseluruhan tetap memilih full regression 11 suite.
+**Dampak test:** **SESUAIKAN** — pertahankan assertion dan validator; tambahkan bukti bahwa validator tetap dapat membaca ketiga sampel saat Gradle memulihkan hasil dari cache. CI pada SHA integrasi PR #177 menunggu Lead. Runtime emulator tetap HOLD.
+## 2026-11-21T09:48:00+07:00 — Codex — Integrasi Lead Android DEV-01A/01B
+**Basis:** main `69c6e053a02870fa28ee4d8e45bfebbda125e588`, Dev `7bcd5aab839092b96de862be1b2b045fb0ceab2f`. Branch `agen/android-integration-dev-01-Codex-Mobile-Native`.
+**Berubah:** integrasi DEV-01A/01B tanpa konflik. Arahan untuk kedua tim pada [workflow bersama](android/LOCAL_WORKFLOW.md). [BU] CI PR, full regression dan runtime API 24/35 menunggu eksekusi. Dampak test **TAMBAH**.
+
+## 2026-11-20T22:27:23+07:00 — Codex Android Dev — Selaraskan DEV-01 dengan PR #173
+**Basis:** [F] Main `69c6e053a02870fa28ee4d8e45bfebbda125e588`, arahan `6b894ca`. `dcad215` merupakan checkpoint historis yang dipertahankan sebagai ancestor.
+**Berubah:** [F] Job smoke API 24/35 memakai SDK `platforms;android-37.0` rev 2 dan Build Tools 36.0.0. Versi Gradle dalam bukti dibaca dari wrapper PR #173. Versi Actions diselaraskan dengan main. Seluruh job wajib Android identik dengan main.
+**Dampak test:** **TAMBAH** — tes kontrak menolak platform SDK salah di tiap job Android, termasuk emulator opsional. Perubahan workflow memerlukan full regression. Runtime API 24/35 tetap [BU].
+
 ## 2026-11-20 — [BU] BE-14 perbaikan review PR #174: diskon baris wajib approval (claude-design)
 
 - P1: diskon di baris tanpa diskon header menghasilkan `accepted` tanpa pengajuan (celah BE-8). Handler kini menganggap `needs_approval` bila ada baris berdiskon > 0 dan memanggil jalur pengajuan.
@@ -301,6 +348,51 @@
 - Pembaca layar: `role="img"` + `aria-label` "1 karton, 2 pack, 3 pcs". Legenda satuan sekali di POS.
 - Tes: `tests/unit-qty.test.ts` (termasuk penjaga tanpa "krt/pak" di komponen), `tests/browser/unit-qty.spec.ts`.
 - Belum dimigrasi (utang K34): Hasil kirim, baris pengiriman/POD, Closing trip, Riwayat, `loadSummary` ("20 karton · 8 pak") di `delivery-progress.ts`.
+## 2026-11-19T19:44:36+07:00 — Codex Android Dev — Bukti checkpoint DEV-01A/01B
+**SHA:** [F] Main acuan `39172de900668263676577d843a095bf90065ec2`, basis Dev `92da15d`, arahan terbaru diperiksa pada `09f9cba8645f24ca08718542701dfe782e0adb2a`, DEV-01A `59d89f8`, sumber kandidat `9d51fb8a99c7b24db8622cb11686ae5191939b65`. Commit bukti ini hanya menambah HANDOFF dan agent log.
+**Gate lokal:** [F] Bagian statis pada kandidat lulus, termasuk Ruff, 14 manifest, 29 tes kontrak/planner dan token zero-diff. Planner `full: true` memilih 11 suite untuk perubahan workflow/test control plane. [BU] `--gradle` tidak lengkap. `:core:data:testDebugUnitTest` dan `:app:lintDebug` gagal sebelum tes Robolectric dan analisis lint app selesai karena unduhan `org.robolectric:nativeruntime-dist-compat:1.0.16` ditolak HTTP 403 oleh redirect Maven.
+**Bukti terpisah:** [F] 72 tes JVM dan validator OpenAPI (tiga kontrol positif, empat negatif) lulus. `:app:assembleDebug` lulus. SHA-256 APK debug lokal `8a58d804e1adb58e967d4e2f0219bffc1068322c09eedefe3777d1d65a75bec8`. Resource APK debug biasa menolak cleartext. `:app:assembleDebugAndroidTest -Podooca.uiFixture=true` lulus kompilasi dan packaging. Fixture HTTP dan redaksi laporan lulus di host.
+**Runtime:** [BU] API 24 dan API 35 belum diuji untuk boot, instalasi, cold start, Login dan instrumentation. Acceptance per API membutuhkan KVM usable, laporan tahap dan screenshot Login, lalu laporan UI. Lead menjalankan workflow opsional dan full regression sesuai [README Android](../android/README.md).
+**Berikutnya:** [F] Handoff `09f9cba` mempertahankan scope smoke. Counterexample status receipt tak dikenal pada D01-05c/d dibawa ke slice D01 terkait. Acceptance Odoo disposable dan perangkat fisik setelah checkpoint.
+
+## 2026-11-19T19:33:41+07:00 — Codex Android Dev — DEV-01B kandidat instrumentation
+**Base dan SHA:** [F] Main `39172de`, arahan `92da15d`, DEV-01A `59d89f8`. SHA checkpoint adalah commit yang memperkenalkan entri ini pada branch `agen/android-dev-Codex-Mobile-Native`.
+**Berubah:** [F] Mode UI opsional menyiapkan fixture HTTP loopback debug, Login kosong/salah/benar, resume/rekreasi Activity, Beranda kosong, navigasi Kalibrasi, penolakan izin lokasi OS dan logout. Android 12+ meminta fine dan coarse bersama. Test ID dan status/timing dipublikasikan via laporan tersanitasi.
+**Gate:** [F] Actionlint, Bash syntax, Ruff, 14 manifest, 29 tes kontrak/planner Android, fixture HTTP dan filter laporan lulus. Build APK tes `:app:assembleDebugAndroidTest -Podooca.uiFixture=true` lulus pada Temurin 17.0.17+10 dan SDK 35. Pemeriksaan kandidat menggunakan `ANDROID_GATE_BASE=39172de`. Planner memilih full regression karena workflow berubah.
+**Bukti runtime:** [BU] API 24: boot/install/cold start/Login/instrumentation belum diuji. API 35: seluruh tahap tersebut belum diuji. Cloud tidak memiliki `/dev/kvm`; biner adb 37.0.1 terpasang tetapi gagal menyiapkan `.android` pada direktori home Cloud yang read-only. Lead menjalankan matriks pada SHA checkpoint sesuai instruksi README. Izin diberikan/perkiraan, font/ukuran/rotasi, Odoo disposable B09 dan perangkat fisik masih terbuka.
+**Dampak test:** **TAMBAH** — kegagalan membuka aplikasi, navigasi awal, form dan penanganan izin harus terlihat terpisah dari hasil build dan install. Scope checkpoint berhenti sebelum DEV-02A dan perluasan visual D01.
+
+## 2026-11-19T19:30:53+07:00 — Codex Android Dev — DEV-01A kandidat smoke emulator
+**Base:** [F] Main `39172de`; baseline bersama dan arahan `92da15d` pada branch `agen/android-dev-Codex-Mobile-Native`.
+**Berubah:** [F] Matriks manual API 24/35 Google APIs x86_64, toolchain berpinned, smoke cold start dengan oracle foreground dan semantics Login, artefak tersanitasi, serta kontrak job opsional di luar `android-gate`.
+**Verifikasi:** [F] Bash syntax, actionlint dan kontrak Android lulus. [BU] Boot/install/cold start/Login API 24 dan 35 menunggu runner dengan KVM. Planner memilih full regression untuk kontrol workflow. Lead menjalankan review dan CI.
+**Dampak test:** **TAMBAH** — APK yang dapat dibangun namun crash, tidak mencapai foreground, atau gagal merender Login harus gagal pada job smoke dengan status per tahap.
+
+## 2026-11-19T19:20:10+07:00 — Codex — Arahan tetap untuk dua tim Android
+**Berubah:** [F] [Handoff bersama](android/LOCAL_WORKFLOW.md) mencatat arahan per tim, waktu pemeriksaan baseline, dan pelaporan checkpoint melalui GitHub. DES-00/DES-01 dan DEV-01A/01B tetap aktif.
+**Scope:** [F] Pembaruan instruksi pada branch baseline bersama.
+
+## 2026-11-19T19:15:04+07:00 — Codex — Baseline Android bersama
+**Berubah:** [F] Branch `agen/android-baseline-Codex-Mobile-Native` memuat baseline yang dipertahankan, main `39172de` dan [handoff bersama](android/LOCAL_WORKFLOW.md). Kedua tim memakai checkout Cloud masing-masing dan menyerahkan commit melalui branch GitHub.
+**Scope:** [F] Publikasi baseline terisolasi sesuai mandat pemilik; review, merge dan deployment tetap mengikuti otorisasi masing-masing.
+
+## 2026-11-19T17:17:03+07:00 — Codex — Sinkronisasi Lead Android
+**Berubah:** [F] Checkout utama memakai main lokal yang mengikuti origin/main. Dokumen menjelaskan kandidat per slice dan pemeriksaan kebaruan main sebelum perakitan, push, serta merge. Gate menambah opsi Lead `--refresh-main`.
+**Scope:** [F] Branch tim tetap lokal. Publikasi kandidat mengikuti checkpoint dan mandat pemilik.
+
+## 2026-11-19T17:01:49+07:00 — Codex — Handoff lokal Android
+**Berubah:** [F] Lead menangani seluruh GitHub. Design dan Dev memakai branch lokal dan bundle bila checkout berbeda. Tambahkan panduan operasi lokal dan pilihan basis gate dari SHA yang diserahkan Lead.
+**Menunggu:** [BU] Handoff bundle ke sesi tim bila tidak memakai checkout yang sama.
+
+## 2026-11-19T15:40:25+07:00 — Codex — Spesifikasi engineering Android v2
+**Berubah:** [F] SSOT Android v2, design system dengan kontrak Figma/Compose, paket Design dan Dev, register endpoint/backend/DB, serta gerbang integrasi antartim dan slice publikasi.
+**Diverifikasi:** [F] Basis main `e28e655` dan pemeriksaan keterlacakan enam dokumen. Perubahan ini dokumentasi.
+**Menunggu:** [BU] File Figma/library yang akan dipakai sebagai referensi resmi, inventaris frame aktual, uji emulator/fisik dan Odoo disposable.
+
+## 2026-11-19T14:53:47+07:00 — Codex — Baseline koordinasi Android
+**Berubah:** [F] SSOT dan register blocker di `docs/android/ARCHITECTURE.md`, spec Design/Dev dan operasi branch, plus `android/tools/integration_gate.sh`.
+**Diverifikasi:** [F] Basis `e28e655`. Ruff, 14 manifest serta tes kontrak selector, workflow dan Android lulus.
+**Belum diuji:** [BU] Mode Gradle lokal, emulator, perangkat fisik, konektivitas Odoo Android dan integrasi workspace desain.
 
 ## 2026-11-19 — [BU] Keputusan pemilik: PJP opsi C, approval kumulatif (claude-design)
 
