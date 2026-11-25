@@ -234,19 +234,25 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
 
         self._settle_commercial_sale(order, lot)
 
-    def _settle_commercial_sale(self, order, lot):
+    def _settle_commercial_sale(self, order, lots, expected=900_000, expected_lines=None, expected_tax=0):
         picking = order.picking_ids.with_user(self.warehouse_user)
         picking.action_assign()
-        self.assertEqual(picking.move_line_ids.lot_id, lot)
+        self.assertEqual(picking.move_line_ids.lot_id, lots)
         picking.move_line_ids.picked = True
         picking.button_validate()
         self.assertEqual(picking.state, "done")
         invoice = order._create_invoices().with_user(self.accountant)
         invoice.action_post()
         self.assertEqual(invoice.invoice_line_ids.sale_line_ids, order.order_line)
-        self.assertEqual(invoice.amount_residual, 900_000)
+        self.assertEqual(invoice.amount_residual, expected)
+        if expected_lines is not None:
+            self.assertEqual(
+                {line.sale_line_ids.id: line.price_subtotal for line in invoice.invoice_line_ids},
+                expected_lines,
+            )
+            self.assertEqual(invoice.amount_tax, expected_tax)
         receivable = invoice.line_ids.filtered(lambda line: line.account_id.account_type == "asset_receivable")
-        self.assertEqual(receivable.balance, 900_000)
+        self.assertEqual(receivable.balance, expected)
         bank = self.env["account.journal"].search([
             ("company_id", "=", self.company.id), ("type", "=", "bank"),
         ], limit=1)
@@ -266,6 +272,10 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         principal = self.env.ref("id_base.principal_mayora")
         product = self.product_a
         product.write({"principal_id": principal.id, "taxes_id": [Command.clear()], "standard_price": 1})
+        other_principal = self.env.ref("id_base.principal_kapalapi")
+        self.product_b.write({
+            "principal_id": other_principal.id, "taxes_id": [Command.clear()], "standard_price": 1,
+        })
         program = self.env["loyalty.program"].sudo().create({
             "name": "Commercial golden programme", "program_type": "promotion",
             "trigger": "with_code", "applies_on": "current", "company_id": self.company.id,
@@ -315,12 +325,30 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         with self.assertRaises(ValidationError):
             coupon.action_apply()
         program.rule_ids.product_ids = product
+        program.rule_ids.minimum_qty = 2
+        with self.assertRaises(ValidationError):
+            coupon.action_apply()
+        program.rule_ids.minimum_qty = 1
+        foreign_company = self.env["res.company"].sudo().create({"name": "Golden foreign promo company"})
+        with self.env.cr.savepoint():
+            program.company_id = foreign_company
+            with self.assertRaises(ValidationError):
+                coupon.action_apply()
+            program.company_id = self.company
+        order.write({"order_line": [Command.create({
+            "product_id": self.product_b.id, "product_uom_qty": 1, "price_unit": 1_000_000,
+        })]})
+        with self.assertRaises(ValidationError):
+            coupon.action_apply()
+        order.order_line.filtered(lambda line: line.product_id == self.product_b).unlink()
         coupon.action_apply()
         reward = self.env["sale.loyalty.reward.wizard"].with_user(self.salesperson).create({
             "order_id": order.id, "selected_reward_id": program.reward_ids.id,
         })
         reward.action_apply()
         self.assertEqual(order.amount_untaxed, 950_000)
+        with self.assertRaisesRegex(UserError, "one fixed order reward"):
+            order.action_apply_tactical_components({}, 100)
         with self.assertRaises(UserError):
             order.action_confirm()
         action = order.action_request_promo_usage_approval()
@@ -332,31 +360,77 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         self.assertEqual(order.state, "sale")
         self.assertEqual(order.amount_untaxed, 950_000)
 
+        other = program.copy({
+            "name": "Separate principal promo", "principal_id": other_principal.id,
+            "rule_ids": [Command.create({
+                "code": "GOLDEN-B-SEPARATE", "minimum_qty": 1,
+                "product_ids": [Command.set(self.product_b.ids)], "reward_point_amount": 1,
+            })],
+        })
+        other.action_submit_approval()
+        other.action_approve()
+        other.action_activate()
+        separate = self.env["sale.order"].with_user(self.salesperson).with_context(install_mode=False).create({
+            "partner_id": self.partner_a.id,
+            "order_line": [Command.create({
+                "product_id": self.product_b.id, "product_uom_qty": 1, "price_unit": 1_000_000,
+            })],
+        })
+        self.env["sale.loyalty.coupon.wizard"].with_user(self.salesperson).create({
+            "order_id": separate.id, "coupon_code": "GOLDEN-B-SEPARATE",
+        }).action_apply()
+        self.env["sale.loyalty.reward.wizard"].with_user(self.salesperson).create({
+            "order_id": separate.id, "selected_reward_id": other.reward_ids.id,
+        }).action_apply()
+        request = self.env["fmcg.approval.request"].browse(separate.action_request_promo_usage_approval()["res_id"])
+        request.with_user(self.supervisor).action_approve()
+        separate.action_confirm()
+        self.assertEqual(separate.state, "sale")
+        self.assertEqual(separate.order_line.reward_id.program_id, other)
+        self.assertEqual(order.order_line.reward_id.program_id, program)
+
     def test_fixed_official_promo_before_tactical_stack_and_footer(self):
+        self._run_fixed_official_promo_chain(multiple=False)
+
+    def test_multi_sku_fixed_promo_rounding_and_stale_approval(self):
+        self._run_fixed_official_promo_chain(multiple=True)
+
+    def _run_fixed_official_promo_chain(self, multiple):
         if "loyalty.program" not in self.env:
             self.skipTest("Sale loyalty is not installed for this focused module run")
         principal = self.env.ref("id_base.principal_mayora")
         product = self.product_a
-        product.write({
+        products = (product | self.product_b) if multiple else product
+        taxes = self.env["account.tax"]
+        if multiple:
+            taxes = self.tax_sale_a.copy({
+                "name": "Golden Chain 10%", "amount_type": "percent", "amount": 10,
+                "price_include_override": "tax_excluded",
+            })
+        products.write({
             "principal_id": principal.id, "type": "consu", "is_storable": True,
             "tracking": "lot", "invoice_policy": "delivery", "standard_price": 100_000,
-            "taxes_id": [Command.clear()],
+            "taxes_id": [Command.set(taxes.ids)],
         })
         warehouse = self.env["stock.warehouse"].search([("company_id", "=", self.company.id)], limit=1)
-        lot = self.env["stock.lot"].create({
-            "name": "MIXED-GOLDEN-LOT", "product_id": product.id, "company_id": self.company.id,
-        })
-        self.env["stock.quant"]._update_available_quantity(product, warehouse.lot_stock_id, 1, lot_id=lot)
+        lots = self.env["stock.lot"]
+        for item in products:
+            lot = self.env["stock.lot"].create({
+                "name": f"MIXED-GOLDEN-LOT-{item.id}", "product_id": item.id, "company_id": self.company.id,
+            })
+            lots |= lot
+            self.env["stock.quant"]._update_available_quantity(item, warehouse.lot_stock_id, 1, lot_id=lot)
+        promo = 60_000 if multiple else 50_000
         program = self.env["loyalty.program"].sudo().create({
             "name": "Fixed official amount", "program_type": "promotion",
             "trigger": "with_code", "applies_on": "current", "company_id": self.company.id,
             "principal_id": principal.id, "budget_source": "distributor",
             "rule_ids": [Command.create({
                 "code": "GOLDEN-B-FIXED", "minimum_qty": 1,
-                "product_ids": [Command.set(product.ids)], "reward_point_amount": 1,
+                "product_ids": [Command.set(products.ids)], "reward_point_amount": 1,
             })],
             "reward_ids": [Command.create({
-                "reward_type": "discount", "discount": 50_000, "discount_mode": "per_order",
+                "reward_type": "discount", "discount": 66_000 if multiple else promo, "discount_mode": "per_order",
                 "discount_applicability": "order", "required_points": 1,
             })],
         })
@@ -366,8 +440,9 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         order = self.env["sale.order"].with_user(self.salesperson).with_context(install_mode=False).create({
             "partner_id": self.partner_a.id, "warehouse_id": warehouse.id,
             "order_line": [Command.create({
-                "product_id": product.id, "product_uom_qty": 1, "price_unit": 1_000_000,
-            })],
+                "product_id": item.id, "product_uom_qty": 1,
+                "price_unit": 1_000_000 if item == product else 500_000,
+            }) for item in products],
         })
         self.env["sale.loyalty.coupon.wizard"].with_user(self.salesperson).create({
             "order_id": order.id, "coupon_code": "GOLDEN-B-FIXED",
@@ -375,10 +450,32 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
         self.env["sale.loyalty.reward.wizard"].with_user(self.salesperson).create({
             "order_id": order.id, "selected_reward_id": program.reward_ids.id,
         }).action_apply()
-        self.assertEqual(order.amount_untaxed, 950_000)
-        line = order.order_line.filtered(lambda item: item.product_id == product)
-        order.action_apply_tactical_components({str(line.id): [1]}, 40_500)
-        self.assertEqual(order.amount_untaxed, 900_000)
+        first = order.order_line.filtered(lambda item: item.product_id == product)
+        reward = order.order_line.filtered("reward_id")
+        expected_lines = None
+        expected = 900_000
+        expected_tax = 0
+        if multiple:
+            second = order.order_line.filtered(lambda item: item.product_id == self.product_b)
+            self.assertEqual(order.amount_untaxed, 1_440_000)
+            steps = {str(first.id): [5, 1], str(second.id): [2]}
+            footer = 101.01
+            # Fixed promo 40,000 / 20,000; post-stack 902,880 / 470,400.
+            # Footer quotas 66.411... / 34.598..., with the last cent going to SKU B.
+            expected = 1_373_178.99
+            expected_tax = 137_317.90
+            expected_lines = {first.id: 942_813.59, second.id: 490_365.40, reward.id: -60_000}
+        else:
+            self.assertEqual(order.amount_untaxed, 950_000)
+            steps = {str(first.id): [1]}
+            footer = 40_500
+        order.action_apply_tactical_components(steps, footer)
+        self.assertEqual(order.amount_untaxed, expected)
+        if multiple:
+            components = order.commercial_tactical_components
+            self.assertEqual(components["promo_allocations"], {str(first.id): "40000.0", str(second.id): "20000.0"})
+            self.assertEqual(components["allocations"], {str(first.id): "66.41", str(second.id): "34.60"})
+            self.assertEqual({line.id: line.price_subtotal for line in order.order_line}, expected_lines)
         requests = order._mobile_auto_request_approvals("Combined golden chain")
         self.assertEqual(requests.mapped("category_code"), ["tactical_discount"])
         self.assertEqual(len(requests.line_ids), 3)
@@ -386,6 +483,42 @@ class TestFmcgOperationalGoldenChain(AccountTestInvoicingCommon):
             order.action_confirm()
         for approver in (self.supervisor, self.user_mgr, self.user_dir):
             requests.with_user(approver).action_approve()
+        if multiple:
+            fingerprint = requests.commercial_fingerprint
+            with self.assertRaisesRegex(UserError, "Basis diskon bertingkat berubah"):
+                with self.env.cr.savepoint():
+                    program.rule_ids.minimum_qty = 3
+                    order.action_confirm()
+            for field in ("promo_allocations", "allocations"):
+                with self.assertRaisesRegex(UserError, "Komposisi komersial berubah"):
+                    with self.env.cr.savepoint():
+                        changed = dict(order.commercial_tactical_components)
+                        amounts = changed[field]
+                        changed[field] = {
+                            str(first.id): str(float(amounts[str(first.id)]) + 1),
+                            str(second.id): str(float(amounts[str(second.id)]) - 1),
+                        }
+                        order.sudo().write({"commercial_tactical_components": changed})
+                        self.assertEqual(order.amount_untaxed, expected)
+                        self.assertEqual(reward.price_subtotal, -promo)
+                        self.assertEqual(requests.commercial_fingerprint, fingerprint)
+                        order.action_confirm()
+            with self.assertRaisesRegex(UserError, "Komposisi komersial berubah"):
+                with self.env.cr.savepoint():
+                    # The order and reward totals stay fixed while 1.00 moves to SKU B.
+                    first.discount += 0.0001
+                    second.discount -= 0.0002
+                    self.assertEqual(order.amount_untaxed, expected)
+                    changed = dict(order.commercial_tactical_components)
+                    changed["basis"] = {
+                        str(line.id): [line.price_unit, line.product_uom_qty, line.discount]
+                        for line in first | second
+                    }
+                    order.sudo().write({"commercial_tactical_components": changed})
+                    self.assertEqual(requests.commercial_fingerprint, fingerprint)
+                    order.action_confirm()
         order.action_confirm()
-        self.assertEqual(order.order_line.filtered("reward_id").price_subtotal, -50_000)
-        self._settle_commercial_sale(order, lot)
+        self.assertEqual(order.order_line.filtered("reward_id").price_subtotal, -promo)
+        self.assertEqual(order.amount_tax, expected_tax)
+        total = order.currency_id.round(expected + expected_tax)
+        self._settle_commercial_sale(order, lots, total, expected_lines, expected_tax)

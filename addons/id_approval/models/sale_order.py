@@ -76,15 +76,20 @@ class SaleOrder(models.Model):
         for order in self:
             tactical = False
             below_hpp = False
+            components = order.commercial_tactical_components or {}
+            promo_basis = components.get("promo_basis")
+            promo_allocations = components.get("promo_allocations")
             for line in order.order_line:
                 if not line.product_id or line.display_type:
                     continue
                 if line.discount > 0.0:
                     tactical = True
                 net_price = line.price_unit * (1.0 - (line.discount / 100.0))
-                promo_basis = (order.commercial_tactical_components or {}).get("promo_basis")
                 if promo_basis and line.price_unit > 0 and line.product_uom_qty > 0:
-                    net_price -= promo_basis[2] / line.product_uom_qty
+                    # Existing snapshots recorded a single SKU without an allocation map.
+                    amount = (promo_basis[2] if promo_allocations is None
+                              else float(promo_allocations.get(str(line.id), 0)))
+                    net_price -= amount / line.product_uom_qty
                 cost_price = line.product_id.standard_price
                 if cost_price > 0.0 and net_price < cost_price:
                     below_hpp = True
@@ -397,14 +402,20 @@ class SaleOrder(models.Model):
         def money(amount):
             return Decimal(str(self.currency_id.round(float(amount))))
 
-        promo = Decimal(0)
         promo_basis = self._tactical_promo_basis()
-        if self._has_program_discount():
-            if len(lines) != 1 or not promo_basis:
-                raise UserError("Stack/footer hanya mendukung satu line dan satu promo nominal tetap.")
-            promo = money(value(promo_basis[2]))
+        if self._has_program_discount() and not promo_basis:
+            raise UserError("Stack/footer requires one fixed order reward and a common tax profile.")
+        gross = {
+            str(line.id): money(value(line.price_unit) * value(line.product_uom_qty))
+            for line in lines
+        }
+        promo = money(value(promo_basis[2])) if promo_basis else Decimal(0)
+        if promo > sum(gross.values()):
+            raise UserError("Promo melebihi nilai pesanan.")
+        quantum = value(self.currency_id.rounding)
+        promo_allocations = self._allocate_tactical_amount(promo, gross, quantum)
 
-        gross, net, steps_by_line = {}, {}, {}
+        net, steps_by_line = {}, {}
         for line in lines:
             key = str(line.id)
             steps = line_steps.get(key, [])
@@ -414,10 +425,7 @@ class SaleOrder(models.Model):
             if any(step > 100 for step in eligible_steps):
                 raise UserError("Persentase diskon tidak boleh melebihi 100%.")
             steps_by_line[key] = [str(step) for step in eligible_steps]
-            gross[key] = money(value(line.price_unit) * value(line.product_uom_qty))
-            net[key] = gross[key] - promo
-            if net[key] < 0:
-                raise UserError("Promo melebihi nilai baris.")
+            net[key] = gross[key] - promo_allocations[key]
             for step in eligible_steps:
                 net[key] = money(net[key] * (1 - step / 100))
 
@@ -425,28 +433,36 @@ class SaleOrder(models.Model):
         base = sum(net.values())
         if footer > base:
             raise UserError("Diskon footer melebihi nilai setelah diskon baris.")
-        quantum = value(self.currency_id.rounding)
-        quotas = {key: footer * amount / base if base else Decimal(0) for key, amount in net.items()}
-        allocated = {key: (quota / quantum).to_integral_value(rounding=ROUND_DOWN) * quantum
-                     for key, quota in quotas.items()}
-        remainder = int((footer - sum(allocated.values())) / quantum)
-        for key in sorted(net, key=lambda key: (-(quotas[key] - allocated[key]), int(key)))[:remainder]:
-            allocated[key] += quantum
+        allocated = self._allocate_tactical_amount(footer, net, quantum)
 
         with self.env.cr.savepoint():
             for line in lines:
                 key = str(line.id)
-                final = net[key] - allocated[key] + promo
+                final = net[key] - allocated[key] + promo_allocations[key]
                 line.discount = float((gross[key] - final) * 100 / gross[key]) if gross[key] else 0
                 if money(line.price_subtotal) != final:
                     raise UserError("Alokasi diskon tidak dapat direpresentasikan dengan presisi diskon Odoo.")
             self.sudo().write({"commercial_tactical_components": {
                 "steps": steps_by_line, "footer": str(footer), "promo_basis": promo_basis,
                 "allocations": {key: str(amount) for key, amount in allocated.items()},
+                "promo_allocations": {key: str(amount) for key, amount in promo_allocations.items()},
                 "basis": {str(line.id): [line.price_unit, line.product_uom_qty, line.discount]
                           for line in lines},
             }})
+            if promo_basis:
+                self._check_tactical_component_basis()
         return True
+
+    @staticmethod
+    def _allocate_tactical_amount(amount, weights, quantum):
+        base = sum(weights.values())
+        quotas = {key: amount * weight / base if base else Decimal(0) for key, weight in weights.items()}
+        allocated = {key: (quota / quantum).to_integral_value(rounding=ROUND_DOWN) * quantum
+                     for key, quota in quotas.items()}
+        remainder = int((amount - sum(allocated.values())) / quantum)
+        for key in sorted(weights, key=lambda key: (-(quotas[key] - allocated[key]), int(key)))[:remainder]:
+            allocated[key] += quantum
+        return allocated
 
     def _tactical_promo_basis(self):
         """Allow native fixed rewards that retain their amount after line/footer deductions."""
@@ -456,11 +472,23 @@ class SaleOrder(models.Model):
             return []
         reward = rewards.reward_id
         program = reward.program_id
+        goods = self.order_line.filtered(
+            lambda line: not line.display_type and line.product_id and not line.reward_id
+        )
         if (
-            reward.discount_mode != "per_order" or not getattr(program, "principal_id", False)
+            reward.reward_type != "discount" or reward.discount_applicability != "order"
+            or reward.discount_mode != "per_order" or not getattr(program, "principal_id", False)
+            or len({tuple(sorted(line.tax_ids.ids)) for line in goods}) != 1
+            or goods & self._get_no_effect_on_threshold_lines()
+            or any(line.price_unit <= 0 or line.product_uom_qty <= 0 or line.combo_item_id for line in goods)
             or program.currency_id != self.currency_id
-            or self.currency_id.compare_amounts(-rewards.price_subtotal, reward.discount) != 0
+            or self.currency_id.compare_amounts(-rewards.price_total, reward.discount) != 0
         ):
+            return []
+        if program.program_type != "promotion" or not program.filtered_domain(self._get_program_domain()):
+            return []
+        eligibility = self._program_check_compute_points(program)[program]
+        if "error" in eligibility or eligibility["points"][0] < reward.required_points:
             return []
         return [program.id, reward.id, -rewards.price_subtotal]
 

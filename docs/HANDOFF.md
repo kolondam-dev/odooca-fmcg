@@ -1,3 +1,17 @@
+## 2026-11-25T19:06:54+07:00 — Agent Codex-Cloud1 — PR #110: Paket B multi-SKU
+
+**Berubah:**
+- Alokasikan DPP reward nominal berdasarkan gross tiap SKU. Hitung tactical berurutan, lalu distribusikan footer ke sisa DPP dengan pembulatan mata uang. Reward Odoo tetap terpisah pada invoice.
+- Simpan alokasi promo bersama komposisi approval dan periksa ulang eligibility saat aplikasi diskon dan konfirmasi. Tambahkan matriks eligibility, oracle invoice/pajak/AR, dan kontrol pertukaran alokasi bernilai sama.
+- Dokumentasikan empat kode sumber dan principal SKU teramati untuk 769 referensi historis. Keputusan budget, otorisasi mapping dan backend v2 tercatat pada [matriks Paket B](reviews/PR110_PACKET_B_ACCEPTANCE.md).
+**Diverifikasi:**
+- [F] Lima golden chain Odoo lulus dengan instalasi kosong dan pengulangan setelah penambahan skenario principal terpisah. 127 tes Python seed/period pack, Ruff, dan pemeriksaan manifest lulus.
+- [F] Dampak test **TAMBAH** untuk multi-SKU, approval stale, pajak, dan eligibility. F4 pada baseline sebelumnya `6d71914` lulus.
+**Belum diuji:**
+- [BU] Workflow install-test dan F4 pada commit integrasi ini menunggu GitHub. Lifecycle budget dan tes konkurensi menunggu keputusan produk/Finance.
+**Berikutnya:**
+- Ambil run dan artefak exact SHA untuk re-review. Paket B tetap HOLD.
+
 ## 2026-11-25T15:43:26+07:00 — Agent Codex-Cloud1 — PR #110: fixture visual dashboard
 
 **Berubah:**

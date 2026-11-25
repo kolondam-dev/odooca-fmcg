@@ -22,20 +22,48 @@ Register tidak mendeklarasikan relasi yang diotorisasi ke ID eksternal program O
 | ID | Pelaku, kondisi dan action | Oracle dan kontrol negatif | Bukti awal | Status |
 | --- | --- | --- | --- | --- |
 | B-01 | Sales, order tanpa diskon, evaluasi approval | Zero discount, nol tactical request | `TestApprovalEngine.test_03d_mobile_auto_request_noop_without_discount` | CLOSED |
-| B-02 | Sales, promo eligible, Supervisor | Pending memblokir, Supervisor menyetujui, program tidak eligible ditolak | Wizard native `test_governed_native_promo_requires_supervisor` dan siklus monitoring existing. Kontrak budget dan outlet masih terbuka | PARTIAL |
+| B-02 | Sales, promo eligible, Supervisor | Pending memblokir, Supervisor menyetujui, program tidak eligible ditolak | Wizard native `test_governed_native_promo_requires_supervisor` meliputi status, tanggal, company, principal, SKU dan minimum. Kontrak budget serta outlet/channel masih terbuka | PARTIAL |
 | B-03 | Sales, tactical Tier0, Supervisor untuk monitoring promo | Batas persis Tier0, promo tetap monitoring | `test_21c_mixed_order_in_free_zone_still_needs_supervisor_promo_monitoring` | CLOSED |
-| B-04 | Sales, approval berjenjang, line dan footer | Rp1 juta → Rp950.000 → Rp940.500 → Rp900.000. Tolak pergantian line walau total tetap | `test_tactical_line_stack_and_footer_to_reconciliation` lulus dengan role nyata dan mutasi komposisi total tetap. Kombinasi satu promo nominal resmi dan satu line dibuktikan lewat `test_fixed_official_promo_before_tactical_stack_and_footer`. Matriks program-first yang lebih luas masih terbuka | PARTIAL |
-| B-05 | Sales, beberapa SKU dan principal | Alokasi nominal presisi, remainder, aturan principal, kontrol pergeseran alokasi | `test_footer_rounding_remainder_is_allocated_once` dan existing tier per principal. Integrasi multi-principal dengan promo belum diuji | PARTIAL |
+| B-04 | Sales, approval berjenjang, line dan footer | Rp1 juta → Rp950.000 → Rp940.500 → Rp900.000. Tolak pergantian line walau total tetap | `test_tactical_line_stack_and_footer_to_reconciliation` lulus dengan role nyata dan mutasi komposisi total tetap. Tes satu line dan `test_multi_sku_fixed_promo_rounding_and_stale_approval` mencakup fixed program-first sampai settlement. Stack dengan reward persen ditolak server | PARTIAL |
+| B-05 | Sales, beberapa SKU dan principal | Alokasi nominal presisi, remainder, aturan principal, kontrol pergeseran alokasi | `test_multi_sku_fixed_promo_rounding_and_stale_approval` mengikat alokasi dua SKU dan menolak tiga mutasi dengan total sama. `test_governed_native_promo_requires_supervisor` mencakup pemisahan SO lintas principal | PARTIAL |
 | B-06 | Sales dan approver, riwayat pada window WITA | Boundary tier, crossing, bobot nilai, isolasi company/outlet/salesman | Existing `test_approval_engine.py` memberi regresi dasar | CLOSED |
-| B-07 | Sales, approver, gudang, akuntansi | Harga, diskon, DPP, pajak, invoice link, residual, jurnal, replay dan rollback | Golden chain tactical sampai rekonsiliasi dan mini-pack historis lulus secara lokal. Golden chain gabungan satu promo nominal dan satu line mencapai settlement. Cakupan historis gabungan tetap terbatas oleh register | PARTIAL |
+| B-07 | Sales, approver, gudang, akuntansi | Harga, diskon, DPP, pajak, invoice link, residual, jurnal, replay dan rollback | Golden chain tactical sampai rekonsiliasi dan mini-pack historis lulus secara lokal. Golden chain gabungan satu promo nominal dengan satu dan dua line mencapai settlement. Cakupan historis gabungan tetap terbatas oleh register | PARTIAL |
+
+## Oracle native dua SKU
+
+| Komponen | SKU A | SKU B |
+| --- | ---: | ---: |
+| DPP awal | 1.000.000,00 | 500.000,00 |
+| Bagian DPP promo | 40.000,00 | 20.000,00 |
+| DPP sesudah promo | 960.000,00 | 480.000,00 |
+| Tactical berurutan | 5% → 912.000,00, lalu 1% → 902.880,00 | 2% → 470.400,00 |
+| Bagian footer 101,01 | 66,41 | 34,60 |
+| DPP line barang pada invoice | 942.813,59 | 490.365,40 |
+
+Reward native Rp66.000 termasuk pajak tercatat terpisah sebagai DPP −60.000,00. Setelah reward, total DPP Rp1.373.178,99, pajak fixture 10% Rp137.317,90 dan piutang Rp1.510.496,89. Pencatatan piutang dan relasi pembayaran diperiksa sampai residual nol. Pengujian memindahkan alokasi promo, alokasi footer atau diskon efektif antar-SKU sambil menjaga total. Approval lama menolak setiap mutasi. Minimum program yang berubah setelah approval turut memblokir konfirmasi.
+
+## Mapping historis yang menunggu otorisasi
+
+Principal SKU berasal dari join `order_lines.csv` dengan `data/seed/products_150.csv`. Cakupan register di bawah adalah Agustus 2026. Periode berlakunya program dan external ID perlu dikonfirmasi pemilik register sebelum loader dapat mengikat referensi.
+
+| Kode sumber | Principal SKU teramati | Line Agustus | External ID / periode efektif |
+| --- | --- | ---: | --- |
+| PROMO-2026-MAYORA-FMCG | PRIN-MAYORA | 255 | Menunggu konfirmasi |
+| PROMO-2026-SANTOS-KOPI | PRIN-SANTOS | 143 | Menunggu konfirmasi |
+| TIER-VOL-UNILEVER-8 | PRIN-UNILEVER | 225 | Menunggu konfirmasi |
+| TIER-VOL-WINGS-10 | PRIN-WINGS | 146 | Menunggu konfirmasi |
+
+## Keputusan eligibility dan budget
+
+Pagu rupiah memerlukan keputusan produk/Finance tentang basis DPP atau gross, mata uang dan konversi, scope company/program/periode, waktu reserve dan expiry, titik consume, serta pelepasan karena cancel, retur, revisi atau retry. Setelah aturan ditetapkan, gate integrasi memerlukan dua transaksi PostgreSQL independen untuk membuktikan satu klaim menang atas sisa pagu yang sama dan retry tidak menghitung pemakaian dua kali. Dimensi outlet/channel memerlukan kontrak eligibility yang disetujui. Field sumber biaya pada program saat ini hanya mengklasifikasikan beban.
 
 ## Dependency order v2
 
-DS_RECONCILIATION K4/K13 B2, kontrak order v2 dan feature gate `features.order_pricing_v2`. PWA mendukung preview line/footer dan program. Handler backend legacy belum menerima pricing v2 maupun memberikan snapshot program yang sah. PR backend terpisah diperlukan untuk schema submit/revise, quote dan validasi otoritatif, budget lifecycle, idempotensi UUID, serta integrasi browser/backend. Owner pekerjaan adalah pelaksana backend mobile yang ditunjuk project. Status OPEN, belum ada PR backend yang teridentifikasi untuk aktivasi ini. Flag live tetap mati. K5 tidak memblokir Paket B.
+DS_RECONCILIATION K4/K13 B2, kontrak order v2 dan feature gate `features.order_pricing_v2`. PWA mendukung preview line/footer dan program. Handler backend legacy belum menerima pricing v2 maupun memberikan snapshot program yang sah. PR backend terpisah diperlukan untuk schema submit/revise, quote dan validasi otoritatif, budget lifecycle, idempotensi UUID, serta integrasi browser/backend. Status OPEN. Agent Claude-Dev1 adalah kandidat owner berdasarkan perubahan backend snapshot BE-18/BE-19. Penugasan dan PR backend v2 belum terkonfirmasi. Flag live tetap mati. K5 tidak memblokir Paket B.
 
 ## Implementasi dan batas pembuktian
 
-- Aksi server tactical menyimpan stack dan footer teralokasi. Aplikasi diskon memakai diskon efektif native supaya tagihan hanya memotong sekali. Presisi yang tidak bisa dinyatakan pada line native ditolak. Aksi ini mendukung satu promo nominal resmi dengan satu line barang. Reward native tetap terpisah dan menjadi basis alokasi. Kombinasi lain masih membutuhkan pembuktian. Integrasi promo + tactical existing tetap memiliki satu rantai tactical.
+- Aksi server tactical menyimpan stack dan footer teralokasi. Aplikasi diskon memakai diskon efektif native supaya tagihan hanya memotong sekali. Presisi yang tidak bisa dinyatakan pada line native ditolak. Aksi ini mendukung satu reward nominal tetap berlingkup order, dengan satu profil pajak barang. Basis alokasi adalah nilai DPP reward native. Reward tetap menjadi line tersendiri pada invoice. Reward persen, cakupan SKU khusus dan profil pajak campuran ditolak pada jalur kombinasi ini. Integrasi promo + tactical existing tetap memiliki satu rantai tactical.
 - Snapshot approval mengikat komposisi dan diskon, SKU/UoM, kuantitas, harga, pajak, program/reward dan konteks perusahaan/outlet/Sales. Aksi validasi tier memeriksa actor. Perubahan komposisi bernilai total sama, penulisan state langsung, dan role yang salah diuji.
 - Mini-pack mengambil `PO-2026-08-01` → `SO-202608-1007` → `INV-202608-1007` → `PAY-AR-02000` langsung dari register. Oracle menguji kode promo sumber, harga, qty, diskon, relasi invoice, nominal dan payment edge. Mutasi metadata promo melalui ORM mempertahankan total, ditolak oracle, lalu di-rollback. Regresi Python menukar persen antar-SKU dengan total yang sama.
 - Seluruh 769 line berkode disimpan sebagai referensi historis belum terpetakan. Snapshot dari loader lama yang berisi binding fuzzy perlu ditinjau sebelum replay karena guard akan menolaknya. Kode sumber tidak menjadi klaim atau rekam approval.

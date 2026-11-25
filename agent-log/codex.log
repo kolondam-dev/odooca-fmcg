@@ -639,3 +639,8 @@
 - GitHub: 337 tes addon lulus pada 582b7a1; tahap shell visual menemukan SO diskon belum disetujui.
 - Patch lokal pada DB kosong lulus hingga DASHBOARD_VISUAL_FIXTURE=PASS.
 - Task managed by codex agent at 2026-11-25T15:43:26+07:00
+
+[2026-11-25T19:06:54+07:00] [INFO] Paket B: chain native dua SKU dan kontrol approval total tetap
+- Buktikan promo nominal, stack/footer, pajak invoice, role, relasi pembayaran dan residual; kontrol eligibility dan split principal lulus.
+- Lima golden chain Odoo dan 127 tes Python lulus. Budget/mapping/order v2 tetap membutuhkan keputusan atau penugasan.
+- Task managed by codex agent at 2026-11-25T19:06:54+07:00
