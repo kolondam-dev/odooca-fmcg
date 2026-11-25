@@ -89,11 +89,20 @@ def verify_cutoff_gl(lines, source, expected_amounts, expense, contra):
             f"Depreciation cutoff GL coverage mismatch: {observed} != {expected}")
 
 
-def verify_acquisition_gl(asset, bill, cost_account):
+def verify_acquisition_gl(asset, bill, cost_account, payable_account):
     """Tie the acquisition base line to a posted bill that capitalized it."""
     require(
         bill.state == "posted" and bill.move_type == "in_invoice",
         "Acquisition is not a posted vendor bill",
+    )
+    require(
+        str(bill.date) == ACQUISITION_DATE
+        and str(bill.invoice_date) == ACQUISITION_DATE,
+        f"Acquisition bill date differs from {ACQUISITION_DATE}",
+    )
+    require(
+        bill.journal_id.type == "purchase",
+        "Acquisition bill journal is not a purchase journal",
     )
     require(
         asset.state in ("open", "close"),
@@ -143,14 +152,43 @@ def verify_acquisition_gl(asset, bill, cost_account):
         "Acquisition bill line does not debit the full asset value",
     )
     require(
+        str(linked.date) == ACQUISITION_DATE,
+        "Capitalizing bill line date differs from the acquisition date",
+    )
+    lines = list(bill.line_ids)
+    require(
+        len(lines) == 2,
+        f"Acquisition bill must have exactly two lines: {lines}",
+    )
+    cost_lines = [line for line in lines if line.account_id == cost_account]
+    payable_lines = [line for line in lines if line.account_id == payable_account]
+    require(
+        len(cost_lines) == 1 and len(payable_lines) == 1,
+        "Acquisition bill must debit cost and credit payable exactly once",
+    )
+    require(
+        linked == cost_lines[0],
+        "Asset capitalization line is not the bill's cost line",
+    )
+    payable = payable_lines[0]
+    require(
+        payable.debit == 0.0
+        and payable.credit == ACQUISITION_VALUE
+        and payable.balance == -ACQUISITION_VALUE,
+        "Acquisition bill does not credit the payable for the full value",
+    )
+    require(
+        str(payable.date) == ACQUISITION_DATE,
+        "Acquisition payable line date differs from the acquisition date",
+    )
+    require(
         bill.company_id == asset.company_id
         and bill.currency_id == asset.currency_id,
         "Acquisition bill company/currency differs from the asset",
     )
     require(
-        len(bill.line_ids) == 2
-        and bill.currency_id.round(sum(line.balance for line in bill.line_ids)) == 0,
-        f"Acquisition bill is not a balanced two-line journal: {bill.line_ids}",
+        bill.currency_id.round(sum(line.balance for line in lines)) == 0,
+        f"Acquisition bill is not a balanced two-line journal: {lines}",
     )
 
 
@@ -295,7 +333,7 @@ def run(env):
             asset = created
             asset.validate()
             asset.invalidate_recordset()
-            verify_acquisition_gl(asset, bill, cost_account)
+            verify_acquisition_gl(asset, bill, cost_account, accounts["ap"])
 
             depreciation = asset.depreciation_line_ids.filtered(
                 lambda line: line.type == "depreciate",

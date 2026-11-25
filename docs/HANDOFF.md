@@ -1,7 +1,7 @@
 ## 2026-11-25 — [BU] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
 
 - [F] PR #197 merged ke `main` sebagai `3056f3f0ce3bda8b4938d8aaa464e5be3de87e01`; head `aed9150c4af091b28f53c7ab97eed2a6f691c6d3`; 22 SUCCESS/6 SKIPPED, Full Dataset runtime SKIPPED. Artifact: tiga jurnal depresiasi (move 1/2/3), GL per cutoff, residual nol, rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.
-- [BU] Branch `agen/opencode-fin36-acquisition-disposal-oracle` mengganti aset manual dengan vendor bill posted; `type=create` wajib menunjuk `move_id` bill dan baris kapitalisasi tunggal. Disposal memakai wizard `account.asset.remove`; oracle memposting jurnal draft lalu mengikat debit akumulasi/kredit biaya perolehan 100.001. Exact-SHA CI belum dijalankan.
+- [BU] Branch `agen/opencode-fin36-acquisition-disposal-oracle` mengganti aset manual dengan vendor bill posted; `type=create` wajib menunjuk `move_id` bill dan baris kapitalisasi tunggal. Disposal memakai wizard `account.asset.remove`; oracle memposting jurnal draft lalu mengikat debit akumulasi/kredit biaya perolehan 100.001. P2 review #199: oracle akuisisi juga mengikat tanggal bill/invoice, jurnal `purchase`, baris kredit payable beserta nilainya, dan tanggal baris kapitalisasi; bukti runtime exact-SHA baru belum dijalankan.
 - [F] Tes offline baru menolak bill draft/bukan `in_invoice`, base line tanpa bill, kapitalisasi ganda/nilai salah, removal residual ≠ 0, jurnal removal draft/jurnal salah, dan baris GL ekstra.
 - [BU] Populasi aset nyata, mapping Controller, lisensi dependensi produksi, ACL/export/live, dan sign-off tetap HOLD.
 

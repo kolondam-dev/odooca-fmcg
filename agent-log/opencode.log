@@ -442,3 +442,9 @@
 - [F] Tes offline menolak bill draft/bukan in_invoice, base line tanpa bill, kapitalisasi ganda/nilai salah, residual removal bukan nol, jurnal removal draft/salah, dan GL ekstra.
 - [BU] Exact-SHA CI belum dijalankan. Populasi aset, mapping Controller, lisensi produksi, ACL/export/live, dan sign-off tetap HOLD.
 - Task managed by opencode at 2026-11-25T20:32:25+07:00
+
+[2026-11-25T21:02:41+07:00] [INFO] FIN36 P2 review #199: ikat lawan kredit dan tanggal akuisisi
+- [F] Oracle akuisisi kini menolak bill yang tanggal/invoice date bukan 2026-07-01, jurnal bukan purchase, akun kredit bukan payable atau nilai kredit bukan 100.001, dan tanggal baris kapitalisasi/payable yang menyimpang.
+- [F] Counterexample offline ditambah untuk setiap mutasi; 6 tes oracle dan Ruff lulus lokal.
+- [BU] Head baru setelah perbaikan belum memiliki bukti artifact Finance I0; bukti 8f2fb37 tidak berlaku untuk head ini.
+- Task managed by opencode at 2026-11-25T21:02:41+07:00
