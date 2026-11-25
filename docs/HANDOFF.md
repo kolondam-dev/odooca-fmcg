@@ -1,3 +1,7 @@
+## 2026-11-25T22:30:17+07:00 — Codex — Integrasi DEV-02A/B09
+**Basis:** main `23a4108`, Dev `cd19d6f`; merge bersih. **Dampak test TAMBAH:** harness HttpCase opt-in membuktikan login, scope, receipt dan rollover di Odoo disposable; jalur APK/HTTPS masih [BU]. Kandidat harness diajukan untuk review dan CI.
+**Tindak lanjut:** gunakan satu runner Android ber-KVM dengan Odoo/PostgreSQL disposable dan endpoint HTTPS privat selama job. HttpCase menjalankan fixture dalam transaksi tes; fase APK memerlukan seed TEST yang dikomit hanya di DB fixture, proses Odoo yang tetap hidup, sertifikat yang dipercaya build test, dan cleanup pada sukses/gagal.
+
 ## 2026-11-25 — [BU] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
 
 - [F] PR #197 merged ke `main` sebagai `3056f3f0ce3bda8b4938d8aaa464e5be3de87e01`; head `aed9150c4af091b28f53c7ab97eed2a6f691c6d3`; 22 SUCCESS/6 SKIPPED, Full Dataset runtime SKIPPED. Artifact: tiga jurnal depresiasi (move 1/2/3), GL per cutoff, residual nol, rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.
@@ -7,6 +11,21 @@
 - [BU] Populasi aset nyata, mapping Controller, lisensi dependensi produksi, ACL/export/live, dan sign-off tetap HOLD.
 
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
+
+## 2026-11-25 — [F] Checkpoint DEV-02A · Harness Odoo B09 (Codex-Mobile Native)
+
+- [F] Branch `agen/android-dev-Codex-Mobile-Native`, base main `f0b3632ef0766d8f36f18ba7f47152ca3c596f11`, implementasi yang diuji `bb6a8008b3cd07f2a7329a1468be1c35196fd783`. Source Android terakhir `97c09a1853e7d2b7ff88652a5500251976d8b461`. Arahan Lead `e023d38`.
+- [F] Odoo `19.0.20261112`, PostgreSQL `16.16`, fixture `dev02a-v1`, `id_mobile_api` `19.0.1.4.0`, `id_base` `19.0.1.3.4`, `id_approval` `19.0.1.0.0`. Login dan bootstrap kedua akun, snapshot sesuai assignment, command dan receipt `accepted` dengan UUID cocok, 401 tanpa sesi, 403 lintas outlet, 403 setelah scope dicabut, rollover WITA dan 409 untuk snapshot lama, serta cleanup jalur sukses/gagal lulus. [Cara ulang, matriks dan laporan tersanitasi](android/DEV02A_HARNESS.md#bukti-runtime-cloud).
+- [F] Gate statis dan Gradle lulus. Ruff, 15 manifest, 34 tes CI, token desain, 72 tes domain, 3 tes data/Robolectric, lint, APK debug dan validasi OpenAPI. Planner memilih `android`, `odoo_install`, `mobile`, `upgrade`. Dampak test **TAMBAH** dengan fixture HTTP opt-in `dev02a`. Rollover memicu retry cursor Odoo yang terdokumentasi.
+- [BU] CI remote dan jalur APK → Odoo disposable melalui HTTPS menunggu review Lead. Fixture yang diuji berjalan melalui HTTP loopback dalam kontainer. DEV-02B berada di slice berikutnya.
+
+
+## 2026-11-25 — DEV-02A · Fixture HTTP Odoo disposable (Codex-Mobile Native)
+
+- [F] Base `f0b3632` dan arahan Lead `e023d38`. Tambah fixture HttpCase B09 untuk dua assignment, login hingga receipt dan batas akses, serta runner Docker dengan pemeriksaan cleanup.
+- [F] Cara ulang dan acceptance per skenario ada di [Harness DEV-02A](android/DEV02A_HARNESS.md).
+- [BU] Bukti runtime exact-SHA dan gate diserahkan pada checkpoint eksekusi. Jalur APK ke target HTTPS memerlukan target disposable yang dapat dijangkau runner Android.
+
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
 
