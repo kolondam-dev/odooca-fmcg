@@ -10,6 +10,16 @@
 > dependensi custom atau aktivasi demo/produksi. FIN36 tetap belum diterima;
 > lisensi untuk dependensi produksi, mapping Controller, akuisisi/disposal,
 > cakupan aset, ACL, ekspor dan sign-off tetap terbuka.
+>
+> **Pembaruan status 2026-11-25:** [F] PR #197 merged ke `main` sebagai
+> `3056f3f` (head `aed9150`); pada exact SHA 22 check SUCCESS dan 6 SKIPPED
+> (Full Dataset runtime tidak dijalankan). Artifact Finance I0 mencatat tiga
+> jurnal depresiasi berbeda (move 1/2/3), GL per cutoff, residual nol dan
+> rollback PASS di DB disposable. [BU] Slice berikutnya memakai vendor bill
+> posted sebagai sumber `type=create` (`move_id` wajib) dan wizard
+> `account.asset.remove` untuk disposal; jurnal draft wizard harus diposting
+> oracle lalu diikat ke akun akumulasi/biaya perolehan. Tetap tanpa dependensi
+> atau aktivasi produksi; FIN36 belum diterima.
 
 ## Scope dan status
 
