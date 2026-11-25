@@ -1,3 +1,9 @@
+## 2026-11-25 — Recovery bukti kedaluwarsa PR #200 (ChatGPT-ABSENSI)
+
+- [F] P2: respons definitif `attendance_evidence_expired` melepas draft dan membuka foto/GPS baru. Respons jaringan ambigu tetap memakai UUID yang sama. Receipt accepted yang ditemukan tetap di-replay.
+- [F] Upgrade lokal, 12 tes ORM/HTTP (expiry, WITA, replay, respons HTTP), 574 Vitest, dan 4 skenario browser ponsel/tablet lulus.
+- [BU] CI head perbaikan dan penerimaan perangkat staging masuk–pulang menunggu sebelum merge.
+
 ## 2026-11-25 — PR 1 absensi PWA pilot (ChatGPT-ABSENSI)
 
 - [F] `agen/absensi`, basis `f0b3632`. Odoo merekam `hr.attendance` dari foto/GPS kantor terverifikasi untuk karyawan pilot. Mode sumber PWA dan tautan bukti tersimpan. PWA mengulang event pending dengan UUID sama setelah reload. Lihat `addons/id_attendance/README.md`.

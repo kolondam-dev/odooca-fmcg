@@ -5,6 +5,12 @@ import {
     AttendanceEvidenceReceiptSchema,
 } from "../domain/official-evidence";
 
+export class AttendanceRecaptureRequired extends ApiError {
+    constructor(message: string) {
+        super(422, message);
+    }
+}
+
 export type AttendanceEvent = "check_in" | "check_out";
 
 export async function postAttendance(
@@ -42,12 +48,14 @@ export async function postAttendance(
         body: form,
         signal: AbortSignal.timeout(15000),
     });
+    if (upload.status === 422)
+        throw new AttendanceRecaptureRequired(
+            "Bukti ditolak. Periksa lokasi kantor, perbarui GPS, lalu ambil foto ulang.",
+        );
     if (!upload.ok)
         throw new ApiError(
             upload.status,
-            upload.status === 422
-                ? "Bukti ditolak. Periksa lokasi kantor, perbarui GPS, lalu ambil foto ulang."
-                : "Bukti belum terkonfirmasi. Coba kirim ulang.",
+            "Bukti belum terkonfirmasi. Coba kirim ulang.",
         );
     const uploaded = AttendanceEvidenceReceiptSchema.parse(await upload.json());
     if (
@@ -75,6 +83,13 @@ export async function postAttendance(
         }),
         signal: AbortSignal.timeout(15000),
     });
+    if (response.status === 422) {
+        const rejection = await response.json().catch(() => null);
+        if (rejection?.error === "attendance_evidence_expired")
+            throw new AttendanceRecaptureRequired(
+                "Bukti absensi kedaluwarsa. Ambil foto dan lokasi baru.",
+            );
+    }
     if (!response.ok)
         throw new ApiError(
             response.status,

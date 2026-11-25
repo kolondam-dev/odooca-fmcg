@@ -1,5 +1,5 @@
 import io
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -126,4 +126,21 @@ class TestPwaAttendance(TransactionCase):
         self.assertTrue(other.has_group("id_mobile_api.group_mobile_evidence"))
         with self.assertRaises(AccessError):
             self.commands.with_user(other).process_command(self._command(check_out))
+        self.assertFalse(self.env["hr.attendance"].search([("employee_id", "=", self.employee.id)]))
+
+    def test_unposted_evidence_expires_after_window_or_wita_rollover(self):
+        for hour, delay in ((0, timedelta(seconds=301)), (15, timedelta(minutes=1))):
+            now, metadata = self._metadata(hour, "check_in")
+            if hour == 15:
+                now += timedelta(minutes=59)
+                for key in ("photo_selected_at", "device_recorded_at", "fix_sampled_at"):
+                    metadata[key] = now.isoformat()
+            self._capture(now, metadata)
+            command = self._command(metadata)
+            with self.assertRaises(EvidenceRejected) as error:
+                self._submit(now + delay, command)
+            self.assertEqual(error.exception.code, "attendance_evidence_expired")
+            self.assertFalse(self.env["id.mobile.command"].search([
+                ("client_uuid", "=", command["client_uuid"]),
+            ]))
         self.assertFalse(self.env["hr.attendance"].search([("employee_id", "=", self.employee.id)]))

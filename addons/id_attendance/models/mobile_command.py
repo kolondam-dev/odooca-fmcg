@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from odoo import _, api, models
 from odoo.exceptions import AccessError, UserError
 
-from odoo.addons.id_mobile_api.models.mobile_evidence import utc_now
+from odoo.addons.id_mobile_api.models.mobile_evidence import EvidenceRejected, utc_now
 from odoo.addons.id_mobile_api.models.mobile_workday import MobileReadConflict
 
 WITA = ZoneInfo("Asia/Makassar")
@@ -48,7 +48,7 @@ class MobileCommand(models.Model):
         day = recorded.astimezone(WITA).date()
         now = utc_now()
         if now.astimezone(WITA).date() != day or not 0 <= (now - received).total_seconds() <= 300:
-            raise UserError(_("Attendance evidence expired before posting."))
+            raise EvidenceRejected("attendance_evidence_expired")
 
         # Serialize actions for the same employee across multiple devices.
         self.env.cr.execute("SELECT id FROM hr_employee WHERE id = %s FOR UPDATE", [employee.id])

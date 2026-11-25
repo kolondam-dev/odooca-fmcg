@@ -9,3 +9,8 @@
 - [F] Instal Odoo 19 id_ID, upgrade DB persisten, 10 tes ORM terpilih, 574 Vitest, dan acceptance retry browser phone/tablet lulus. Ruff, manifest, TypeScript, kontrak dan build gate lulus.
 - [BU] Dua skenario GPS outlet gagal pada Chromium alternatif di basis dan kandidat. CI exact SHA, browser resmi, dan acceptance perangkat staging belum dijalankan.
 - Task managed by ChatGPT-ABSENSI at 2026-11-25T22:10:32+07:00
+
+[2026-11-25T22:50:37+07:00] [INFO] Perbaiki recovery retry bukti kedaluwarsa PR #200
+- [F] HTTP 422 dengan kode attendance_evidence_expired membuka pengambilan bukti baru. Retry ambigu mempertahankan UUID.
+- [F] Upgrade lokal, 12 tes Odoo ORM/HTTP, 574 Vitest dan 4 skenario browser pilot lulus. [BU] CI head baru dan perangkat staging menunggu.
+- Task managed by ChatGPT-ABSENSI at 2026-11-25T22:50:37+07:00

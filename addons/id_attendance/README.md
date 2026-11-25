@@ -24,3 +24,8 @@ memiliki absen pulang resmi dapat memerlukan tindakan HR sebelum check-in baru.
 Odoo dapat memiliki checkout otomatis atau manual. Untuk pelaporan PWA,
 identifikasi pasangan resmi dari tautan bukti masuk dan pulang. Koreksi
 ber-approval dan perhitungan rekap merupakan milestone berikutnya.
+
+Saat Odoo memastikan bukti belum diposting dan sudah kedaluwarsa, PWA
+membuka pengambilan foto dan lokasi baru. Respons yang hilang atau status
+server yang belum pasti tetap memakai UUID lama. Draft hari sebelumnya
+dilepas saat PWA memuat hari WITA yang baru. Riwayat resmi tetap di Odoo.

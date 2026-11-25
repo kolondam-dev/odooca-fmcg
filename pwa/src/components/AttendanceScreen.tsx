@@ -1,6 +1,9 @@
-import { postAttendance } from "../data/attendance";
+import {
+    AttendanceRecaptureRequired,
+    postAttendance,
+} from "../data/attendance";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { ApiError, type Identity, type Snapshot } from "../domain/contracts";
+import type { Identity, Snapshot } from "../domain/contracts";
 import { distanceMeters } from "../domain/format";
 import { renderEvidencePackage } from "../domain/evidence-render";
 import { LocationNoticeSheet, type LocationNotice } from "./LocationNotice";
@@ -311,11 +314,7 @@ export function AttendanceScreen({
                         saved.fixAt,
                     );
                 } catch (error) {
-                    if (
-                        error instanceof ApiError &&
-                        error.status === 422 &&
-                        error.message.startsWith("Bukti ditolak")
-                    ) {
+                    if (error instanceof AttendanceRecaptureRequired) {
                         await store.removeDraft(owner, pendingKey);
                         setAwaitingReceipt(false);
                         locate(true);
