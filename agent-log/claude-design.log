@@ -456,3 +456,35 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-23T07:39:00+07:00] [INFO] BE-7 outlet_receivables
 - piutang + faktur terbuka di snapshot, di luar digest; include_volatile; kontrak, tes ORM
 - Task managed by claude-design agent at 2026-11-23T07:39:00+07:00
+
+[2026-11-23T09:25:07+07:00] [INFO] FE-8 kartu Tagihan read-only
+- receivables.ts, kartu Tagihan, wajib ditagih hari ini, creditRoom mode-aware, K37, BE-20
+- Task managed by claude-design agent at 2026-11-23T09:25:07+07:00
+
+[2026-11-23T13:51:49+07:00] [INFO] FE-8 baca: P2 total terpotong
+- mustCollectToday complete; label Minimal saat daftar terpotong; tes unit+e2e
+- Task managed by claude-design agent at 2026-11-23T13:51:49+07:00
+
+[2026-11-23T16:26:26+07:00] [INFO] BE-20a collect_today
+- agregat server wajib ditagih; PWA memakai; tes Odoo+unit+e2e
+- Task managed by claude-design agent at 2026-11-23T16:26:26+07:00
+
+[2026-11-23T16:59:50+07:00] [INFO] BE-20 rancangan SJP
+- D8 dicatat; docs/ui/BE20_SJP_DESIGN.md
+- Task managed by claude-design agent at 2026-11-23T16:59:50+07:00
+
+[2026-11-23T19:57:58+07:00] [INFO] BE-20b addon id_ar_collection
+- SJP model, Generate, PDF, grup, 13 tes Odoo (CI)
+- Task managed by claude-design agent at 2026-11-23T19:57:58+07:00
+
+[2026-11-24T08:09:03+07:00] [INFO] BE-20b putaran 2
+- active_claim+indeks unik, state machine server, mata uang, tes dua transaksi + PDF
+- Task managed by claude-design agent at 2026-11-24T08:09:03+07:00
+
+[2026-11-24T19:04:49+07:00] [INFO] BE-20c snapshot SJP
+- collection_sheets pada snapshot: kolektor, perusahaan, hari WITA; kontrak zod; 7 tes Odoo
+- Task managed by claude-design agent at 2026-11-24T19:04:49+07:00
+
+[2026-11-25T06:18:57+07:00] [INFO] BE-20c P2 pergantian hari
+- Satu jangkar assignment/hari; _assert_day sesudah induk dan sesudah blok SJP; 3 tes ORM baru; hanya CI yang membuktikan
+- Task managed by claude-design agent at 2026-11-25T06:18:57+07:00

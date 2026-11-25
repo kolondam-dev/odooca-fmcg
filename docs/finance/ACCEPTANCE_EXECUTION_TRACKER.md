@@ -1,5 +1,14 @@
 # Eksekusi penerimaan FIN01–FIN58 — snapshot 2026-11-19
 
+**Pembaruan FIN36, 2026-11-24:** [F] PR #193 merged sebagai `54a1aff`
+(head `76342d7`); full regression 28 SUCCESS, 0 SKIPPED, posted depreciation
+pertama→GL dan rollback PASS pada fixture disposable. [BU] Slice lanjutan
+mengikat **seluruh** baris board ke jurnal posted, residual sampai nol, dan
+AML GL per cutoff (termasuk penolakan duplikat/extra seimbang). Ini tetap
+bukan oracle akuisisi/disposal atau laporan FIN36 yang siap diterima. Pemilik
+memilih jalur *oracle disposable dulu*; dependensi produksi/aktivasi demo
+tidak diotorisasi, keputusan lisensi khusus dan mapping Controller masih perlu.
+
 **Status:** 0/58 `DITERIMA`; `REPORT_CATALOG.csv` tetap sumber status dan tidak
 diubah oleh inventaris ini. Dokumen ini adalah urutan kerja dan register blocker,
 bukan sign-off Finance/Tax atau persetujuan mengubah data production. Company
@@ -74,6 +83,24 @@ bukan mengklaim submit dari working tree.
 | P0 — I2a: ledger dasar | **FIN01, FIN02, FIN03, FIN04, FIN51, FIN57** (6) | GL opening + debit − credit = closing; TB debit=credit; sequence jurnal/drilldown; FIN04 AML posted/reversal; FIN57 invoice/bill/refund tanpa duplikasi; FIN51 per-company TB + rate, jelas **combined ≠ consolidated**. Cocokkan UI dan seluruh sel XLSX dengan oracle native, termasuk batas halaman/row. | Mapping chart dan dua-company perimeter disahkan Controller; workbook asli + digest di storage privat; user Sales ditolak server-side dan browser; freeze periode serta QA/Controller sign-off per ID. Menu/XLSX `PK` saja tidak cukup. |
 | P1 — I2b: AR/AP | **FIN05, FIN06, FIN07, FIN08, FIN09** (5) | AR dan AP dipisah; partnerless/credit/debit exception eksplisit; residual *as-of* dari partial allocation bertanggal; signed bucket aging = subledger + GL control; pembayaran setelah cutoff tidak mengubah snapshot historis yang dibekukan. | Approved control accounts, periode frozen, kasus parsial/unreconcile dan credit notes. Label current-observed reconstruction tidak boleh dipasarkan sebagai snapshot historis yang tak berubah. |
 | P2 — I2c: sumber khusus | **FIN36, FIN37, FIN38, FIN55, FIN56** (5) | FIN36 asset/depreciation/disposal ke GL; FIN37 jadwal accrual/releases ke GL tanpa double posting; FIN38 realized/unrealized FX per rate/tanggal; FIN55 liabilitas pinjaman/sewa + bunga/pembayaran; FIN56 approved payroll/expense→GL, pembayaran dan pajak terpisah. | FIN36: spike/install OCA `account_asset_management` + closure + coverage aset. FIN55: parameter kontrak pokok/bunga/jadwal/akun/dokumen **bertanggal** dan sign-off Controller; tanpa itu exception bernominal, bukan angka rekaan. FIN56: `payroll`/`hr_expense` belum installed, perlu alur persetujuan/slip-jurnal dan sumber statutory PPh21/BPJS resmi bertanggal + Tax PIC. FIN37/38 sudah ada snapshot, belum acceptance per ID. |
+
+**FIN36 technical prerequisite (belum acceptance):** [F] PR #185 telah merge
+sebagai `23dc930`, head `0485f96`; comparator FIN37 period-by-period diterima
+dengan dampak test **CUKUP** (75 tes I2c, 22 SUCCESS/6 SKIPPED, upgrade zero
+drift). [BU] Slice FIN36 berikutnya hanya menambah profil install/upgrade OCA
+`account_asset_management` pada DB CI disposable dan oracle baris depresiasi
+ke jurnal posted, dengan mutasi offline; belum ada hasil CI exact-SHA untuk
+spike. `type=create` adalah basis depresiasi tanpa jurnal akuisisi pada fixture
+ini: jangan menyebutnya bukti additions→GL. Coverage populasi aset, additions,
+disposal, ACL, register/export, serta mapping Controller belum diuji; keputusan
+eksplisit lisensi AGPL-3 tetap diperlukan sebelum dependensi produksi. Tidak
+ada aktivasi demo, perubahan data live, atau perubahan katalog.
+
+[F] Exact-SHA awal `6717f0c` (run `45153062220`) menginstal dan meng-upgrade
+profil `assets`, namun verifier FAIL pada expected pembulatan: OCA/DB CI
+menghasilkan tiga periode `33.333,67 / 33.333,67 / 33.333,66`, bukan rupiah
+utuh. [BU] Perbaikan expected ke presisi DB dua desimal harus lolos CI baru
+termasuk bukti posted→GL dan rollback; `finance-gate` pada head awal FAIL.
 | P3 — I3: HPP dan stok | **FIN10, FIN11, FIN12, FIN13, FIN14, FIN15, FIN16, FIN17, FIN18, FIN53, FIN54, FIN58** (12) | Ikat stock.move→posted cost journal secara unik; opening+movement=closing qty/value; stock GL, HPP delivery−return, GRNI, landed cost sesudah jual, scrap/expiry, consignment/transit, purchase variance, delivered-not-invoiced dan margin invoice-cohort dipisah basisnya. Tidak ada selisih tak dijelaskan atau alokasi harga rekaan. | Diagnostik read-only demo pada 2026-11-19: 51 kategori (29 FIFO+real_time; 22 standard+periodic), 7 produk storable berbiaya standar nol, 3.091 move bernilai; **profil FIFO seragam adalah asumsi salah**. Controller harus menyetujui metode/mapping per kategori dan penyebab zero-cost sebelum oracle I3; jangan ubah kategori atau transaksi live untuk menyamakan asumsi. |
 | P4 — I4: statements/MIS | **FIN19, FIN20, FIN21, FIN22, FIN23, FIN31, FIN32, FIN33, FIN34, FIN35** (10) | BS balance; P&L ke GL/HPP; cashflow direct/indirect ke perubahan kas yang sama; equity rollforward; MIS KPI/rasio/budget/dimensi versioned, unallocated eksplisit dan pembagi nol unavailable. | `mis_builder` belum installed; template, budget/forecast approved, basis cash-equivalents dan alokasi cabang/principal/channel/warehouse belum disahkan. Menunggu I2+I3 dan keputusan Finance/Business Head. |
 | P5 — I5: bank/settlement | **FIN24, FIN25, FIN26, FIN27, FIN28, FIN29, FIN30, FIN39, FIN40** (9) | Statement, partial/overpayment, promise-to-pay hanya cash cocok, cash/bank book, BRS, clearing/transit, driver collection, credit hold dan rebate klaim ke posted GL. Duplicate import/unreconcile/refund/transfer diuji. | `account_reconcile_oca` belum installed; format bank, sumber POD vs kas riil, bukti settlement/approval, batas retensi rekening dan role belum disahkan. Sales tidak boleh match bank/approve kas. |
@@ -155,6 +182,24 @@ workbook; nilainya diturunkan dari baris dan dipatok ke oracle. Unit offline
 menutup 31 kasus I2b (59 total pada berkas XLSX); [BU] render native hanya
 dijalankan Finance I0 CI pada exact SHA. Tidak ada workbook bisnis, AML live,
 atau status katalog yang berubah.
+
+### I2c-a: tie-out XLSX FIN37/FIN38 pada fixture disposable (bukan bukti live)
+
+FIN37/FIN38 sudah memiliki snapshot dan oracle native AML/partial independen.
+Slice I2c-a menambahkan pembanding workbook wizard nyata untuk coverage line,
+exception bernominal, alokasi period accrual, realized/unrealized FX, exchange
+move evidence, dan tie-out GL per mata uang tanpa netting silang. Nilai numerik
+bertipe teks dan nested JSON non-numerik ditolak. [F] Run `45094187557` pada
+head `7a1ade9` merender wizard nyata dan lolos, tetapi review menemukan P2:
+tanggal/hari dan redistribusi nominal period FIN37 yang totalnya tetap sama
+belum dibandingkan dengan oracle. [BU] Perbaikan kini membandingkan setiap
+period terhadap konstruksi AML independen dan menambah fixture lintas bulan;
+exact-SHA Finance I0 perbaikan masih harus PASS. Bukti live/non-sintetis,
+negative ACL produksi, dan sign-off Controller tetap terbuka.
+
+FIN36/FIN55/FIN56 tidak dicampur ke slice ini: masing-masing masih menunggu
+aset OCA, parameter kontrak bertanggal, atau sumber payroll/statutory resmi.
+`REPORT_CATALOG.csv` tetap tidak berubah.
 
 ### FIN04: pembanding XLSX ↔ AML independen (belum dijalankan pada live)
 

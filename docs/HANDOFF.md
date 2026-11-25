@@ -1,3 +1,94 @@
+## 2026-11-24 — [BU] FIN36 oracle seluruh board posted pada DB disposable (opencode)
+
+- [F] PR #193 merged ke `main` sebagai `54a1aff528c538bae8d5195e2f584d60bca94c40`, head integrasi `76342d75673238279aef93c2651fca21aca1d256`; supervisor PASS/CUKUP untuk prasyarat teknis saja. 28/28 CI SUCCESS; install/upgrade, satu depresiasi posted→GL dan rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.
+- [F] Pemilik memilih **oracle disposable dulu**, bukan izin dependensi/aktivasi produksi. Slice baru menguji ketiga periode board 100.001 posted, residual bertahap sampai nol, dan seluruh AML posted per cutoff, termasuk menolak missing/duplicate/extra balanced journals tanpa netting.
+- [F] Tes offline untuk cutoff dan reuse move ditambah; [BU] Finance I0 exact-SHA baru belum dijalankan. Akuisisi (`type=create` tanpa `move_id`) dan disposal, cakupan populasi aset, lisensi produksi, mapping Controller, UI/export/ACL/live serta sign-off tetap HOLD.
+
+## 2026-11-24 — [F] BE-20c: snapshot SJP untuk kolektor (claude-design)
+
+- [F] `id_ar_collection` memperluas `_snapshot_payload`: `collection_sheets {sheets, truncated}` hanya SJP `issued` milik pengguna sesi, perusahaan penugasan, `collect_date` = hari bisnis WITA. Baris membawa `amount_due` (snapshot) dan `balance` (sisa sekarang), `outlet_id` PJP, `overdue`. Volatil, di luar digest versi dan command/evidence; batas 10 SJP / 300 baris ditandai `truncated`.
+- [F] Kontrak zod opsional `collection_sheets`, `openapi.json` diekspor, tes katalog. 9 method tes Odoo (cakupan kolektor/perusahaan/hari/status, batas WITA, isi baris, batas, digest, kontrol hari sama, pergantian hari WITA dalam satu request ditolak MobileReadConflict) + satu tes vitest [BU: hanya CI]. P2 review #196: satu jangkar (assignment, hari) untuk seluruh snapshot, validasi sesudah induk dan sesudah blok SJP.
+- [BU] PWA belum membaca blok ini (FE-8b); BE-20d penerimaan dan BE-20e validasi/pembayaran berikutnya. `collection_v2` tetap OFF.
+
+## 2026-11-24 — [F] BE-20b putaran 2: tutup P1/P2 review PR #194 (claude-design)
+
+- [F] P1: kolom `active_claim` + indeks unik parsial DB (satu faktur satu SJP aktif) dan pre-check sebelum INSERT/reaktivasi; reaktivasi `action_draft` ditolak atomik bila faktur aktif di SJP lain.
+- [F] P2: mesin status dan immutability di server (create/write/unlink/O2M); `_apply_state` dan `_apply_outcome` privat sebagai seam; validasi kolektor/faktur saat terbit. P2: faktur mata uang asing dikecualikan dan ditolak (tidak ada penjumlahan lintas mata uang).
+- [F] Tes baru: reaktivasi/reparent, indeks DB, dua transaksi PostgreSQL nyata (fixture di-commit, cleanup best-effort), lifecycle/immutability, validasi kolektor, USD+IDR, smoke PDF dipindah ke `scripts/ui/collection_sheet_pdf_smoke.py` + langkah CI terhadap server HTTP hidup (render dalam proses tes membuat wkhtmltopdf menggantung dan menghabiskan 30 menit job); tes dua transaksi di kelas terpisah dengan lock_timeout.
+- [BU] Tes Odoo hanya terverifikasi lewat CI exact SHA; BE-20c/d/e tetap di luar PR.
+
+## 2026-11-23 — [F] BE-20a: agregat "wajib ditagih hari ini" dari server (claude-design)
+
+- [F] `_outlet_receivables` menambah `collect_today` {window_days 7, count, total, overdue_count} dari SEMUA faktur terbuka (commercial partner, perusahaan sesi, jatuh tempo < hari bisnis WITA + 7); outlet = `outlet_ids` penugasan hari itu (PJP). Volatil, di luar digest. 3 tes Odoo baru (+6/+7, cap daftar tidak membatasi agregat, parent/saudara, WITA) [BU: hanya CI, tidak ada Odoo di sandbox].
+- [F] PWA: kontrak `collect_today` opsional, `mustCollectToday` memakai agregat server (lengkap) dan tetap fallback "Minimal" untuk server lama; e2e dua varian, `openapi.json` diekspor.
+- [BU] BE-20b (penugasan penagihan/kolektor/surat jalan penagihan) dan BE-20c (`collection.receipt.submit`, `collection.settlement.submit`) butuh keputusan pemilik: siapa penugas, apakah faktur ditugaskan per faktur atau per outlet, otoritas terima uang.
+
+## 2026-11-23 — [F] BE-20b: addon id_ar_collection (SJP: model, Generate, PDF) (claude-design)
+
+- [F] Addon baru `id_ar_collection` (depends id_base, id_mobile_api, account): `id.collection.sheet` (SJP, sequence `SJP/<tahun>/`, state draf/diterbitkan/dikembalikan/ditutup/dibatalkan, banyak SJP per hari), `id.collection.sheet.line` (satu faktur satu SJP aktif, outcome pending/paid/partial/unpaid, dokumen dikembalikan), wizard Generate (jatuh tempo sampai, salesman via PJP penugasan + commercial partner, rute `delivery_route`), PDF QWeb, grup `group_ar_admin`/`group_ar_control`, aturan perusahaan dan kolektor-hanya-baca-miliknya, menu Penagihan.
+- [F] Keputusan D9 dicatat di `docs/ui/BE20_SJP_DESIGN.md` (banyak SJP, unpaid kembali kandidat, kasir→accounting berurutan, PDF wajib). Daftar install dan tag tes CI diperbarui.
+- [BU] Tes Odoo (13) hanya terverifikasi lewat CI; belum ada integrasi mobile (BE-20c), penerimaan (BE-20d), validasi kasir/accounting (BE-20e). Addon belum dimasukkan ke `INIT_MODULES` LIVE.
+
+
+## 2026-11-23 — [F] BE-20: keputusan pemilik D8 dan rancangan SJP (claude-design)
+
+- [F] Jawaban pemilik dicatat: SJP dibuat finance/AR admin dari AR terbuka (Generate SJP: tanggal jatuh tempo + salesman/rute); pelaksana salesman/delivery/supervisor/branch manager; hasil paid/partial/unpaid wajib diposting lalu divalidasi kasir dan accounting; setoran uang ke admin kasir, rekap SJP dan copy/asli faktur ke finance AR control.
+- [F] Rancangan `docs/ui/BE20_SJP_DESIGN.md`: addon `id_ar_collection`, model SJP/line/receipt, grup, fase BE-20b–e + FE-8b. Hanya dokumen.
+- [BU] Empat pertanyaan terbuka (SJP per hari, unpaid berlanjut, segregasi kasir/accounting, cetak PDF) menunggu pemilik sebelum BE-20b.
+
+## 2026-11-23 — [F] BE-20a: agregat "wajib ditagih hari ini" dari server (claude-design)
+
+- [F] `_outlet_receivables` menambah `collect_today` {window_days 7, count, total, overdue_count} dari SEMUA faktur terbuka (commercial partner, perusahaan sesi, jatuh tempo < hari bisnis WITA + 7); outlet = `outlet_ids` penugasan hari itu (PJP). Volatil, di luar digest. 3 tes Odoo baru (+6/+7, cap daftar tidak membatasi agregat, parent/saudara, WITA) [BU: hanya CI, tidak ada Odoo di sandbox].
+- [F] PWA: kontrak `collect_today` opsional, `mustCollectToday` memakai agregat server (lengkap) dan tetap fallback "Minimal" untuk server lama; e2e dua varian, `openapi.json` diekspor.
+- [BU] BE-20b (penugasan penagihan/kolektor/surat jalan penagihan) dan BE-20c (`collection.receipt.submit`, `collection.settlement.submit`) butuh keputusan pemilik: siapa penugas, apakah faktur ditugaskan per faktur atau per outlet, otoritas terima uang.
+
+## 2026-11-23 — [F] FE-8 baca: tutup P2 PR #189, total Wajib ditagih dari daftar terpotong (claude-design)
+
+- [F] `mustCollectToday` kini mengembalikan `complete`; daftar server terpotong (50 faktur) dan faktur termuat terakhir masih di jendela 7 hari ⇒ angka hanya minimum. VisitPanel menampilkan "Minimal Rp … · N+ faktur (daftar terpotong)" atau "Belum diketahui (daftar terpotong)" plus catatan; "Tidak ada" hanya bila lengkap. Piutang berjalan/jatuh tempo tetap agregat server.
+- [F] Tes: 6 unit baru (60 faktur terlambat/50 terkirim, terpotong lewat +7, +6, tanpa jatuh tempo) dan e2e phone+tablet >50 faktur. Docstring `creditRoom` diselaraskan (piutang tidak diketahui dianggap 0).
+- [BU] Total lengkap menunggu agregat jendela dari server (BE-20).
+
+## 2026-11-23 — PR #190 backfill offer karton vendor existing (codex)
+
+- [F] Mode dry-run dan apply memvalidasi SKU, principal serta rasio karton. Apply membuat hanya offer baru pada company yang dipilih.
+- [F] Entrypoint memakai environment dari recordset company yang sudah di-scope. CI shell memakai salinan database untuk memeriksa dry-run, apply, rollback dan replay.
+- [BU] Smoke shell perlu verifikasi ulang pada SHA integrasi. Belum dijalankan pada demo existing.
+
+## 2026-11-23 — [BU] FIN36 prasyarat OCA aset pada fixture disposable (opencode)
+
+- [F] CI exact-SHA `6717f0c` run `45153062220`: seluruh profil `assets` terpasang dan upgrade tanpa error; verifier menghentikan kandidat karena expected pembulatan rupiah utuh salah. OCA menghasilkan `33.333,67 + 33.333,67 + 33.333,66 = 100.001,00` di fixture DB. `finance-gate` FAIL; perubahan expected dua desimal belum diuji CI exact-SHA. PR #193 tetap HOLD.
+- [F] PR #185 merged ke `main` sebagai `23dc930` (head `0485f96`); review P2 FIN37 ditutup dengan dampak test CUKUP, CI 22 SUCCESS/6 SKIPPED, upgrade zero drift PASS. Katalog tetap 58/58 `BELUM_DITERIMA`; live sign-off tetap HOLD.
+- [F] `oca.lock` sudah memuat `account-financial-tools` `c23fd099` dan `reporting-engine` `b9e8c6c`; manifest upstream `account_asset_management` AGPL-3 mengecualikan `account_asset` dan membutuhkan `report_xlsx_helper` AGPL-3. Tidak ditambahkan ke `INIT_MODULES` atau dependensi custom.
+- [F] Profil `assets` di Finance I0 dipisah ke DB disposable dengan install/upgrade dan skrip verifikasi board 100.001, remainder, depresiasi posted→AML dua akun, serta rollback fixture. Mutasi offline menolak jurnal draft, baris GL ekstra, company/tanggal salah, dan periode duplikat/tertukar; [BU] runtime OCA exact-SHA belum diuji.
+- [F] Audit upstream: `type=create` bukan bukti jurnal akuisisi bila `move_id` kosong; `move_check` hanya menunjukkan ada `move_id`. FIN36 register/additions/disposal/ACL/export dan keputusan legal AGPL-3 serta coverage/mapping Controller tetap BLOCKED.
+
+## 2026-11-23 — [BU] PR #185 HOLD: tutup P2 period JSON FIN37 (opencode)
+
+- [F] Review supervisor pada exact head `7a1ade9` memberi HOLD/TAMBAH: mutasi tanggal/hari period dan redistribusi nominal period dengan total tetap masih mendapat PASS; finding berada pada verifier, bukan bukti workbook produksi salah.
+- [F] Oracle AML independen kini membangun bucket bulanan lengkap; comparator mematok coverage/urutan, rentang, hari inklusif, `recognized_days`/flag, `amount`, dan `recognized_amount` per period.
+- [F] Dua reproduksi reviewer kini ditolak dengan `periods mismatch`; fixture native baru melintasi 20 Juli–10 Agustus, cutoff parsial 25 Juli, dan remainder pembulatan pada period terakhir. 75 unit I2c, Ruff, 14 manifest, dan diff-check PASS lokal.
+- [BU] Finance I0 exact-SHA setelah sinkronisasi `main` masih menunggu CI; PR tetap HOLD, belum merge/deploy. Katalog tetap 58/58 `BELUM_DITERIMA`; bukti live dan sign-off tetap terbuka.
+
+## 2026-11-23 — [BU] PR #185 Finance I0: oracle FIN38 merekonstruksi residual penuh (opencode)
+
+- [F] Exact-SHA `b850939` gagal pada `FIN38 unrealized_rows coverage mismatch`: workbook 9 baris, oracle 15. FIN37 XLSX sudah lolos; suite non-finance hijau.
+- [F] Penyebab: oracle hanya menerapkan partial bila kedua leg berada di basis mata uang asing, sehingga pembayaran/write-off/functional counterpart di luar basis tidak mengurangi residual, dan baris over-reconciled tidak dikecualikan.
+- [F] Oracle kini mengambil partial dari seluruh baris moneter posted <= cutoff, merekonstruksi residual dari partial bertanggal, mengecualikan baris over-reconciled, dan mengklasifikasikan realized/unposted secara independen (functional counterpart, write-off, reversal mirror, rate per leg).
+- [F] 73 unit I2c PASS, Ruff PASS, `git diff --check` PASS. [F] Exact-SHA `6557b819a5e2f86f174e55bb6a0523346ebac105`: 22 check sukses, 6 skipped, 0 gagal; `FINANCE_I2C_SCHEDULES=PASS` dengan 9 kasus FIN37 dan 2 kasus FIN38 XLSX vs oracle AML. Katalog tetap 58/58 `BELUM_DITERIMA`.
+
+## 2026-11-22 — [BU] PR #185 Finance I0: normalisasi presisi rate XLSX (opencode)
+
+- [F] Exact-SHA `61c34c9` gagal hanya pada Finance I0: FIN37 XLSX lolos sampai FIN38, lalu `unrealized_rows` berbeda saat membandingkan rate float. Install/init/seed/upgrade dan gate lain hijau.
+- [A] Odoo dapat menghasilkan rate IEEE seperti `15999.999999999998`, sementara xlsxwriter menyimpan presisi efektif Excel sebagai `16000`. Comparator kini memberi toleransi relatif `1e-12` **hanya** untuk `rate_as_of`; nominal residual/revalued/difference tetap exact.
+- [F] Dua unit baru mengunci representasi rate setara diterima dan beda material ditolak (11 counterexample XLSX; 73 unit I2c lokal). [BU] Finance I0 exact-SHA perbaikan menunggu rerun.
+
+## 2026-11-22 — [BU] I2c-a XLSX tie-out FIN37/FIN38 pada fixture disposable (opencode)
+
+- [F] PR #178 di-merge pemilik: head `4993a403e39edc45814229b1245d15e05ce2a505`, merge `cc9ecb6c166971d17fa07b93f6641783e1b29688`; review PASS/CUKUP, 22 check sukses + 6 skipped sesuai impact plan. Penerimaan live FIN05–FIN09 tetap HOLD.
+- [F] Slice berikutnya menambahkan comparator offline FIN37/FIN38 dan wiring ekspor wizard nyata ke Finance I0: line/exception accrual + period JSON, realized/unrealized/unposted FX, exchange move evidence, dan GL per currency tanpa netting silang.
+- [F] 9 counterexample XLSX baru; 71 unit I2c PASS lokal. FIN36/55/56 tetap terpisah karena blocker aset, kontrak bertanggal, dan payroll/statutory.
+- [BU] Render/tie-out workbook native menunggu exact-SHA CI; katalog tetap 58/58 `BELUM_DITERIMA`, tanpa perubahan data/deploy.
+
 ## 2026-11-23T11:29:37+07:00 — Agent Codex-Cloud1 — F4/PR #110: Paket B komersial
 
 **Berubah:**
@@ -95,6 +186,14 @@
 - [F] Master seed membuat penawaran vendor untuk karton native per SKU, dengan harga seed per unit dikonversi ke harga karton. Penawaran vendor yang sudah ada dipertahankan.
 - [F] Loader PO kanonik menetapkan UoM inventaris secara eksplisit agar kuantitas dan harga historis berbasis unit tetap sepadan.
 - [BU] Tes Odoo untuk replay, PO karton, receipt, dan data baris vendor bill menunggu CI. Aktivasi master pada basis data yang sudah memakai marker seed tetap terpisah.
+
+## 2026-11-23 — [F] FE-8 (bagian baca): kartu Tagihan, daftar faktur, Wajib ditagih hari ini (claude-design)
+
+- `domain/receivables.ts`: `daysUntilDue`, `dueLabel`, `mustCollectToday` (jatuh tempo < 7 hari dari hari bisnis, termasuk yang terlambat; aturan pemilik 2026-11-23), `outstandingFor`. `outlet-card.ts`: `creditRoom` dan `creditExceeded` kini mengikuti `credit_mode` (strict tidak memeriksa nominal) dan limit 0 = tanpa pemeriksaan (memperbaiki OrderScreen yang menganggap limit 0 selalu melebihi).
+- VisitPanel: kartu "Tagihan" (menggantikan "Tagihan jatuh tempo / Segera tersedia") berisi status (Wajib ditagih hari ini / Piutang berjalan / Tidak ada tagihan / Belum tersedia), piutang berjalan, sudah jatuh tempo, wajib ditagih hari ini, daftar faktur (8 teratas, label jatuh tempo, nominal sisa), callout strict/limit. Tanpa blok `outlet_receivables` memakai perilaku lama (`ar_outstanding`).
+- Tidak ada tombol "Mulai penagihan" dan tidak ada pencatatan: command `collection.*` backend masih kosong. Modul backend "AR collection assignment" (surat jalan penagihan) dicatat sebagai BE-20.
+- Data demo relatif terhadap hari bisnis (Minimarket Pelangi 4 faktur); `outlet-daftar.spec` diperbarui (server lama tanpa blok piutang).
+- Tes: vitest `receivables.test.ts` (8), e2e `receivables.spec.ts` (phone + tablet). Utang: K37 (penafsiran "< 7 hari" termasuk terlambat perlu konfirmasi pemilik).
 
 ## 2026-11-23 — [F] BE-7: piutang berjalan dan daftar faktur terbuka pada snapshot (claude-design)
 

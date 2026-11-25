@@ -163,7 +163,7 @@ jobs:
           docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
-              --load-language=id_ID -i id_base,id_approval,id_ui_form,id_mobile_api,id_promo_governance,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,sale_management,purchase_stock,account,fleet,l10n_id --test-tags /id_base,/id_approval,/id_ui,/id_ui_shell,/id_mobile_api,/id_promo_governance,/id_dashboard_monetary,/id_dashboard_wms,/id_dashboard_sales --stop-after-init --log-level=test
+              --load-language=id_ID -i id_base,id_approval,id_ui_form,id_mobile_api,id_ar_collection,id_promo_governance,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,sale_management,purchase_stock,account,fleet,l10n_id --test-tags /id_base,/id_approval,/id_ui,/id_ui_shell,/id_mobile_api,/id_ar_collection,/id_promo_governance,/id_dashboard_monetary,/id_dashboard_wms,/id_dashboard_sales --stop-after-init --log-level=test
           ' 2>&1 | tee odoo.log
       - name: Log harus bersih
         if: needs.changes.outputs.odoo_install == 'true'
@@ -171,6 +171,9 @@ jobs:
           if grep -E " (ERROR|CRITICAL) |Traceback" odoo.log; then
             echo "Ditemukan ERROR/Traceback pada log"; exit 1
           fi
+      - name: Vendor carton backfill operator smoke on disposable DB
+        if: needs.changes.outputs.odoo_install == 'true'
+        run: bash scripts/ui/vendor_carton_backfill_smoke.sh
       - name: Start Odoo for warehouse PDF smoke
         if: needs.changes.outputs.odoo_install == 'true'
         run: |
@@ -193,6 +196,16 @@ jobs:
           ' < scripts/ui/warehouse_report_pdf_smoke.py 2>&1 | tee warehouse-report-pdf.log
           grep -q 'WAREHOUSE_PDF_SMOKE=PASS' warehouse-report-pdf.log
           if grep -E ' (ERROR|CRITICAL) |Traceback' warehouse-report-pdf.log; then exit 1; fi
+      - name: FMCG collection sheet (SJP) PDF render against live HTTP server
+        if: needs.changes.outputs.odoo_install == 'true'
+        run: |
+          set -o pipefail
+          docker run --rm -i -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
+            odoo shell -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
+              --addons-path "$(/opt/deploy/addons_path.sh)" --no-http
+          ' < scripts/ui/collection_sheet_pdf_smoke.py 2>&1 | tee collection-sheet-pdf.log
+          grep -q 'COLLECTION_SHEET_PDF_SMOKE=PASS' collection-sheet-pdf.log
+          if grep -E ' (ERROR|CRITICAL) |Traceback' collection-sheet-pdf.log; then exit 1; fi
       - name: Stop warehouse PDF Odoo server
         if: always() && needs.changes.outputs.odoo_install == 'true'
         run: docker rm -f warehouse-pdf-smoke || true

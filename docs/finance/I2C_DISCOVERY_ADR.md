@@ -1,5 +1,16 @@
 # Paket I2c — Discovery dan ADR sumber (FIN36–38, FIN55–56)
 
+> **Pembaruan status 2026-11-24:** klaim "belum di-pin/belum di-image"
+> pada audit awal di bawah adalah snapshot historis, bukan keadaan sekarang.
+> [F] PR #193 merged ke `main` sebagai `54a1aff` (head `76342d7`):
+> `account_asset_management` serta `report_xlsx_helper` terpasang dan di-upgrade
+> di **DB CI disposable saja**; satu baris depresiasi posted→GL dan rollback
+> fixture PASS pada exact SHA (28 checks SUCCESS). [BU] Slice berikutnya
+> menguji seluruh board posted dan GL per cutoff di DB disposable, tanpa
+> dependensi custom atau aktivasi demo/produksi. FIN36 tetap belum diterima;
+> lisensi untuk dependensi produksi, mapping Controller, akuisisi/disposal,
+> cakupan aset, ACL, ekspor dan sign-off tetap terbuka.
+
 ## Scope dan status
 
 - [F] Dokumen ini adalah **discovery + ADR**, bukan implementasi. Tidak ada
@@ -110,6 +121,12 @@ untuk tie-out GL.
    `account_asset_management` pada image/profil; saat ini belum.
 2. Spike install + upgrade pada DB disposable, termasuk konflik `excludes:
    ["account_asset"]` dan dependensi `report_xlsx_helper`.
+   [BU] Profil `assets` CI dan verifikasi posted depreciation→GL telah disiapkan;
+   hasil runtime exact-SHA masih wajib. Pada SHA pin, `move_check` berarti
+   `move_id` terisi, **bukan** bukti posting mandiri: oracle harus memeriksa
+   `move.state == posted`, seluruh AML, company, tanggal, dan saldo. Baris
+   `type=create` dapat tanpa `move_id`; jangan pakai sebagai bukti akuisisi
+   tanpa sumber GL lain.
 3. [A] **Penilaian lisensi sebelum menambah dependensi.** Modul OCA
    `account_asset_management` berlisensi AGPL-3, sedangkan addon custom repo
    memakai LGPL-3. Menjadikannya dependensi langsung menimbulkan pertanyaan

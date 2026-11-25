@@ -289,6 +289,19 @@ export const SnapshotSchema = z
                     overdue_total: z.number(),
                     oldest_due: z.string().nullable(),
                     truncated: z.boolean(),
+                    /**
+                     * BE-20a: "wajib ditagih hari ini" dihitung server dari SEMUA faktur terbuka (jatuh tempo
+                     * kurang dari `window_days` dari hari bisnis; terlambat dan hari ini ikut), tidak bergantung
+                     * pada `invoices` yang dipotong. Tidak ada = server lama (klien menghitung dari daftar).
+                     */
+                    collect_today: z
+                        .object({
+                            window_days: z.number().int().positive(),
+                            count: z.number().int().nonnegative(),
+                            total: z.number(),
+                            overdue_count: z.number().int().nonnegative(),
+                        })
+                        .optional(),
                     invoices: z.array(
                         z.object({
                             reference: z.string(),
@@ -302,6 +315,57 @@ export const SnapshotSchema = z
                     ),
                 }),
             )
+            .optional(),
+        /**
+         * Surat Jalan Penagihan (BE-20c): SJP berstatus terbit milik kolektor sesi untuk hari bisnis WITA dan
+         * perusahaan penugasan (draf, dikembalikan, ditutup, dibatalkan, kolektor lain, hari lain tidak ikut).
+         * `amount_due` snapshot saat SJP dibuat, `balance` sisa tagihan sekarang. Volatil di luar digest versi.
+         * Blok tidak ada = server lama / modul penagihan belum terpasang.
+         */
+        collection_sheets: z
+            .object({
+                sheets: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string(),
+                        collect_date: z.string(),
+                        due_until: z.string(),
+                        route: z.string().nullable(),
+                        state: z.literal("issued"),
+                        line_count: z.number().int().nonnegative(),
+                        amount_total: z.number(),
+                        /** true = baris yang dikirim dipotong server; `line_count` tetap jumlah sebenarnya. */
+                        truncated: z.boolean(),
+                        lines: z.array(
+                            z.object({
+                                id: z.string(),
+                                reference: z.string(),
+                                partner: z.string(),
+                                partner_id: z.string(),
+                                /** Outlet PJP hari ini yang memiliki pelanggan (parent) faktur; null = di luar PJP. */
+                                outlet_id: z.string().nullable(),
+                                due_date: z.string().nullable(),
+                                overdue: z.boolean(),
+                                amount_due: z.number(),
+                                balance: z.number(),
+                                outcome: z.enum([
+                                    "pending",
+                                    "paid",
+                                    "partial",
+                                    "unpaid",
+                                ]),
+                                document_return: z.enum([
+                                    "none",
+                                    "copy",
+                                    "original",
+                                ]),
+                            }),
+                        ),
+                    }),
+                ),
+                /** true = ada lebih banyak SJP daripada batas payload. */
+                truncated: z.boolean(),
+            })
             .optional(),
         /**
          * Tata kelola approval diskon (BE-18): hanya untuk pratinjau di POS. Server tetap menentukan
