@@ -123,6 +123,15 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** Bukti menutup kegagalan transisi APK. Tindak lanjut menunggu temuan baru.
 - **Design:** Lanjutkan DES-02-r1.
 
+### Arahan Lead — DEV-02A Harness Odoo
+
+[PR #177](https://github.com/kolondam-dev/odooca-fmcg/pull/177) merged pada `f0b3632ef0766d8f36f18ba7f47152ca3c596f11`. DEV-01A/01B selesai berdasarkan CI wajib dan bukti smoke serta instrumentation API 24/35 pada `1930694`. Pakai `f0b3632` sebagai acuan awal DEV-02A, refresh main saat memulai dan melaporkan checkpoint.
+
+- **Dev:** Sinkronkan main ke branch Dev sambil mempertahankan riwayat. Mulai [DEV-02A](DEV_SPEC.md) dan [B09](BACKEND_REGISTER.md). Gunakan Odoo + PostgreSQL disposable yang dapat dibuat ulang dengan fixture dua akun, assignment, company, katalog, outlet, kantor, dan clock WITA deterministik. Periksa setup repo yang dapat dipakai ulang dan catat SHA/versi Odoo, addon, fixture dan Android. Pakai endpoint dan kontrak aktif. Buktikan login → snapshot → satu command dan receipt pada data fixture; uji 401, 403, scope dicabut, rollover dan cleanup. Catat request/receipt tersanitasi dan bukti cleanup pada sukses maupun gagal. Jika HTTPS atau kontrak aktif menghambat kasus tertentu, serahkan bukti yang tersedia dengan kasus tersebut bertanda [BU] dan blocker spesifik.
+- **Checkpoint Dev:** Push ke branch Dev dengan base/head, cara menjalankan fixture, matriks hasil per skenario, tautan bukti, dampak test dan hasil planner. Target persisten, deployment, perubahan kontrak dan DEV-02B (perangkat fisik/identity) berada di luar slice ini.
+- **Design:** Lanjutkan DES-02-r1 dan catat hasil review di branch Design. Harness memakai layar dan capability yang sudah tersedia; dua foto, perubahan binding dan implementasi visual D01 mengikuti review slice masing-masing.
+- **Lead:** Review checkpoint Dev dan koordinasikan kendala B09 dengan maintainer backend/infra sebelum integrasi.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
