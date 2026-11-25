@@ -317,6 +317,57 @@ export const SnapshotSchema = z
             )
             .optional(),
         /**
+         * Surat Jalan Penagihan (BE-20c): SJP berstatus terbit milik kolektor sesi untuk hari bisnis WITA dan
+         * perusahaan penugasan (draf, dikembalikan, ditutup, dibatalkan, kolektor lain, hari lain tidak ikut).
+         * `amount_due` snapshot saat SJP dibuat, `balance` sisa tagihan sekarang. Volatil di luar digest versi.
+         * Blok tidak ada = server lama / modul penagihan belum terpasang.
+         */
+        collection_sheets: z
+            .object({
+                sheets: z.array(
+                    z.object({
+                        id: z.string(),
+                        name: z.string(),
+                        collect_date: z.string(),
+                        due_until: z.string(),
+                        route: z.string().nullable(),
+                        state: z.literal("issued"),
+                        line_count: z.number().int().nonnegative(),
+                        amount_total: z.number(),
+                        /** true = baris yang dikirim dipotong server; `line_count` tetap jumlah sebenarnya. */
+                        truncated: z.boolean(),
+                        lines: z.array(
+                            z.object({
+                                id: z.string(),
+                                reference: z.string(),
+                                partner: z.string(),
+                                partner_id: z.string(),
+                                /** Outlet PJP hari ini yang memiliki pelanggan (parent) faktur; null = di luar PJP. */
+                                outlet_id: z.string().nullable(),
+                                due_date: z.string().nullable(),
+                                overdue: z.boolean(),
+                                amount_due: z.number(),
+                                balance: z.number(),
+                                outcome: z.enum([
+                                    "pending",
+                                    "paid",
+                                    "partial",
+                                    "unpaid",
+                                ]),
+                                document_return: z.enum([
+                                    "none",
+                                    "copy",
+                                    "original",
+                                ]),
+                            }),
+                        ),
+                    }),
+                ),
+                /** true = ada lebih banyak SJP daripada batas payload. */
+                truncated: z.boolean(),
+            })
+            .optional(),
+        /**
          * Tata kelola approval diskon (BE-18): hanya untuk pratinjau di POS. Server tetap menentukan
          * perlu/tidaknya approval saat order dikirim. Batas zona bebas dan tier bisa khusus principal.
          */

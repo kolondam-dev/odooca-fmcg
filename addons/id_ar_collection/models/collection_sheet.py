@@ -70,6 +70,61 @@ class CollectionSheet(models.Model):
     line_count = fields.Integer(compute="_compute_totals", string="Jumlah Faktur")
     amount_total = fields.Monetary(compute="_compute_totals", string="Total Tagihan")
 
+    # Batas payload snapshot mobile (BE-20c): lewat batas ditandai `truncated`, tidak dipotong diam-diam.
+    MOBILE_SHEET_CAP = 10
+    MOBILE_LINE_CAP = 300
+
+    @api.model
+    def _mobile_snapshot_payload(self, assignment, day):
+        """SJP terbit milik pengguna sesi, perusahaan penugasan, dan hari bisnis WITA `day`.
+
+        Ruang lingkup dikunci server (tanpa selector dari HTTP): kolektor = pengguna sesi, perusahaan =
+        perusahaan penugasan, tanggal penagihan = hari bisnis, status = diterbitkan. Draf, dikembalikan,
+        ditutup, dibatalkan, SJP kolektor lain, hari lain, dan perusahaan lain tidak ikut. Data baris dibaca
+        dengan sudo terbatas pada kolom yang dikirim; aturan record SJP tetap membatasi dokumennya.
+        """
+        empty = {"sheets": [], "truncated": False}
+        if not self.has_access("read"):
+            return empty
+        company = assignment.company_id
+        sheets = self.search([
+            ("collector_id", "=", self.env.user.id),
+            ("company_id", "=", company.id),
+            ("collect_date", "=", day),
+            ("state", "=", "issued"),
+        ], order="id", limit=self.MOBILE_SHEET_CAP + 1)
+        outlet_by_commercial = {
+            outlet.commercial_partner_id.id: str(outlet.id) for outlet in assignment.outlet_ids
+        }
+        result = []
+        for sheet in sheets[: self.MOBILE_SHEET_CAP]:
+            lines = sheet.sudo().line_ids.sorted(key=lambda line: (line.due_date or day.max, line.id))
+            result.append({
+                "id": str(sheet.id),
+                "name": sheet.name,
+                "collect_date": sheet.collect_date.isoformat(),
+                "due_until": sheet.due_until.isoformat(),
+                "route": sheet.route or None,
+                "state": sheet.state,
+                "line_count": len(lines),
+                "amount_total": sheet.amount_total,
+                "truncated": len(lines) > self.MOBILE_LINE_CAP,
+                "lines": [{
+                    "id": str(line.id),
+                    "reference": line.move_id.name,
+                    "partner": line.commercial_partner_id.name,
+                    "partner_id": str(line.commercial_partner_id.id),
+                    "outlet_id": outlet_by_commercial.get(line.commercial_partner_id.id),
+                    "due_date": line.due_date.isoformat() if line.due_date else None,
+                    "overdue": bool(line.due_date and line.due_date < day),
+                    "amount_due": line.amount_due,
+                    "balance": line.move_id.amount_residual,
+                    "outcome": line.outcome,
+                    "document_return": line.document_return,
+                } for line in lines[: self.MOBILE_LINE_CAP]],
+            })
+        return {"sheets": result, "truncated": len(sheets) > self.MOBILE_SHEET_CAP}
+
     @api.depends("line_ids.amount_due")
     def _compute_totals(self):
         # Aman dijumlah: baris hanya boleh berisi faktur bermata uang perusahaan (lihat constraint baris).

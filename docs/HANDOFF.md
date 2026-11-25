@@ -4,6 +4,12 @@
 - [F] Pemilik memilih **oracle disposable dulu**, bukan izin dependensi/aktivasi produksi. Slice baru menguji ketiga periode board 100.001 posted, residual bertahap sampai nol, dan seluruh AML posted per cutoff, termasuk menolak missing/duplicate/extra balanced journals tanpa netting.
 - [F] Tes offline untuk cutoff dan reuse move ditambah; [BU] Finance I0 exact-SHA baru belum dijalankan. Akuisisi (`type=create` tanpa `move_id`) dan disposal, cakupan populasi aset, lisensi produksi, mapping Controller, UI/export/ACL/live serta sign-off tetap HOLD.
 
+## 2026-11-24 — [F] BE-20c: snapshot SJP untuk kolektor (claude-design)
+
+- [F] `id_ar_collection` memperluas `_snapshot_payload`: `collection_sheets {sheets, truncated}` hanya SJP `issued` milik pengguna sesi, perusahaan penugasan, `collect_date` = hari bisnis WITA. Baris membawa `amount_due` (snapshot) dan `balance` (sisa sekarang), `outlet_id` PJP, `overdue`. Volatil, di luar digest versi dan command/evidence; batas 10 SJP / 300 baris ditandai `truncated`.
+- [F] Kontrak zod opsional `collection_sheets`, `openapi.json` diekspor, tes katalog. 9 method tes Odoo (cakupan kolektor/perusahaan/hari/status, batas WITA, isi baris, batas, digest, kontrol hari sama, pergantian hari WITA dalam satu request ditolak MobileReadConflict) + satu tes vitest [BU: hanya CI]. P2 review #196: satu jangkar (assignment, hari) untuk seluruh snapshot, validasi sesudah induk dan sesudah blok SJP.
+- [BU] PWA belum membaca blok ini (FE-8b); BE-20d penerimaan dan BE-20e validasi/pembayaran berikutnya. `collection_v2` tetap OFF.
+
 ## 2026-11-24 — [F] BE-20b putaran 2: tutup P1/P2 review PR #194 (claude-design)
 
 - [F] P1: kolom `active_claim` + indeks unik parsial DB (satu faktur satu SJP aktif) dan pre-check sebelum INSERT/reaktivasi; reaktivasi `action_draft` ditolak atomik bila faktur aktif di SJP lain.
