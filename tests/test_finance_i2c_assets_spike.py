@@ -113,6 +113,158 @@ class AssetSpikeOracleTest(unittest.TestCase):
             spike.verify_cutoff_gl(rows, source, [33333.67, 33333.67],
                                    self.expense, self.contra)
 
+    def test_acquisition_requires_posted_bill_and_single_cost_line(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        cost = SimpleNamespace(id=7)
+        payable = SimpleNamespace(id=8)
+        revenue = SimpleNamespace(id=9)
+        acquired_on = date(2026, 7, 1)
+        cost_line = SimpleNamespace(
+            account_id=cost, debit=100001.0, credit=0.0, balance=100001.0,
+            date=acquired_on, move_id=None, parent_state="posted",
+        )
+        payable_line = SimpleNamespace(
+            account_id=payable, debit=0.0, credit=100001.0, balance=-100001.0,
+            date=acquired_on,
+        )
+        bill = SimpleNamespace(
+            state="posted", move_type="in_invoice", company_id=self.company,
+            currency_id=currency, name="BILL/2026/07/0001",
+            date=acquired_on, invoice_date=acquired_on, partner_id=object(),
+            journal_id=SimpleNamespace(type="purchase"),
+            line_ids=[cost_line, payable_line],
+        )
+        cost_line.move_id = bill
+        create = SimpleNamespace(
+            type="create", move_id=bill, move_check=True, init_entry=True,
+            amount=100001.0, line_date=acquired_on,
+        )
+        asset = SimpleNamespace(
+            state="open", depreciation_line_ids=[create], purchase_value=100001.0,
+            code=bill.name, date_start=acquired_on, partner_id=bill.partner_id,
+            account_move_line_ids=[cost_line], company_id=self.company,
+            currency_id=currency,
+        )
+        spike.verify_acquisition_gl(asset, bill, cost, payable)
+
+        bill.state = "draft"
+        with self.assertRaisesRegex(AssertionError, "posted vendor bill"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        bill.state = "posted"
+        bill.move_type = "entry"
+        with self.assertRaisesRegex(AssertionError, "posted vendor bill"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        bill.move_type = "in_invoice"
+
+        bill.date = date(2026, 8, 31)
+        with self.assertRaisesRegex(AssertionError, "bill date"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        bill.date = acquired_on
+        bill.invoice_date = date(2026, 8, 31)
+        with self.assertRaisesRegex(AssertionError, "bill date"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        bill.invoice_date = acquired_on
+
+        bill.journal_id.type = "sale"
+        with self.assertRaisesRegex(AssertionError, "purchase journal"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        bill.journal_id.type = "purchase"
+
+        payable_line.account_id = revenue
+        with self.assertRaisesRegex(AssertionError, "credit payable exactly once"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        payable_line.account_id = payable
+
+        payable_line.credit = 99999.0
+        payable_line.balance = -99999.0
+        with self.assertRaisesRegex(AssertionError, "credit the payable"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        payable_line.credit = 100001.0
+        payable_line.balance = -100001.0
+
+        payable_line.date = date(2026, 8, 31)
+        with self.assertRaisesRegex(AssertionError, "payable line date"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        payable_line.date = acquired_on
+
+        cost_line.date = date(2026, 8, 31)
+        with self.assertRaisesRegex(AssertionError, "Capitalizing bill line date"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        cost_line.date = acquired_on
+
+        create.move_id = None
+        with self.assertRaisesRegex(AssertionError, "not linked to the posted bill"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        create.move_id = bill
+
+        cost_line.debit = 99999.0
+        cost_line.balance = 99999.0
+        with self.assertRaisesRegex(AssertionError, "full asset value"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        cost_line.debit = 100001.0
+        cost_line.balance = 100001.0
+
+        asset.account_move_line_ids = [cost_line, cost_line]
+        with self.assertRaisesRegex(AssertionError, "exactly one bill line"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+        asset.account_move_line_ids = [cost_line]
+
+        asset.state = "draft"
+        with self.assertRaisesRegex(AssertionError, "not validated"):
+            spike.verify_acquisition_gl(asset, bill, cost, payable)
+
+    def test_disposal_requires_posted_removal_journal(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        cost = SimpleNamespace(id=7)
+        accumulated = SimpleNamespace(id=8)
+        move = SimpleNamespace(
+            state="posted", date=date(2026, 10, 31), company_id=self.company,
+            journal_id=object(),
+            line_ids=[
+                SimpleNamespace(account_id=accumulated, debit=100001.0,
+                                credit=0.0, balance=100001.0),
+                SimpleNamespace(account_id=cost, debit=0.0, credit=100001.0,
+                                balance=-100001.0),
+            ],
+        )
+        removal = SimpleNamespace(
+            type="remove", move_id=move, move_check=True, amount=0.0,
+            line_date=move.date,
+        )
+        asset = SimpleNamespace(
+            state="removed", date_remove=move.date, company_id=self.company,
+            currency_id=currency,
+            profile_id=SimpleNamespace(journal_id=move.journal_id),
+            purchase_value=100001.0,
+        )
+        spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+
+        move.state = "draft"
+        with self.assertRaisesRegex(AssertionError, "not posted"):
+            spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+        move.state = "posted"
+
+        removal.amount = 0.01
+        with self.assertRaisesRegex(AssertionError, "zero residual"):
+            spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+        removal.amount = 0.0
+
+        asset.state = "close"
+        with self.assertRaisesRegex(AssertionError, "not removed"):
+            spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+        asset.state = "removed"
+
+        move.line_ids.append(SimpleNamespace(
+            account_id=accumulated, debit=1.0, credit=1.0, balance=0.0,
+        ))
+        with self.assertRaisesRegex(AssertionError, "GL posting mismatch"):
+            spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+        move.line_ids.pop()
+
+        move.journal_id = object()
+        with self.assertRaisesRegex(AssertionError, "profile journal"):
+            spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+
 
 if __name__ == "__main__":
     unittest.main()

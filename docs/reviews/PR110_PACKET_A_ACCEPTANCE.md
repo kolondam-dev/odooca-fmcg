@@ -22,11 +22,15 @@ Saldo dan pemetaan likuiditas per rekening menunggu K5. A-01 sampai A-07 lulus u
 
 Pada `284e31f809316a2112493aa9c365b3050106d242`, [F4](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45610697265/artifacts/15025901192) mengulang mini-pack, kontrol future receipt dan pembayaran salah, audit kronologi, digest dua DB, replay/rollback/recovery serta rekonsiliasi GL. A-01–A-07 lulus dalam cakupan tabel.
 
-| Area tersisa | Bukti yang diperlukan | Status |
-| --- | --- | --- |
-| A-08 PJP dan reservasi | Assignment dan frekuensi kunjungan dengan Sales berwenang, reservasi parsial/backorder pada tanggal sumber dan audit ketersediaan pada setiap event. Dispatch per lot sudah lulus. | PARTIAL |
-| C Gudang dan delivery | Hubungkan picking, packing, trip/driver dan FEFO/ED melalui action native. Audit relasi/jejak source dan kontrol salah lot/ED. Bukti saat ini mencakup dispatch ber-lot. | PARTIAL |
-| Retur, karantina dan Coretax | Buktikan rantai retur sampai dokumen koreksi dan coverage profil buyer. Audit register dan valuasi karantina tetap berlaku. | PARTIAL |
-| D Pemetaan kas dan biaya | Validasi metode/rekening pembayaran serta siklus advance, realisasi, liability, bukti dan approval. K5 tetap membatasi acceptance likuiditas terkait. | OPEN |
+| Area | Correctness fakta sumber | Batas histori untuk re-review | Fitur lanjutan |
+| --- | --- | --- | --- |
+| A-08 PJP dan reservasi | Owner SO, tanggal, dan ketersediaan lot saat dispatch telah diuji. Pertahankan kontrol receipt masa depan dan audit owner pada SHA integrasi. | Register penjualan tidak merekam kunjungan PJP atau urutan reservasi per jam. Rekam sebagai UNKNOWN jika reviewer menerima batas ini. | Assignment/frekuensi kunjungan, reservation/backorder pada setiap event dan bukti role native. |
+| C Trip, FEFO dan delivery | SO → DO, kuantitas dan lot mengikuti register. Metrik logistik terbit sebagai agregat harian. Ketidaksesuaian dokumen/lot yang tercatat tetap memblokir. | Agregat kendaraan/rute/personel tidak menetapkan relasi ke tiap DO, picking atau packing. Status atribusi per DO UNKNOWN. | Chain picking/packing, trip dan driver. Uji FEFO/ED native dengan batas kedaluwarsa dan override berotorisasi. |
+| C Retur dan karantina | Audit kecocokan rejection ID, DO, SKU, lot, qty, alasan, bukti sumber dan nilai karantina. F4 memverifikasi valuasi. Trace ke koreksi dokumen tetap perlu adjudikasi per jenis retur. | Bukti yang kosong tetap kosong. ID insiden atau bukti yang tercatat tidak boleh dihilangkan. | Bukti alur koreksi komersial native dan role untuk varian retur yang belum diuji. |
+| Coretax | Cocokkan profil buyer yang tercatat, kode pajak, DPP/PPN dan total. F4 membuktikan perhitungan serta link invoice. Coverage seluruh profil buyer tetap PARTIAL. | Identitas yang kosong dinyatakan UNKNOWN. Jangan mengisi NIK/NPWP dari dugaan. | Bukti output Coretax per profil dan alur operasional koreksi. |
+| D Kas/payment | Pembayaran harus tertaut ke invoice/bill yang benar, bertanggal sumber dan cocok dengan residual/GL. AP mempunyai bank source. AR menyediakan referensi, tanggal dan nominal tanpa rekening sumber per baris. | Atribusi rekening AR yang tidak tercatat tetap UNKNOWN. K5 membatasi acceptance likuiditas dan pemetaan kas terkait. | Pemetaan metode/rekening lengkap dan pembuktian likuiditas harian. |
+| D Biaya | Pertahankan kategori, tanggal, nominal, jurnal dan audit OPEX. Salah akun, saldo atau relasi yang didukung register wajib diperbaiki. | Register OPEX berisi tanggal, nominal, kategori dan deskripsi. Advance, evidence dan approval historis yang tidak tercatat tetap UNKNOWN. | Advance → realisasi → liability/pelunasan, bukti dan approval native. |
 
-[Keputusan pemilik dan gate merge](PR110_PACKET_B_ACCEPTANCE.md#keputusan-pemilik-dan-gate-merge) mencatat hal yang perlu ditutup atau disepakati pemilik sebelum perubahan status HOLD.
+Correctness yang masih perlu bukti atau adjudikasi tercantum di kolom kedua. Kolom batas histori adalah cakupan yang diajukan untuk re-review, tanpa menganggap persetujuan atas 769 baris promo berlaku ke seluruh A/C/D. Fitur lanjutan tetap OPEN sampai ada bukti atau keputusan scope untuk tahap berikutnya.
+
+[Keputusan pemilik dan gate merge](PR110_PACKET_B_ACCEPTANCE.md#keputusan-pemilik-dan-gate-merge) mencatat dasar keputusan. Verdict merge berada pada supervisor/reviewer.

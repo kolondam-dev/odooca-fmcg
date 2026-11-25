@@ -83,6 +83,9 @@ Replay batch lama menolak referensi berbeda atau binding promo melalui `_validat
 
 ## Keputusan pemilik dan gate merge
 
+**Asal keputusan.** Instruksi langsung pemilik di percakapan PR #110 setelah usulan tiga keputusan, “untuk 3 keputusan : saya ikut usulan anda, kita nanti akan mengikuti dinamika jika terdapat temuan atau feedback dari supervisor.” Pemilik menegaskan bahwa merge adalah otoritas supervisor/reviewer. Persetujuan mencakup UNKNOWN historis promo, batas pricing awal, dan proses penetapan acceptance bertahap. Status tiap gap A/C/D tetap dinilai saat re-review.
+
+
 Pemilik menyetujui status UNKNOWN untuk metadata 769 referensi promo yang tidak tercatat, dengan audit harga efektif dan referensi sumber wajib lulus. Cakupan operasional pricing fase ini adalah satu reward nominal tetap, beberapa SKU dalam satu principal dan satu profil pajak. Budget enforcement dan backend order v2 menjadi gate aktivasi terpisah.
 
 Gate operasional disusun bertahap. Correctness atas fakta sumber menjadi syarat merge seeding. Butir playbook yang masih parsial dicatat untuk penetapan cakupan saat re-review. Keputusan merge dan penilaian kecukupan bukti berada pada supervisor/reviewer.
@@ -97,4 +100,6 @@ Bukti pada `284e31f809316a2112493aa9c365b3050106d242`: 29 checks lulus. [Install
 | Acceptance playbook A/C/D | Tetapkan PJP/reservasi, trip/FEFO, retur, identitas Coretax, kas dan alur biaya per butir. Ketidaktepatan pada fakta yang tersedia memblokir merge. Keterbatasan sumber memerlukan batas dan persetujuan eksplisit. | OPEN |
 | Aktivasi fitur | Budget enforcement memerlukan kebijakan dan tes concurrency ketika diimplementasikan. Order v2 memerlukan owner, PR, dan integrasi terpisah. Flag live tetap OFF. | OPEN |
 
-Cakupan playbook per tahap tetap tunduk pada re-review supervisor. Rekomendasi kebijakan budget dan pembagian beban tetap usulan supervisor. Status B-01/B-03/B-06 tetap CLOSED.
+Cakupan playbook per tahap tetap tunduk pada re-review supervisor. Lihat [daftar final sumber, keterbatasan, dan fitur lanjutan](PR110_PACKET_A_ACCEPTANCE.md#bukti-integrasi-dan-remaining-playbook).
+
+**Checkpoint supervisor pada `a77dcb33d81b935438bd1418ca450c02b091ace4`.** B-04/B-05 PASS dalam cakupan fixed/common-tax dan B-07 PASS untuk historical effective price. F4 menolak binding legacy tanpa drift dan memperoleh nol approval/loyalty/atribusi sintetis pada kedua DB. Acceptance operasional tetap PARTIAL. [Review dan dampak test CUKUP](https://github.com/kolondam-dev/odooca-fmcg/pull/110#issuecomment-7166622956) · [Artefak F4](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45628067644/artifacts/15034629759). Rekomendasi kebijakan budget dan pembagian beban tetap usulan supervisor. Status B-01/B-03/B-06 tetap CLOSED.

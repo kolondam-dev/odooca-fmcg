@@ -1,3 +1,23 @@
+## 2026-11-25T22:28:33+07:00 — Agent Codex-Cloud1 — PR #110: integrasi main dan gate final
+
+**Berubah:**
+- Sinkron dengan `main` `23a4108`. Pertahankan kedua riwayat handoff dan log. Konflik hanya pada handoff.
+- Catat pernyataan pemilik sebagai asal otorisasi. Konsolidasikan correctness sumber, batas histori untuk re-review dan fitur lanjutan A/C/D pada [matriks Paket A](reviews/PR110_PACKET_A_ACCEPTANCE.md).
+**Diverifikasi:**
+- [F] Correctness komersial pada `a77dcb3` diterima supervisor, dampak test **CUKUP**. Integrasi lokal lulus Ruff, manifest, dan 127 tes seed/period pack.
+**Belum diuji:**
+- [BU] CI dan F4 exact SHA integrasi. Status gate operasional serta verdict merge berada pada supervisor.
+**Berikutnya:**
+- Pantau run GitHub dan tautkan artefak pada deskripsi PR.
+
+## 2026-11-25 — [BU] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
+
+- [F] PR #197 merged ke `main` sebagai `3056f3f0ce3bda8b4938d8aaa464e5be3de87e01`; head `aed9150c4af091b28f53c7ab97eed2a6f691c6d3`; 22 SUCCESS/6 SKIPPED, Full Dataset runtime SKIPPED. Artifact: tiga jurnal depresiasi (move 1/2/3), GL per cutoff, residual nol, rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.
+- [BU] Branch `agen/opencode-fin36-acquisition-disposal-oracle` mengganti aset manual dengan vendor bill posted; `type=create` wajib menunjuk `move_id` bill dan baris kapitalisasi tunggal. Disposal memakai wizard `account.asset.remove`; oracle memposting jurnal draft lalu mengikat debit akumulasi/kredit biaya perolehan 100.001. P2 review #199: oracle akuisisi juga mengikat tanggal bill/invoice, jurnal `purchase`, baris kredit payable beserta nilainya, dan tanggal baris kapitalisasi.
+- [F] Merge `origin/main` (`f0b3632`, PR #177 Android) ke head `b8631b9` (parent `273ab8e` + `f0b3632`) karena PR sempat `CONFLICTING`/nihil check-run; oracle dan tes byte-identik dengan `273ab8e`, katalog tetap 58/58 `BELUM_DITERIMA`. Exact-SHA `b8631b9`: 29 nama check unik, 22 SUCCESS / 7 SKIPPED (Full Dataset runtime SKIPPED); Finance I0 run `45631348851` SUCCESS, artifact `finance-i0-candidate-evidence` id `15031647416` memuat `acquisition_bill_to_asset_gl` (bill 1 → create move 1, 100.001,00), tiga move depresiasi 2/3/4, cutoff GL 33.333,67 / 66.667,34 / 100.001,00, `disposal_wizard_to_posted_gl` (move 5, debit akumulasi = kredit biaya perolehan = 100.001,00), `fixture_rollback=PASS`.
+- [F] Tes offline baru menolak bill draft/bukan `in_invoice`, base line tanpa bill, kapitalisasi ganda/nilai salah, removal residual ≠ 0, jurnal removal draft/jurnal salah, dan baris GL ekstra.
+- [BU] Populasi aset nyata, mapping Controller, lisensi dependensi produksi, ACL/export/live, dan sign-off tetap HOLD.
+
 ## 2026-11-25T20:52:36+07:00 — Agent Codex-Cloud1 — PR #110: verifikasi efek impor historis
 
 **Berubah:**
