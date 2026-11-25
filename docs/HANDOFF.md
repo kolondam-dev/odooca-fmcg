@@ -9,6 +9,13 @@
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
+## 2026-11-25 — [F] BE-20d: keputusan pemilik D10 masuk rancangan (claude-design)
+
+- [F] Q1: one-day settlement (kecuali kasbon/kanvas): tanpa sinkron lintas hari; command hanya pada `collect_date` WITA; penutupan akhir hari menandai baris tak dilaporkan `lapsed`, SJP tanpa penerimaan `expired`, receipt pending tetap terproteksi; uang terlewat lewat pengecualian manual AR control (Q5 terbuka).
+- [F] Q2: tunai, transfer (hanya rekening perusahaan; verifikasi manual telepon/WA ke admin finance wajib tercatat), dan giro. Kontrak 20d memuat ketiganya; validasi per metode di 20e (tunai dulu, lalu transfer, lalu giro). Q6 (perlakuan akuntansi giro) terbuka.
+- [F] Q3 dan Q4 disetujui sesuai rekomendasi (satu hasil per baris; satu pending per faktur lintas SJP).
+- [BU] Hanya dokumen; `collection_v2` tetap OFF.
+
 ## 2026-11-25 — [F] BE-20d: rancangan penerimaan penagihan (claude-design)
 
 - [F] `docs/ui/BE20_SJP_DESIGN.md` bagian 8: kontrak `collection.receipt.submit`, identitas server SJP+baris+faktur+kolektor+perusahaan (bukan `outlet_id`), idempotensi dua lapis (UUID command + indeks unik parsial satu penerimaan aktif per baris), kunci baris/faktur dan `expected_balance`, rollback atomik, titik perluasan dispatcher di `id_mobile_api`, rencana 10 tes, tiga pertanyaan terbuka (Q1-Q3, ada default).

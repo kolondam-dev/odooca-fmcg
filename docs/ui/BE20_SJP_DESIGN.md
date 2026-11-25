@@ -57,7 +57,7 @@ Status: BE-20b diimplementasikan (addon `id_ar_collection`: model SJP + baris, w
 
 ## 8. BE-20d: penerimaan penagihan (rancangan revisi, belum diimplementasikan)
 
-Tujuan: kolektor mengirim hasil penagihan satu SJP lewat command offline-aman. Server mencatat penerimaan berstatus `posted` dan menandai baris SJP. **Tidak ada pembayaran, rekonsiliasi, atau perubahan saldo faktur** (itu BE-20e); `collection_v2` tetap OFF. Keputusan yang butuh pemilik (8.8) hanya berstatus **rekomendasi**; implementasinya menunggu jawaban eksplisit.
+Tujuan: kolektor mengirim hasil penagihan satu SJP lewat command offline-aman. Server mencatat penerimaan berstatus `posted` dan menandai baris SJP. **Tidak ada pembayaran, rekonsiliasi, atau perubahan saldo faktur** (itu BE-20e); `collection_v2` tetap OFF. Keputusan pemilik D10 (2026-11-25) ada di 8.8; dua hal turunannya (Q5 dan Q6) masih menunggu jawaban.
 
 ### 8.1 Kontrak command `collection.receipt.submit`
 
@@ -66,13 +66,17 @@ Tujuan: kolektor mengirim hasil penagihan satu SJP lewat command offline-aman. S
   "payload": { "sheet_id": 12, "occurred_at": "2026-11-25T10:15:00+08:00",
     "lines": [ { "line_id": 301, "invoice_id": 8841, "outcome": "paid|partial|unpaid",
                  "amount": 1250000, "expected_balance": 1250000,
+                 "method": "cash|transfer|giro",
+                 "transfer": { "reference": "", "proof_evidence_uuid": "" },
+                 "giro": { "number": "", "bank": "", "due_date": "2026-12-05" },
                  "unpaid_reason": "closed|no_cash|dispute|absent|other", "note": "" } ] } }
 ```
 - Dikunci server: kolektor = pengguna sesi, perusahaan = perusahaan sesi. `outlet_id` (bila dikirim) hanya petunjuk tampilan, tidak pernah dipakai sebagai kunci atau otorisasi.
 - **Identitas** = SJP + baris + faktur + kolektor + perusahaan, dimuat dari DB. `line_id` duplikat dalam payload, `invoice_id` tidak cocok dengan baris, atau baris bukan milik `sheet_id` = malformed (`UserError`, tidak dicatat).
 - **Akses lintas pemilik** (SJP kolektor lain/perusahaan lain/tidak ada) = satu pesan generik "SJP tidak ditemukan" (`AccessError`), tidak dicatat dan tidak mengungkap dokumen.
 - `amount` dalam mata uang perusahaan, dibulatkan sesuai mata uang. `paid`: `amount == saldo terkunci`; `partial`: `0 < amount < saldo`; `unpaid`: `amount == 0` dan `unpaid_reason` wajib. `document_return` diturunkan server (`paid`/`partial` -> `copy`, `unpaid` -> `original`).
-- Sinkron lintas hari (rekomendasi Q1): `occurred_at` wajib ber-zona waktu, tidak di masa depan (toleransi 5 menit), tidak sebelum awal `collect_date` WITA; `submitted_at` diisi server; penerimaan yang `submitted_at`-nya lewat `collect_date` WITA ditandai `late`.
+- **Satu hari penyelesaian (D10-Q1):** command hanya diterima pada hari bisnis WITA yang sama dengan `collect_date` SJP. `occurred_at` wajib ber-zona waktu, jatuh pada `collect_date` WITA, tidak di masa depan (toleransi 5 menit); `submitted_at` diisi server. Tidak ada penanda `late` dan tidak ada sinkron lintas hari. Command yang tiba setelah hari itu = `rejected` persisten ("melewati hari penyelesaian"), lihat 8.3a.
+- **Metode terima (D10-Q2):** `cash` | `transfer` | `giro`. `transfer`: wajib `reference` dan/atau bukti (`proof_evidence_uuid`, memakai evidence mobile yang ada); tujuan hanya rekening perusahaan, tidak pernah rekening karyawan; uang tidak dipegang kolektor. `giro`: wajib nomor, bank, tanggal jatuh tempo/cair. Pada 20d metode hanya **dicatat** dan menentukan jalur validasi di 20e; belum ada pembayaran. Kontrak memuat ketiganya sejak awal agar tidak terjadi perubahan kontrak di tengah.
 
 ### 8.2 Hasil command dan batas transaksi
 
@@ -87,6 +91,15 @@ Mekanisme dua batas (perubahan generik di dispatcher `id_mobile_api`):
 - Retry dengan UUID dan payload identik membaca log dan mengembalikan hasil `rejected` yang sama tanpa mengeksekusi ulang. UUID sama dengan payload berbeda tetap `MobileReadConflict`.
 - Pemetaan `IntegrityError 23505` **menurut `constraint_name`**: indeks UUID command (`UNIQUE(user_id, client_uuid)`) tetap menjadi "Command submission raced; retry the same UUID"; indeks penerimaan (8.3) diubah menjadi `CommandRejected`; constraint lain naik sebagai error. Dilarang menyamakan semua 23505.
 - Tipe command lama yang mengembalikan tuple tetap tidak berubah; jalur `CommandRejected` hanya dipakai handler baru.
+
+### 8.3a Penyelesaian satu hari dan penutupan SJP yang tidak selesai (D10-Q1)
+
+Praktik FMCG: semua transaksi diselesaikan pada hari yang sama (kecuali kasbon dan kanvas yang punya penanganan khusus di luar SJP ini). Konsekuensinya:
+- Kolektor wajib sinkron begitu sinyal kembali atau saat tiba di kantor, pada hari yang sama.
+- **Penutupan akhir hari (job terjadwal, batas WITA, parameter jam, Q5):** untuk SJP `issued` dengan `collect_date` lewat: baris tanpa penerimaan ditandai `lapsed` (hasil baru, bukan `unpaid`, agar terbedakan dari tidak tertagih yang dilaporkan kolektor) dan melepas `active_claim`, sehingga faktur kembali menjadi kandidat tanpa lubang atau loop. SJP tanpa satu pun penerimaan menjadi `expired`; SJP dengan penerimaan lanjut ke validasi (20e) dan hanya baris `lapsed`-nya yang dilepas.
+- **Penerimaan yang sudah tersinkron (pending) tidak dibatalkan** oleh penutupan ini: proteksi 8.3 tetap berlaku sampai tervalidasi/ditolak. Yang "dibatalkan accordingly" hanyalah baris yang tidak pernah dilaporkan.
+- Command yang terlambat tiba setelah penutupan = `rejected` persisten dengan pesan jelas; HP boleh membuang antrean itu (tidak loop).
+- **Uang nyata yang sudah diterima tetapi tidak sempat tersinkron** tidak boleh masuk lewat command offline. Jalurnya pengecualian manual oleh `group_ar_control` (BE-20e), tercatat dengan alasan dan pelaku. Detail menunggu Q5.
 
 ### 8.3 Proteksi penerimaan pending lintas SJP (kebijakan eksplisit)
 
@@ -111,8 +124,8 @@ Setelah semua lock didapat: `flush_all()`, `invalidate_all()` (atau invalidate p
 
 ### 8.5 Model dan akses (di `id_ar_collection`)
 
-- `id.collection.receipt`: `name` (`RCP/<tahun>/`), `sheet_id`, `collector_id`, `company_id`, `command_uuid`, `occurred_at`, `submitted_at`, `late`, `state` (`posted` di 20d; `cashier_validated`/`accounting_validated`/`rejected` untuk 20e), `amount_total`, `line_ids`.
-- `id.collection.receipt.line`: `receipt_id`, `sheet_line_id`, `move_id`, `outcome`, `amount`, `balance_at_submit`, `unpaid_reason`, `document_return`, `state` (stored dari header, dasar indeks), `currency_id`.
+- `id.collection.receipt`: `name` (`RCP/<tahun>/`), `sheet_id`, `collector_id`, `company_id`, `command_uuid`, `occurred_at`, `submitted_at`, `method`, `state` (`posted` di 20d; `cashier_validated`/`accounting_validated`/`rejected` untuk 20e), `amount_total`, `line_ids`.
+- `id.collection.receipt.line`: `receipt_id`, `sheet_line_id`, `move_id`, `outcome`, `amount`, `balance_at_submit`, `unpaid_reason`, `document_return`, `transfer_reference`, `proof_evidence_id`, `giro_number`, `giro_bank`, `giro_due_date`, `state` (stored dari header, dasar indeks), `currency_id`.
 - Tanpa create/write/unlink untuk pengguna biasa; pembuatan hanya lewat seam privat yang dipanggil handler. Kolektor membaca miliknya; `group_ar_admin`/`group_ar_control` membaca perusahaan sendiri. Baris SJP diperbarui lewat seam `_apply_outcome`. SJP tetap `issued` sampai BE-20e.
 
 ### 8.6 Perubahan di `id_mobile_api` dan rencana tes
@@ -128,7 +141,7 @@ Tes (Odoo, melalui `process_command` produksi, dibuktikan lewat CI exact SHA):
 6. UUID berbeda untuk baris/faktur yang sama = `rejected`, satu receipt pending.
 7. **Pending lintas SJP:** partial di A; A tidak dapat dibatalkan/draf; A `returned`; faktur tidak masuk SJP B (wizard dan `_validate_invoice`); command UUID baru di B = `rejected`; tidak ada penagihan ganda; proteksi lepas hanya setelah receipt `rejected`/`accounting_validated`.
 8. **Dua transaksi nyata (dua cursor, tanpa mock):** (a) command vs command pada faktur yang sama: tepat satu menang; (b) command vs pembayaran/rekonsiliasi native (register payment) pada faktur yang sama, dua urutan: `expected_balance` basi ditolak, tidak ada over-collect, saldo dibaca ulang setelah menunggu lock; (c) multi-faktur dengan urutan payload berlawanan antar transaksi: tidak deadlock.
-9. Lifecycle/waktu: SJP `draft/returned/cancelled` = `rejected`; `occurred_at` tanpa zona, masa depan, atau sebelum `collect_date` ditolak; lintas hari sah ditandai `late`.
+9. Lifecycle/waktu: SJP `draft/returned/cancelled/expired` = `rejected`; `occurred_at` tanpa zona, masa depan, atau di luar `collect_date` WITA ditolak; command setelah hari penyelesaian = `rejected` persisten (tanpa penanda `late`). Penutupan akhir hari: baris tanpa penerimaan menjadi `lapsed` dan melepas klaim, SJP tanpa penerimaan menjadi `expired`, receipt pending tetap terproteksi, job idempoten. Metode: `transfer` tanpa referensi/bukti dan `giro` tanpa nomor/bank/jatuh tempo ditolak.
 10. Jumlah: `paid` != saldo, `partial` >= saldo, `unpaid` > 0, negatif/NaN/presisi ditolak. Tidak ada `account.payment`, `amount_residual` tidak berubah, flag tidak disentuh, tanpa addon command ditolak sebagai tidak didukung.
 
 ### 8.7 Urutan implementasi setelah jawaban pemilik
@@ -136,9 +149,23 @@ Tes (Odoo, melalui `process_command` produksi, dibuktikan lewat CI exact SHA):
 1. PR dispatcher generik di `id_mobile_api` (titik perluasan, `CommandRejected`, 23505 menurut constraint) dengan tes regresi.
 2. PR model receipt, indeks, lifecycle guard, kandidat/snapshot, handler, dan tes 1-10.
 
-### 8.8 Keputusan pemilik (rekomendasi, **belum disetujui**)
+### 8.8 Keputusan pemilik D10 (2026-11-25)
 
-- **Q1 Sinkron lintas hari:** rekomendasi izinkan selama SJP `issued` dengan validasi `occurred_at` dan penandaan `late` (8.1). Menunggu jawaban pemilik, termasuk apakah perlu batas N hari.
-- **Q2 Metode terima:** rekomendasi tunai saja; transfer/QRIS belum dinyatakan selesai.
-- **Q3 Sisa partial:** rekomendasi satu hasil per baris; sisa menjadi kandidat hanya setelah receipt selesai dan penutupan sah (proteksi 8.3). Alternatif: penerimaan kedua pada faktur yang sama (butuh reservasi saldo kumulatif atomik dan perubahan indeks).
-- **Q4 Kebijakan pending:** rekomendasi satu pending per faktur lintas SJP (8.3).
+- **Q1 Satu hari penyelesaian:** FMCG menganut one-day settlement untuk semua transaksi kecuali kasbon dan kanvas (penanganan khusus). Sinkron wajib tuntas saat sinyal kembali atau saat tiba di kantor; yang tidak tuntas dibatalkan "accordingly" tanpa loop/lubang pada rantai transaksi. Tidak ada sinkron lintas hari. Rancangan: 8.1 dan 8.3a.
+- **Q2 Metode terima:** tunai, transfer (hanya ke rekening perusahaan, bukan rekening karyawan; kolektor/sales/delivery wajib verifikasi manual via telepon/WA ke admin finance atas mutasi berdasarkan bukti transfer toko), dan giro. Rancangan: kontrak memuat tiga metode (8.1); validasi berbeda per metode di 20e (8.9).
+- **Q3 Sisa partial:** disetujui satu hasil per baris; kasus bayar dua kali dalam sehari jarang. Sisa menjadi kandidat setelah receipt selesai dan penutupan sah.
+- **Q4 Pending:** disetujui satu pending per faktur lintas SJP (8.3).
+
+**Masih terbuka (rekomendasi, menunggu pemilik):**
+- **Q5 Batas penutupan dan uang yang terlewat:** rekomendasi batas keras pukul 23:59 WITA (tengah malam) dengan jam kantor sebagai target operasional, dan jalur pengecualian manual `group_ar_control` untuk uang yang sudah diterima tetapi tidak sempat tersinkron. Perlu konfirmasi jam batas dan siapa yang berwenang menerima pengecualian.
+- **Q6 Giro:** kapan giro dianggap pembayaran? Rekomendasi: giro dicatat sebagai receipt pending (faktur tetap terproteksi dari penagihan ulang), pembayaran native baru dibuat saat giro cair (diverifikasi accounting); giro mundur/tolak = receipt `rejected` dan faktur kembali kandidat. Perlu konfirmasi perlakuan akuntansi (giro dalam penyimpanan vs langsung bank).
+
+### 8.9 Dampak ke BE-20e (validasi per metode)
+
+| Metode | Siapa memvalidasi | Langkah |
+|---|---|---|
+| Tunai | Kasir lalu accounting (D8/D9) | kasir menghitung setoran, accounting membuat dan merekonsiliasi pembayaran |
+| Transfer | Admin finance memverifikasi mutasi rekening perusahaan, lalu accounting | langkah verifikasi (menggantikan hitung kasir) dicatat oleh sistem: pelaku, waktu, referensi mutasi; verifikasi telepon/WA tetap manual di luar sistem tetapi hasilnya wajib tercatat |
+| Giro | Admin finance/accounting | pencatatan giro, pencairan pada tanggal jatuh tempo, penolakan; sebelum cair receipt tetap pending |
+
+Fase implementasi yang diusulkan: 20d mencatat ketiga metode; 20e dimulai dengan tunai, lalu transfer, lalu giro (PR terpisah). `collection_v2` tetap OFF sampai ketiga jalur yang dipakai di lapangan lulus review.
