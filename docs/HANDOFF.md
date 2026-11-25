@@ -12,6 +12,7 @@
 ## 2026-11-25 — [F] BE-20d: rancangan penerimaan penagihan (claude-design)
 
 - [F] `docs/ui/BE20_SJP_DESIGN.md` bagian 8: kontrak `collection.receipt.submit`, identitas server SJP+baris+faktur+kolektor+perusahaan (bukan `outlet_id`), idempotensi dua lapis (UUID command + indeks unik parsial satu penerimaan aktif per baris), kunci baris/faktur dan `expected_balance`, rollback atomik, titik perluasan dispatcher di `id_mobile_api`, rencana 10 tes, tiga pertanyaan terbuka (Q1-Q3, ada default).
+- [F] Revisi review #198: tiga kelas hasil command (`CommandRejected` dicatat di luar savepoint, nol efek bisnis), 23505 dipetakan menurut constraint, pending satu per faktur lintas SJP (indeks + guard lifecycle), urutan lock global + baca ulang setelah lock, audit lock rekonsiliasi native sebagai prasyarat [BU], rencana tes 10 butir termasuk dua transaksi nyata. Q1-Q4 hanya rekomendasi, menunggu pemilik; frasa 'default dipakai' dihapus.
 - [BU] Hanya dokumen; belum ada kode atau tes. Pembayaran/rekonsiliasi tetap BE-20e. `collection_v2` tetap OFF.
 
 ## 2026-11-24 — [BU] FIN36 oracle seluruh board posted pada DB disposable (opencode)

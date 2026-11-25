@@ -492,3 +492,7 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-25T08:59:31+07:00] [INFO] BE-20d rancangan penerimaan
 - Bagian 8 BE20_SJP_DESIGN: kontrak, idempotensi dua lapis, proteksi saldo, rollback atomik, 10 tes; hanya dokumen
 - Task managed by claude-design agent at 2026-11-25T08:59:31+07:00
+
+[2026-11-25T09:40:44+07:00] [INFO] BE-20d rancangan revisi #198
+- 3 kontrak: rejected persisten luar savepoint, pending lintas SJP, urutan lock + tes native; Q1-Q4 rekomendasi
+- Task managed by claude-design agent at 2026-11-25T09:40:44+07:00
