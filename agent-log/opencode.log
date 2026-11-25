@@ -417,3 +417,21 @@
 - [F] 75 unit I2c, Ruff, 14 manifest, dan diff-check PASS lokal.
 - [BU] Finance I0 exact-SHA menunggu CI; PR tetap HOLD dan katalog 58/58 BELUM_DITERIMA.
 - Task managed by opencode at 2026-11-23T10:46:26+07:00
+[2026-11-23T17:05:25+07:00] [INFO] FIN36 OCA asset technical prerequisite (disposable)
+- [F] account_asset_management dan report_xlsx_helper tersedia pada SHA pin OCA, lisensi AGPL-3; tidak ada perubahan produksi.
+- [F] Profil assets install/upgrade terpisah, verifier board IDR 100001 dan posted depreciation ke GL, rollback fixture.
+- [F] 3 tes mutasi offline PASS; type=create tidak diklaim jurnal akuisisi dan move_check tidak diperlakukan sebagai posting oracle.
+- [BU] Exact-SHA CI, lisensi eksplisit, coverage/mapping Controller, dan FIN36 acceptance tetap terbuka.
+- Task managed by opencode at 2026-11-23T17:05:25+07:00
+
+[2026-11-23T18:33:00+07:00] [FIX] PR #193 FIN36 board precision from exact-SHA CI
+- [F] Run 45153062220 at 6717f0c: assets install/upgrade PASS, verifier board mismatch: 33333.67 + 33333.67 + 33333.66 instead of integer rounding; finance-gate FAIL.
+- [F] Expected board/GL/residual updated to observed currency precision without tolerances; 26 offline tests, Ruff, manifests PASS.
+- [BU] Posted GL and rollback await new exact-SHA CI. FIN36 acceptance and legal/Controller decisions HOLD.
+- Task managed by opencode at 2026-11-23T18:33:00+07:00
+
+[2026-11-24T19:38:30+07:00] [INFO] FIN36 oracle seluruh depresiasi posted disposable
+- [F] PR #193 merged 54a1aff/head 76342d7, supervisor PASS/CUKUP technical prerequisite dengan 28 checks SUCCESS; belum FIN36 acceptance.
+- [F] Pemilik memilih oracle disposable dulu. Slice ini membuktikan ketiga board period posted dan GL per cutoff termasuk mutasi missing/extra/duplicate/reuse, tanpa dependensi produksi.
+- [BU] Exact-SHA runtime CI belum diuji untuk slice baru. Akuisisi/disposal, mapping Controller, lisensi produksi, live dan sign-off tetap HOLD.
+- Task managed by opencode at 2026-11-24T19:38:30+07:00

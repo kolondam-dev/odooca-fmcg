@@ -8,6 +8,8 @@ atau diimpor dalam Python script runner.
 
 import csv
 import logging
+import os
+from math import isclose
 import pathlib
 import sys
 
@@ -211,8 +213,8 @@ def load_hierarchical_categories():
     return leaf_cat_map
 
 
-def ensure_vendor_carton(product, principal, row, lead_times):
-    """Seed a vendor offer in the SKU's native carton UoM."""
+def vendor_carton_values(product, principal, row, lead_times):
+    """Return values for a missing carton offer while preserving existing offers."""
     if not row.get("purchase_uom"):
         return
     if row["purchase_uom"] != "Karton" or not product.fmcg_carton_uom_id:
@@ -220,8 +222,8 @@ def ensure_vendor_carton(product, principal, row, lead_times):
     if not principal or not principal.partner_id:
         raise ValueError(f"[seed_loader] Missing vendor for SKU {product.default_code}")
 
-    company = env.company
-    supplierinfo = env["product.supplierinfo"].sudo()
+    company = product.env.company
+    supplierinfo = product.env["product.supplierinfo"].sudo()
     existing = supplierinfo.search_count([
         ("product_tmpl_id", "=", product.id),
         ("partner_id", "=", principal.partner_id.id),
@@ -235,7 +237,7 @@ def ensure_vendor_carton(product, principal, row, lead_times):
         raise ValueError(f"[seed_loader] Invalid vendor lead time for principal {principal.code}")
 
     carton = product.fmcg_carton_uom_id
-    supplierinfo.create({
+    return {
         "partner_id": principal.partner_id.id,
         "product_tmpl_id": product.id,
         "company_id": company.id,
@@ -244,7 +246,169 @@ def ensure_vendor_carton(product, principal, row, lead_times):
         "min_qty": 1,
         "price": product.uom_id._compute_price(float(row["cost_price"]), carton),
         "delay": delay,
-    })
+    }
+
+
+def read_principal_lead_times():
+    principal_file = seed_dir / "principals_4.csv"
+    if not principal_file.is_file():
+        return {}
+    with principal_file.open(encoding="utf-8") as stream:
+        return {row["code"]: row["lead_time_days"] for row in csv.DictReader(stream)}
+
+
+BASE_UOM_XMLIDS = {
+    "Pcs": "id_base.uom_pcs",
+    "Sachet": "id_base.uom_sch",
+    "Botol": "id_base.uom_btl",
+    "Pouch": "id_base.uom_pouch",
+    "Box": "id_base.uom_box",
+}
+
+def backfill_carton_uoms(target_env, *, apply=False):
+    """Configure missing packaging without replaying the product master."""
+    products = target_env["product.template"].sudo()
+    inventory_uom = target_env.ref("uom.product_uom_unit")
+    planned, unchanged, seen = [], [], set()
+    with (seed_dir / "products_150.csv").open(encoding="utf-8") as stream:
+        for row in csv.DictReader(stream):
+            code = row["default_code"]
+            if code in seen or row["purchase_uom"] != "Karton":
+                raise ValueError(f"[vendor_carton] Invalid or duplicate SKU {code}")
+            seen.add(code)
+            product = products.search([
+                ("default_code", "=", code),
+                ("company_id", "in", [False, target_env.company.id]),
+            ])
+            if len(product) != 1:
+                raise ValueError(f"[vendor_carton] Expected one active product for SKU {code}, got {len(product)}")
+            if product.principal_id.code != row["principal_code"]:
+                raise ValueError(f"[vendor_carton] Principal mismatch for SKU {code}")
+            product.assert_fmcg_seed_inventory_uom(inventory_uom)
+            xmlid = BASE_UOM_XMLIDS.get(row["base_uom"])
+            base = target_env.ref(xmlid) if xmlid else None
+            inner, quantity = int(row["inner_qty"]), int(row["carton_qty"])
+            if not base or base == inventory_uom or base.factor != inventory_uom.factor:
+                raise ValueError(f"[vendor_carton] Invalid base label for SKU {code}")
+            if inner < 1 or quantity <= 1 or quantity % inner:
+                raise ValueError(f"[vendor_carton] Invalid packaging ratio for SKU {code}")
+            if (product.inner_qty, product.carton_qty) != (inner, quantity):
+                raise ValueError(
+                    f"[vendor_carton] Master ratio mismatch for SKU {code}: "
+                    f"existing={product.inner_qty}/{product.carton_qty} CSV={inner}/{quantity}"
+                )
+            carton = product.fmcg_carton_uom_id
+            if carton:
+                if (
+                    product.fmcg_base_uom_id != base
+                    or carton not in product.uom_ids
+                    or not isclose(carton._compute_quantity(1, inventory_uom, round=False), quantity)
+                ):
+                    raise ValueError(f"[vendor_carton] Carton conversion mismatch for SKU {code}")
+                unchanged.append(code)
+            else:
+                if product.fmcg_base_uom_id or product.fmcg_inner_uom_id:
+                    raise ValueError(f"[vendor_carton] Partial packaging configuration for SKU {code}")
+                planned.append((product, base, inner, quantity))
+    if not seen:
+        raise ValueError("[vendor_carton] Product seed is empty")
+    if apply:
+        for product, base, inner, quantity in planned:
+            product.configure_fmcg_packaging_uoms(base, inner, quantity)
+            actual = product.fmcg_carton_uom_id._compute_quantity(1, inventory_uom, round=False)
+            if not isclose(actual, quantity):
+                raise ValueError(f"[vendor_carton] Carton conversion mismatch for SKU {product.default_code}")
+    return [(product.default_code, quantity) for product, _, _, quantity in planned], unchanged
+
+
+def backfill_vendor_cartons(target_env, *, apply=False, offer_status=None):
+    """Plan or create missing supplierinfo rows on an already seeded database."""
+    products = target_env["product.template"].sudo()
+    supplierinfo = target_env["product.supplierinfo"].sudo()
+    lead_times = read_principal_lead_times()
+    planned = []
+    preserved = []
+    seen = set()
+    with (seed_dir / "products_150.csv").open(encoding="utf-8") as stream:
+        for row in csv.DictReader(stream):
+            code = row["default_code"]
+            if code in seen or row["purchase_uom"] != "Karton":
+                raise ValueError(f"[vendor_carton] Invalid or duplicate SKU {code}")
+            seen.add(code)
+            product = products.search([
+                ("default_code", "=", code),
+                ("company_id", "in", [False, target_env.company.id]),
+            ])
+            if len(product) != 1:
+                raise ValueError(f"[vendor_carton] Expected one active product for SKU {code}, got {len(product)}")
+            principal = product.principal_id
+            if not principal or principal.code != row["principal_code"]:
+                raise ValueError(f"[vendor_carton] Principal mismatch for SKU {code}")
+            carton = product.fmcg_carton_uom_id
+            if not carton or not isclose(
+                carton._compute_quantity(1, product.uom_id, round=False),
+                int(row["carton_qty"]),
+            ):
+                raise ValueError(f"[vendor_carton] Carton conversion mismatch for SKU {code}")
+            vals = vendor_carton_values(product, principal, row, lead_times)
+            if vals:
+                planned.append((code, vals))
+            else:
+                preserved.append(code)
+                if offer_status is not None:
+                    offers = supplierinfo.search([
+                        ("product_tmpl_id", "=", product.id),
+                        ("partner_id", "=", principal.partner_id.id),
+                        ("company_id", "in", [False, target_env.company.id]),
+                    ])
+                    for offer in offers:
+                        if offer.product_uom_id == carton:
+                            status = "carton"
+                        elif offer.product_uom_id == product.uom_id:
+                            status = "inventory"
+                        else:
+                            status = "other"
+                        offer_status[status] += 1
+                        print(f"[vendor_carton] preserved SKU={code} offer={offer.id} uom_status={status}")
+    if not seen:
+        raise ValueError("[vendor_carton] Product seed is empty")
+    if apply and planned:
+        supplierinfo.create([vals for _, vals in planned])
+    return planned, preserved
+
+
+def run_vendor_carton_backfill(mode):
+    if mode not in {"dry-run", "apply", "uom-dry-run", "uom-apply"}:
+        raise ValueError("[vendor_carton] Expected dry-run, apply, uom-dry-run or uom-apply")
+    company_id = int(os.environ["FMCG_VENDOR_CARTON_COMPANY_ID"])
+    company = env["res.company"].browse(company_id).exists()
+    if not company:
+        raise ValueError(f"[vendor_carton] Unknown company ID {company_id}")
+    apply = mode in {"apply", "uom-apply"}
+    try:
+        if apply:
+            # Serialize concurrent runs of this backfill on the same company.
+            cr.execute("SELECT pg_try_advisory_xact_lock(%s, %s)", (1961318, company.id))
+            if not cr.fetchone()[0]:
+                raise RuntimeError(f"[vendor_carton] Backfill already running for company {company.id}")
+        target_env = company.with_company(company).env
+        if mode.startswith("uom-"):
+            planned, preserved = backfill_carton_uoms(target_env, apply=apply)
+        else:
+            offer_status = dict.fromkeys(("carton", "inventory", "other"), 0)
+            planned, preserved = backfill_vendor_cartons(target_env, apply=apply, offer_status=offer_status)
+            print(f"[vendor_carton] preserved_offers={offer_status}")
+        for code, vals in planned:
+            print(f"[vendor_carton] {mode} {code} {vals}")
+        if apply:
+            cr.commit()
+        print(
+            f"[vendor_carton] mode={mode} company={company.id} "
+            f"planned={len(planned)} preserved={len(preserved)}"
+        )
+    except Exception:
+        cr.rollback()
+        raise
 
 
 def load_products():
@@ -265,22 +429,12 @@ def load_products():
     leaf_cat_map = load_hierarchical_categories()
 
     uom_unit = env.ref("uom.product_uom_unit", raise_if_not_found=False) or Uom.search([], limit=1)
-    base_uom_xmlids = {
-        "Pcs": "id_base.uom_pcs",
-        "Sachet": "id_base.uom_sch",
-        "Botol": "id_base.uom_btl",
-        "Pouch": "id_base.uom_pouch",
-        "Box": "id_base.uom_box",
-    }
+
 
     principal_map = {p.code: p for p in Principal.search([])}
     brand_map = {b.code: b for b in Brand.search([])}
 
-    lead_times = {}
-    principal_file = seed_dir / "principals_4.csv"
-    if principal_file.is_file():
-        with principal_file.open(encoding="utf-8") as stream:
-            lead_times = {row["code"]: row["lead_time_days"] for row in csv.DictReader(stream)}
+    lead_times = read_principal_lead_times()
 
     count_created = 0
     count_updated = 0
@@ -366,7 +520,7 @@ def load_products():
             # Odoo 19: packaging adalah UoM native yang ditautkan ke product.template.uom_ids.
             # UoM inventaris (Units) sengaja tidak diubah agar saldo/riwayat tetap memakai basis lama.
             base_uom_name = row.get("base_uom", "Pcs")
-            base_uom_xmlid = base_uom_xmlids.get(base_uom_name)
+            base_uom_xmlid = BASE_UOM_XMLIDS.get(base_uom_name)
             base_uom = env.ref(base_uom_xmlid, raise_if_not_found=False) if base_uom_xmlid else False
             if not base_uom:
                 raise RuntimeError(
@@ -378,7 +532,9 @@ def load_products():
                 inner_qty=int(row.get("inner_qty", 1)),
                 carton_qty=int(row.get("carton_qty", 1)),
             )
-            ensure_vendor_carton(prod, prin, row, lead_times)
+            offer_vals = vendor_carton_values(prod, prin, row, lead_times)
+            if offer_vals:
+                env["product.supplierinfo"].sudo().create(offer_vals)
 
     print(
         f"    Selesai: {count_created} dibuat, {count_updated} diperbarui "
@@ -737,5 +893,8 @@ def load_all():
         raise
 
 
-load_all()
+if "FMCG_VENDOR_CARTON_MODE" in os.environ:
+    run_vendor_carton_backfill(os.environ["FMCG_VENDOR_CARTON_MODE"])
+else:
+    load_all()
 
