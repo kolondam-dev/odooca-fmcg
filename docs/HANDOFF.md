@@ -1,4 +1,11 @@
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
+
+## 2026-11-25 — DEV-02A · Fixture HTTP Odoo disposable (Codex-Mobile Native)
+
+- [F] Base `f0b3632` dan arahan Lead `e023d38`. Tambah fixture HttpCase B09 untuk dua assignment, login hingga receipt dan batas akses, serta runner Docker dengan pemeriksaan cleanup.
+- [F] Cara ulang dan acceptance per skenario ada di [Harness DEV-02A](android/DEV02A_HARNESS.md).
+- [BU] Bukti runtime exact-SHA dan gate diserahkan pada checkpoint eksekusi. Jalur APK ke target HTTPS memerlukan target disposable yang dapat dijangkau runner Android.
+
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
 
