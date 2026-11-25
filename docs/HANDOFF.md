@@ -9,6 +9,11 @@
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
+## 2026-11-25 — [F] BE-20d: Q6 giro diputuskan (claude-design)
+
+- [F] Q6: pemilik setuju rekomendasi dan menyerahkan perlakuan ke best practice. Rancangan 8.10: giro diterima diposting ke akun perantara Giro Diterima saat divalidasi accounting (piutang turun, proteksi pending lepas), pencairan = pemindahan ke Bank, tolak = pembalikan dan faktur kembali kandidat. Mengoreksi rancangan sebelumnya (pembayaran saat cair). [BU] Perlu konfirmasi accountant sebelum implementasi.
+- [BU] Q5 (batas penutupan dan uang terlewat) masih terbuka; hanya dokumen; `collection_v2` tetap OFF.
+
 ## 2026-11-25 — [F] BE-20d: keputusan pemilik D10 masuk rancangan (claude-design)
 
 - [F] Q1: one-day settlement (kecuali kasbon/kanvas): tanpa sinkron lintas hari; command hanya pada `collect_date` WITA; penutupan akhir hari menandai baris tak dilaporkan `lapsed`, SJP tanpa penerimaan `expired`, receipt pending tetap terproteksi; uang terlewat lewat pengecualian manual AR control (Q5 terbuka).

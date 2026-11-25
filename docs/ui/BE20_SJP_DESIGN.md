@@ -158,7 +158,7 @@ Tes (Odoo, melalui `process_command` produksi, dibuktikan lewat CI exact SHA):
 
 **Masih terbuka (rekomendasi, menunggu pemilik):**
 - **Q5 Batas penutupan dan uang yang terlewat:** rekomendasi batas keras pukul 23:59 WITA (tengah malam) dengan jam kantor sebagai target operasional, dan jalur pengecualian manual `group_ar_control` untuk uang yang sudah diterima tetapi tidak sempat tersinkron. Perlu konfirmasi jam batas dan siapa yang berwenang menerima pengecualian.
-- **Q6 Giro:** kapan giro dianggap pembayaran? Rekomendasi: giro dicatat sebagai receipt pending (faktur tetap terproteksi dari penagihan ulang), pembayaran native baru dibuat saat giro cair (diverifikasi accounting); giro mundur/tolak = receipt `rejected` dan faktur kembali kandidat. Perlu konfirmasi perlakuan akuntansi (giro dalam penyimpanan vs langsung bank).
+- **Q6 Giro (diputuskan pemilik: ikuti rekomendasi, perlakuan akuntansi mengikuti best practice):** lihat 8.10.
 
 ### 8.9 Dampak ke BE-20e (validasi per metode)
 
@@ -166,6 +166,15 @@ Tes (Odoo, melalui `process_command` produksi, dibuktikan lewat CI exact SHA):
 |---|---|---|
 | Tunai | Kasir lalu accounting (D8/D9) | kasir menghitung setoran, accounting membuat dan merekonsiliasi pembayaran |
 | Transfer | Admin finance memverifikasi mutasi rekening perusahaan, lalu accounting | langkah verifikasi (menggantikan hitung kasir) dicatat oleh sistem: pelaku, waktu, referensi mutasi; verifikasi telepon/WA tetap manual di luar sistem tetapi hasilnya wajib tercatat |
-| Giro | Admin finance/accounting | pencatatan giro, pencairan pada tanggal jatuh tempo, penolakan; sebelum cair receipt tetap pending |
+| Giro | Admin finance, lalu accounting | pencatatan giro (nomor, bank, jatuh tempo) di register giro; accounting memposting penerimaan ke akun giro diterima; pencairan dan penolakan diproses terpisah (8.10) |
 
 Fase implementasi yang diusulkan: 20d mencatat ketiga metode; 20e dimulai dengan tunai, lalu transfer, lalu giro (PR terpisah). `collection_v2` tetap OFF sampai ketiga jalur yang dipakai di lapangan lulus review.
+
+### 8.10 Giro: perlakuan akuntansi (D10-Q6)
+
+Pemilik memutuskan mengikuti rekomendasi dan memakai praktik akuntansi yang lazim. Rancangan (perlu konfirmasi accountant sebelum implementasi 20e giro, [BU]):
+1. **Giro diterima:** penerimaan divalidasi accounting dan diposting sebagai pembayaran pelanggan ke akun perantara **Giro Diterima** (giro dalam penyimpanan), bukan ke bank. Piutang faktur berkurang dan proteksi pending (8.3) lepas pada saat ini (`accounting_validated`). Giro tercatat di register: nomor, bank penerbit, tanggal jatuh tempo/cair, status.
+2. **Giro cair:** pada atau setelah jatuh tempo, accounting memposting pemindahan **Giro Diterima ke Bank** (jurnal pencairan). Tidak mengubah piutang.
+3. **Giro tolak/mundur:** pembayaran di langkah 1 dibalik (faktur terbuka kembali, aging kembali berjalan), giro ditandai tolak dengan alasan, faktur kembali menjadi kandidat SJP.
+4. Pagar: giro belum jatuh tempo tidak dapat dicairkan; register giro memantau yang akan jatuh tempo dan yang lewat tanpa pencairan.
+Koreksi atas 8.8 versi sebelumnya: pembayaran tidak menunggu pencairan; yang menunggu pencairan adalah pemindahan akun perantara ke bank. Konsekuensi: piutang tampak turun sebelum uang masuk bank, dengan risiko tolak yang ditangani langkah 3 dan register giro.
