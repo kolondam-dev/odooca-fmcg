@@ -474,6 +474,52 @@
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, and live-backend acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-19T13:46:37+07:00
 
+[2026-11-19T14:53:47+07:00] [INFO] Baseline koordinasi Android
+- [F] Menyiapkan SSOT, spec Design dan Dev, register blocker, prosedur integrasi, dan gate lokal.
+- [F] Basis origin/main e28e655; Ruff, 14 manifest dan tes kontrak CI lulus.
+- [BU] Integrasi Figma, emulator, perangkat fisik dan backend Android tetap mengikuti milestone.
+- Task managed by codex agent at 2026-11-19T14:53:47+07:00
+
+[2026-11-19T15:40:25+07:00] [INFO] Spesifikasi engineering Android v2
+- [F] Perluas SSOT, paket Design dan Dev, gate lintas tim; tambah design system dan register kontrak endpoint/DB.
+- [F] Enam dokumen diperiksa konsistensi tautan, requirement, komponen dan blocker.
+- [BU] Frame sumber Figma, acceptance perangkat dan runtime Odoo tetap mengikuti milestone.
+- Task managed by codex agent at 2026-11-19T15:40:25+07:00
+
+[2026-11-19T17:01:49+07:00] [INFO] Handoff lokal Android, akses GitHub melalui Lead
+- [F] Perjelas batas akses Design/Dev dan prosedur bundle antarsesi Cloud.
+- [F] Gate lokal menerima SHA main dari Lead tanpa akses remote.
+- Task managed by codex agent at 2026-11-19T17:01:49+07:00
+
+[2026-11-19T17:17:03+07:00] [INFO] Alur sinkronisasi Lead Android
+- [F] Checkout utama membuka main lokal sebagai mirror fast-forward origin/main.
+- [F] Gate Lead menyegarkan dan memeriksa ulang main GitHub, serta menghentikan kandidat yang tertinggal.
+- Task managed by codex agent at 2026-11-19T17:17:03+07:00
+
+[2026-11-19T19:15:04+07:00] [INFO] Baseline Android bersama melalui GitHub
+- [F] Pertahankan baseline 75b39a8 dan integrasikan main 39172de, termasuk keputusan PJP/approval terbaru.
+- [F] Handoff tim menggunakan baseline feature branch dan branch kerja masing-masing.
+- Task managed by codex agent at 2026-11-19T19:15:04+07:00
+
+[2026-11-19T19:20:10+07:00] [INFO] Arahan tetap untuk Design dan Dev Android
+- [F] Handoff GitHub menjadi rujukan instruksi strategis dan workflow kedua task.
+- [F] Tim memeriksa ref bersama dan menyertakan SHA arahan di checkpoint.
+- Task managed by codex agent at 2026-11-19T19:20:10+07:00
+
+[2026-11-19T19:30:53+07:00] [INFO] DEV-01A kandidat smoke Android API 24/35
+- [F] Base 39172de; arahan bersama 92da15d; smoke manual API 24/35, KVM, boot, install dan Login.
+- [BU] Runtime API 24/35 menunggu runner ber-KVM dan bukti pada SHA kandidat.
+- Task managed by codex agent at 2026-11-19T19:30:53+07:00
+
+[2026-11-19T19:33:41+07:00] [INFO] DEV-01B siapkan instrumentation alur awal Android
+- [F] Fixture HTTP loopback khusus debug, Login, sesi awal, Beranda, Kalibrasi dan penolakan izin OS.
+- [F] Fixture dan filter laporan diuji pada host. [BU] Runtime API 24/35 menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-19T19:33:41+07:00
+
+[2026-11-19T19:44:36+07:00] [INFO] Checkpoint lokal DEV-01A/01B untuk Lead
+- [F] Pada 9d51fb8, 72 tes domain dan OpenAPI lulus. APK debug dan APK instrumentation berhasil dibangun.
+- [BU] Robolectric dan lint Cloud menunggu dependensi Maven yang mendapat 403. Runtime API 24/35 menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-19T19:44:36+07:00
 [2026-11-20T08:41:39+07:00] [INFO] PR173 coordinated Android toolchain upgrade supersedes Dependabot PRs 164-168
 - [F] The five Dependabot Gradle PRs cannot pass in isolation: AGP 9.5.1 needs Gradle >= 9.6, core-ktx 1.19.1 and OkHttp 5.5.1 need compileSdk >= 37 and AGP >= 9.1, KSP must match Kotlin, and Gradle 9.9.1 alone breaks the wrapper oracle pinned to 8.9.
 - [F] PR #173 was opened from main (not from a Dependabot branch) with Gradle wrapper 9.9.1, AGP 9.5.1, Kotlin 2.4.21, KSP 2.3.14, Compose BOM 2026.09.00, core-ktx 1.19.1, navigation 2.10.2, Room 2.8.5, WorkManager 2.12.0, OkHttp 5.5.1, serialization 1.13.0, coroutines 1.11.0 and compileSdk 37.
@@ -489,6 +535,25 @@
 - [F] No merge, deployment, or server-data change was performed by this work.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-20T08:41:39+07:00
+
+[2026-11-20T22:27:23+07:00] [INFO] Sinkronkan DEV-01 dengan toolchain PR #173
+- [F] Main 69c6e05, arahan 6b894ca, checkpoint historis dcad215. Android required jobs identik dengan main.
+- [F] Smoke mempertahankan API 24/35 opt-in; SDK compile 37.0/Build Tools 36.0.0 dan versi Gradle dari wrapper.
+- Task managed by codex agent at 2026-11-20T22:27:23+07:00
+
+[2026-11-21T09:48:00+07:00] [INFO] Integrasi Lead DEV-01A/01B
+- Base 69c6e05, checkpoint Dev 7bcd5aa. PR memicu CI wajib.
+- Bukti runtime API 24/35 masih HOLD. Arahan Dev dan Design di LOCAL_WORKFLOW.
+- Task managed by codex agent at 2026-11-21T09:48:00+07:00
+[2026-11-21T10:22:32+07:00] [INFO] DEV-01 deklarasikan output sampel kontrak pada Gradle
+- [F] Tindak lanjut arahan 79f41bb untuk PR #177 pada 27d7428. Cache task tes harus memulihkan tiga sampel kontrak untuk validator.
+- [F] Path lokal dipasok lewat argument provider dan direktori diberi anotasi OutputDirectory.
+- [F] Baseline mereproduksi sampel hilang pada cache hit. Cold run dan cache hit lintas path kandidat memulihkan tiga file dengan checksum identik; validator lulus.
+- Task managed by codex agent at 2026-11-21T10:22:32+07:00
+
+[2026-11-21T13:00:02+07:00] [INFO] Integrasi perbaikan cache domain PR #177
+- Perbaikan Dev f23ea50; kedua entri konflik dipertahankan. CI PR memverifikasi domain-tests.
+- Task managed by codex agent at 2026-11-21T13:00:02+07:00
 
 [2026-11-22T08:33:20+07:00] [INFO] Dependabot policy and Gradle resolution retries after the Android toolchain merge
 - [F] PR #173 is merged as 127287a5c1cb273a612fc5ed643f88f7e8623658 (head 4158713, 28/28 check runs successful); PR #162 is merged as e6b1fb35abbcdad14039e67ee5f027e8005d6a25 (head 3e2a419, 28/28).
@@ -506,6 +571,20 @@
 - [F] No merge, deployment, or server-data change was performed by this work.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-22T08:33:20+07:00
+
+[2026-11-22T11:28:39+07:00] [INFO] DEV-01 patok arsip toolchain smoke API 24/35
+- [F] Tindak lanjut 5cbd64a untuk run 44881381326 pada a74613c. Platform Tools 37.0.3, emulator 37.3.10 dan image API 24 rev 27/API 35 rev 9 dipasang dari arsip Google dengan checksum.
+- [F] Provisioning dan pembuatan AVD lulus pada dua SDK Cloud terisolasi. Pemeriksaan revisi lulus. [BU] Boot, install, cold start dan instrumentation menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-22T11:28:39+07:00
+
+[2026-11-22T11:42:54+07:00] [INFO] Integrasi provisioning emulator PR #177
+- Main f52734b dan Dev 4e832de. Bukti runtime API 24/35 menunggu.
+- Task managed by codex agent at 2026-11-22T11:42:54+07:00
+
+[2026-11-22T15:55:53+07:00] [INFO] Sinkronisasi dan review PR #177
+- Main 16b909e. Pertahankan desugar 2.1.5 dan dependency instrumentation.
+- Run 44986280681: smoke API 24 lulus, API 35 gagal pada resolusi Gradle.
+- Task managed by codex agent at 2026-11-22T15:55:53+07:00
 
 [2026-11-16 00:25:00+07:00] [INFO] PR #135 sync main 4cb81ce + PO/model_terms id_ID
 - Main CI impact planner/targeted workflows retained; WMS report files overlaid without reverting newer main changes.
@@ -551,6 +630,20 @@
 - Seed offer native per SKU dan vendor, pertahankan basis UoM PO historis, tambah kontrak PO-receipt-bill pada CI.
 - Task managed by codex agent at 2026-11-23T07:44:32+07:00
 
+[2026-11-22T22:46:50+07:00] [INFO] DEV-01B bersihkan APK smoke sebelum instalasi fixture UI
+- [F] Run 45038999868 pada fef6f3e menunjukkan Login lulus dan instalasi ulang target API 24 ditolak INSTALL_FAILED_ALREADY_EXISTS.
+- [F] Smoke memakai APK reguler. Mode UI uninstall dan verifikasi absensi sebelum Gradle memasang fixture. Simulasi host, dua build APK dan guard urutan lulus.
+- [BU] Eksekusi API 24/35 pada SHA perbaikan menunggu Lead. Cloud tanpa KVM; daemon ADB tidak bisa menulis ke home.
+- Task managed by codex agent at 2026-11-22T22:46:50+07:00
+
+[2026-11-23T11:31:06+07:00] [INFO] Integrasi reset APK fixture PR #177
+- Main b37a502, Dev f1ed07f. Bukti runtime menunggu.
+- Task managed by codex agent at 2026-11-23T11:31:06+07:00
+
 [2026-11-23T10:45:07+07:00] [INFO] Backfill offer karton vendor existing
 - Mode dry-run dan apply eksplisit, validasi SKU dan rasio; tidak dijalankan di demo.
 - Task managed by codex agent at 2026-11-23T10:45:07+07:00
+
+[2026-11-25T19:06:25+07:00] [INFO] Sinkronisasi PR 177 setelah review supervisor
+- Main 2cf2626. Log kedua sisi dipertahankan.
+- Task managed by codex agent at 2026-11-25T19:06:25+07:00

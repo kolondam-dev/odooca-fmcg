@@ -108,7 +108,7 @@ class CalibrationViewModel(app: Application) : AndroidViewModel(app) {
 fun CalibrationScreen(onBack: () -> Unit) {
     val vm: CalibrationViewModel = viewModel()
     val ui by vm.ui.collectAsStateWithLifecycle()
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { vm.start() }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { vm.start() }
     val context = LocalContext.current
 
     Column(Modifier.fillMaxSize()) {
@@ -129,7 +129,16 @@ fun CalibrationScreen(onBack: () -> Unit) {
                         val granted = androidx.core.content.ContextCompat.checkSelfPermission(
                             context, Manifest.permission.ACCESS_FINE_LOCATION,
                         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                        if (granted) vm.start() else launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        if (granted) {
+                            vm.start()
+                        } else {
+                            launcher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                ),
+                            )
+                        }
                     })
                 }
                 is CalibrationUi.Running -> {

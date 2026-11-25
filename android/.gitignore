@@ -6,3 +6,6 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+
+# Kotlin compiler session state
+.kotlin/
