@@ -132,6 +132,15 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Design:** Lanjutkan DES-02-r1 dan catat hasil review di branch Design. Harness memakai layar dan capability yang sudah tersedia; dua foto, perubahan binding dan implementasi visual D01 mengikuti review slice masing-masing.
 - **Lead:** Review checkpoint Dev dan koordinasikan kendala B09 dengan maintainer backend/infra sebelum integrasi.
 
+### Keputusan Lead — target APK untuk DEV-02A/B09
+
+[Draft PR #201](https://github.com/kolondam-dev/odooca-fmcg/pull/201) mengintegrasikan `cd19d6f` pada `4663563` dengan main `23a4108`. Gate statis lulus. Bukti HttpCase tetap menjadi bukti backend; acceptance APK melalui HTTPS masih HOLD.
+
+- **Dev:** Target yang disetujui untuk dibangun adalah Odoo/PostgreSQL disposable pada job Linux Android ber-KVM yang sama. Gunakan endpoint HTTPS privat selama job, misalnya reverse proxy loopback host melalui adb reverse. Gunakan CA fixture yang dipercaya hanya oleh build pengujian dan pertahankan verifikasi TLS. Siapkan fase fixture TEST yang mengisi dan commit data sintetis hanya pada DB disposable, lalu jalankan Odoo sebagai service selama pengujian. HttpCase yang berhenti dan rollback tidak menyediakan akun yang bisa dipakai APK. Buat akses TEST per run, injeksikan ke tes tanpa mencatat password/session/CSRF, dan bersihkan DB, container, network, proxy serta material TLS saat lulus atau gagal.
+- **Acceptance:** Dari APK pada SHA integrasi, buktikan login, snapshot sesuai assignment, serta satu command aktif dan receipt dengan UUID cocok. Tautkan bukti tersanitasi, versi fixture, SHA Android/Odoo, dan hasil cleanup. Catat batas jika capability APK yang ada belum menyediakan command terpilih. Jangan gunakan target demo/live atau mengubah trust produksi. DEV-02B menunggu arahan berikutnya.
+- **Design:** Lanjutkan DES-02-r1. Perubahan visual dan binding dua foto tetap mengikuti slice terkait.
+- **Lead:** Review checkpoint HTTPS dan jalur fixture TEST, lalu verifikasi pada runner Android. Endpoint dan akun dihasilkan oleh job sehingga belum ada URL atau akun aktif untuk dibagikan.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

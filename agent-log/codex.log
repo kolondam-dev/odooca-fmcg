@@ -579,3 +579,7 @@
 [2026-11-25T20:41:07+07:00] [INFO] Mulai DEV-02A Harness Odoo
 - Main f0b3632 dan PR 177 merged. Arahan Dev untuk B09 disposable dan arahan Design dicatat.
 - Task managed by codex agent at 2026-11-25T20:41:07+07:00
+
+[2026-11-25T22:31:00+07:00] [INFO] Tetapkan target APK DEV-02A B09
+- PR 201; HTTPS privat dan fixture TEST per runner Android ber-KVM.
+- Task managed by codex agent at 2026-11-25T22:31:00+07:00

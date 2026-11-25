@@ -1,3 +1,7 @@
+## 2026-11-25T22:30:59+07:00 — Codex — Target APK DEV-02A/B09
+**Status:** Draft PR #201 pada `4663563`. [Arahan bersama](android/LOCAL_WORKFLOW.md) menetapkan target Odoo HTTPS disposable dan akses fixture TEST per job Android.
+**Menunggu:** checkpoint Dev untuk implementasi endpoint, login/snapshot/receipt APK, dan cleanup. Design lanjut DES-02-r1.
+
 ## 2026-11-25T20:41:07+07:00 — Codex — Mulai DEV-02A Harness Odoo
 **Basis:** PR #177 merged ke main `f0b3632`; DEV-01A/01B selesai. [Arahan bersama](android/LOCAL_WORKFLOW.md) membuka DEV-02A/B09 dan meminta bukti fixture, skenario runtime, redaksi, dan cleanup. Design melanjutkan DES-02-r1.
 **Menunggu:** checkpoint Dev pada branch tim; runtime DEV-02A masih [BU].
