@@ -17,7 +17,8 @@ COMMANDS = "/api/v1/sync/commands"
 LOGIN = "/web/session/authenticate"
 
 
-@tagged("post_install", "-at_install")
+# The rollover deliberately exercises Odoo's read-only to read/write retry.
+@tagged("post_install", "-at_install", "-standard", "dev02a")
 class TestDev02aHarness(MobileFixture, HttpCase):
     @classmethod
     def setUpClass(cls):

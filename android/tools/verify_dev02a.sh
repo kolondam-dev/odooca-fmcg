@@ -34,7 +34,11 @@ cleanup() {
         exit 1
     fi
     printf 'cleanup=passed run=%s containers=0 volumes=0 networks=0\n' "$run"
-    if (( result != 0 )); then printf 'result=failed phase=%s exit=%s\n' "$phase" "$result"; fi
+    if (( result == 0 )); then
+        printf 'result=passed\n'
+    else
+        printf 'result=failed phase=%s exit=%s\n' "$phase" "$result"
+    fi
     exit "$result"
 }
 trap cleanup EXIT
@@ -75,7 +79,7 @@ odoo="$(docker create --pull never --name "$run-odoo" --label "$label" --network
         exec odoo -d dev02a --db_host fixture-pg --db_port 5432 -r odoo -w "$DEV02A_DB_PASSWORD" \
             --addons-path "/tmp/addons${addons_path#/opt/id-addons}" --without-demo=true \
             --data-dir /tmp/dev02a-odoo --http-interface 127.0.0.1 --http-port 18069 \
-            -i id_mobile_api,id_approval --test-tags /id_mobile_api:TestDev02aHarness \
+            -i id_mobile_api,id_approval --test-tags dev02a/id_mobile_api:TestDev02aHarness \
             --stop-after-init --log-level=test
     ')"
 # Ship the exact committed addon tree and avoid importing addons baked into the image.
@@ -85,7 +89,7 @@ timeout --kill-after=15s 15m docker start -a "$odoo" >"$scratch/odoo.log" 2>&1
 run_result=$?
 set -e
 # The allowlisted test report excludes Odoo logs, HTTP bodies, cookies, and credentials.
-sed -n -E '/^ODOO_VERSION=[[:alnum:].~+:_-]+$/p; s/^.*INFO [^ ]+ odoo.addons.id_mobile_api.tests.test_dev02a_harness: DEV02A_EVIDENCE (\{.*\})$/\1/p' \
+sed -n -E '/^ODOO_VERSION=[[:alnum:].~+:_-]+$/p; s/^.*INFO [^ ]+ odoo.addons.id_mobile_api.tests.test_dev02a_harness: DEV02A_EVIDENCE (\{.*\})[[:space:]]*$/\1/p' \
     "$scratch/odoo.log" >"$scratch/evidence"
 cat "$scratch/evidence"
 if (( run_result != 0 )); then exit "$run_result"; fi
@@ -103,4 +107,3 @@ if scenarios != expected or sum(line.startswith("ODOO_VERSION=") for line in lin
     sys.exit("DEV-02A evidence missing or duplicated")
 PY
 phase=complete
-printf 'result=passed\n'

@@ -652,3 +652,8 @@
 - Basis f0b3632 dan arahan Lead e023d38.
 - Fixture HTTP Odoo dan runner cleanup siap diuji pada commit kandidat.
 - Task managed by codex agent at 2026-11-25T20:55:50+07:00
+
+[2026-11-25T20:57:14+07:00] [INFO] DEV-02A pisahkan rollover B09 dari suite wajib
+- Percobaan Odoo awal lulus seluruh assertion. Rollover memicu log retry cursor read/write.
+- Pilih tag B09 eksplisit dan terima spasi akhir pada bukti Odoo.
+- Task managed by codex agent at 2026-11-25T20:57:14+07:00
