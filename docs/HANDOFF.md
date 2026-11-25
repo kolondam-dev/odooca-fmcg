@@ -9,6 +9,12 @@
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
+## 2026-11-25 — [F] BE-20d: Q5/Q6 diputuskan, mekanisme meja kasir (claude-design)
+
+- [F] Q5a: penutupan SJP tengah malam WITA. Q5b: uang wajib diamankan di kasir dan dicatat tanpa bergantung PWA: bagian 8.11, penerimaan `source=cashier_desk` (langsung `cashier_validated`) atau kasir memvalidasi klaim `mobile`; invarian satu-pending-per-faktur dan lock sama; SJP tidak bisa `returned` sebelum kasir menghitung; laporan "uang di tangan kolektor" dan kontrol "uang bermalam"; setelah penutupan hanya pengecualian AR control dengan alasan.
+- [F] Q6 disetujui (best practice, 8.10; [BU] konfirmasi accountant). Tidak ada pertanyaan terbuka tersisa di rancangan 8.
+- [BU] Hanya dokumen; 20d menyiapkan model (`source`, `exception`), meja kasir dan validasi di 20e. `collection_v2` tetap OFF.
+
 ## 2026-11-25 — [F] BE-20d: Q6 giro diputuskan (claude-design)
 
 - [F] Q6: pemilik setuju rekomendasi dan menyerahkan perlakuan ke best practice. Rancangan 8.10: giro diterima diposting ke akun perantara Giro Diterima saat divalidasi accounting (piutang turun, proteksi pending lepas), pencairan = pemindahan ke Bank, tolak = pembalikan dan faktur kembali kandidat. Mengoreksi rancangan sebelumnya (pembayaran saat cair). [BU] Perlu konfirmasi accountant sebelum implementasi.

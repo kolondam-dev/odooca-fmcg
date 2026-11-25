@@ -96,10 +96,10 @@ Mekanisme dua batas (perubahan generik di dispatcher `id_mobile_api`):
 
 Praktik FMCG: semua transaksi diselesaikan pada hari yang sama (kecuali kasbon dan kanvas yang punya penanganan khusus di luar SJP ini). Konsekuensinya:
 - Kolektor wajib sinkron begitu sinyal kembali atau saat tiba di kantor, pada hari yang sama.
-- **Penutupan akhir hari (job terjadwal, batas WITA, parameter jam, Q5):** untuk SJP `issued` dengan `collect_date` lewat: baris tanpa penerimaan ditandai `lapsed` (hasil baru, bukan `unpaid`, agar terbedakan dari tidak tertagih yang dilaporkan kolektor) dan melepas `active_claim`, sehingga faktur kembali menjadi kandidat tanpa lubang atau loop. SJP tanpa satu pun penerimaan menjadi `expired`; SJP dengan penerimaan lanjut ke validasi (20e) dan hanya baris `lapsed`-nya yang dilepas.
+- **Penutupan akhir hari (job terjadwal, tengah malam WITA 00:00, diputuskan D10-Q5a):** untuk SJP `issued` dengan `collect_date` lewat: baris tanpa penerimaan ditandai `lapsed` (hasil baru, bukan `unpaid`, agar terbedakan dari tidak tertagih yang dilaporkan kolektor) dan melepas `active_claim`, sehingga faktur kembali menjadi kandidat tanpa lubang atau loop. SJP tanpa satu pun penerimaan menjadi `expired`; SJP dengan penerimaan lanjut ke validasi (20e) dan hanya baris `lapsed`-nya yang dilepas.
 - **Penerimaan yang sudah tersinkron (pending) tidak dibatalkan** oleh penutupan ini: proteksi 8.3 tetap berlaku sampai tervalidasi/ditolak. Yang "dibatalkan accordingly" hanyalah baris yang tidak pernah dilaporkan.
 - Command yang terlambat tiba setelah penutupan = `rejected` persisten dengan pesan jelas; HP boleh membuang antrean itu (tidak loop).
-- **Uang nyata yang sudah diterima tetapi tidak sempat tersinkron** tidak boleh masuk lewat command offline. Jalurnya pengecualian manual oleh `group_ar_control` (BE-20e), tercatat dengan alasan dan pelaku. Detail menunggu Q5.
+- **Uang nyata yang sudah diterima tetapi tidak sempat tersinkron** tidak boleh masuk lewat command offline. Jalur utamanya adalah penerimaan di meja kasir (8.11), yang tidak bergantung pada PWA; setelah penutupan, penerimaan kasir hanya lewat pengecualian `group_ar_control` dengan alasan.
 
 ### 8.3 Proteksi penerimaan pending lintas SJP (kebijakan eksplisit)
 
@@ -156,9 +156,9 @@ Tes (Odoo, melalui `process_command` produksi, dibuktikan lewat CI exact SHA):
 - **Q3 Sisa partial:** disetujui satu hasil per baris; kasus bayar dua kali dalam sehari jarang. Sisa menjadi kandidat setelah receipt selesai dan penutupan sah.
 - **Q4 Pending:** disetujui satu pending per faktur lintas SJP (8.3).
 
-**Masih terbuka (rekomendasi, menunggu pemilik):**
-- **Q5 Batas penutupan dan uang yang terlewat:** rekomendasi batas keras pukul 23:59 WITA (tengah malam) dengan jam kantor sebagai target operasional, dan jalur pengecualian manual `group_ar_control` untuk uang yang sudah diterima tetapi tidak sempat tersinkron. Perlu konfirmasi jam batas dan siapa yang berwenang menerima pengecualian.
-- **Q6 Giro (diputuskan pemilik: ikuti rekomendasi, perlakuan akuntansi mengikuti best practice):** lihat 8.10.
+- **Q5a Batas penutupan:** tengah malam WITA (disetujui). Job akhir hari sesuai 8.3a.
+- **Q5b Uang diamankan di kasir dulu:** mekanisme meja kasir tanpa bergantung PWA, lihat 8.11.
+- **Q6 Giro:** disetujui; perlakuan akuntansi best practice (8.10).
 
 ### 8.9 Dampak ke BE-20e (validasi per metode)
 
@@ -178,3 +178,24 @@ Pemilik memutuskan mengikuti rekomendasi dan memakai praktik akuntansi yang lazi
 3. **Giro tolak/mundur:** pembayaran di langkah 1 dibalik (faktur terbuka kembali, aging kembali berjalan), giro ditandai tolak dengan alasan, faktur kembali menjadi kandidat SJP.
 4. Pagar: giro belum jatuh tempo tidak dapat dicairkan; register giro memantau yang akan jatuh tempo dan yang lewat tanpa pencairan.
 Koreksi atas 8.8 versi sebelumnya: pembayaran tidak menunggu pencairan; yang menunggu pencairan adalah pemindahan akun perantara ke bank. Konsekuensi: piutang tampak turun sebelum uang masuk bank, dengan risiko tolak yang ditangani langkah 3 dan register giro.
+
+### 8.11 Uang diamankan di kasir dahulu: penerimaan di meja kasir (D10-Q5b)
+
+Prinsip: **kebenaran uang ada di kasir, bukan di PWA.** PWA hanya klaim/pemberitahuan dari kolektor; penerimaan sah tercipta ketika kasir menerima uang fisik dan mencatatnya di Odoo. Kegagalan HP, sinyal, atau aplikasi tidak boleh menahan pencatatan.
+
+**Dua jalan, satu model penerimaan** (`id.collection.receipt.source`):
+- `mobile`: command PWA (8.1), berstatus `posted`. Klaim kolektor; belum ada uang yang sah sampai kasir menghitung.
+- `cashier_desk`: kasir memilih SJP/kolektor di form back-office Odoo (tanpa PWA), memasukkan baris yang disetor (faktur, jumlah, metode) sambil menerima uang. Penerimaan langsung berstatus `cashier_validated` karena kasir menghitung uang fisik; accounting tetap langkah independen berikutnya.
+- Jika penerimaan `mobile` sudah ada untuk baris itu, kasir **memvalidasi** yang ada (membandingkan klaim dengan hitungan fisik; selisih dicatat, penanganannya di 20e), bukan membuat yang baru. Jika tidak ada, kasir membuat `cashier_desk`. Indeks satu-pending-per-faktur (8.3) dan protokol lock (8.4) berlaku sama untuk kedua jalan, sehingga tidak mungkin dua penerimaan aktif atas faktur yang sama.
+
+**Kewajiban amankan dulu:**
+- SJP tidak dapat berstatus `returned`, dan kolektor tidak dianggap selesai, sebelum seluruh uang tunai pada penerimaannya dihitung kasir (`cashier_validated`).
+- **Laporan "uang di tangan kolektor"** (AR control/kasir): penerimaan `mobile` `posted` yang belum divalidasi kasir, ditambah SJP berpenagihan yang tidak memiliki penerimaan apa pun saat jam kantor usai. Dipakai untuk menagih setoran.
+- **Kontrol akhir hari:** job penutupan (tengah malam) menandai SJP yang masih memiliki klaim `mobile` tanpa validasi kasir sebagai **uang bermalam**, dengan notifikasi ke AR control. Klaim itu tidak dibatalkan (proteksi pending tetap).
+- Kasir menerima kolektor **dengan SJP dan faktur di tangan**; baris yang disetor harus merupakan baris SJP milik kolektor itu (identitas server sama dengan 8.1).
+
+**Setelah penutupan tengah malam:** penerimaan kasir atas baris `lapsed` atau SJP `expired` hanya lewat pengecualian oleh `group_ar_control` dengan alasan wajib dan jejak audit (`exception=true`); ia memakai model dan invarian yang sama sehingga tidak ada lubang atau loop (klaim dibuka kembali secara atomik bila faktur belum masuk SJP lain, dan ditolak bila sudah).
+
+**Metode:** tunai: kasir. Transfer: admin finance mencatat setelah memverifikasi mutasi (8.9). Giro: fisik giro diserahkan ke kasir/finance, dicatat di register (8.10). Semuanya tanpa PWA.
+
+**Pembagian fase:** 20d menyiapkan model dengan `source`, `exception`, dan seam pembuatan yang dipakai bersama; 20e memuat form meja kasir, validasi kasir/accounting, laporan uang di tangan kolektor, dan kontrol uang bermalam. Tes tambahan: penerimaan meja kasir tanpa command mobile; kasir memvalidasi klaim mobile (selisih tercatat); meja kasir vs command mobile paralel pada faktur yang sama (satu menang); SJP tidak dapat `returned` sebelum validasi kasir; pengecualian pasca-penutupan dengan alasan, termasuk ditolak bila faktur sudah di SJP lain; job uang bermalam idempoten.
