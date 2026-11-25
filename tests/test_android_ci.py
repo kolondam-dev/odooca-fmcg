@@ -30,25 +30,29 @@ class TestAndroidBootstrapContract(unittest.TestCase):
             self.assertIn("org/gradle/wrapper/GradleWrapperMain.class", archive.namelist())
 
     def test_workflow_installs_the_platform_matching_compile_sdk(self):
-        workflow = WORKFLOW.read_text(encoding="utf-8")
-        installed = re.findall(r"platforms;android-(\d+(?:\.\d+)?)", workflow)
-        self.assertEqual(2, len(installed), installed)
+        jobs = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))["jobs"]
+        platforms = {}
+        for job in ("data-tests", "build", "emulator-smoke"):
+            steps = "\n".join(step.get("run", "") for step in jobs[job]["steps"])
+            installed = re.findall(r"platforms;android-(\d+(?:\.\d+)?)", steps)
+            self.assertEqual(1, len(installed), f"{job}: {installed}")
+            self.assertIn("build-tools;36.0.0", steps, job)
+            platforms[job] = installed[0]
 
         for module in ("app", "core/data", "core/designsystem"):
             source = (ANDROID / module / "build.gradle.kts").read_text(encoding="utf-8")
             match = re.search(r"compileSdk\s*=\s*(\d+)", source)
             self.assertIsNotNone(match, f"compileSdk missing in {module}")
             major = match.group(1)
-            for package in installed:
-                self.assertEqual(
-                    major,
-                    package.split(".")[0],
-                    f"{module} compiles against android-{major} but CI installs {package}",
-                )
-            # Since API 37 the platform package carries a minor version and
-            # AGP resolves compileSdk = 37 to android-37.0; android-37 does not exist.
-            if int(major) >= 37:
-                self.assertIn(f"platforms;android-{major}.0", workflow)
+            # From API 37 AGP resolves the major to the .0 SDK package.
+            expected = f"{major}.0" if int(major) >= 37 else major
+            for job, installed in platforms.items():
+                self.assertEqual(expected, installed, f"{module}: wrong SDK in {job}")
+
+        smoke = (ANDROID / "tools" / "emulator_smoke.sh").read_text(encoding="utf-8")
+        self.assertIn(f"verify_revision platforms/android-{platforms['emulator-smoke']} 2", smoke)
+        self.assertIn("verify_revision build-tools/36.0.0 36.0.0", smoke)
+        self.assertIn("android/gradle/wrapper/gradle-wrapper.properties", smoke)
 
     def test_gradle_retries_are_widened_for_transient_ci_failures(self):
         properties = {}
@@ -141,6 +145,66 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         self.assertIn("android/tools/validate_contract.py", source)
         self.assertIn("odooca-field-debug-${{ github.sha }}", source)
         self.assertIn("app-debug.apk.sha256", source)
+
+    def test_emulator_matrix_is_opt_in_and_outside_required_gate(self):
+        workflow = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
+        events = workflow[True]  # YAML 1.1 interprets the Actions key "on" as true.
+        inputs = events["workflow_dispatch"]["inputs"]
+        self.assertIs(inputs["emulator_smoke"]["default"], False)
+        self.assertIs(inputs["emulator_ui"]["default"], False)
+        self.assertNotIn("emulator_smoke", events["workflow_call"]["inputs"])
+        jobs = workflow["jobs"]
+        self.assertEqual(
+            jobs["emulator-smoke"]["if"],
+            "github.event_name == 'workflow_dispatch' && inputs.emulator_smoke",
+        )
+        self.assertEqual(jobs["emulator-smoke"]["strategy"]["matrix"]["api"], [24, 35])
+        self.assertEqual(
+            jobs["android-gate"]["needs"], ["changes", "guards", "domain-tests", "data-tests", "build"]
+        )
+
+    def test_emulator_provisioning_uses_versioned_sdk_archives(self):
+        jobs = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))["jobs"]
+        provision = next(
+            step["run"]
+            for step in jobs["emulator-smoke"]["steps"]
+            if step.get("name") == "Install Android SDK and system image"
+        )
+        commands = provision.replace("\\\n", " ").splitlines()
+        install = next(line for line in commands if "--channel=0" in line)
+        self.assertNotIn('"platform-tools"', install)
+        self.assertNotIn('"emulator"', install)
+        self.assertNotIn("system-images;", install)
+        self.assertIn("install_archive platform-tools_r37.0.3-linux.zip", provision)
+        self.assertIn("install_archive emulator-linux_x64-16970787.zip", provision)
+        self.assertIn('<localPackage path="emulator"', provision)
+        self.assertIn("<revision><major>37</major><minor>3</minor><micro>10</micro></revision>", provision)
+        self.assertIn("24) install_archive sys-img/google_apis/x86_64-24_r27.zip", provision)
+        self.assertIn("35) install_archive sys-img/google_apis/x86_64-35_r09.zip", provision)
+        self.assertIn("sha1sum --check --status", provision)
+
+        smoke = (ANDROID / "tools" / "emulator_smoke.sh").read_text(encoding="utf-8")
+        self.assertIn("verify_revision platform-tools 37.0.3", smoke)
+        self.assertIn("verify_revision emulator 37.3.10", smoke)
+
+    def test_ui_smoke_removes_smoke_apk_before_gradle_installs_the_fixture(self):
+        smoke = (ANDROID / "tools" / "emulator_smoke.sh").read_text(encoding="utf-8")
+        steps = (
+            ":app:assembleDebug",
+            "-Podooca.baseUrl=https://ci.invalid -Podooca.uiFixture=false",
+            "record login_ui PASS",
+            'timeout 30 "$adb" uninstall "$package"',
+            'timeout 10 "$adb" shell pm list packages "$package"',
+            "record fixture_reset PASS",
+            ":app:connectedDebugAndroidTest -Podooca.uiFixture=true",
+            "python3 android/tools/ui_smoke_report.py",
+            'test "$test_result" -eq 0',
+            "record instrumentation PASS",
+        )
+        offsets = [smoke.index(step) for step in steps]
+        self.assertEqual(offsets, sorted(offsets))
+        self.assertNotIn("shell pm clear", smoke)
+        self.assertEqual(1, smoke.count("-Podooca.uiFixture=true"))
 
     def test_contract_validator_has_four_negative_schema_controls(self):
         source = (ANDROID / "tools" / "validate_contract.py").read_text(encoding="utf-8")

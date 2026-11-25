@@ -81,3 +81,51 @@ non-angka). Guard terpisah memastikan klien native tidak pernah mengirim field `
 
 Kamera (CameraX) dan layar check-in/check-out, order, display, delivery, penagihan, absensi, dan parsing snapshot
 lengkap, mengikuti urutan dependency di blueprint.
+
+## DEV-01A/01B — emulator opsional
+
+Lead dapat menjalankan workflow **Android native** dari branch Dev yang memuat
+definisi workflow. Set input `ref` ke SHA kandidat, `force_all=true`,
+`emulator_smoke=true` dan `emulator_ui=false` untuk DEV-01A. Ulangi dengan
+`emulator_ui=true` untuk DEV-01B. Jika GitHub menolak input baru dari branch
+fitur, jalankan perintah lokal pada runner Linux ber-KVM. Required `android-gate`
+terpisah dari hasil kedua job opsional. Perubahan workflow memilih full
+regression berdasarkan planner. Lead mengumpulkan full regression dan Android
+pada SHA yang sama.
+
+Untuk runner lokal, siapkan Temurin 17.0.17+10 dan SDK Linux x86_64 terisolasi
+dengan Command-line Tools 19.0, platform `android-37.0` rev 2, Build Tools 36.0.0,
+Platform Tools 37.0.3, emulator 37.3.10, dan kedua image Google APIs x86_64
+(API 24 rev 27, API 35 rev 9). Workflow memasang Platform Tools, emulator, dan
+image dari arsip Google yang dipatok dan diperiksa checksum-nya. SDK Manager
+memasang platform SDK dan Build Tools. Skrip berhenti saat revisi terpasang
+berbeda dari pin.
+Dengan `ANDROID_HOME` dan `ANDROID_SDK_ROOT` mengarah ke SDK tersebut dan
+`/dev/kvm` bisa dibaca/ditulis, jalankan setiap API secara berurutan:
+
+```bash
+bash android/tools/emulator_smoke.sh 24 /tmp/odooca-api24-smoke smoke
+bash android/tools/emulator_smoke.sh 35 /tmp/odooca-api35-smoke smoke
+bash android/tools/emulator_smoke.sh 24 /tmp/odooca-api24-ui ui
+bash android/tools/emulator_smoke.sh 35 /tmp/odooca-api35-ui ui
+```
+
+Pakai direktori bukti baru setiap run. Skrip membuat AVD bersih dengan timeout boot
+300 detik. Laporan TSV mencatat SDK/image, SHA, checksum dan hasil akselerasi,
+build, boot, install, cold start, Login dan instrumentation secara terpisah.
+Versi Gradle dicatat dari wrapper repo yang dipatok pada 9.9.1.
+Screenshot Login diambil pada AVD bersih sebelum kredensial diisi. Mode UI
+menambah ukuran/font perangkat dan laporan test ID, waktu, dan hasil yang
+disanitasi. Dump UI, stack trace, payload HTTP, dan log emulator mentah tidak
+masuk artefak. Kegagalan setup runner tampak pada job Actions dan metadata SHA/API.
+
+Mode UI memakai APK debug reguler untuk bukti Login. Setelah screenshot,
+skrip menghapus paket smoke dari AVD, memverifikasi paket sudah tidak terpasang,
+dan mencatat hasilnya sebagai `fixture_reset`. Gradle kemudian memasang APK
+fixture dan APK tes melalui `:app:connectedDebugAndroidTest -Podooca.uiFixture=true`.
+Build khusus UI memakai endpoint HTTP `127.0.0.1` lewat `adb reverse`.
+Skenario memeriksa form kosong, tombol/label, resume dan rekreasi Activity,
+login ditolak/diterima, Beranda kosong, navigasi Kalibrasi, dialog izin OS
+ditolak, kembali, dan keluar. Bukti untuk izin diberikan, lokasi perkiraan,
+variasi font/ukuran dan rotasi fisik masih perlu dikumpulkan. Penerimaan
+transaksi Odoo disposable dan perangkat Redmi 4X/POCO M3 menjadi uji tersendiri.
