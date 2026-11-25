@@ -373,6 +373,29 @@ def native_commercial_lines(orders):
     ]
 
 
+def historical_commercial_side_effects(env, sales):
+    """Count unsupported commercial records and attribution on imported August sales."""
+    sale_lines = sales.order_line
+    invoice_lines = sale_lines.invoice_lines
+    return {
+        "approval_requests": env["fmcg.approval.request"].search_count([
+            ("res_model", "=", "sale.order"), ("res_id", "in", sales.ids),
+        ]),
+        "loyalty_usage_rows": env["loyalty.history"].search_count([
+            ("order_model", "=", "sale.order"), ("order_id", "in", sales.ids),
+        ]),
+        "sale_loyalty_links": len(sales.filtered(
+            lambda sale: sale.applied_coupon_ids or sale.coupon_point_ids or sale.code_enabled_rule_ids
+        )),
+        "sale_promo_attributions": len(sale_lines.filtered(
+            lambda line: line.reward_id or line.promo_program_id or line.promo_claim_amount
+        )),
+        "invoice_promo_attributions": len(invoice_lines.filtered(
+            lambda line: line.promo_program_id or line.promo_claim_amount or line.promo_discount_amount
+        )),
+    }
+
+
 def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     """Execute comprehensive mathematical and accounting audit against oracle."""
     if env is None:
@@ -487,6 +510,11 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             report["violations"].append(
                 f"Frozen commercial line mismatch: {list(missing.items())[:3]} {list(unexpected.items())[:3]}"
             )
+
+        effects = historical_commercial_side_effects(env, so_recs)
+        report["checks"]["historical_commercial_side_effects"] = effects
+        if any(effects.values()):
+            report["violations"].append(f"Unexpected historical commercial side effects: {effects}")
 
     # 3. Outbound Deliveries (DO Picking) Count & Status Done
     pickings = StockPicking.search(
@@ -2006,8 +2034,39 @@ def verify_august_commercial_slice(env, pack_dir):
                 pass
             if capture_period_state_snapshot(env)["digest"] != applied:
                 raise RuntimeError("Promo substitution rollback left commercial drift.")
-            loader.execute_apply()
+            effects = historical_commercial_side_effects(env, sale)
+            if any(effects.values()):
+                raise RuntimeError(f"Historical commercial slice wrote unsupported records: {effects}")
+            try:
+                with env.cr.savepoint():
+                    program = env.ref("id_promo_governance.promo_mayora_torabika_2026")
+                    line = sale.order_line.filtered("fmcg_seed_promo_ref")[:1]
+                    if not line:
+                        raise RuntimeError("Expected a source promo reference for the legacy binding probe.")
+                    line.promo_program_id = program
+                    if sale.amount_total != before_total:
+                        raise RuntimeError("Legacy binding probe changed the order total.")
+                    contaminated = capture_period_state_snapshot(env)["digest"]
+                    if contaminated == applied:
+                        raise RuntimeError("Legacy binding probe did not change the audit snapshot.")
+                    try:
+                        with env.cr.savepoint():
+                            loader.execute_apply()
+                    except StateInconsistencyError as exc:
+                        if "unverified historical promotion binding" not in str(exc):
+                            raise
+                    else:
+                        raise RuntimeError("Replay accepted a legacy promotion binding.")
+                    if capture_period_state_snapshot(env)["digest"] != contaminated:
+                        raise RuntimeError("Rejected legacy binding replay left writes.")
+                    raise RollbackCommercialSlice
+            except RollbackCommercialSlice:
+                pass
             if capture_period_state_snapshot(env)["digest"] != applied:
+                raise RuntimeError("Legacy binding rollback left commercial drift.")
+            loader.execute_apply()
+            if (capture_period_state_snapshot(env)["digest"] != applied
+                    or historical_commercial_side_effects(env, sale) != effects):
                 raise RuntimeError("Historical commercial slice changed during replay.")
             raise RollbackCommercialSlice
     except RollbackCommercialSlice:
@@ -2016,7 +2075,8 @@ def verify_august_commercial_slice(env, pack_dir):
     if capture_period_state_snapshot(env)["digest"] != before:
         raise RuntimeError("Historical commercial slice left writes after rollback.")
     return {"status": "PASS", "sale": "SO-202608-1007", "invoice": "INV-202608-1007",
-            "payment": "PAY-AR-02000", "same_total_promo_mutation": "REJECTED"}
+            "payment": "PAY-AR-02000", "same_total_promo_mutation": "REJECTED",
+            "legacy_promo_binding_replay": "REJECTED_WITHOUT_DRIFT", "side_effects": effects}
 
 
 def run_full_disposable_period_verification(

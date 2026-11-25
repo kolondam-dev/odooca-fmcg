@@ -11,8 +11,22 @@ Acuan frozen adalah register Juli dan Agustus 2026. Gunakan tanggal bisnis WITA.
 | A-05 | `INV-202608-1059` dan `PAY-AR-02066` | Akuntansi memposting invoice dan merekonsiliasi pembayaran. Loader mencari invoice posted tepat per referensi, perusahaan, customer dan tanggal. | Dispatch harus selesai sebelum invoice. Invoice line tertaut ke SO, AR Rp1.158.094,08, residual nol setelah jurnal pembayaran yang tepat. | Mini-pack memeriksa relasi sale line dan reconciliation edge. Replay dengan target lain bernominal sama ditolak dan rollback mempertahankan digest. | PASS |
 | A-06 | `PAY-AP-05` dan bill `PO-2026-06-05` | Akuntansi memposting AP payment dan merekonsiliasi bill sebelumnya. | Bill posted dan saldo yang diotorisasi tersedia untuk pelunasan. | Probe F4 mengubah residual, mengharuskan rollback tanpa drift, lalu recovery menguji target asli. | PASS |
 | A-07 | Register penuh dan 48 carry-forward Juli | Loader meneruskan Juli, menjalankan event, lalu replay. | Dokumen dan angka frozen tetap dapat direkonsiliasi pada cutoff. | Dua database F4 harus lulus pada SHA yang sama. Digest A/B, rollback, replay dan audit angka tetap wajib. | PASS |
-| A-08 | Aktivitas PJP dan saldo tersedia pada setiap reservasi | Sales dengan assignment dan role yang valid. Gudang menjalankan reservasi sesuai lot. | Validasi jadwal, ownership, reservasi parsial dan backorder. | Mini-pack ini menguji ketersediaan saat dispatch. Proof PJP dan per-event reservasi masih diperlukan. | NOT_STARTED |
+| A-08 | Aktivitas PJP dan saldo tersedia pada setiap reservasi | Sales dengan assignment dan role yang valid. Gudang menjalankan reservasi sesuai lot. | Validasi jadwal, ownership, reservasi parsial dan backorder. | Mini-pack ini menguji ketersediaan saat dispatch. Proof PJP dan per-event reservasi masih diperlukan. | PARTIAL |
 
 Mini-pack mengambil baris melalui referensi sumber, tanpa salinan CSV yang dapat berubah terpisah. Mutasi tanggal hanya ada di savepoint pengujian. Script verifikasi adalah `scripts/ops/verify_disposable_period_pack.py`, melalui workflow Period Pack Runtime Verification. Bukti native ada di `addons/id_approval/tests/test_operational_golden_chain.py` dan tes dispatcher/oracle ada di `tests/test_period_pack_loader.py`.
 
 Saldo dan pemetaan likuiditas per rekening menunggu K5. A-01 sampai A-07 lulus untuk cakupan kronologi dan irisan yang diuji pada `2cb0b6a`. [F4 integrasi](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45093700739/job/137428709998). A-08 tetap terbuka untuk PJP dan reservasi per event.
+
+
+## Bukti integrasi dan remaining playbook
+
+Pada `284e31f809316a2112493aa9c365b3050106d242`, [F4](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45610697265/artifacts/15025901192) mengulang mini-pack, kontrol future receipt dan pembayaran salah, audit kronologi, digest dua DB, replay/rollback/recovery serta rekonsiliasi GL. A-01–A-07 lulus dalam cakupan tabel.
+
+| Area tersisa | Bukti yang diperlukan | Status |
+| --- | --- | --- |
+| A-08 PJP dan reservasi | Assignment dan frekuensi kunjungan dengan Sales berwenang, reservasi parsial/backorder pada tanggal sumber dan audit ketersediaan pada setiap event. Dispatch per lot sudah lulus. | PARTIAL |
+| C Gudang dan delivery | Hubungkan picking, packing, trip/driver dan FEFO/ED melalui action native. Audit relasi/jejak source dan kontrol salah lot/ED. Bukti saat ini mencakup dispatch ber-lot. | PARTIAL |
+| Retur, karantina dan Coretax | Buktikan rantai retur sampai dokumen koreksi dan coverage profil buyer. Audit register dan valuasi karantina tetap berlaku. | PARTIAL |
+| D Pemetaan kas dan biaya | Validasi metode/rekening pembayaran serta siklus advance, realisasi, liability, bukti dan approval. K5 tetap membatasi acceptance likuiditas terkait. | OPEN |
+
+[Keputusan pemilik dan gate merge](PR110_PACKET_B_ACCEPTANCE.md#keputusan-pemilik-dan-gate-merge) mencatat hal yang perlu ditutup atau disepakati pemilik sebelum perubahan status HOLD.

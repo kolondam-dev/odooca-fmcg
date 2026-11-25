@@ -1,3 +1,16 @@
+## 2026-11-25T20:52:36+07:00 — Agent Codex-Cloud1 — PR #110: verifikasi efek impor historis
+
+**Berubah:**
+- Sinkron dengan main `f0b3632`, pertahankan log dan handoff kedua cabang. Konflik Android memakai konfigurasi cache yang telah masuk main.
+- Catat persetujuan pemilik atas UNKNOWN historis dan batas pricing fixed/common-tax, serta kewenangan merge supervisor.
+- Verifier menolak binding legacy dengan total sama saat replay. Audit mini-pack dan seluruh Agustus memeriksa approval, loyalty, reward, atribusi promo dan klaim invoice.
+**Diverifikasi:**
+- [F] Mini-pack Odoo lulus. Binding lama ditolak tanpa drift, replay bersih lulus, dan seluruh hitungan efek samping nol. Setup kontinuitas Juli memakai shim master lokal. 127 tes Python, Ruff, dan pemeriksaan manifest lulus.
+**Belum diuji:**
+- [BU] F4 exact SHA untuk baseline penuh Juli, audit seluruh Agustus dan dua database.
+**Berikutnya:**
+- Pantau CI dan serahkan bukti untuk re-review. Status HOLD mengikuti supervisor.
+
 ## 2026-11-25T19:06:54+07:00 — Agent Codex-Cloud1 — PR #110: Paket B multi-SKU
 
 **Berubah:**

@@ -46,12 +46,16 @@ Reward native Rp66.000 termasuk pajak tercatat terpisah sebagai DPP −60.000,00
 
 Principal SKU berasal dari join `order_lines.csv` dengan `data/seed/products_150.csv`. Cakupan register di bawah adalah Agustus 2026. Periode berlakunya program dan external ID perlu dikonfirmasi pemilik register sebelum loader dapat mengikat referensi.
 
-| Kode sumber | Principal SKU teramati | Line Agustus | External ID / periode efektif |
-| --- | --- | ---: | --- |
-| PROMO-2026-MAYORA-FMCG | PRIN-MAYORA | 255 | Menunggu konfirmasi |
-| PROMO-2026-SANTOS-KOPI | PRIN-SANTOS | 143 | Menunggu konfirmasi |
-| TIER-VOL-UNILEVER-8 | PRIN-UNILEVER | 225 | Menunggu konfirmasi |
-| TIER-VOL-WINGS-10 | PRIN-WINGS | 146 | Menunggu konfirmasi |
+Semua kode teramati dari 1 sampai 31 Agustus 2026. Nominal di bawah adalah diskon efektif dari register.
+
+| Kode sumber | Principal SKU | Line | Diskon efektif | Kandidat dan hasil pemeriksaan |
+| --- | --- | ---: | ---: | --- |
+| PROMO-2026-MAYORA-FMCG | PRIN-MAYORA | 255 | Rp18.357.939,00 | `id_promo_governance.promo_mayora_torabika_2026`, 1 Agustus–31 Desember. Principal dan tanggal cocok. Register meliputi SKU di luar Torabika dan tidak menautkan MoU atau external ID. |
+| PROMO-2026-SANTOS-KOPI | PRIN-SANTOS | 143 | Rp7.702.611,20 | `id_promo_governance.promo_santos_kapalapi_2026`, 15 Agustus–31 Desember. Principal cocok, tetapi ada transaksi sebelum 15 Agustus. Kandidat ini gagal mencakup seluruh kode. |
+| TIER-VOL-UNILEVER-8 | PRIN-UNILEVER | 225 | Rp39.688.166,00 | Master repo yang diperiksa tidak memuat kandidat. |
+| TIER-VOL-WINGS-10 | PRIN-WINGS | 146 | Rp9.494.067,20 | Master repo yang diperiksa tidak memuat kandidat. |
+
+Sumber kandidat adalah `addons/id_promo_governance/data/id_promo_demo_data.xml`. Pemilik register dapat mengesahkan mapping dengan bukti per cakupan, menyetujui master referensi historis dalam perubahan terpisah, atau menerima status UNKNOWN dan mempertahankan referensi sumber.
 
 ## Keputusan eligibility dan budget
 
@@ -59,7 +63,7 @@ Pagu rupiah memerlukan keputusan produk/Finance tentang basis DPP atau gross, ma
 
 ## Dependency order v2
 
-DS_RECONCILIATION K4/K13 B2, kontrak order v2 dan feature gate `features.order_pricing_v2`. PWA mendukung preview line/footer dan program. Handler backend legacy belum menerima pricing v2 maupun memberikan snapshot program yang sah. PR backend terpisah diperlukan untuk schema submit/revise, quote dan validasi otoritatif, budget lifecycle, idempotensi UUID, serta integrasi browser/backend. Status OPEN. Agent Claude-Dev1 adalah kandidat owner berdasarkan perubahan backend snapshot BE-18/BE-19. Penugasan dan PR backend v2 belum terkonfirmasi. Flag live tetap mati. K5 tidak memblokir Paket B.
+DS_RECONCILIATION K4/K13 B2, kontrak order v2 dan feature gate `features.order_pricing_v2`. PWA mendukung preview line/footer dan program. Handler backend legacy belum menerima pricing v2 maupun memberikan snapshot program yang sah. PR backend terpisah diperlukan untuk schema submit/revise, quote dan validasi otoritatif, budget lifecycle, idempotensi UUID, serta integrasi browser/backend. Status OPEN. Owner dan PR backend v2 menunggu penugasan eksplisit. Flag live tetap mati. K5 tidak memblokir Paket B.
 
 ## Implementasi dan batas pembuktian
 
@@ -70,3 +74,27 @@ DS_RECONCILIATION K4/K13 B2, kontrak order v2 dan feature gate `features.order_p
 - Governance native membatasi promo berpemilik principal ke status approved/active, company sesuai dan order yang produknya satu principal yang cocok. SKU/minimum dan periode memakai engine native. Coverage budget rupiah (termasuk kompetisi transaksi), outlet/channel tambahan, serta integrasi kontrak mobile v2 tetap terbuka.
 
 Bukti lokal memakai Odoo 19 disposable. Mini-pack lokal mengganti setup kontinuitas Juli dengan fixture master. F4 GitHub menjalankan preflight dan pembanding dua database penuh. Status keseluruhan Paket B tetap HOLD.
+
+## Audit efek samping loader
+
+`load_period_pack.py` mengisi harga DPP, diskon efektif dan `fmcg_seed_promo_ref` pada sale line. `PERIOD_` membatasi promo governed saat load, dan `fmcg_seed_load` menandai konfirmasi impor yang melewati approval native. Log mencatat exception tersebut. Loader tidak membuat pengajuan atau keputusan approval dan tidak mengikat `promo_program_id` untuk 769 referensi. Klaim nominal pada alur invoice membutuhkan binding program. Pemeriksaan ini membuktikan jalur kode loader. Oracle runtime menghitung approval, riwayat penggunaan loyalty dan atribusi promo/klaim pada SO serta invoice. Budget enforcement dengan ledger pagu tersendiri tetap di luar acceptance implementasi saat ini.
+
+Replay batch lama menolak referensi berbeda atau binding promo melalui `_validate_existing_so` pada baris seed. F4 membuktikan mutasi referensi total-sama ditolak oracle, rollback bersih, dan replay bersih. Probe mini-pack baru memasukkan binding legacy tanpa mengubah total, menjalankan replay, memeriksa digest setelah penolakan, lalu mengulang replay bersih.
+
+## Keputusan pemilik dan gate merge
+
+Pemilik menyetujui status UNKNOWN untuk metadata 769 referensi promo yang tidak tercatat, dengan audit harga efektif dan referensi sumber wajib lulus. Cakupan operasional pricing fase ini adalah satu reward nominal tetap, beberapa SKU dalam satu principal dan satu profil pajak. Budget enforcement dan backend order v2 menjadi gate aktivasi terpisah.
+
+Gate operasional disusun bertahap. Correctness atas fakta sumber menjadi syarat merge seeding. Butir playbook yang masih parsial dicatat untuk penetapan cakupan saat re-review. Keputusan merge dan penilaian kecukupan bukti berada pada supervisor/reviewer.
+
+Bukti pada `284e31f809316a2112493aa9c365b3050106d242`: 29 checks lulus. [Install-test 338 tes Odoo](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45610697200/job/139193371850) dan [artefak F4](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45610697265/artifacts/15025901192). F4 membuktikan 2.350 line, 769 referensi belum terpetakan, digest dua DB identik, replay zero drift, rollback dan recovery. GL stok Rp11.997.744.800, AR Rp2.368.135.989,94 dan AP Rp7.666.137.600 cocok.
+
+| Gate | Syarat penutupan | Status |
+| --- | --- | --- |
+| Correctness loader | Harga, identitas, owner, kronologi, lot, dokumen dan ledger mengikuti sumber. Sertakan native role chain, kontrol negatif, audit seluruh dataset dan bukti CI exact SHA. Probe replay binding lama dan assertion efek samping historis harus lulus pada F4 exact SHA. | PARTIAL |
+| Cakupan B-04/B-05 | Native fixed order reward, satu principal, profil pajak seragam, alokasi beberapa SKU, footer dan mutasi total-sama sudah terbukti. Pemilik menyetujui batas kombinasi ini. Tunggu penilaian supervisor atas hasil integrasi. | PARTIAL |
+| Cakupan B-07 | Audit harga efektif dan linkage historis lulus. Pemilik menerima UNKNOWN untuk komposisi, aktor approval dan atribusi yang hilang. Bukti oracle tambahan menunggu F4 exact SHA. | PARTIAL |
+| Acceptance playbook A/C/D | Tetapkan PJP/reservasi, trip/FEFO, retur, identitas Coretax, kas dan alur biaya per butir. Ketidaktepatan pada fakta yang tersedia memblokir merge. Keterbatasan sumber memerlukan batas dan persetujuan eksplisit. | OPEN |
+| Aktivasi fitur | Budget enforcement memerlukan kebijakan dan tes concurrency ketika diimplementasikan. Order v2 memerlukan owner, PR, dan integrasi terpisah. Flag live tetap OFF. | OPEN |
+
+Cakupan playbook per tahap tetap tunduk pada re-review supervisor. Rekomendasi kebijakan budget dan pembagian beban tetap usulan supervisor. Status B-01/B-03/B-06 tetap CLOSED.
