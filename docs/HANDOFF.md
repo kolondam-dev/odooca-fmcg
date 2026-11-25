@@ -1,3 +1,6 @@
+## 2026-11-25T19:17:55+07:00 — Codex — Smoke dan instrumentation PR #177 lulus
+**Bukti:** `1930694`, smoke 45610657967 dan instrumentation 45611140955 lulus API 24/35. [Arahan bersama](android/LOCAL_WORKFLOW.md).
+
 ## 2026-11-22T22:38:50+07:00 — Codex — Bukti runtime PR #177
 **Bukti:** smoke API 24/35 lulus pada `fef6f3e`. Instrumentation API 35 lulus, API 24 terblokir `INSTALL_FAILED_ALREADY_EXISTS`. [Arahan Dev dan Design](android/LOCAL_WORKFLOW.md).
 

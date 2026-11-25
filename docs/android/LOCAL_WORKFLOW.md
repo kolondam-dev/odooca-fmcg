@@ -117,6 +117,12 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** Perbaiki transisi antara smoke APK dan instalasi APK fixture oleh `connectedDebugAndroidTest`. Reproduksi kondisi APK smoke telah terpasang di API 24, buktikan transisi ke instalasi fixture bersih, dan pertahankan bukti Login serta oracle laporan instrumentation. Serahkan SHA dan hasil pengujian. Lead akan mengulang matriks setelah integrasi.
 - **Design:** Lanjutkan review DES-02-r1.
 
+### Bukti runtime Lead — PR #177 pada 1930694
+
+- **Lead:** HEAD `193069485d73d034f7b76e3b1fc7b9ebb861bfa4` mencakup main `2cf2626` dan perbaikan Dev `f1ed07f`. Gate statis lulus. [Smoke](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45610657967) dan [instrumentation](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45611140955) lulus API 24/35. Instrumentation API 24 lulus pada percobaan kedua setelah HTTP 429 Maven Central. Cek CI wajib dan review supervisor pada HEAD sebelum merge pemilik.
+- **Dev:** Bukti menutup kegagalan transisi APK. Tindak lanjut menunggu temuan baru.
+- **Design:** Lanjutkan DES-02-r1.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
