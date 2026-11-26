@@ -1,3 +1,11 @@
+## 2026-11-26 — DEV-02A · Job opt-in APK HTTPS B09 (Codex-Mobile Native)
+
+- [F] Arahan `c3e3090`, basis PR #201 `dcafd0d`. Job manual B09 di `android.yml` memakai SDK/emulator yang dipatok untuk API 24/35. Gate Android wajib memakai dependensi yang sama. [Dispatch dan bukti](android/DEV02A_HARNESS.md#job-opt-in-github).
+- [F] Runner membuat Odoo/PostgreSQL disposable, CA lokal, gateway HTTPS loopback dan AVD baru. Workflow mengikat SHA dispatch dan checkout. Audit before → APK first → audit after → APK replay → audit after_replay → verifier. Cleanup memeriksa resource milik run pada sukses/gagal.
+- [F] Probe dari host melalui HTTPS pada Odoo `19.0.20261112` dan PostgreSQL `16.16` menghasilkan satu receipt `accepted`, satu ledger dan satu SO. Replay tidak mengubah checkpoint. Startup gagal yang disengaja dan jalur sukses menyisakan nol container, volume, dan network fixture. Pemeriksaan build menunjukkan CA fixture di APK debug B09 dan tidak ada di resource release.
+- [F] Dampak test **TAMBAH**. Tes menolak hasil instrumentation hilang, dilewati, gagal, duplikat atau stale, serta fingerprint, scope, duplikasi order dan mutasi replay. Perubahan workflow dan kontrol CI memilih **full regression 11 suite**.
+- [BU] Runtime APK API 24/35 belum terverifikasi. Cloud berhenti pada preflight KVM untuk kedua API. Lead menjalankan job pada SHA integrasi dan mengumpulkan bukti fase APK serta cleanup. PR #201 tetap DRAFT/HOLD.
+
 ## 2026-11-26 — DEV-02A · Kandidat receipt/replay dari APK (Codex-Mobile Native)
 
 - [F] Handoff Lead `90f1bbc`, referensi PR #201 `4663563`, branch Dev berangkat dari `cd19d6f`. Tambah instrumentation opt-in melalui sesi dan klien HTTPS APK, audit ledger Odoo read-only, dan verifier untuk dua receipt serta tiga checkpoint.
