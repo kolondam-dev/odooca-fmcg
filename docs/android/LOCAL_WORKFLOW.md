@@ -153,6 +153,14 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** Sediakan runner otomatis dan entry point CI opt-in B09 yang memakai provisioning Android ber-KVM serta prosedur fixture yang sudah direview. Jalankan DB Odoo/PostgreSQL disposable, endpoint HTTPS privat dan CA fixture dengan verifikasi TLS; pertahankan trust release. Rangkai audit before → APK first → audit after → APK replay → audit after_replay → verifier, lalu cleanup pada sukses/gagal. Artefak hanya bukti tersanitasi, SHA/hash/versi dan status cleanup. Pertahankan job wajib dan oracle receipt/ledger. Serahkan SHA, cara dispatch, pilihan API yang diuji, dan bukti yang tersedia; Lead menjalankan verifikasi pada SHA integrasi.
 - **Design:** Lanjutkan DES-02-r1. DEV-02B menunggu penutupan B09.
 
+### Acceptance runner B09 — review supervisor PR #201
+
+[Review pada `dcafd0d`](https://github.com/kolondam-dev/odooca-fmcg/pull/201#issuecomment-7179605096) mencatat 24 check sukses, 5 dilewati, dan **Dampak test TAMBAH**. PR tetap draft dan acceptance APK HOLD.
+
+- **Dev:** Rangkap proses B09 dalam satu job opt-in. Pada masing-masing fase first dan replay, validasi XML baru dari eksekusi tersebut dengan tepat satu expected test ID berstatus lulus. Tolak hasil hilang, skipped, duplikat atau usang; exit Gradle dan JSON saja tidak menutup gate. Jalankan test host terhadap fungsi verifier produksi dengan baseline valid dan mutasi fingerprint, duplikasi ledger/order, reference atau scope aktor, payload replay dan checkpoint. Uji cleanup dengan kegagalan yang sengaja dipicu sesudah target siap. Upload hanya artefak allowlist; keluarkan credential, argumen password instrumentation, cookie/CSRF, private key dan raw log sensitif.
+- **Lead:** Sinkronkan main saat menerima checkpoint, lalu jalankan job B09 dan cek CI pada SHA integrasi. Target HTTPS tetap mengikuti keputusan sebelumnya.
+- **Design:** Lanjutkan DES-02-r1.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

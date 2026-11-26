@@ -591,3 +591,7 @@
 [2026-11-26T07:44:47+07:00] [INFO] Integrasi kandidat APK B09
 - PR 201 pada dcafd0d. Runner opt-in KVM dengan HTTPS dan fixture TEST masih terbuka.
 - Task managed by codex agent at 2026-11-26T07:44:47+07:00
+
+[2026-11-26T09:05:49+07:00] [INFO] Acceptance runner B09 PR #201
+- Catat review dcafd0d: bukti fresh, mutasi verifier dan cleanup gagal.
+- Task managed by codex agent at 2026-11-26T09:05:49+07:00

@@ -1,3 +1,6 @@
+## 2026-11-26T09:05:49+07:00 — Codex — Acceptance runner B09 PR #201
+**Status:** Review supervisor pada dcafd0d. Arahan Dev menambahkan pemeriksaan ID instrumentation fresh, mutasi verifier dan bukti cleanup gagal. APK/HTTPS tetap HOLD.
+
 ## 2026-11-26T07:44:47+07:00 — Codex — Integrasi kandidat APK B09
 **Status:** `dcafd0d` terintegrasi pada draft PR #201; gate statis lulus. [Arahan runner KVM](android/LOCAL_WORKFLOW.md) mencatat pekerjaan untuk menjalankan HTTPS, APK dan audit ledger dalam satu job. Acceptance tetap HOLD.
 
