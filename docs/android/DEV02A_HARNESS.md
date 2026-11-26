@@ -141,3 +141,16 @@ python3 android/tools/verify_dev02a_apk.py first.json replay.json before.json af
 Verifier mencocokkan UUID, status, referensi, fingerprint payload, scope akun, dan order dengan ledger Odoo. Verifier juga membandingkan ledger, order, picking, invoice, dan approval fixture sebelum dan setelah replay. Instrumentation berjalan di proses APK dan memakai `AppContainer`, sesi serta klien HTTP produksi. Skenario menguji jalur klien backend. Interaksi UI order dan pengiriman lewat antrean Android memiliki acceptance terpisah.
 
 Simpan lima JSON tersanitasi dan hasil verifier, SHA integrasi Android/Odoo, hash kedua APK, API/ABI dan image emulator, versi Odoo/PostgreSQL/addon/fixture, serta bukti cleanup. Operator menghentikan emulator dan menghapus DB, filestore, dan resource TLS disposable pada jalur sukses maupun gagal. Pastikan resource yang berlabel run sudah hilang sebelum menutup checkpoint.
+
+### Job opt-in GitHub
+
+Lead menjalankan workflow `android.yml` dengan `b09=true` dari branch integrasi yang memuat definisi workflow. Isi `ref` dengan SHA penuh yang sama dengan HEAD branch tersebut dan pilih API `35` (default) atau `24`. Jalankan pada Senin–Sabtu WITA. Setiap dispatch menguji tepat satu API dan menghasilkan bukti untuk API itu. Perintah untuk Lead setelah publikasi kandidat:
+
+```bash
+gh workflow run android.yml --ref "$INTEGRATION_BRANCH" \
+  -f ref="$INTEGRATION_SHA" -f b09=true -f b09_api=35
+```
+
+Job menggunakan image emulator yang sama dengan smoke DEV-01. Odoo dan PostgreSQL disposable berbagi satu network milik run. Port Odoo dan gateway HTTPS hanya dipublikasikan pada loopback runner. Emulator menjangkau gateway melalui `adb reverse`. APK debug B09 mempercayai CA yang baru dibuat khusus untuk `127.0.0.1`. Trust APK release dan build biasa mengikuti konfigurasi yang ada. Kunci TLS, kata sandi TEST, log mentah, dan APK tidak diunggah.
+
+Runner membuat UUID baru dan memasangkannya dengan bukti instrumentation serta ketiga audit. Test yang dilewati, hasil yang hilang atau ganda, dan bukti dari UUID atau fase lain menggagalkan job. File receipt dan audit dipublikasikan setelah verifier lulus. `result.txt` mencatat hasil dan status cleanup, termasuk jika job berhenti sebelum runner dapat memverifikasinya. Kegagalan menghapus resource menggagalkan eksekusi. Langkah integrasi dan full regression mengikuti hasil planner.

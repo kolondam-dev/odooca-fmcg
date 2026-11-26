@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from copy import deepcopy
+import hashlib
+import json
 import re
+import runpy
 import unittest
 import zipfile
 from pathlib import Path
@@ -34,6 +38,9 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         platforms = {}
         for job in ("data-tests", "build", "emulator-smoke"):
             steps = "\n".join(step.get("run", "") for step in jobs[job]["steps"])
+            if job == "emulator-smoke":
+                self.assertIn("bash android/tools/install_emulator_sdk.sh", steps)
+                steps = (ANDROID / "tools" / "install_emulator_sdk.sh").read_text(encoding="utf-8")
             installed = re.findall(r"platforms;android-(\d+(?:\.\d+)?)", steps)
             self.assertEqual(1, len(installed), f"{job}: {installed}")
             self.assertIn("build-tools;36.0.0", steps, job)
@@ -165,11 +172,9 @@ class TestAndroidBootstrapContract(unittest.TestCase):
 
     def test_emulator_provisioning_uses_versioned_sdk_archives(self):
         jobs = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))["jobs"]
-        provision = next(
-            step["run"]
-            for step in jobs["emulator-smoke"]["steps"]
-            if step.get("name") == "Install Android SDK and system image"
-        )
+        self.assertTrue(any("bash android/tools/install_emulator_sdk.sh" in step.get("run", "")
+                            for step in jobs["emulator-smoke"]["steps"]))
+        provision = (ANDROID / "tools" / "install_emulator_sdk.sh").read_text(encoding="utf-8")
         commands = provision.replace("\\\n", " ").splitlines()
         install = next(line for line in commands if "--channel=0" in line)
         self.assertNotIn('"platform-tools"', install)
@@ -250,6 +255,100 @@ class TestAndroidBootstrapContract(unittest.TestCase):
         # Server HTTP harus memakai kelas yang ada di android.jar; com.sun.* tidak tersedia.
         self.assertIn("ServerSocket", source)
         self.assertNotIn("com.sun", source)
+
+
+class TestB09Evidence(unittest.TestCase):
+    def setUp(self):
+        tools = ANDROID / "tools"
+        self.extract = runpy.run_path(str(tools / "dev02a_instrumentation.py"))["extract"]
+        self.verify = runpy.run_path(str(tools / "verify_dev02a_apk.py"))["verify"]
+        self.uuid = "a22a5b03-f435-4b9d-8b3a-d7cc94547d90"
+        self.scope = {"user_id": "4", "company_id": "2"}
+        command = {
+            "type": "sales.order.submit", "client_uuid": self.uuid,
+            "payload": {
+                "outlet_id": "9", "snapshot_version": "odoo-read-v1:" + "a" * 64,
+                "lines": [{"product_id": "7", "qty": "1", "uom": "carton"}],
+            },
+        }
+        receipt = {"client_uuid": self.uuid, "status": "accepted", "reference": "S00001"}
+        self.first = {"phase": "first", "request": command, "receipt": receipt,
+                      "business_date": "2026-11-26", **self.scope}
+        self.replay = {**deepcopy(self.first), "phase": "replay"}
+        self.before = {
+            "fixture": "id_mobile_api_staging", "uuid": self.uuid, "outlet_id": "9", "product_id": "7",
+            "company_command_count": 0, "ledger": [], "orders": [], "approvals": [], **self.scope,
+        }
+        serialized = json.dumps(command, sort_keys=True, separators=(",", ":"))
+        row = {**self.scope, **receipt, "type": command["type"], "sale_order_ids": [99],
+               "fingerprint": hashlib.sha256(serialized.encode()).hexdigest()}
+        order = {**self.scope, "id": 99, "outlet_id": "9", "reference": "S00001", "state": "draft",
+                 "picking_ids": [], "invoice_ids": [], "lines": [{"product_id": "7", "qty": 24}]}
+        self.after = {**self.before, "company_command_count": 1, "ledger": [row], "orders": [order]}
+
+    def test_b09_is_manual_and_outside_required_gates(self):
+        workflow = yaml.safe_load(WORKFLOW.read_text())
+        inputs = workflow[True]["workflow_dispatch"]["inputs"]
+        self.assertIs(inputs["b09"]["default"], False)
+        self.assertNotIn("b09", workflow[True]["workflow_call"]["inputs"])
+        self.assertNotIn("apk-odoo", workflow["jobs"]["android-gate"]["needs"])
+        job = workflow["jobs"]["apk-odoo"]
+        self.assertEqual(job["if"], "github.event_name == 'workflow_dispatch' && inputs.b09")
+        self.assertNotIn("continue-on-error", job)
+        self.assertEqual(job["steps"][-1]["if"], "always()")
+        paths = job["steps"][-1]["with"]["path"]
+        self.assertNotIn("*", paths)
+        self.assertNotIn(".log", paths)
+        self.assertNotIn(".pem", paths)
+
+    def test_instrumentation_rejects_missing_skipped_failed_and_stale(self):
+        case = (
+            "INSTRUMENTATION_STATUS: class=com.kolondam.odooca.field.DisposableOdooReceiptTest\n"
+            "INSTRUMENTATION_STATUS: test=submitOrReplay\n"
+        )
+        evidence = "INSTRUMENTATION_STATUS: dev02a_evidence=" + json.dumps(self.first) + "\n"
+        evidence += "INSTRUMENTATION_STATUS_CODE: 0\n"
+        start = case + "INSTRUMENTATION_STATUS_CODE: 1\n"
+        finished = case + "INSTRUMENTATION_STATUS_CODE: 0\n"
+        final = "INSTRUMENTATION_CODE: -1\n"
+        raw = start + evidence + finished + final
+        self.assertEqual(self.first, self.extract(raw, self.uuid, "first"))
+        for label, candidate, uuid, phase in [
+            ("missing", start + finished + final, self.uuid, "first"),
+            ("skipped", raw.replace(finished, case + "INSTRUMENTATION_STATUS_CODE: -4\n"), self.uuid, "first"),
+            ("failed", raw.replace(finished, case + "INSTRUMENTATION_STATUS_CODE: -2\n"), self.uuid, "first"),
+            ("duplicate", start + evidence + evidence + finished + final, self.uuid, "first"),
+            ("stale", raw, "e7b4fb53-4b4d-49ef-a74a-08cb92178339", "first"),
+            ("wrong_phase", raw, self.uuid, "replay"),
+            ("aborted", raw + "INSTRUMENTATION_FAILED: process crashed\n", self.uuid, "first"),
+        ]:
+            with self.subTest(label=label), self.assertRaises(ValueError):
+                self.extract(candidate, uuid, phase)
+
+    def test_verifier_rejects_fingerprint_duplicate_scope_and_replay_mutations(self):
+        self.assertEqual(
+            self.verify(self.first, self.replay, self.before, self.after, deepcopy(self.after))["result"], "passed",
+        )
+        for mutation, reason in (
+            ("fingerprint", "exact APK command"), ("duplicate", "exactly one"),
+            ("scope", "actor scope mismatch"), ("replay", "replay changed the Odoo checkpoint"),
+        ):
+            with self.subTest(mutation=mutation):
+                after = deepcopy(self.after)
+                replay = deepcopy(after)
+                if mutation == "fingerprint":
+                    after["ledger"][0]["fingerprint"] = "0" * 64
+                    replay = deepcopy(after)
+                elif mutation == "duplicate":
+                    after["orders"].append({**after["orders"][0], "id": 100})
+                    replay = deepcopy(after)
+                elif mutation == "scope":
+                    after["ledger"][0]["user_id"] = "44"
+                    replay = deepcopy(after)
+                else:
+                    replay["orders"][0]["picking_ids"] = [1]
+                with self.assertRaisesRegex(ValueError, reason):
+                    self.verify(self.first, self.replay, self.before, after, replay)
 
 
 if __name__ == "__main__":

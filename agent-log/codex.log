@@ -671,3 +671,8 @@
 - Acuan review PR #201 4663563 dan handoff Lead 90f1bbc.
 - Build dua APK dan probe ORM lulus. Runtime APK menunggu KVM dan target HTTPS disposable.
 - Task managed by codex agent at 2026-11-26T07:41:40+07:00
+
+[2026-11-26T08:22:48+07:00] [INFO] DEV-02A siapkan runner APK HTTPS B09 opt-in
+- Tambahkan job manual untuk TLS lokal, emulator, dua fase APK dan tiga audit Odoo.
+- Mutation checks menolak bukti basi, scope salah, fingerprint salah, duplikasi dan perubahan akibat replay.
+- Task managed by codex agent at 2026-11-26T08:22:48+07:00
