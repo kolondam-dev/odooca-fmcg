@@ -147,6 +147,12 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Dev:** Lengkapi bukti APK → HTTPS → Odoo. Cocokkan UUID, status, dan reference receipt dari APK dengan tepat satu command ledger dan satu sales order fixture. Ulangi command dengan UUID yang sama dan buktikan tidak ada efek tambahan. Catat SHA, hash APK, versi backend/fixture serta cleanup resource baru pada sukses/gagal.
 - **Design:** Lanjutkan DES-02-r1.
 
+### Tindak lanjut runner B09 — PR #201
+
+- **Lead:** Integrasikan `dcafd0d70fc1de6fff59e06098a633f59b8626d3` ke draft [PR #201](https://github.com/kolondam-dev/odooca-fmcg/pull/201). Gate statis lulus. **Dampak test TAMBAH** untuk APK/HTTPS dan replay; probe ORM dari Dev adalah bukti pendukung. Script dan prosedur manual tersedia, tetapi kandidat belum menyediakan job yang merangkai target Odoo HTTPS dan kedua fase APK pada runner KVM yang sama.
+- **Dev:** Sediakan runner otomatis dan entry point CI opt-in B09 yang memakai provisioning Android ber-KVM serta prosedur fixture yang sudah direview. Jalankan DB Odoo/PostgreSQL disposable, endpoint HTTPS privat dan CA fixture dengan verifikasi TLS; pertahankan trust release. Rangkai audit before → APK first → audit after → APK replay → audit after_replay → verifier, lalu cleanup pada sukses/gagal. Artefak hanya bukti tersanitasi, SHA/hash/versi dan status cleanup. Pertahankan job wajib dan oracle receipt/ledger. Serahkan SHA, cara dispatch, pilihan API yang diuji, dan bukti yang tersedia; Lead menjalankan verifikasi pada SHA integrasi.
+- **Design:** Lanjutkan DES-02-r1. DEV-02B menunggu penutupan B09.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

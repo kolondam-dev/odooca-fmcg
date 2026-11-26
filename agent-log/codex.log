@@ -587,3 +587,7 @@
 [2026-11-26T07:35:28+07:00] [INFO] Review harness HTTP PR 201
 - Rerun exact HEAD 4663563 terlampir; Upgrade lulus. APK/HTTPS tetap HOLD.
 - Task managed by codex agent at 2026-11-26T07:35:28+07:00
+
+[2026-11-26T07:44:47+07:00] [INFO] Integrasi kandidat APK B09
+- PR 201 pada dcafd0d. Runner opt-in KVM dengan HTTPS dan fixture TEST masih terbuka.
+- Task managed by codex agent at 2026-11-26T07:44:47+07:00

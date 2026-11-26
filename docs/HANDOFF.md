@@ -1,3 +1,6 @@
+## 2026-11-26T07:44:47+07:00 — Codex — Integrasi kandidat APK B09
+**Status:** `dcafd0d` terintegrasi pada draft PR #201; gate statis lulus. [Arahan runner KVM](android/LOCAL_WORKFLOW.md) mencatat pekerjaan untuk menjalankan HTTPS, APK dan audit ledger dalam satu job. Acceptance tetap HOLD.
+
 ## 2026-11-26T07:35:28+07:00 — Codex — Review harness HTTP PR #201
 **Bukti:** rerun `4663563` terlampir di PR, CI 24 sukses dan 5 dilewati. **Dampak test CUKUP** untuk HTTP. APK/HTTPS, receipt dan retry tanpa duplikasi tetap menunggu Dev.
 
