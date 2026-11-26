@@ -454,3 +454,16 @@
 - [F] Exact-SHA b8631b9: 29 check unik, 22 SUCCESS / 7 SKIPPED (Full Dataset runtime SKIPPED). Finance I0 run 45631348851 SUCCESS; artifact 15031647416 memuat acquisition_bill_to_asset_gl (bill 1 -> create move 1, 100001.00), move depresiasi 2/3/4, cutoff 33333.67/66667.34/100001.00, disposal move 5 (debit akumulasi = kredit biaya perolehan = 100001.00), fixture_rollback PASS.
 - [BU] Populasi aset, mapping Controller, lisensi produksi, ACL/export/live, sign-off, merge/deploy tetap HOLD; menunggu re-review independen.
 - Task managed by opencode at 2026-11-25T21:41:12+07:00
+
+[2026-11-25T22:41:44+07:00] [INFO] FIN36 register rollforward dan early disposal (disposable)
+- [F] PR #199 merged 23a4108 (head 6ce53e6), 22 SUCCESS/7 SKIPPED; Finance evidence artifact yang benar 15034796540. Koreksi ID diposting di PR #199; 15034796544 adalah Docker build. Katalog tetap 58/58 BELUM_DITERIMA.
+- [BU] Oracle disposable menambah aset opening 60.000 (NBV opening 50.000, closing 40.000) dan aset 120.000 yang dihapus 16 Agustus: depresiasi parsial 4.838,71, residual 105.161,29, sale 100.000, loss 5.161,29. Register tiga aset direkonsiliasi per bucket ke GL independen.
+- [F] Delapan tes offline menolak residual/GL early disposal salah, extra line, draft removal, mismatch tiap bucket dan balanced bucket tamper; Ruff dan 15 manifest PASS. [BU] Finance I0 exact-SHA belum dijalankan.
+- [BU] Tidak ada dependensi/aktivasi produksi, data live atau perubahan katalog; mapping Controller, lisensi AGPL-3, ACL/export/live dan sign-off tetap HOLD.
+- Task managed by opencode at 2026-11-25T22:41:44+07:00
+[2026-11-26T08:00:29+07:00] [INFO] FIN36 PR #202 rerun PASS dan sinkronisasi strict-main
+- Exact head historis f9eeddd7f0e81ec7c35b02b527f5c7c1c7bffa1a: Finance I0 run 45648307014 dan CI run 45648306479 attempt 2 SUCCESS; 22 SUCCESS / 7 SKIPPED.
+- Kegagalan attempt 1 terisolasi pada boundary tengah malam WITA tes WMS; rerun pada SHA sama PASS tanpa perubahan oracle atau selector.
+- Ruleset main-quality-gate mewajibkan strict required checks; origin/main ef97d1f digabung. Upstream hanya docs/log BE-20d dan jalur oracle FIN36 byte-identik.
+- Exact-SHA CI dan artifact setelah sinkronisasi masih [BU]. Full Dataset runtime, penerimaan FIN36, merge, dan deployment tetap HOLD menunggu re-review independen.
+- Task managed by Agent Opencode at 2026-11-26T08:00:29+07:00
