@@ -473,3 +473,8 @@
 - [BU] Fixture runtime menambah company kedua dengan salvage 4.000, draft GL noise, dan acquisition setelah cutoff; counterexample juga menutup disposal setelah cutoff, aset hilang/duplikat, source reuse, company leakage, serta komposisi salah dengan agregat tetap benar.
 - [F] Sebelas tes offline, Ruff, compile dan diff check PASS lokal. [BU] Odoo runtime/Finance I0 exact-SHA menunggu CI; FIN36, Full Dataset, produksi, katalog, merge dan deployment tetap HOLD.
 - Task managed by Agent Opencode at 2026-11-26T08:46:26+07:00
+[2026-11-26T09:05:00+07:00] [FIX] FIN36 salvage residual OCA vs NBV register
+- [F] Finance I0 run 45738370662 head 1873deb gagal pada assertion fixture company B; semua gate install/init/seed lain PASS dan upgrade replay PASS.
+- [F] OCA value_residual mengecualikan salvage: 24.000 purchase - 4.000 salvage - 10.000 depreciation = 10.000 depreciable residual. NBV register/posted GL tetap 14.000.
+- [BU] Assertion field dikoreksi ke 10.000 tanpa mengubah expected closing register/GL 14.000 atau melemahkan coverage/company/cutoff oracle. Exact-SHA baru menunggu CI.
+- Task managed by Agent Opencode at 2026-11-26T09:05:00+07:00

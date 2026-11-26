@@ -1030,8 +1030,8 @@ def run(env):
                 )
             asset_b.invalidate_recordset()
             require(
-                asset_b.value_residual == 14_000.0,
-                "Second-company salvage asset must close at 14,000 NBV",
+                asset_b.value_residual == 10_000.0,
+                "Second-company depreciable residual must exclude 4,000 salvage",
             )
 
             period_start, period_end = "2026-07-01", REMOVAL_DATE
@@ -1275,6 +1275,7 @@ def run(env):
                  "excluded_post_cutoff_asset_id": future_asset.id,
                  "draft_noise_move_id": draft_noise.id,
                  "company_b_salvage": SECOND_COMPANY_SALVAGE_VALUE,
+                 "company_b_depreciable_residual": asset_b.value_residual,
                  "company_b_closing": source_rollforward_b["closing"]},
             ])
             raise RollbackAssetSpike()
