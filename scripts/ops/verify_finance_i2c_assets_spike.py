@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Disposable install/upgrade and lifecycle proof for the FIN36 OCA source.
+"""Disposable lifecycle and register-rollforward proof for the FIN36 OCA source.
 
 This is a technical prerequisite, not FIN36 acceptance.  It proves that the
 pinned ``account_asset_management`` closure works in the project image and that
 ``account.asset.line`` retains an exact link to the posted move that created it
 (acquisition), to every posted depreciation journal, and to the posted removal
-journal.  The fixture is created inside a savepoint and always rolled back.
+journal.  A non-zero opening/closing asset and an early disposal additionally
+reconcile the asset-source rollforward to independently queried posted GL.
+The fixture is created inside a savepoint and always rolled back.
 """
 
 import json
@@ -38,6 +40,17 @@ BOARD = [
 ACQUISITION_DATE = "2026-07-01"
 ACQUISITION_VALUE = 100_001.0
 REMOVAL_DATE = "2026-10-31"
+EARLY_ACQUISITION_VALUE = 120_000.0
+EARLY_REMOVAL_DATE = "2026-08-16"
+EARLY_REGULAR_DEPRECIATION = 10_000.0
+EARLY_PARTIAL_DEPRECIATION = 4_838.71
+EARLY_ACCUMULATED_DEPRECIATION = 14_838.71
+EARLY_RESIDUAL_VALUE = 105_161.29
+EARLY_SALE_VALUE = 100_000.0
+EARLY_LOSS_VALUE = 5_161.29
+OPENING_ACQUISITION_DATE = "2026-06-01"
+OPENING_ACQUISITION_VALUE = 60_000.0
+OPENING_MONTHLY_DEPRECIATION = 10_000.0
 
 
 def verify_board(observed):
@@ -45,16 +58,14 @@ def verify_board(observed):
     require(observed == BOARD, f"Asset depreciation board mismatch: {observed}")
 
 
-def verify_posted_gl(move, first, expense, contra):
-    """Tie one source line to its *posted* move and every journal line."""
+def verify_depreciation_gl(move, first, expected_amount, expense, contra):
+    """Tie one depreciation source line to its posted move and complete GL."""
     require(move.state == "posted", "Depreciation move is not posted")
     require(
         first.move_id == move and first.move_check and first.type == "depreciate",
         "Depreciation line lost posted move provenance",
     )
-    expected_amount = dict(BOARD).get(first.line_date.isoformat())
-    require(expected_amount is not None and first.amount == expected_amount,
-            "Depreciation amount differs from board")
+    require(first.amount == expected_amount, "Depreciation amount differs from board")
     gl = [(line.account_id.id, line.debit, line.credit, line.balance)
           for line in move.line_ids]
     expected = [
@@ -67,6 +78,13 @@ def verify_posted_gl(move, first, expense, contra):
             "Depreciation journal company differs from asset")
     require(move.date == first.line_date,
             "Depreciation journal date differs from asset line")
+
+
+def verify_posted_gl(move, first, expense, contra):
+    """Tie one standard-board source line to its posted move and complete GL."""
+    expected_amount = dict(BOARD).get(first.line_date.isoformat())
+    require(expected_amount is not None, "Depreciation date is outside the board")
+    verify_depreciation_gl(move, first, expected_amount, expense, contra)
 
 
 def verify_cutoff_gl(lines, source, expected_amounts, expense, contra):
@@ -89,16 +107,23 @@ def verify_cutoff_gl(lines, source, expected_amounts, expense, contra):
             f"Depreciation cutoff GL coverage mismatch: {observed} != {expected}")
 
 
-def verify_acquisition_gl(asset, bill, cost_account, payable_account):
+def verify_acquisition_gl(
+    asset,
+    bill,
+    cost_account,
+    payable_account,
+    expected_value=ACQUISITION_VALUE,
+    expected_date=ACQUISITION_DATE,
+):
     """Tie the acquisition base line to a posted bill that capitalized it."""
     require(
         bill.state == "posted" and bill.move_type == "in_invoice",
         "Acquisition is not a posted vendor bill",
     )
     require(
-        str(bill.date) == ACQUISITION_DATE
-        and str(bill.invoice_date) == ACQUISITION_DATE,
-        f"Acquisition bill date differs from {ACQUISITION_DATE}",
+        str(bill.date) == expected_date
+        and str(bill.invoice_date) == expected_date,
+        f"Acquisition bill date differs from {expected_date}",
     )
     require(
         bill.journal_id.type == "purchase",
@@ -116,15 +141,15 @@ def verify_acquisition_gl(asset, bill, cost_account, payable_account):
         "Acquisition base line is not linked to the posted bill",
     )
     require(
-        create.amount == asset.purchase_value == ACQUISITION_VALUE,
+        create.amount == asset.purchase_value == expected_value,
         "Acquisition base amount differs from the bill value",
     )
     require(
-        str(create.line_date) == ACQUISITION_DATE,
+        str(create.line_date) == expected_date,
         "Acquisition base date differs from the bill date",
     )
     require(
-        asset.code == bill.name and str(asset.date_start) == ACQUISITION_DATE,
+        asset.code == bill.name and str(asset.date_start) == expected_date,
         "Asset identity/start date does not follow the acquisition bill",
     )
     require(
@@ -146,13 +171,13 @@ def verify_acquisition_gl(asset, bill, cost_account, payable_account):
         "Acquisition bill line is not posted on the asset cost account",
     )
     require(
-        linked.debit == ACQUISITION_VALUE
+        linked.debit == expected_value
         and linked.credit == 0.0
-        and linked.balance == ACQUISITION_VALUE,
+        and linked.balance == expected_value,
         "Acquisition bill line does not debit the full asset value",
     )
     require(
-        str(linked.date) == ACQUISITION_DATE,
+        str(linked.date) == expected_date,
         "Capitalizing bill line date differs from the acquisition date",
     )
     lines = list(bill.line_ids)
@@ -173,12 +198,12 @@ def verify_acquisition_gl(asset, bill, cost_account, payable_account):
     payable = payable_lines[0]
     require(
         payable.debit == 0.0
-        and payable.credit == ACQUISITION_VALUE
-        and payable.balance == -ACQUISITION_VALUE,
+        and payable.credit == expected_value
+        and payable.balance == -expected_value,
         "Acquisition bill does not credit the payable for the full value",
     )
     require(
-        str(payable.date) == ACQUISITION_DATE,
+        str(payable.date) == expected_date,
         "Acquisition payable line date differs from the acquisition date",
     )
     require(
@@ -236,6 +261,95 @@ def verify_disposal_gl(asset, removal, move, cost_account, accumulated_account):
     )
 
 
+def verify_early_disposal_gl(
+    asset,
+    removal,
+    move,
+    cost_account,
+    accumulated_account,
+    sale_account,
+    loss_account,
+):
+    """Tie an early removal with residual value and loss to its complete GL."""
+    require(
+        asset.state == "removed" and str(asset.date_remove) == EARLY_REMOVAL_DATE,
+        "Early-disposal asset state/date mismatch",
+    )
+    require(
+        removal.type == "remove" and removal.move_id == move and removal.move_check,
+        "Early-removal line lost posted move provenance",
+    )
+    require(
+        removal.amount == EARLY_RESIDUAL_VALUE
+        and str(removal.line_date) == EARLY_REMOVAL_DATE,
+        "Early-removal line residual/date mismatch",
+    )
+    require(move.state == "posted", "Early-removal journal entry is not posted")
+    require(
+        str(move.date) == EARLY_REMOVAL_DATE
+        and move.company_id == asset.company_id
+        and move.journal_id == asset.profile_id.journal_id,
+        "Early-removal journal date/company/profile journal mismatch",
+    )
+    gl = [
+        (line.account_id.id, line.debit, line.credit, line.balance)
+        for line in move.line_ids
+    ]
+    expected = [
+        (
+            accumulated_account.id,
+            EARLY_ACCUMULATED_DEPRECIATION,
+            0.0,
+            EARLY_ACCUMULATED_DEPRECIATION,
+        ),
+        (
+            cost_account.id,
+            0.0,
+            EARLY_ACQUISITION_VALUE,
+            -EARLY_ACQUISITION_VALUE,
+        ),
+        (sale_account.id, EARLY_SALE_VALUE, 0.0, EARLY_SALE_VALUE),
+        (loss_account.id, EARLY_LOSS_VALUE, 0.0, EARLY_LOSS_VALUE),
+    ]
+    require(
+        len(gl) == 4 and sorted(gl) == sorted(expected),
+        f"Early-removal GL posting mismatch: {gl}",
+    )
+    require(
+        asset.currency_id.round(sum(line.balance for line in move.line_ids)) == 0,
+        "Early-removal journal entry is unbalanced",
+    )
+
+
+def verify_register_rollforward(source, gl, currency):
+    """Reconcile independently-derived source and GL rollforward buckets."""
+    keys = ("opening", "additions", "disposals", "depreciation", "closing")
+    require(set(source) == set(keys), f"Register source buckets mismatch: {source}")
+    require(set(gl) == set(keys), f"Register GL buckets mismatch: {gl}")
+    for key in keys:
+        require(
+            currency.round(source[key]) == currency.round(gl[key]),
+            f"Register {key} source/GL mismatch: {source[key]} != {gl[key]}",
+        )
+    source_equation = currency.round(
+        source["opening"]
+        + source["additions"]
+        - source["disposals"]
+        - source["depreciation"]
+    )
+    gl_equation = currency.round(
+        gl["opening"] + gl["additions"] - gl["disposals"] - gl["depreciation"]
+    )
+    require(
+        source_equation == currency.round(source["closing"]),
+        f"Register source rollforward does not close: {source_equation}",
+    )
+    require(
+        gl_equation == currency.round(gl["closing"]),
+        f"Register GL rollforward does not close: {gl_equation}",
+    )
+
+
 def run(env):
     require(
         env.cr.dbname == "finance_i0_assets_disposable",
@@ -272,7 +386,10 @@ def run(env):
     )
 
     evidence = {
-        "scope": "FIN36 OCA source install/upgrade and lifecycle spike; not FIN36 acceptance",
+        "scope": (
+            "FIN36 OCA lifecycle/register rollforward spike; "
+            "not FIN36 acceptance"
+        ),
         "module_closure": sorted(installed),
         "cases": [],
     }
@@ -424,6 +541,339 @@ def run(env):
                 asset, removal, removal_move, cost_account, accounts["tax_input"],
             )
 
+            # A third asset provides a non-zero opening and closing net book
+            # value. Its June acquisition and depreciation precede the report
+            # period; only July depreciation is a period movement.
+            opening_profile = env["account.asset.profile"].with_company(company).create({
+                "name": "FIN36 opening-balance profile",
+                "company_id": company.id,
+                "account_asset_id": cost_account.id,
+                "account_depreciation_id": accounts["tax_input"].id,
+                "account_expense_depreciation_id": accounts["expense"].id,
+                "journal_id": journal.id,
+                "method": "linear",
+                "method_time": "number",
+                "method_number": 6,
+                "method_period": "month",
+            })
+            opening_bill = env["account.move"].with_company(company).create({
+                "move_type": "in_invoice",
+                "partner_id": partner.id,
+                "invoice_date": OPENING_ACQUISITION_DATE,
+                "date": OPENING_ACQUISITION_DATE,
+                "journal_id": purchase_journal.id,
+                "invoice_line_ids": [(0, 0, {
+                    "name": "FIN36 opening-balance acquisition",
+                    "account_id": cost_account.id,
+                    "quantity": 1.0,
+                    "price_unit": OPENING_ACQUISITION_VALUE,
+                })],
+            })
+            opening_bill.invoice_line_ids.write({
+                "asset_profile_id": opening_profile.id,
+            })
+            opening_bill.action_post()
+            opening_assets = env["account.asset"].with_company(company).search([
+                ("company_id", "=", company.id),
+                ("profile_id", "=", opening_profile.id),
+            ])
+            require(
+                len(opening_assets) == 1,
+                f"Opening bill must create exactly one asset: {opening_assets}",
+            )
+            opening_asset = opening_assets
+            opening_asset.validate()
+            opening_asset.invalidate_recordset()
+            verify_acquisition_gl(
+                opening_asset,
+                opening_bill,
+                cost_account,
+                accounts["ap"],
+                expected_value=OPENING_ACQUISITION_VALUE,
+                expected_date=OPENING_ACQUISITION_DATE,
+            )
+            opening_board = opening_asset.depreciation_line_ids.filtered(
+                lambda line: line.type == "depreciate",
+            ).sorted(key=lambda line: (line.line_date, line.id))
+            require(
+                len(opening_board) == 6
+                and [line.amount for line in opening_board[:2]]
+                == [OPENING_MONTHLY_DEPRECIATION] * 2
+                and [str(line.line_date) for line in opening_board[:2]]
+                == ["2026-06-30", "2026-07-31"],
+                f"Opening asset board mismatch: {opening_board[:2]}",
+            )
+            for opening_line in opening_board[:2]:
+                opening_move_ids = opening_line.create_move()
+                require(
+                    len(opening_move_ids) == 1,
+                    "Expected one posted move per opening-asset depreciation",
+                )
+                opening_line.invalidate_recordset()
+                verify_depreciation_gl(
+                    opening_line.move_id,
+                    opening_line,
+                    OPENING_MONTHLY_DEPRECIATION,
+                    accounts["expense"],
+                    accounts["tax_input"],
+                )
+            opening_asset.invalidate_recordset()
+            require(
+                opening_asset.value_residual == 40_000.0,
+                "Opening asset must retain 40,000 closing net book value",
+            )
+
+            # A zero-residual removal cannot prove how an in-period disposal
+            # affects net book value.  Create a second asset with a 12-month
+            # board, post July, then remove it mid-August for less than its
+            # residual value.  OCA must post the prorated final depreciation
+            # and preserve the residual/loss in the separate removal journal.
+            early_profile = env["account.asset.profile"].with_company(company).create({
+                "name": "FIN36 early-disposal profile",
+                "company_id": company.id,
+                "account_asset_id": cost_account.id,
+                "account_depreciation_id": accounts["tax_input"].id,
+                "account_expense_depreciation_id": accounts["expense"].id,
+                "journal_id": journal.id,
+                "method": "linear",
+                "method_time": "number",
+                "method_number": 12,
+                "method_period": "month",
+            })
+            early_bill = env["account.move"].with_company(company).create({
+                "move_type": "in_invoice",
+                "partner_id": partner.id,
+                "invoice_date": ACQUISITION_DATE,
+                "date": ACQUISITION_DATE,
+                "journal_id": purchase_journal.id,
+                "invoice_line_ids": [(0, 0, {
+                    "name": "FIN36 early-disposal acquisition",
+                    "account_id": cost_account.id,
+                    "quantity": 1.0,
+                    "price_unit": EARLY_ACQUISITION_VALUE,
+                })],
+            })
+            early_bill.invoice_line_ids.write({"asset_profile_id": early_profile.id})
+            early_bill.action_post()
+            early_assets = env["account.asset"].with_company(company).search([
+                ("company_id", "=", company.id),
+                ("profile_id", "=", early_profile.id),
+            ])
+            require(
+                len(early_assets) == 1,
+                f"Early-disposal bill must create exactly one asset: {early_assets}",
+            )
+            early_asset = early_assets
+            early_asset.validate()
+            early_asset.invalidate_recordset()
+            verify_acquisition_gl(
+                early_asset,
+                early_bill,
+                cost_account,
+                accounts["ap"],
+                expected_value=EARLY_ACQUISITION_VALUE,
+            )
+            early_board = early_asset.depreciation_line_ids.filtered(
+                lambda line: line.type == "depreciate",
+            ).sorted(key=lambda line: (line.line_date, line.id))
+            require(
+                len(early_board) == 12
+                and early_board[0].amount == EARLY_REGULAR_DEPRECIATION
+                and str(early_board[0].line_date) == "2026-07-31",
+                f"Early-disposal board first period mismatch: {early_board[:1]}",
+            )
+            july_move_ids = early_board[0].create_move()
+            require(len(july_move_ids) == 1, "Expected one July depreciation move")
+            early_asset.invalidate_recordset()
+            require(
+                early_asset.value_residual == 110_000.0,
+                "Early-disposal asset residual after July must be 110,000",
+            )
+
+            early_action = early_asset.remove()
+            require(
+                early_action["context"].get("early_removal") is True,
+                "Open asset removal must enter the early-removal path",
+            )
+            early_wizard = (
+                env["account.asset.remove"]
+                .with_company(company)
+                .with_context(**early_action["context"])
+                .create({
+                    "date_remove": EARLY_REMOVAL_DATE,
+                    "sale_value": EARLY_SALE_VALUE,
+                    "posting_regime": "gain_loss_on_sale",
+                    "account_sale_id": accounts["cash"].id,
+                    "account_plus_value_id": accounts["revenue"].id,
+                    "account_min_value_id": accounts["expense"].id,
+                    "company_id": company.id,
+                })
+            )
+            early_wizard.remove()
+            early_asset.invalidate_recordset()
+            early_depreciation = early_asset.depreciation_line_ids.filtered(
+                lambda line: line.type == "depreciate",
+            ).sorted(key=lambda line: (line.line_date, line.id))
+            require(
+                len(early_depreciation) == 2
+                and [line.amount for line in early_depreciation]
+                == [EARLY_REGULAR_DEPRECIATION, EARLY_PARTIAL_DEPRECIATION]
+                and [str(line.line_date) for line in early_depreciation]
+                == ["2026-07-31", "2026-08-15"]
+                and all(line.move_check for line in early_depreciation),
+                f"Early-removal prorated depreciation mismatch: {early_depreciation}",
+            )
+            for early_line, expected_amount in zip(
+                early_depreciation,
+                [EARLY_REGULAR_DEPRECIATION, EARLY_PARTIAL_DEPRECIATION],
+            ):
+                verify_depreciation_gl(
+                    early_line.move_id,
+                    early_line,
+                    expected_amount,
+                    accounts["expense"],
+                    accounts["tax_input"],
+                )
+            early_removal = early_asset.depreciation_line_ids.filtered(
+                lambda line: line.type == "remove",
+            )
+            require(len(early_removal) == 1, "Expected one early-removal line")
+            early_removal_move = early_removal.move_id
+            require(
+                early_removal_move.state == "draft",
+                "Early-removal wizard must leave the removal journal in draft",
+            )
+            early_removal_move.with_context(
+                allow_asset=True, allow_asset_removal=True,
+            ).action_post()
+            early_asset.invalidate_recordset()
+            early_removal.invalidate_recordset()
+            early_removal_move.invalidate_recordset()
+            verify_early_disposal_gl(
+                early_asset,
+                early_removal,
+                early_removal_move,
+                cost_account,
+                accounts["tax_input"],
+                accounts["cash"],
+                accounts["expense"],
+            )
+
+            period_start, period_end = "2026-07-01", REMOVAL_DATE
+            fixture_assets = asset | early_asset | opening_asset
+            fixture_lines = fixture_assets.depreciation_line_ids
+            before_period = fixture_lines.filtered(
+                lambda line: line.move_check and str(line.line_date) < period_start,
+            )
+            create_in_period = fixture_lines.filtered(
+                lambda line: line.type == "create"
+                and period_start <= str(line.line_date) <= period_end,
+            )
+            depreciation_in_period = fixture_lines.filtered(
+                lambda line: line.type == "depreciate"
+                and line.move_check
+                and period_start <= str(line.line_date) <= period_end,
+            )
+            removals_in_period = fixture_lines.filtered(
+                lambda line: line.type == "remove"
+                and line.move_check
+                and period_start <= str(line.line_date) <= period_end,
+            )
+            require(
+                len(create_in_period) == 2
+                and all(
+                    line.move_id.state == "posted"
+                    and line.move_id.move_type == "in_invoice"
+                    and line.move_id.date == line.line_date
+                    and line.asset_id.company_id == company
+                    for line in create_in_period
+                ),
+                "Register additions lost posted bill/date/company provenance",
+            )
+            require(
+                len(depreciation_in_period) == 6
+                and all(
+                    line.move_id.state == "posted"
+                    and line.move_id.date == line.line_date
+                    and line.asset_id.company_id == company
+                    for line in depreciation_in_period
+                ),
+                "Register depreciation lost posted move/date/company provenance",
+            )
+            require(
+                len(removals_in_period) == 2
+                and all(
+                    line.move_id.state == "posted"
+                    and line.move_id.date == line.line_date
+                    and line.asset_id.company_id == company
+                    for line in removals_in_period
+                ),
+                "Register disposals lost posted move/date/company provenance",
+            )
+            source_rollforward = {
+                "opening": company.currency_id.round(
+                    sum(
+                        line.amount if line.type == "create" else -line.amount
+                        for line in before_period
+                        if line.type in ("create", "depreciate", "remove")
+                    ),
+                ),
+                "additions": company.currency_id.round(
+                    sum(create_in_period.mapped("amount")),
+                ),
+                "disposals": company.currency_id.round(
+                    sum(removals_in_period.mapped("amount")),
+                ),
+                "depreciation": company.currency_id.round(
+                    sum(depreciation_in_period.mapped("amount")),
+                ),
+                "closing": company.currency_id.round(
+                    sum(fixture_assets.mapped("value_residual")),
+                ),
+            }
+            account_domain = [
+                ("company_id", "=", company.id),
+                ("parent_state", "=", "posted"),
+                ("account_id", "in", [cost_account.id, accounts["tax_input"].id]),
+            ]
+            opening_aml = env["account.move.line"].with_company(company).search(
+                account_domain + [("date", "<", period_start)],
+            )
+            posted_aml = env["account.move.line"].with_company(company).search([
+                *account_domain,
+                ("date", ">=", period_start),
+                ("date", "<=", period_end),
+            ])
+            closing_aml = env["account.move.line"].with_company(company).search(
+                account_domain + [("date", "<=", period_end)],
+            )
+            cost_rows = posted_aml.filtered(lambda row: row.account_id == cost_account)
+            accumulated_rows = posted_aml.filtered(
+                lambda row: row.account_id == accounts["tax_input"],
+            )
+            gl_rollforward = {
+                "opening": sum(opening_aml.mapped("balance")),
+                "additions": sum(cost_rows.mapped("debit")),
+                "disposals": sum(cost_rows.mapped("credit"))
+                - sum(accumulated_rows.mapped("debit")),
+                "depreciation": sum(accumulated_rows.mapped("credit")),
+                "closing": sum(closing_aml.mapped("balance")),
+            }
+            expected_rollforward = {
+                "opening": 50_000.0,
+                "additions": 220_001.0,
+                "disposals": EARLY_RESIDUAL_VALUE,
+                "depreciation": 124_839.71,
+                "closing": 40_000.0,
+            }
+            require(
+                source_rollforward == expected_rollforward,
+                f"Register source expected values mismatch: {source_rollforward}",
+            )
+            verify_register_rollforward(
+                source_rollforward, gl_rollforward, company.currency_id,
+            )
+
             evidence["cases"].extend([
                 {"case": "monthly_board_with_final_remainder", "result": "PASS",
                  "periods": observed_board},
@@ -440,6 +890,16 @@ def run(env):
                  "cost_credit": ACQUISITION_VALUE,
                  "accumulated_debit": ACQUISITION_VALUE,
                  "residual": 0.0},
+                {"case": "early_disposal_residual_and_loss_to_posted_gl",
+                 "result": "PASS",
+                 "removal_move_id": early_removal_move.id,
+                 "partial_depreciation": EARLY_PARTIAL_DEPRECIATION,
+                 "residual": EARLY_RESIDUAL_VALUE,
+                 "sale_value": EARLY_SALE_VALUE,
+                 "loss": EARLY_LOSS_VALUE},
+                {"case": "fixed_asset_register_rollforward_to_gl",
+                 "result": "PASS", "period": [period_start, period_end],
+                 **source_rollforward},
             ])
             raise RollbackAssetSpike()
     except RollbackAssetSpike:

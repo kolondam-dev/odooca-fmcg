@@ -1,3 +1,31 @@
+## 2026-11-26T15:06:13+07:00 — Agent Codex-Cloud1 — PR #110: integrasi main setelah correctness PASS
+
+**Berubah:**
+- Integrasikan `main` `ac9c5fe`. Konflik hanya pada HANDOFF dan kedua riwayat dipertahankan. Log dari kedua cabang tetap ada.
+- Catat bukti PASS tiga gate sumber pada `b258705`. Rekomendasi UNKNOWN picking/packing, trip dan driver serta pemisahan K5 tercatat dalam matriks, dengan keputusan pemilik eksplisit masih diperlukan.
+**Diverifikasi:**
+- [F] 137 tes Python, Ruff dan manifest lulus. Register, loader, verifier dan workflow F4 tidak berubah akibat integrasi.
+**Belum diuji:**
+- [BU] CI/F4 exact SHA integrasi dan re-review supervisor.
+**Berikutnya:**
+- Pantau CI dan tautkan artefak. Verdict merge berada pada supervisor/reviewer.
+
+## 2026-11-26 — [F] FIN36 PR #202 CI rerun dan sinkronisasi strict-main (opencode)
+
+- [F] Exact head historis `f9eeddd7f0e81ec7c35b02b527f5c7c1c7bffa1a`: Finance I0 run `45648307014` SUCCESS dengan artifact `finance-i0-candidate-evidence` id `15038838267`; early disposal residual/loss, register rollforward ke GL, lifecycle lama, dan rollback PASS.
+- [F] CI run `45648306479` attempt 2 pada SHA yang sama SUCCESS. Kegagalan attempt 1 terisolasi pada tes WMS yang menyeberangi tengah malam WITA; rerun tanpa perubahan kode/oracle menutupnya. Rekap 29 check: 22 SUCCESS / 7 SKIPPED; Full Dataset Disposable Runtime Proof tetap SKIPPED.
+- [F] Ruleset `main-quality-gate` mewajibkan strict required checks. Branch digabung dengan `origin/main` `ef97d1f`; perubahan upstream hanya dokumentasi/log BE-20d dan jalur oracle FIN36 tetap byte-identik. Exact-SHA CI/artifact hasil sinkronisasi masih [BU] sampai run baru selesai.
+- [BU] Dampak test tetap TAMBAH dan perlu re-review independen. FIN36 keseluruhan, Full Dataset runtime, aktivasi/lisensi produksi, populasi nyata, mapping Controller, ACL/export/live, sign-off, merge, dan deployment tetap HOLD.
+
+## 2026-11-25 — [BU] FIN36 register rollforward + early disposal (opencode)
+
+- [F] PR #199 merged ke `main` sebagai `23a41087eaf7fa7a222b0c38e05fe81e807107ee` (head uji `6ce53e66b2a71f774c4e1d1d1d9314a4b4f8e4fb`); 22 SUCCESS / 7 SKIPPED, Full Dataset runtime SKIPPED. Finance I0 artifact yang benar: `finance-i0-candidate-evidence` id `15034796540` (bukan `15034796544`, yang merupakan artifact Docker build). P2 tanggal/jurnal/akun lawan/nilai/relasi kapitalisasi tertutup; dampak test reviewer CUKUP. FIN36 keseluruhan dan deployment tetap HOLD; katalog 58/58 `BELUM_DITERIMA`.
+- [BU] Branch `agen/opencode-fin36-register-early-disposal` menambah aset opening 60.000 (NBV opening 50.000, closing 40.000) dan aset early disposal 120.000: depresiasi Juli 10.000, removal 16 Agustus dengan depresiasi parsial 4.838,71, residual 105.161,29, nilai jual 100.000 dan rugi 5.161,29. Oracle mengikat jurnal depresiasi parsial serta empat baris removal GL, lalu merekonsiliasi register tiga aset `opening + additions − disposals − depreciation = closing` terhadap bucket GL independen. Runtime exact-SHA belum dijalankan.
+- [F] Counterexample offline menolak residual/GL early disposal yang salah, extra line, draft removal, mismatch setiap bucket register, dan tamper seimbang additions+depreciation. Tidak ada addon/dependensi produksi, data live, atau perubahan katalog.
+- [BU] Populasi aset nyata, mapping Controller, lisensi AGPL-3 produksi, ACL/export/live dan sign-off Controller+QA tetap HOLD.
+
+## 2026-11-25 — [F] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
+
 ## 2026-11-26T08:05:55+07:00 — Agent Codex-Cloud1 — PR #110: pertahankan PKP sumber saat VAT berubah
 
 **Berubah:**
