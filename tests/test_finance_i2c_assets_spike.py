@@ -366,6 +366,128 @@ class AssetSpikeOracleTest(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "source rollforward"):
             spike.verify_register_rollforward(source_bad, source_bad, currency)
 
+    def test_population_row_excludes_draft_and_post_cutoff_sources(self):
+        company = SimpleNamespace(id=41)
+        asset = SimpleNamespace(id=51, company_id=company)
+
+        def source(source_id, source_type, amount, source_date, posted=True):
+            move = SimpleNamespace(
+                id=source_id + 100,
+                state="posted" if posted else "draft",
+                date=source_date,
+            )
+            return SimpleNamespace(
+                id=source_id,
+                type=source_type,
+                amount=amount,
+                line_date=source_date,
+                move_check=posted,
+                move_id=move,
+                asset_id=asset,
+                company_id=company,
+            )
+
+        asset.depreciation_line_ids = [
+            source(1, "create", 60_000.0, date(2026, 6, 1)),
+            source(2, "depreciate", 10_000.0, date(2026, 6, 30)),
+            source(3, "depreciate", 10_000.0, date(2026, 7, 31)),
+            source(4, "depreciate", 10_000.0, date(2026, 8, 31), posted=False),
+            source(5, "depreciate", 10_000.0, date(2026, 11, 30)),
+            source(6, "remove", 40_000.0, date(2026, 11, 15)),
+        ]
+        row = spike.register_population_row(asset, "2026-07-01", "2026-10-31")
+        self.assertEqual(
+            {key: row[key] for key in spike.REGISTER_KEYS},
+            {
+                "opening": 50_000.0,
+                "additions": 0.0,
+                "disposals": 0.0,
+                "depreciation": 10_000.0,
+                "closing": 40_000.0,
+            },
+        )
+        self.assertEqual(row["source_line_ids"], (1, 2, 3))
+
+    def test_population_requires_exact_assets_company_and_unique_sources(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        expected = {
+            11: {
+                "opening": 50_000.0, "additions": 0.0,
+                "disposals": 0.0, "depreciation": 10_000.0,
+                "closing": 40_000.0, "source_count": 3,
+            },
+            12: {
+                "opening": 0.0, "additions": 120_000.0,
+                "disposals": 105_161.29, "depreciation": 14_838.71,
+                "closing": 0.0, "source_count": 4,
+            },
+        }
+        rows = [
+            {
+                "asset_id": 11, "company_id": 7,
+                "opening": 50_000.0, "additions": 0.0,
+                "disposals": 0.0, "depreciation": 10_000.0,
+                "closing": 40_000.0,
+                "source_line_ids": (1, 2, 3),
+                "source_move_ids": (101, 102, 103),
+            },
+            {
+                "asset_id": 12, "company_id": 7,
+                "opening": 0.0, "additions": 120_000.0,
+                "disposals": 105_161.29, "depreciation": 14_838.71,
+                "closing": 0.0,
+                "source_line_ids": (4, 5, 6, 7),
+                "source_move_ids": (104, 105, 106, 107),
+            },
+        ]
+        totals = spike.verify_register_population(rows, expected, 7, currency)
+        self.assertEqual(totals["closing"], 40_000.0)
+
+        with self.assertRaisesRegex(AssertionError, "coverage mismatch"):
+            spike.verify_register_population(rows[:1], expected, 7, currency)
+        with self.assertRaisesRegex(AssertionError, "duplicate assets"):
+            spike.verify_register_population(rows + [dict(rows[0])], expected, 7, currency)
+
+        cross_company = [dict(row) for row in rows]
+        cross_company[1]["company_id"] = 8
+        with self.assertRaisesRegex(AssertionError, "crosses company"):
+            spike.verify_register_population(cross_company, expected, 7, currency)
+
+        reused = [dict(row) for row in rows]
+        reused[1]["source_line_ids"] = (3, 5, 6, 7)
+        with self.assertRaisesRegex(AssertionError, "reuses a source line"):
+            spike.verify_register_population(reused, expected, 7, currency)
+
+    def test_population_rejects_correct_aggregate_with_wrong_asset_composition(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        expected = {
+            11: {
+                "opening": 50.0, "additions": 0.0, "disposals": 0.0,
+                "depreciation": 10.0, "closing": 40.0, "source_count": 1,
+            },
+            12: {
+                "opening": 0.0, "additions": 100.0, "disposals": 20.0,
+                "depreciation": 30.0, "closing": 50.0, "source_count": 1,
+            },
+        }
+        rows = [
+            {
+                "asset_id": 11, "company_id": 7,
+                "opening": 50.0, "additions": 1.0, "disposals": 0.0,
+                "depreciation": 11.0, "closing": 40.0,
+                "source_line_ids": (1,), "source_move_ids": (101,),
+            },
+            {
+                "asset_id": 12, "company_id": 7,
+                "opening": 0.0, "additions": 99.0, "disposals": 20.0,
+                "depreciation": 29.0, "closing": 50.0,
+                "source_line_ids": (2,), "source_move_ids": (102,),
+            },
+        ]
+        # Aggregate additions/depreciation and both closing values still match.
+        with self.assertRaisesRegex(AssertionError, "asset 11 additions mismatch"):
+            spike.verify_register_population(rows, expected, 7, currency)
+
 
 if __name__ == "__main__":
     unittest.main()

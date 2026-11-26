@@ -23,10 +23,13 @@
 > akun akumulasi/biaya perolehan 100.001,00. [F] PR #199 merged ke `main`
 > sebagai `23a4108` (head uji `6ce53e6`), 22 SUCCESS / 7 SKIPPED; artifact
 > Finance I0 yang benar adalah `15034796540` (`15034796544` adalah artifact
-> Docker build). [BU] Slice berikutnya menguji rollforward register tiga aset
-> (opening/closing nonnol) dan early disposal ber-residual/gain-loss di DB
-> disposable. Tetap tanpa
-> dependensi atau aktivasi produksi; FIN36 belum diterima.
+> Docker build). [F] PR #202 merged sebagai `ac9c5fe` (head uji `b869e2b`),
+> review final PASS/CUKUP dengan 22 SUCCESS / 7 SKIPPED; Finance I0 dan rollback
+> PASS. Register tiga aset (opening/closing nonnol) dan early disposal
+> residual/loss telah terikat ke GL disposable. [BU] Slice berikutnya mengunci
+> coverage exact per aset/source, cutoff dan isolasi dua company. Tetap tanpa
+> dependensi atau aktivasi produksi; Full Dataset runtime belum dijalankan dan
+> FIN36 belum diterima.
 
 ## Scope dan status
 

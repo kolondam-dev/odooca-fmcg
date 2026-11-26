@@ -1,3 +1,9 @@
+## 2026-11-26 — [BU] FIN36 PR #204 sinkronisasi strict-main (opencode)
+
+- [F] Review head `d6473ae147476e2d83a4235057f044c555f338b3` PASS dengan dampak test CUKUP; 86 tes I2c diulang reviewer dan PASS, CI 22 SUCCESS / 7 SKIPPED. Finance I0 artifact `15081087455` menutup populasi/cutoff/company/salvage/GL/rollback; Full Dataset runtime SKIPPED.
+- [F] `origin/main` maju dari `ac9c5fe` ke `57a5cb2` melalui PR #203 dan #110. Konflik hanya `docs/HANDOFF.md`; seluruh riwayat kedua sisi dipertahankan. Oracle dan tes FIN36 byte-identik dengan reviewed head; delta upstream Finance I0 hanya memperjelas healthcheck PostgreSQL memakai DB `postgres`.
+- [BU] Exact-SHA CI integrasi dan review delta masih wajib. Penerimaan FIN36, Full Dataset, produksi, katalog, deployment dan merge tetap HOLD; pemilik akan merge setelah delta review dan CI lulus tanpa izin ulang.
+
 ## 2026-11-26T15:27:06+07:00 — Agent Codex-Cloud1 — PR #110: keputusan batas sumber akhir
 
 **Berubah:**
@@ -31,6 +37,14 @@
 - [BU] CI/F4 exact SHA integrasi dan re-review supervisor.
 **Berikutnya:**
 - Pantau CI dan tautkan artefak. Verdict merge berada pada supervisor/reviewer.
+
+## 2026-11-26 — [BU] FIN36 population coverage + cutoff/multi-company isolation (opencode)
+
+- [F] PR #202 merged ke `main` sebagai `ac9c5fe8b4880b0042c3f02d057b94d223fc4a76` (head uji `b869e2bd9e4b07b68aef3691ebfc997f5cb92e32`); review final PASS/CUKUP, 22 SUCCESS / 7 SKIPPED. Finance I0 dan rollback PASS; Full Dataset runtime SKIPPED. Early disposal residual/loss dan rollforward register→GL disposable tertutup, bukan acceptance FIN36.
+- [BU] Branch `agen/opencode-fin36-population-isolation` mengganti agregasi tiga aset terpilih dengan coverage exact per asset/source-line/source-move pada populasi hasil pencarian. Fixture menambah company kedua dengan salvage value 4.000, draft GL noise, dan acquisition setelah cutoff; oracle merekonsiliasi rollforward dan GL per company tanpa netting lintas aset/company.
+- [F] Sebelas tes offline menolak aset hilang/duplikat, source reuse, company leakage, komposisi per-aset salah walau agregat benar, serta draft dan acquisition/depreciation/disposal setelah cutoff. Ruff dan compile PASS lokal; runtime Odoo/Finance I0 exact-SHA masih [BU].
+- [F] Finance I0 head awal `1873deb` gagal fail-closed pada fixture salvage: OCA `value_residual` adalah sisa basis depresiasi 10.000 (purchase 24.000 − salvage 4.000 − depresiasi 10.000), sedangkan NBV register/GL tetap 14.000. Ekspektasi field dikoreksi tanpa mengubah oracle closing register/GL.
+- [BU] Dampak test TAMBAH. Full Dataset, ACL/export/live, lisensi/aktivasi produksi AGPL-3, populasi aset nyata, mapping Controller, sign-off, merge, dan deployment tetap HOLD; katalog tidak diubah.
 
 ## 2026-11-26 — [F] FIN36 PR #202 CI rerun dan sinkronisasi strict-main (opencode)
 
