@@ -24,22 +24,29 @@ sdk=${ANDROID_SDK_ROOT:-}
 adb=$sdk/platform-tools/adb
 emulator=$sdk/emulator/emulator
 
+source android/tools/dev02a_cleanup.sh
 source android/tools/dev02a_backend.sh
 cleanup() {
-    local result=$? failed=0
+    local result=$? failed=0 resource
     trap - EXIT
     trap '' INT TERM
-    if [[ "$reverse" == true ]]; then timeout 5 "$adb" reverse --remove tcp:18443 >/dev/null 2>&1 || true; fi
-    if [[ -n "$emulator_pid" ]]; then
-        timeout 10 "$adb" emu kill >/dev/null 2>&1 || true
-        kill "$emulator_pid" 2>/dev/null || true
-        wait "$emulator_pid" 2>/dev/null || true
-        if kill -0 "$emulator_pid" 2>/dev/null; then failed=1; fi
-        if ! timeout 10 "$adb" devices > "$scratch/devices" ||
-            grep -q "^$ANDROID_SERIAL[[:space:]]" "$scratch/devices"; then failed=1; fi
+    local report=$evidence/cleanup.tsv
+    printf 'resource\tstatus\tdetail\n' > "$report" || failed=1
+    cleanup_emulator >> "$report" || failed=1
+    if [[ "$backend_started" == true ]]; then
+        backend_cleanup >> "$report" || failed=1
+    else
+        for resource in gateway_process gateway_listener docker_containers docker_volumes docker_networks; do
+            cleanup_record "$resource" not_started - >> "$report" || failed=1
+        done
     fi
-    if [[ "$backend_started" == true ]]; then backend_cleanup > "$scratch/cleanup.log" 2>&1 || failed=1; fi
-    rm -rf -- "$scratch" || failed=1
+    if rm -rf -- "$scratch" && [[ ! -e "$scratch" && ! -L "$scratch" ]]; then
+        cleanup_record temporary_directory removed - >> "$report" || failed=1
+    else
+        cleanup_record temporary_directory remaining - >> "$report" || true
+        failed=1
+    fi
+    [[ -s "$report" && "$(wc -l < "$report")" == 10 ]] || failed=1
     if (( failed )); then
         printf 'cleanup=failed\nresult=failed phase=%s\n' "$phase" > "$evidence/result.txt"
         exit 1

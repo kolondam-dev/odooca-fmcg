@@ -88,20 +88,34 @@ PY
 }
 
 backend_cleanup() {
-    local status=0 containers volumes networks id
+    local status=0
     if [[ -n "$backend_tls" ]]; then
-        kill "$backend_tls" 2>/dev/null || true
-        wait "$backend_tls" 2>/dev/null || true
+        if stop_owned_process "$backend_tls"; then
+            cleanup_record gateway_process removed -
+        else
+            cleanup_record gateway_process remaining -
+            status=1
+        fi
+        # A successful connection means the fixture port is still occupied.
+        local port_status=0
+        python3 -c 'import errno, socket, sys
+with socket.socket() as connection:
+    connection.settimeout(2)
+    result = connection.connect_ex(("127.0.0.1", 18443))
+sys.exit(0 if result == errno.ECONNREFUSED else 1 if result == 0 else 2)
+' >/dev/null 2>&1 || port_status=$?
+        case "$port_status" in
+            0) cleanup_record gateway_listener removed - ;;
+            1) cleanup_record gateway_listener remaining -; status=1 ;;
+            *) cleanup_record gateway_listener unverified -; status=1 ;;
+        esac
+    else
+        cleanup_record gateway_process not_started -
+        cleanup_record gateway_listener not_started -
     fi
-    # Query by this invocation's label even if creation was interrupted before returning an ID.
-    containers=$(docker ps -aq --filter "label=$label") || status=1
-    volumes=$(docker volume ls -q --filter "label=$label") || status=1
-    networks=$(docker network ls -q --filter "label=$label") || status=1
-    for id in $containers; do timeout 90 docker rm -fv "$id" >/dev/null || status=1; done
-    for id in $volumes; do timeout 30 docker volume rm "$id" >/dev/null || status=1; done
-    for id in $networks; do timeout 30 docker network rm "$id" >/dev/null || status=1; done
-    containers=$(docker ps -aq --filter "label=$label") || status=1
-    volumes=$(docker volume ls -q --filter "label=$label") || status=1
-    networks=$(docker network ls -q --filter "label=$label") || status=1
-    [[ $status == 0 && -z "$containers$volumes$networks" ]]
+    # Always check the run label, including interrupted creates that never returned an ID.
+    cleanup_docker_resource docker_containers ps -aq || status=1
+    cleanup_docker_resource docker_volumes volume ls -q || status=1
+    cleanup_docker_resource docker_networks network ls -q || status=1
+    return "$status"
 }

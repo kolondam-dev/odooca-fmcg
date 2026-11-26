@@ -1,3 +1,11 @@
+## 2026-11-26 — DEV-02A · Diagnostik dan verifikasi cleanup B09 (Codex-Mobile Native)
+
+- [F] Arahan `e23a0d1` diterapkan di atas `f9719ea` (basis main integrasi `57a5cb2`). Log run API 35 lama hanya memuat exit 1 untuk cleanup. Resource historis penyebab kegagalan belum dapat ditetapkan.
+- [F] Runner menerbitkan `cleanup.tsv` per resource. Unregister ADB memeriksa transport sampai hilang, termasuk status offline sementara. Gateway, reverse port, Docker dan direktori temporer diperiksa terpisah. Residu atau hasil verifikasi yang tidak tersedia tetap menggagalkan job.
+- [F] Probe host HTTPS memakai helper cleanup produksi. Jalur normal menghasilkan satu receipt accepted, satu ledger dan satu SO, serta replay tanpa perubahan. Injeksi exit 77 setelah fixture HTTPS siap juga mempertahankan hasil gagal semula. Kedua jalur mengonfirmasi listener gateway ditutup dan 0 container, volume, serta network berlabel run.
+- [F] Dampak test **TAMBAH**. Tes host mencakup unregister terlambat, transport tetap ada, inventaris ADB tidak tersedia, penghapusan Docker dengan exit sementara, serta residu atau inventaris Docker yang tidak dapat dibuktikan.
+- [BU] Unregister pada emulator nyata dan hasil job pada SHA baru menunggu rerun Lead ber-KVM. PR #201 tetap DRAFT/HOLD. Planner memilih full regression 11 suite.
+
 ## 2026-11-26T15:27:06+07:00 — Agent Codex-Cloud1 — PR #110: keputusan batas sumber akhir
 
 **Berubah:**

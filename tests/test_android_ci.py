@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 import runpy
+import subprocess
 import unittest
 import zipfile
 from pathlib import Path
@@ -303,6 +304,7 @@ class TestB09Evidence(unittest.TestCase):
         self.assertNotIn("*", paths)
         self.assertNotIn(".log", paths)
         self.assertNotIn(".pem", paths)
+        self.assertIn("/b09-evidence/cleanup.tsv", paths)
 
     def test_instrumentation_rejects_missing_skipped_failed_and_stale(self):
         case = (
@@ -386,6 +388,87 @@ class TestB09Evidence(unittest.TestCase):
         after_replay["orders"][0]["picking_ids"] = [1]
         with self.assertRaisesRegex(ValueError, "replay changed the Odoo checkpoint"):
             self.verify(self.first, self.replay, self.before, self.after, after_replay)
+
+
+class TestB09Cleanup(unittest.TestCase):
+    def run_cleanup(self, script, mode):
+        return subprocess.run(
+            ["bash", "-c", 'source android/tools/dev02a_cleanup.sh\n' + script, "test", mode],
+            cwd=ROOT, check=False, capture_output=True, text=True, timeout=10,
+        )
+
+    def test_adb_rechecks_offline_transport_and_fails_for_residue_or_unavailable_inventory(self):
+        script = r'''
+            work=$(mktemp -d)
+            trap 'rm -rf -- "$work"' EXIT
+            export COUNT="$work/count" MODE="$1" ANDROID_SERIAL=emulator-5556
+            adb="$work/adb"
+            cat > "$adb" <<'ADB'
+#!/usr/bin/env bash
+if [[ "$1" == devices ]]; then
+    if [[ "$MODE" == unavailable ]]; then exit 1; fi
+    n=$(cat "$COUNT" 2>/dev/null || echo 0)
+    echo "$((n + 1))" > "$COUNT"
+    echo 'List of devices attached'
+    if [[ "$MODE" == remaining || "$n" -lt 2 ]]; then printf 'emulator-5556\toffline\n'; fi
+    printf 'emulator-5558\tdevice\n'
+fi
+ADB
+            chmod +x "$adb"
+            true &
+            emulator_pid=$!
+            wait "$emulator_pid"
+            reverse=true
+            sleep() { :; }
+            cleanup_emulator
+        '''
+        for mode, status, expected in (
+            ("delayed", 0, "adb_unregister\tremoved\tpolls=3"),
+            ("remaining", 1, "adb_unregister\tremaining\t"),
+            ("unavailable", 1, "adb_unregister\tunverified\t"),
+        ):
+            with self.subTest(mode=mode):
+                result = self.run_cleanup(script, mode)
+                self.assertEqual(status, result.returncode, result.stderr)
+                self.assertIn(expected, result.stdout)
+                self.assertIn("emulator_process\tremoved", result.stdout)
+
+    def test_docker_requires_verified_absence_after_removal(self):
+        script = r'''
+            work=$(mktemp -d)
+            trap 'rm -rf -- "$work"' EXIT
+            export STATE="$work/removed" MODE="$1"
+            export PATH="$work:$PATH"
+            cat > "$work/docker" <<'DOCKER'
+#!/usr/bin/env bash
+case "$1" in
+    ps)
+        [[ "$3" == --filter && "$4" == label=org.odooca.b09=test ]] || exit 9
+        if [[ "$MODE" == unavailable ]]; then exit 1; fi
+        if [[ ! -f "$STATE" ]]; then echo owned; fi
+        ;;
+    rm)
+        [[ "$3" == owned ]] || exit 9
+        if [[ "$MODE" == delayed ]]; then touch "$STATE"; fi
+        exit 1
+        ;;
+    *) exit 9 ;;
+esac
+DOCKER
+            chmod +x "$work/docker"
+            sleep() { :; }
+            label=org.odooca.b09=test
+            cleanup_docker_resource docker_containers ps -aq
+        '''
+        for mode, status, expected in (
+            ("delayed", 0, "docker_containers\tremoved\tremaining=0"),
+            ("remaining", 1, "docker_containers\tremaining\tremaining=1"),
+            ("unavailable", 1, "docker_containers\tunverified\tinventory_failed"),
+        ):
+            with self.subTest(mode=mode):
+                result = self.run_cleanup(script, mode)
+                self.assertEqual(status, result.returncode, result.stderr)
+                self.assertIn(expected, result.stdout)
 
 
 if __name__ == "__main__":
