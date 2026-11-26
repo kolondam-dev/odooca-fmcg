@@ -1234,7 +1234,9 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
 
         command = self._extension_command(x=1)
         first = self._run_extension(command, handler)
-        self.assertEqual((first["status"], first["message"], first["reference"]), ("rejected", "Saldo berubah.", "REJ-1"))
+        self.assertEqual(
+            (first["status"], first["message"], first["reference"]), ("rejected", "Saldo berubah.", "REJ-1")
+        )
         self.assertFalse(self.env["res.partner"].sudo().search([("name", "=", marker)]))  # nol efek bisnis
         logged = self._logged(command["client_uuid"])
         self.assertEqual((len(logged), logged.status), (1, "rejected"))
