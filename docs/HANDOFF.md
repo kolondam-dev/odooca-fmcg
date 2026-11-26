@@ -1,3 +1,14 @@
+## 2026-11-26T08:05:55+07:00 — Agent Codex-Cloud1 — PR #110: pertahankan PKP sumber saat VAT berubah
+
+**Berubah:**
+- Kirim flag PKP sumber bersama perubahan VAT karena Odoo mengalkulasi ulang field tersebut.
+**Diverifikasi:**
+- [F] Probe lokal 1.240 profil menemukan empat NIK dengan VAT baru yang sebelumnya berubah ke PKP. Setelah koreksi, payload native lulus untuk 724 NIK, 435 NPWP16 dan 81 TIN_0 pada invoice fixture. 129 tes Python lulus.
+**Belum diuji:**
+- [BU] Audit seluruh invoice posted dan tiga gate pada F4 exact SHA.
+**Berikutnya:**
+- Pantau F4 dan pertahankan HOLD untuk penilaian supervisor.
+
 ## 2026-11-26T07:55:33+07:00 — Agent Codex-Cloud1 — PR #110: tiga gate correctness sumber
 
 **Berubah:**

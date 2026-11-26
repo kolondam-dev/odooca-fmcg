@@ -3138,6 +3138,9 @@ class GenericPeriodPackLoader:
             raise PreflightContinuityError("Install native Indonesian Coretax fields before loading buyer profiles.")
         changed = {key: value for key, value in values.items() if (getattr(partner, key) or False) != value}
         if changed:
+            if "vat" in changed:
+                # Native Coretax recomputes PKP from VAT unless the source override is supplied.
+                changed["l10n_id_pkp"] = values["l10n_id_pkp"]
             if row.get("tax_id_status") in ("SYNTHETIC_TEST_IDENTITY", "UNREGISTERED_ZERO_IDENTITY"):
                 partner = partner.with_context(no_vat_validation=True)
             partner.write(changed)

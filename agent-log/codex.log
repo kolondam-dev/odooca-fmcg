@@ -753,3 +753,8 @@
 - Tambah oracle dua DB dan kontrol replay/rollback. Coretax memakai field partner komersial; mapping AP BNK1/101401.
 - 129 tes Python, Ruff dan manifest lulus. F4 exact SHA menunggu.
 - Task managed by codex agent at 2026-11-26T07:55:33+07:00
+
+[2026-11-26T08:05:55+07:00] [INFO] PR #110: cegah recompute PKP saat VAT historis diisi
+- Probe lokal atas 1.240 profil menemukan empat NIK dengan flag PKP yang berubah. Kirim flag dari register bersama VAT.
+- Setelah koreksi seluruh profil fixture lulus, termasuk regresi unit.
+- Task managed by codex agent at 2026-11-26T08:05:55+07:00

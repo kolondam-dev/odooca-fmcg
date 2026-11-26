@@ -2793,6 +2793,14 @@ class TestTaxPkpNonPkpIdentity(unittest.TestCase):
                           l10n_id_buyer_document_type="TIN", l10n_id_buyer_document_number=False)
         cust.commercial_partner_id = cust
         cust._fields = {"vat", "l10n_id_pkp", "l10n_id_buyer_document_type", "l10n_id_buyer_document_number"}
+        write = cust.write
+
+        def write_with_native_pkp(values):
+            if "vat" in values and "l10n_id_pkp" not in values:
+                cust.l10n_id_pkp = bool(values["vat"])
+            return write(values)
+
+        cust.write = write_with_native_pkp
         prod = MockRecord(id=101, default_code="MYR-CND-02", name="Koppiko", uom_id=MockRecord(id=1))
         tax_04 = MockRecord(id=14, name="PPN 12% (Kode 04)", amount=12.0, type_tax_use="sale")
         sol = MockRecord(id=701, product_id=prod, product_uom_qty=120.0, price_unit=3000.0)
@@ -2829,6 +2837,7 @@ class TestTaxPkpNonPkpIdentity(unittest.TestCase):
             "is_pkp": "False",
             "buyer_id_type": "NIK",
             "customer_tax_id": "7171010808890090",
+            "customer_vat": "7171010808890090",
             "customer": "CUST-RTL-006 - Warung Dani",
             "commercial_dpp": "355680.00",
             "dpp_amount": "326040.00",
@@ -2843,6 +2852,7 @@ class TestTaxPkpNonPkpIdentity(unittest.TestCase):
         inv = created_invoices[0]
         self.assertEqual(cust.l10n_id_buyer_document_type, "NIK")
         self.assertEqual(cust.l10n_id_buyer_document_number, "7171010808890090")
+        self.assertFalse(cust.l10n_id_pkp)
         self.assertEqual(inv.l10n_id_kode_transaksi, "04")
 
 
