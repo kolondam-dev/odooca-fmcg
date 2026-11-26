@@ -141,6 +141,12 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Design:** Lanjutkan DES-02-r1. Perubahan visual dan binding dua foto tetap mengikuti slice terkait.
 - **Lead:** Review checkpoint HTTPS dan jalur fixture TEST, lalu verifikasi pada runner Android. Endpoint dan akun dihasilkan oleh job sehingga belum ada URL atau akun aktif untuk dibagikan.
 
+### Review harness HTTP — PR #201
+
+- **Lead:** Rerun HTTP pada HEAD `4663563` lulus; stdout tersanitasi terlampir pada [PR #201](https://github.com/kolondam-dev/odooca-fmcg/pull/201). CI selesai 24 sukses dan 5 dilewati, termasuk Upgrade lulus. [Review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/201#issuecomment-7167334386) memberi **Dampak test CUKUP** untuk harness HTTP. PR tetap draft dan acceptance APK HOLD.
+- **Dev:** Lengkapi bukti APK → HTTPS → Odoo. Cocokkan UUID, status, dan reference receipt dari APK dengan tepat satu command ledger dan satu sales order fixture. Ulangi command dengan UUID yang sama dan buktikan tidak ada efek tambahan. Catat SHA, hash APK, versi backend/fixture serta cleanup resource baru pada sukses/gagal.
+- **Design:** Lanjutkan DES-02-r1.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

@@ -1,3 +1,6 @@
+## 2026-11-26T07:35:28+07:00 — Codex — Review harness HTTP PR #201
+**Bukti:** rerun `4663563` terlampir di PR, CI 24 sukses dan 5 dilewati. **Dampak test CUKUP** untuk HTTP. APK/HTTPS, receipt dan retry tanpa duplikasi tetap menunggu Dev.
+
 ## 2026-11-25T22:30:59+07:00 — Codex — Target APK DEV-02A/B09
 **Status:** Draft PR #201 pada `4663563`. [Arahan bersama](android/LOCAL_WORKFLOW.md) menetapkan target Odoo HTTPS disposable dan akses fixture TEST per job Android.
 **Menunggu:** checkpoint Dev untuk implementasi endpoint, login/snapshot/receipt APK, dan cleanup. Design lanjut DES-02-r1.
