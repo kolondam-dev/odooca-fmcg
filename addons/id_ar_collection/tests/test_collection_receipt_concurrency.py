@@ -116,12 +116,16 @@ class TestCollectionReceiptConcurrency(TransactionCase):
                         "lines": lines},
         }
 
-    def _run_in_thread(self, db, work, outcome):
+    def _run_in_thread(self, db, work, outcome, uid):
+        # Cursor dan Environment dibuat DI THREAD UTAMA: Registry._lock dipegang thread tes utama selama tes berjalan,
+        # sehingga api.Environment(...) di thread lain menggantung (terbukti dari stack di CI).
+        cr = db.cursor()
+        cr.execute("SET LOCAL lock_timeout = '20s'")
+        thread_env = api.Environment(cr, uid, {})
+
         def runner():
-            cr = db.cursor()
             try:
-                cr.execute("SET LOCAL lock_timeout = '20s'")
-                outcome["result"] = work(cr)
+                outcome["result"] = work(thread_env)
                 # Commit PostgreSQL mentah: hook postcommit ORM (signal_changes) membuka registry.cursor() yang pada
                 # mode tes memakai satu cursor bersama berkunci milik thread tes utama dan menggantung thread ini.
                 cr.precommit.clear()
@@ -169,13 +173,12 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             self.assertEqual(first_result["status"], "accepted")
             env1.flush_all()
 
-            def other(cr):
-                env2 = api.Environment(cr, ids["collector"], {})
+            def other(env2):
                 result = env2["id.mobile.command"].process_command(self._command(ids, [first, second]))
                 env2.flush_all()
                 return result
 
-            thread = self._run_in_thread(db, other, outcome)
+            thread = self._run_in_thread(db, other, outcome, ids["collector"])
             time.sleep(WAIT)
             self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu lock SJP")
             cr1.commit()
@@ -217,13 +220,12 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             residual = self._native_reconcile(env_native, ids, 400.0)
             self.assertEqual(residual, 600.0)
 
-            def command(cr):
-                env2 = api.Environment(cr, ids["collector"], {})
+            def command(env2):
                 result = env2["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
                 env2.flush_all()
                 return result
 
-            thread = self._run_in_thread(db, command, outcome)
+            thread = self._run_in_thread(db, command, outcome, ids["collector"])
             time.sleep(WAIT)
             self.assertTrue(thread.is_alive(), "command harus menunggu rekonsiliasi native yang belum commit")
             cr_native.commit()
@@ -251,10 +253,10 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             self.assertEqual(result["status"], "accepted")
             env1.flush_all()
 
-            def native(cr):
-                return self._native_reconcile(api.Environment(cr, SUPERUSER_ID, {}), ids, 400.0)  # flush di dalam
+            def native(env_t):
+                return self._native_reconcile(env_t, ids, 400.0)  # flush di dalam
 
-            thread = self._run_in_thread(db, native, outcome)
+            thread = self._run_in_thread(db, native, outcome, SUPERUSER_ID)
             time.sleep(WAIT)
             self.assertTrue(thread.is_alive(), "rekonsiliasi native harus menunggu lock command")
             cr1.commit()
