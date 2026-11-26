@@ -1,5 +1,8 @@
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
+
+
+COMMERCIAL_CATEGORIES = ("tactical_discount", "promo_program_usage")
 
 
 class FmcgApprovalRequest(models.Model):
@@ -68,6 +71,38 @@ class FmcgApprovalRequest(models.Model):
         ("cancelled", "Dibatalkan"),
     ], string="Status Persetujuan", default="draft", tracking=True, index=True)
 
+    commercial_fingerprint = fields.Char(readonly=True, copy=False)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.su:
+            categories = self.env["fmcg.approval.category"].browse([
+                vals["category_id"] for vals in vals_list if vals.get("category_id")
+            ])
+            if any(category.code in COMMERCIAL_CATEGORIES for category in categories):
+                raise AccessError("Ajukan persetujuan komersial dari penawaran terkait.")
+        return super().create(vals_list)
+
+    def write(self, vals):
+        protected = {"commercial_fingerprint", "state", "line_ids", "current_tier_sequence",
+                     "category_id", "res_model", "res_id", "requested_by", "principal_id",
+                     "principal_decided", "amount", "discount_percent", "snapshot_taken",
+                     "manual_discount_amount", "program_discount_amount"}
+        if not self.env.su and protected.intersection(vals):
+            categories = self.category_id | self.env["fmcg.approval.category"].browse(vals.get("category_id") or [])
+            if any(category.code in COMMERCIAL_CATEGORIES for category in categories):
+                raise AccessError("Keputusan dan snapshot komersial hanya dapat ditetapkan oleh action server.")
+        return super().write(vals)
+
+    def unlink(self):
+        if not self.env.su and any(code in COMMERCIAL_CATEGORIES for code in self.mapped("category_code")):
+            raise AccessError("Riwayat persetujuan komersial tidak dapat dihapus.")
+        return super().unlink()
+
+    def _decision_writer(self):
+        self.ensure_one()
+        return self.sudo() if self.category_code in COMMERCIAL_CATEGORIES else self
+
     snapshot_taken = fields.Boolean(
         string="Snapshot Diskon Tersimpan",
         help="True bila nilai diskon pesanan saat pengajuan dicatat; dipakai untuk mendeteksi perubahan "
@@ -102,6 +137,7 @@ class FmcgApprovalRequest(models.Model):
             rec.total_tiers = len(rec.line_ids)
 
     @api.depends("state", "current_tier_sequence", "line_ids")
+    @api.depends_context("uid")
     def _compute_is_current_user_approver(self):
         current_user = self.env.user
         for rec in self:
@@ -174,6 +210,10 @@ class FmcgApprovalRequest(models.Model):
 
             # Cari aturan tier yang sesuai dari kategori
             target = self.env[rec.res_model].sudo().browse(rec.res_id).exists()
+            if rec.res_model == "sale.order" and rec.category_code in COMMERCIAL_CATEGORIES:
+                if not (rec.env.su or rec.requested_by == rec.env.user):
+                    raise AccessError("Pengajuan hanya dapat dikirim oleh pemohon.")
+                rec.sudo().write({"commercial_fingerprint": target._commercial_approval_fingerprint()})
             if rec.principal_decided:
                 # Keputusan per principal sudah final (False = kelompok tanpa principal, aturan umum):
                 # jangan diganti principal pertama pesanan.
@@ -185,7 +225,7 @@ class FmcgApprovalRequest(models.Model):
             free_limit = rec.category_id._free_zone_limit(principal_id) \
                 if rec.category_id.has_discount_tiers else None
             if free_limit is not None and rec.discount_percent <= free_limit:
-                rec.write({"state": "approved", "current_tier_sequence": 0})
+                rec._decision_writer().write({"state": "approved", "current_tier_sequence": 0})
                 rec.message_post(
                     body=f"Diskon kumulatif {rec.discount_percent:.2f}% berada dalam zona bebas "
                          f"(&le; {free_limit:.2f}%): tidak perlu persetujuan.",
@@ -207,7 +247,7 @@ class FmcgApprovalRequest(models.Model):
                     "state": "pending" if idx == 0 else "waiting",
                 }))
 
-            rec.write({
+            rec._decision_writer().write({
                 "line_ids": lines_vals,
                 "current_tier_sequence": 1,
                 "state": "pending",
@@ -225,13 +265,21 @@ class FmcgApprovalRequest(models.Model):
             if rec.state != "pending":
                 raise UserError("Pengajuan ini tidak sedang menunggu persetujuan.")
 
+            if rec.category_code in COMMERCIAL_CATEGORIES and not (
+                rec.env.su or rec.is_current_user_approver
+            ):
+                raise AccessError("Pengguna tidak berwenang memutuskan tier persetujuan ini.")
+
+            if rec.category_code in COMMERCIAL_CATEGORIES and rec.res_model == "sale.order":
+                self.env["sale.order"].sudo().browse(rec.res_id)._check_commercial_approval_revision(rec)
+
             current_line = rec.line_ids.filtered(
                 lambda line: line.tier_sequence == rec.current_tier_sequence and line.state == "pending"
             )
             if not current_line:
                 raise UserError("Tidak ditemukan tahapan persetujuan aktif untuk diproses.")
 
-            current_line.write({
+            current_line.with_env(rec._decision_writer().env).write({
                 "state": "approved",
                 "actual_approver_id": self.env.user.id,
                 "action_date": fields.Datetime.now(),
@@ -243,8 +291,8 @@ class FmcgApprovalRequest(models.Model):
             next_line = rec.line_ids.filtered(lambda line: line.tier_sequence == next_tier)
 
             if next_line:
-                next_line.write({"state": "pending"})
-                rec.write({"current_tier_sequence": next_tier})
+                next_line.with_env(rec._decision_writer().env).write({"state": "pending"})
+                rec._decision_writer().write({"current_tier_sequence": next_tier})
                 rec.message_post(
                     body=f"Tingkat {current_line.tier_name} telah disetujui oleh {self.env.user.name}. "
                          f"Beralih ke tingkat berikutnya: <b>{next_line.tier_name}</b>.",
@@ -252,7 +300,7 @@ class FmcgApprovalRequest(models.Model):
                 )
             else:
                 # Selesai seluruh tingkat approval
-                rec.write({"state": "approved"})
+                rec._decision_writer().write({"state": "approved"})
                 rec.message_post(
                     body=f"Persetujuan <b>{rec.name}</b> telah disetujui penuh oleh {self.env.user.name}!",
                     subtype_xmlid="mail.mt_note",
@@ -265,18 +313,23 @@ class FmcgApprovalRequest(models.Model):
             if rec.state != "pending":
                 raise UserError("Pengajuan ini tidak sedang menunggu persetujuan.")
 
+            if rec.category_code in COMMERCIAL_CATEGORIES and not (
+                rec.env.su or rec.is_current_user_approver
+            ):
+                raise AccessError("Pengguna tidak berwenang memutuskan tier persetujuan ini.")
+
             current_line = rec.line_ids.filtered(
                 lambda line: line.tier_sequence == rec.current_tier_sequence and line.state == "pending"
             )
             if current_line:
-                current_line.write({
+                current_line.with_env(rec._decision_writer().env).write({
                     "state": "rejected",
                     "actual_approver_id": self.env.user.id,
                     "action_date": fields.Datetime.now(),
                     "notes": notes or "Ditolak",
                 })
 
-            rec.write({"state": "rejected"})
+            rec._decision_writer().write({"state": "rejected"})
             rec.message_post(
                 body=f"Pengajuan <b>{rec.name}</b> DITOLAK oleh {self.env.user.name}. Catatan: {notes or '-'}",
                 subtype_xmlid="mail.mt_note",
@@ -285,7 +338,12 @@ class FmcgApprovalRequest(models.Model):
 
     def action_cancel(self):
         for rec in self:
-            rec.write({"state": "cancelled"})
+            if rec.category_code in COMMERCIAL_CATEGORIES:
+                if not (rec.env.su or rec.requested_by == rec.env.user):
+                    raise AccessError("Pengajuan hanya dapat dibatalkan oleh pemohon.")
+                if rec.state not in ("draft", "pending"):
+                    raise UserError("Pembatalan hanya berlaku untuk pengajuan yang masih berjalan.")
+            rec._decision_writer().write({"state": "cancelled"})
             rec._notify_target_record("cancelled")
 
     def _notify_target_record(self, status):
@@ -307,6 +365,28 @@ class FmcgApprovalRequestLine(models.Model):
         required=True,
         ondelete="cascade",
     )
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.su:
+            requests = self.env["fmcg.approval.request"].browse([
+                vals["request_id"] for vals in vals_list if vals.get("request_id")
+            ])
+            if any(request.category_code in COMMERCIAL_CATEGORIES for request in requests):
+                raise AccessError("Tier persetujuan komersial hanya dapat dibuat oleh server.")
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if not self.env.su:
+            request = self.env["fmcg.approval.request"].browse(vals.get("request_id") or [])
+            if any(item.category_code in COMMERCIAL_CATEGORIES for item in self.request_id | request):
+                raise AccessError("Keputusan tier komersial harus melalui action persetujuan.")
+        return super().write(vals)
+
+    def unlink(self):
+        if not self.env.su and any(code in COMMERCIAL_CATEGORIES for code in self.request_id.mapped("category_code")):
+            raise AccessError("Riwayat tier komersial tidak dapat dihapus.")
+        return super().unlink()
+
     tier_sequence = fields.Integer(string="Tingkat (Tier)", default=1, required=True)
     tier_name = fields.Char(string="Nama Tingkatan", required=True)
     rule_id = fields.Many2one("fmcg.approval.rule", string="Aturan Referensi")

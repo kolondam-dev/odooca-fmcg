@@ -7,6 +7,9 @@ from unittest.mock import patch
 from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
+from psycopg2 import IntegrityError
+from odoo.tools import mute_logger
+from ..models.mobile_command import CommandRejected
 from ..models.mobile_workday import MobileReadConflict
 from .test_read_api import MobileFixture, business_date, sunday_business_date
 
@@ -763,7 +766,9 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
     def test_delivery_pod_and_trip_close_validation(self):
         """Delivery POD submit requires valid picking manifest and persistent evidence; trip close binds PODs."""
         model = self._command_model()
-        day_str = business_date().isoformat()
+        day = business_date()
+        day_str = day.isoformat()
+        scheduled_now = datetime.combine(day, datetime.min.time())
         dummy_base64 = base64.b64encode(b"valid-pod-photo")
 
         # 1. POD with nonexistent trip / manifest -> rejected
@@ -809,7 +814,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
 
@@ -827,7 +832,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
 
@@ -917,7 +922,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "cancel",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
         _add_picking_move(picking_cancelled, "cancel")
@@ -942,7 +947,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "draft",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
         with self.assertRaises(UserError):
@@ -997,7 +1002,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
         _add_picking_move(picking_incoming, "assigned")
@@ -1028,7 +1033,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": other_courier.id,
         })
         _add_picking_move(picking_other_courier, "assigned")
@@ -1054,6 +1059,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "client_uuid": pod_uuid1,
             "type": "delivery.pod.submit",
             "payload": {
+                "business_date": day_str,
                 "pod_version": 1,
                 "source": {
                     "id": picking1.name,
@@ -1106,6 +1112,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "client_uuid": pod_uuid2,
             "type": "delivery.pod.submit",
             "payload": {
+                "business_date": day_str,
                 "pod_version": 1,
                 "source": {
                     "id": picking2.name,
@@ -1166,6 +1173,249 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                     "type": cmd_type,
                     "payload": {},
                 })
+
+    # ---- titik perluasan dispatcher (BE-20d, generik) -----------------------------------------
+    def _extension_command(self, cmd_type="test.ext.submit", **payload):
+        return {"client_uuid": str(uuid.uuid4()), "type": cmd_type, "payload": payload}
+
+    def _patched_extension(self, handler, mapper=None):
+        """Daftarkan tipe uji lewat titik perluasan; handler berjalan di dalam savepoint dispatcher."""
+        cls = type(self.env["id.mobile.command"])
+        original = cls._supported_commands
+
+        def supported(model):
+            return set(original(model)) | {"test.ext.submit"}
+
+        def extension(model, cmd_type, payload, client_uuid):
+            if cmd_type != "test.ext.submit":
+                return None
+            return handler(model, payload, client_uuid)
+
+        stack = [patch.object(cls, "_supported_commands", supported),
+                 patch.object(cls, "_handle_extension", extension)]
+        if mapper is not None:
+            stack.append(patch.object(cls, "_map_integrity_error", mapper))
+        return stack
+
+    def _run_extension(self, command, handler, mapper=None):
+        stack = self._patched_extension(handler, mapper)
+        for item in stack:
+            item.start()
+            self.addCleanup(item.stop)
+        return self._command_model().process_command(command)
+
+    def _logged(self, client_uuid):
+        return self.env["id.mobile.command"].sudo().search([
+            ("client_uuid", "=", client_uuid), ("user_id", "=", self.mobile.id)])
+
+    def test_extension_accepted_is_logged_and_replayed_once(self):
+        calls = []
+
+        def handler(model, payload, client_uuid):
+            calls.append(client_uuid)
+            return "accepted", "ok", "EXT-1"
+
+        command = self._extension_command(x=1)
+        first = self._run_extension(command, handler)
+        self.assertEqual((first["status"], first["reference"]), ("accepted", "EXT-1"))
+        self.assertEqual(self._command_model().process_command(command), first)
+        self.assertEqual(len(calls), 1)  # replay tidak menjalankan handler lagi
+        self.assertEqual(len(self._logged(command["client_uuid"])), 1)
+
+    def test_extension_type_is_unsupported_until_an_addon_registers_it(self):
+        model = self._command_model()
+        with self.assertRaises(UserError):
+            model.process_command(self._extension_command(cmd_type="test.ext.submit"))
+
+    def test_command_rejected_rolls_back_business_effects_and_logs_one_rejected_command(self):
+        marker = "BE20D Rejected Partner %s" % uuid.uuid4()
+        calls = []
+
+        def handler(model, payload, client_uuid):
+            calls.append(client_uuid)
+            model.env["res.partner"].sudo().create({"name": marker})  # mutasi bisnis baris pertama
+            raise CommandRejected("Saldo berubah.", reference="REJ-1")  # lalu baris kedua gagal
+
+        command = self._extension_command(x=1)
+        first = self._run_extension(command, handler)
+        self.assertEqual(
+            (first["status"], first["message"], first["reference"]), ("rejected", "Saldo berubah.", "REJ-1")
+        )
+        self.assertFalse(self.env["res.partner"].sudo().search([("name", "=", marker)]))  # nol efek bisnis
+        logged = self._logged(command["client_uuid"])
+        self.assertEqual((len(logged), logged.status), (1, "rejected"))
+        # Retry identik: hasil rejected sama, handler tidak dijalankan ulang, tetap satu log.
+        self.assertEqual(self._command_model().process_command(command), first)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(self._logged(command["client_uuid"])), 1)
+        # UUID sama dengan payload berbeda tetap konflik.
+        with self.assertRaises(MobileReadConflict):
+            self._command_model().process_command({**command, "payload": {"x": 2}})
+
+    def test_user_error_from_extension_is_not_logged(self):
+        def handler(model, payload, client_uuid):
+            raise UserError("malformed")
+
+        command = self._extension_command()
+        with self.assertRaises(UserError):
+            self._run_extension(command, handler)
+        self.assertFalse(self._logged(command["client_uuid"]))
+
+    @mute_logger("odoo.sql_db")
+    def test_integrity_error_is_mapped_by_constraint_not_blanket(self):
+        def duplicate_key(model, payload, client_uuid):
+            key = "be20d.dispatcher.%s" % uuid.uuid4()
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            return "accepted", "tidak tercapai", ""
+
+        # Tanpa pemetaan addon, 23505 dari constraint lain naik apa adanya (bukan "retry UUID").
+        with self.assertRaises(IntegrityError):
+            self._run_extension(self._extension_command(), duplicate_key)
+
+    @mute_logger("odoo.sql_db")
+    def test_mapped_integrity_error_becomes_persistent_rejection(self):
+        def duplicate_key(model, payload, client_uuid):
+            key = "be20d.dispatcher.%s" % uuid.uuid4()
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            return "accepted", "tidak tercapai", ""
+
+        def mapper(model, error, cmd_type):
+            return CommandRejected("Sudah ada penerimaan aktif.", reference="DUP")
+
+        command = self._extension_command()
+        receipt = self._run_extension(command, duplicate_key, mapper)
+        self.assertEqual((receipt["status"], receipt["reference"]), ("rejected", "DUP"))
+        self.assertEqual(self._logged(command["client_uuid"]).status, "rejected")
+
+    @mute_logger("odoo.sql_db")
+    def test_command_uuid_race_is_a_retry_conflict_even_if_addon_maps_other_constraints(self):
+        command = self._extension_command()
+
+        def racing(model, payload, client_uuid):
+            # Sesi lain menyisipkan UUID yang sama lebih dulu: pelanggaran terjadi pada log command itu sendiri.
+            model.sudo().create({
+                "client_uuid": client_uuid, "command_type": "test.ext.submit", "fingerprint": "other",
+                "user_id": self.mobile.id, "company_id": self.company.id,
+                "payload_json": "{}", "status": "accepted"})
+            return "accepted", "ok", ""
+
+        mapped = []
+
+        def mapper(model, error, cmd_type):  # tidak boleh dipakai untuk konflik UUID command
+            mapped.append(error)
+            return CommandRejected("salah dipetakan")
+
+        with self.assertRaises(MobileReadConflict):
+            self._run_extension(command, racing, mapper)
+        self.assertFalse(mapped)  # satu transaksi (cabang unique violation), BUKAN bukti dua transaksi bersaing
+
+    # ---- klasifikasi 23505 menurut constraint nyata (bukan tabel) -------------------------------
+    def _raw_log_insert(self, cr, row_id, client_uuid, user=None):
+        cr.execute(
+            "INSERT INTO id_mobile_command (id, client_uuid, command_type, fingerprint, user_id, company_id,"
+            " payload_json, status) VALUES (%s, %s, 'x', 'f', %s, %s, '{}', 'accepted')",
+            (row_id, client_uuid, (user or self.mobile).id, self.company.id),
+        )
+
+    def _inject_on_log_create(self, kind, only_status=None, once=False):
+        """Sisipkan tabrakan tepat sebelum pembuatan log command; kind: 'uuid' atau 'pkey'."""
+        cls = type(self.env["id.mobile.command"])
+        original = cls._create_log_record
+        state = {"done": False}
+
+        def patched(model, vals):
+            if (only_status is None or vals.get("status") == only_status) and not (once and state["done"]):
+                state["done"] = True
+                cr = model.env.cr
+                cr.execute("SELECT nextval(pg_get_serial_sequence('id_mobile_command', 'id'))")
+                row_id = cr.fetchone()[0]
+                if kind == "uuid":
+                    owner = model.env["res.users"].browse(vals["user_id"])
+                    self._raw_log_insert(cr, row_id, vals["client_uuid"], user=owner)
+                else:
+                    self._raw_log_insert(cr, row_id, str(uuid.uuid4()))
+                    cr.execute(
+                        "SELECT setval(pg_get_serial_sequence('id_mobile_command', 'id'), %s, true)", (row_id - 1,)
+                    )
+            return original(model, vals)
+
+        item = patch.object(cls, "_create_log_record", patched)
+        item.start()
+        self.addCleanup(item.stop)
+
+    @mute_logger("odoo.sql_db")
+    def test_uuid_constraint_name_comes_from_schema_and_matches_real_violation(self):
+        model = self.env["id.mobile.command"]
+        names = model._command_uuid_constraint_names()
+        self.assertTrue(names)
+        cr = self.env.cr
+        cr.execute("SELECT nextval(pg_get_serial_sequence('id_mobile_command', 'id'))")
+        row_id = cr.fetchone()[0]
+        dup = str(uuid.uuid4())
+        self._raw_log_insert(cr, row_id, dup)
+        cr.execute("SELECT nextval(pg_get_serial_sequence('id_mobile_command', 'id'))")
+        other_id = cr.fetchone()[0]
+        with self.assertRaises(IntegrityError) as uuid_clash:
+            with cr.savepoint():
+                self._raw_log_insert(cr, other_id, dup)  # (user_id, client_uuid) sama
+        self.assertIn(uuid_clash.exception.diag.constraint_name, names)
+        self.assertTrue(model._is_command_uuid_conflict(uuid_clash.exception))
+        with self.assertRaises(IntegrityError) as pkey_clash:
+            with cr.savepoint():
+                self._raw_log_insert(cr, row_id, str(uuid.uuid4()))  # primary key sama, UUID beda
+        self.assertEqual(pkey_clash.exception.diag.table_name, "id_mobile_command")
+        self.assertNotIn(pkey_clash.exception.diag.constraint_name, names)
+        self.assertFalse(model._is_command_uuid_conflict(pkey_clash.exception))
+
+    @mute_logger("odoo.sql_db")
+    def test_accepted_log_uuid_collision_is_retry_conflict_and_skips_mapper(self):
+        mapped = []
+        self._inject_on_log_create("uuid")
+        with self.assertRaises(MobileReadConflict):
+            self._run_extension(
+                self._extension_command(),
+                lambda model, payload, client_uuid: ("accepted", "ok", ""),
+                lambda model, error, cmd_type: mapped.append(error),
+            )
+        self.assertFalse(mapped)
+
+    @mute_logger("odoo.sql_db")
+    def test_accepted_log_non_uuid_unique_goes_to_mapper_or_raises(self):
+        handler = lambda model, payload, client_uuid: ("accepted", "ok", "")  # noqa: E731
+        self._inject_on_log_create("pkey", only_status="accepted", once=True)
+        with self.assertRaises(IntegrityError):  # tanpa pemetaan: naik, bukan "retry UUID"
+            self._run_extension(self._extension_command(), handler)
+        mapped = []
+
+        def mapper(model, error, cmd_type):
+            mapped.append(error.diag.constraint_name)
+            return CommandRejected("Tabrakan non-UUID.", reference="PK")
+
+        self._inject_on_log_create("pkey", only_status="accepted", once=True)
+        command = self._extension_command()
+        receipt = self._run_extension(command, handler, mapper)
+        self.assertEqual((receipt["status"], receipt["reference"]), ("rejected", "PK"))
+        self.assertNotIn(mapped[0], self.env["id.mobile.command"]._command_uuid_constraint_names())
+
+    @mute_logger("odoo.sql_db")
+    def test_rejected_log_uuid_collision_is_retry_conflict(self):
+        def handler(model, payload, client_uuid):
+            raise CommandRejected("Ditolak.")
+
+        self._inject_on_log_create("uuid", only_status="rejected")
+        with self.assertRaises(MobileReadConflict):
+            self._run_extension(self._extension_command(), handler)
+
+    @mute_logger("odoo.sql_db")
+    def test_rejected_log_non_uuid_unique_is_not_reported_as_uuid_retry(self):
+        def handler(model, payload, client_uuid):
+            raise CommandRejected("Ditolak.")
+
+        self._inject_on_log_create("pkey", only_status="rejected")
+        with self.assertRaises(IntegrityError):
+            self._run_extension(self._extension_command(), handler)
 
 
 @tagged("post_install", "-at_install")

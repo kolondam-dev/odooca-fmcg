@@ -478,3 +478,9 @@
 - [F] OCA value_residual mengecualikan salvage: 24.000 purchase - 4.000 salvage - 10.000 depreciation = 10.000 depreciable residual. NBV register/posted GL tetap 14.000.
 - [BU] Assertion field dikoreksi ke 10.000 tanpa mengubah expected closing register/GL 14.000 atau melemahkan coverage/company/cutoff oracle. Exact-SHA baru menunggu CI.
 - Task managed by Agent Opencode at 2026-11-26T09:05:00+07:00
+[2026-11-26T19:23:07+07:00] [INFO] FIN36 PR #204 sinkronisasi strict-main setelah review PASS
+- [F] Reviewed head d6473ae PASS/CUKUP: 86 tes I2c reviewer PASS, CI 22 SUCCESS / 7 SKIPPED, Finance artifact 15081087455 population/cutoff/company/salvage/GL/rollback PASS.
+- [F] origin/main 57a5cb2 digabung. Konflik hanya docs/HANDOFF.md dan riwayat kedua sisi dipertahankan; oracle serta tes FIN36 byte-identik dengan d6473ae.
+- [F] Delta upstream Finance I0 hanya healthcheck pg_isready yang kini eksplisit memakai DB postgres. [BU] CI exact-SHA integrasi dan delta review menunggu.
+- [BU] Full Dataset, acceptance FIN36, produksi, katalog, deployment dan merge tetap HOLD; pemilik berwenang merge setelah review delta dan CI lulus.
+- Task managed by Agent Opencode at 2026-11-26T19:23:07+07:00

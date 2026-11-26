@@ -512,3 +512,15 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-25T20:46:33+07:00] [INFO] BE-20d revisi custody
 - Custody dipisah dari alokasi; unpaid nol; metode campuran; cutoff per entrypoint; hanya dokumen
 - Task managed by claude-design agent at 2026-11-25T20:46:33+07:00
+
+[2026-11-26T07:49:00+07:00] [INFO] BE-20d dispatcher generik
+- Titik perluasan, CommandRejected luar savepoint, 23505 per constraint, 7 tes Odoo (hanya CI)
+- Task managed by claude-design agent at 2026-11-26T07:49:00+07:00
+
+[2026-11-26T08:05:10+07:00] [INFO] BE-20d dispatcher lint
+- E501 pada tes diperbaiki; ruff check . bersih
+- Task managed by claude-design agent at 2026-11-26T08:05:10+07:00
+
+[2026-11-26T09:05:55+07:00] [INFO] BE-20d dispatcher P2 #203
+- Constraint UUID dibaca dari skema; seam _create_log_record; 5 tes baru; hanya CI
+- Task managed by claude-design agent at 2026-11-26T09:05:55+07:00
