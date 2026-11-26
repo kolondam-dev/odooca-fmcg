@@ -65,6 +65,12 @@
 - [F] Sebelas tes offline menolak aset hilang/duplikat, source reuse, company leakage, komposisi per-aset salah walau agregat benar, serta draft dan acquisition/depreciation/disposal setelah cutoff. Ruff dan compile PASS lokal; runtime Odoo/Finance I0 exact-SHA masih [BU].
 - [F] Finance I0 head awal `1873deb` gagal fail-closed pada fixture salvage: OCA `value_residual` adalah sisa basis depresiasi 10.000 (purchase 24.000 − salvage 4.000 − depresiasi 10.000), sedangkan NBV register/GL tetap 14.000. Ekspektasi field dikoreksi tanpa mengubah oracle closing register/GL.
 - [BU] Dampak test TAMBAH. Full Dataset, ACL/export/live, lisensi/aktivasi produksi AGPL-3, populasi aset nyata, mapping Controller, sign-off, merge, dan deployment tetap HOLD; katalog tidak diubah.
+## 2026-11-26 — [F] BE-20d (2/2): model penerimaan dan handler `collection.receipt.submit` (claude-design)
+
+- [F] `id_ar_collection`: `id.collection.receipt` (+ baris), indeks unik parsial (satu aktif per baris SJP; satu pending per faktur), indeks (kolektor, UUID, metode); handler lewat titik perluasan dispatcher (3 kelas hasil, `CommandRejected`), protokol lock sheet -> faktur (NO KEY UPDATE) -> baris receivable (UPDATE) -> baris SJP, baca ulang saldo setelah lock; satu receipt per metode; guard: SJP berpenerimaan pending tidak dapat dibatalkan/didraf, faktur pending tidak masuk kandidat/SJP lain; snapshot memuat `receipt_state`/`receipt_amount` (kontrak zod opsional + openapi).
+- [F] Audit lock native dari sumber Odoo 19.0 (`439a87c`): bagian 8.14 rancangan. API `lock_for_update` ORM = SKIP LOCKED, jadi dipakai SQL `FOR UPDATE` yang menunggu.
+- [F] Tes Odoo: 15 fungsional via `process_command` + 3 dua-transaksi nyata [BU: hanya CI]. Tes `unsupported` lama memakai `collection.settlement.submit` (tipe penerimaan kini terdaftar bila addon terpasang).
+- [BU] Belum: penutupan akhir hari/`lapsed`/`expired` (job idempoten), `held`/custody exception, meja kasir, validasi (20e); PWA masih mengirim payload lama untuk tipe ini (FE-8b); addon belum di `INIT_MODULES` LIVE; `collection_v2` OFF.
 
 ## 2026-11-26 — [F] FIN36 PR #202 CI rerun dan sinkronisasi strict-main (opencode)
 

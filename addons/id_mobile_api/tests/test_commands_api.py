@@ -1167,7 +1167,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
     def test_unsupported_commands_fail_closed(self):
         """Unimplemented domains (collection, hris, expense) fail closed with UserError."""
         model = self._command_model()
-        for cmd_type in ("collection.receipt.submit", "hris.attendance.capture", "field_expense.request"):
+        for cmd_type in ("collection.settlement.submit", "hris.attendance.capture", "field_expense.request"):
             with self.assertRaises(UserError):
                 model.process_command({
                     "client_uuid": str(uuid.uuid4()),

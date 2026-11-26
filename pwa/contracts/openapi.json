@@ -6592,6 +6592,28 @@
                               "copy",
                               "original"
                             ]
+                          },
+                          "receipt_state": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "posted",
+                                  "cashier_validated",
+                                  "finance_verified",
+                                  "instrument_registered",
+                                  "accounting_validated",
+                                  "rejected",
+                                  "cancelled"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "receipt_amount": {
+                            "type": "number"
                           }
                         },
                         "required": [

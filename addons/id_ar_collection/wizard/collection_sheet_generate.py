@@ -50,6 +50,9 @@ class CollectionSheetGenerate(models.TransientModel):
             ("company_id", "=", self.company_id.id),
             ("sheet_id.state", "in", ACTIVE_STATES),
         ]).move_id
+        pending = self.env["id.collection.receipt.line"].sudo().search([
+            ("company_id", "=", self.company_id.id), ("holds_invoice", "=", True)]).move_id
+        busy |= pending
         domain = [
             ("move_type", "=", "out_invoice"),
             ("state", "=", "posted"),
