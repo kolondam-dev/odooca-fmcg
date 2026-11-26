@@ -34,3 +34,10 @@ Pada `284e31f809316a2112493aa9c365b3050106d242`, [F4](https://github.com/kolonda
 Correctness yang masih perlu bukti atau adjudikasi tercantum di kolom kedua. Kolom batas histori adalah cakupan yang diajukan untuk re-review, tanpa menganggap persetujuan atas 769 baris promo berlaku ke seluruh A/C/D. Fitur lanjutan tetap OPEN sampai ada bukti atau keputusan scope untuk tahap berikutnya.
 
 [Keputusan pemilik dan gate merge](PR110_PACKET_B_ACCEPTANCE.md#keputusan-pemilik-dan-gate-merge) mencatat dasar keputusan. Verdict merge berada pada supervisor/reviewer.
+
+
+## Tiga kontrol correctness sumber untuk re-review
+
+- Retur menyimpan relasi picking outgoing, referensi DO, alasan, ID insiden, jenis dan referensi bukti. F4 mengaudit 47 baris termasuk carry-forward 1 September dan menguji mutasi provenance melalui replay dan savepoint. Transfer lama yang belum memiliki metadata hanya diperkaya setelah fakta fisik cocok.
+- Coretax menyiapkan partner komersial yang dibaca oleh pembentuk payload native. F4 memeriksa profil buyer NIK, NPWP16 dan TIN_0 untuk 1.240 invoice. Bila identitas penjual kosong pada DB sintetis, fixture sementara disimpan di savepoint dan di-rollback. Bukti ini untuk isi payload buyer di disposable.
+- `Bank Mandiri Rekening Operasional` dipetakan eksplisit ke jurnal `BNK1` dan default liquidity account `101401` pada chart company disposable. Loader memeriksa mapping sebelum pelunasan dan saat replay. F4 mencatat jurnal/akun aktual. Rekening sumber AR serta batas UNKNOWN A/C/D tetap menunggu keputusan pemilik.

@@ -53,6 +53,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.ops.load_period_pack import (  # noqa: E402
+    AP_BANK_SOURCE_ACCOUNTS,
     GenericPeriodPackLoader,
     OPEX_CATEGORY_ACCOUNT_MAP,
     PeriodPackManifest,
@@ -396,6 +397,105 @@ def historical_commercial_side_effects(env, sales):
     }
 
 
+def audit_period_buyer_payloads(invoices, rows):
+    """Use the native payload builder without persisting seller test identity."""
+    company = invoices.company_id
+    if not company or company.vat:
+        return _audit_buyer_payloads(invoices, rows)
+
+    class RollbackSellerFixture(Exception):
+        pass
+
+    try:
+        with invoices.env.cr.savepoint():
+            # The synthetic pack has no seller TIN. Native formatting needs one even for buyer-only checks.
+            company.partner_id.with_context(no_vat_validation=True).vat = "0" * 16
+            result = _audit_buyer_payloads(invoices, rows)
+            raise RollbackSellerFixture
+    except RollbackSellerFixture:
+        return result
+
+
+def _audit_buyer_payloads(invoices, rows):
+    by_ref = {invoice.payment_reference: invoice for invoice in invoices}
+    profiles = Counter()
+    mismatches = []
+    for row in rows:
+        profile = row["buyer_id_type"]
+        profiles[profile] += 1
+        reference = row["invoice_number"]
+        invoice = by_ref.get(reference)
+        number = row["customer_tax_id"]
+        expected = ("National ID", "0" * 16, number) if profile == "NIK" else ("TIN", number, "")
+        payload = {}
+        if invoice:
+            invoice._l10n_id_coretax_build_invoice_vals(payload)
+        actual = tuple(payload.get(key) for key in ("BuyerDocument", "BuyerTin", "BuyerDocumentNumber"))
+        if actual != expected or invoice.partner_id.commercial_partner_id.l10n_id_pkp != (
+            row["is_pkp"].lower() == "true"
+        ):
+            mismatches.append(reference)
+    return {"profiles": dict(profiles), "checked": sum(profiles.values()),
+            "mismatches": len(mismatches), "examples": mismatches[:5]}
+
+
+def audit_period_rejections(env, company, reader):
+    rows = reader.rejections
+    refs = [row["rejection_id"] for row in rows]
+    pickings = env["stock.picking"].search([("company_id", "=", company.id), ("origin", "in", refs)])
+    by_ref = {}
+    for picking in pickings:
+        by_ref.setdefault(picking.origin, []).append(picking)
+    carton_sizes = {(row["so_number"], row["sku_code"]): _dec(row["carton_qty"]) for row in reader.order_lines}
+    delivery_sources = {row["do_number"]: row["so_number"] for row in reader.deliveries}
+    mismatches = []
+    for row in rows:
+        ref = row["rejection_id"]
+        found = by_ref.get(ref, [])
+        if len(found) != 1:
+            mismatches.append(ref)
+            continue
+        picking, = found
+        delivery = picking.fmcg_seed_rejection_delivery_id
+        lines = picking.move_line_ids
+        provenance = (
+            picking.fmcg_seed_rejection_do_ref, picking.fmcg_seed_rejection_reason,
+            picking.fmcg_seed_rejection_incident_ref, picking.fmcg_seed_rejection_evidence_type,
+            picking.fmcg_seed_rejection_evidence_ref or "",
+        )
+        expected_provenance = tuple(row[key] for key in (
+            "do_number", "rejection_reason", "incident_batch_ref", "evidence_type", "evidence_photo_ref",
+        ))
+        expected_qty = _dec(row["qty_cartons"]) * carton_sizes[row["so_number"], row["sku_code"]]
+        if (provenance != expected_provenance
+                or delivery_sources.get(row["do_number"]) != row["so_number"]
+                or delivery.sale_id.client_order_ref != row["so_number"]
+                or delivery.picking_type_id.code != "outgoing" or delivery.state != "done"
+                or picking.state != "done" or str(picking.date_done)[:10] != row["rejection_date"]
+                or picking.location_id.usage != "customer" or not _is_quarantine(picking.location_dest_id)
+                or not lines or set(lines.product_id.mapped("default_code")) != {row["sku_code"]}
+                or set(lines.lot_id.mapped("name")) != {row["lot_number"]}
+                or sum(_dec(line.quantity_product_uom) for line in lines) != expected_qty):
+            mismatches.append(ref)
+    return {"checked": len(rows), "mismatches": len(mismatches), "examples": mismatches[:5]}
+
+
+def audit_period_ap_bank_sources(env, company, rows):
+    mismatches = []
+    observed = []
+    for row in rows:
+        ref = row["ap_payment_id"]
+        payment = _find_payment(env["account.payment"], company.id, [ref], payment_type="outbound")
+        journal = payment.journal_id if payment else None
+        expected = AP_BANK_SOURCE_ACCOUNTS.get(row.get("bank_source"))
+        account = journal.default_account_id.with_company(company) if journal and journal.default_account_id else None
+        actual = (journal.code if journal else None, account.code if account else None)
+        observed.append({"reference": ref, "journal_code": actual[0], "account_code": actual[1]})
+        if not journal or not expected or journal.company_id != company or journal.type != "bank" or actual != expected:
+            mismatches.append(ref)
+    return {"checked": len(rows), "mismatches": len(mismatches), "examples": mismatches[:5], "observed": observed}
+
+
 def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
     """Execute comprehensive mathematical and accounting audit against oracle."""
     if env is None:
@@ -569,6 +669,15 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             ("state", "=", "posted"),
         ]
     )
+    if oracle.manifest.period == "2026-08" and callable(getattr(getattr(env, "cr", None), "savepoint", None)):
+        for name, result in (
+            ("coretax_buyer_payloads", audit_period_buyer_payloads(inv_recs, oracle.reader.invoices)),
+            ("rejection_source_trace", audit_period_rejections(env, company, oracle.reader)),
+            ("ap_bank_sources", audit_period_ap_bank_sources(env, company, oracle.reader.ap_payments)),
+        ):
+            report["checks"][name] = result
+            if result["mismatches"]:
+                report["violations"].append(f"{name}: {result}")
     inv_count = len(inv_recs)
     act_inv_dpp = sum(_dec(m.amount_untaxed) for m in inv_recs)
     act_inv_ppn = sum(_dec(m.amount_tax) for m in inv_recs)
@@ -2079,6 +2188,27 @@ def verify_august_commercial_slice(env, pack_dir):
             "legacy_promo_binding_replay": "REJECTED_WITHOUT_DRIFT", "side_effects": effects}
 
 
+def verify_rejection_trace_rollback(env, loader):
+    row = loader.reader.rejections[0]
+    picking = env["stock.picking"].search([
+        ("origin", "=", row["rejection_id"]), ("company_id", "=", loader.company.id),
+    ], limit=1)
+    original = picking.fmcg_seed_rejection_incident_ref
+    try:
+        with env.cr.savepoint():
+            picking.fmcg_seed_rejection_incident_ref = "F4-TAMPERED-INCIDENT"
+            loader._apply_rejections_and_quarantine([row])
+            raise RuntimeError("Rejection replay accepted mutated incident provenance.")
+    except StateInconsistencyError as exc:
+        if "source trace mismatch" not in str(exc):
+            raise
+    if picking.fmcg_seed_rejection_incident_ref != original:
+        raise RuntimeError("Rejection provenance mutation survived rollback.")
+    if loader._apply_rejections_and_quarantine([row]) != 1:
+        raise RuntimeError("Rejection replay failed after rollback.")
+    return "REJECTED_AND_RESTORED"
+
+
 def run_full_disposable_period_verification(
     env: Any,
     pack_dir: Path,
@@ -2122,6 +2252,8 @@ def run_full_disposable_period_verification(
         _logger.info("Executing Scenario A: Re-running period pack for zero-drift replay proof...")
         loader_rerun = GenericPeriodPackLoader(env=env, pack_dir=pack_dir, dry_run=False, strict=True)
         loader_rerun.execute_apply()
+        if oracle.manifest.period == "2026-08" and callable(getattr(getattr(env, "cr", None), "savepoint", None)):
+            report["rejection_trace_rollback"] = verify_rejection_trace_rollback(env, loader_rerun)
         snap2 = capture_period_state_snapshot(env)
 
         if snap1["digest"] == snap2["digest"]:

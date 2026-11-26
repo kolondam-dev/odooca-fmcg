@@ -382,6 +382,24 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
             loader.evaluate_dry_run()
         self.assertIn("Drift detected on existing SO-202608-0001", str(ctx.exception))
 
+    def test_ap_bank_resolution_fails_closed(self):
+        row = {"ap_payment_id": "PAY-TEST", "bank_source": "Bank Mandiri Rekening Operasional"}
+        bank = MockRecord(
+            id=1, company_id=1, type="bank", code="BNK1", default_account_id=MockRecord(id=8, code="101401"),
+        )
+        loader = GenericPeriodPackLoader(env=MockEnv({"account.journal": MockModel(records=[bank])}),
+                                         pack_dir=AUG_PACK_DIR, dry_run=False)
+        loader.company = MockRecord(id=1)
+        self.assertIs(loader._resolve_ap_bank_journal(row), bank)
+        with self.assertRaisesRegex(PreflightContinuityError, "unmapped bank source"):
+            loader._resolve_ap_bank_journal({**row, "bank_source": ""})
+        wrong = MockRecord(id=2, company_id=1, type="bank", code="BNK1",
+                           default_account_id=MockRecord(id=9, code="101402"))
+        for candidates in ([], [bank, bank], [wrong]):
+            loader.env = MockEnv({"account.journal": MockModel(records=candidates)})
+            with self.assertRaisesRegex(PreflightContinuityError, "expected one company bank journal"):
+                loader._resolve_ap_bank_journal(row)
+
     def test_ap_payment_settles_july_unilever_bill(self):
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri")
         mock_partner_unilever = MockRecord(id=50, name="PT Unilever Indonesia", ref="PRIN-002")
@@ -396,7 +414,9 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
             ref="PO-2026-06-05",
             partner_id=mock_partner_unilever,
         )
-        mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_journal_bank = MockRecord(
+            id=5, company_id=1, type="bank", code="BNK1", default_account_id=MockRecord(id=90, code="101401"),
+        )
         mock_journal_misc = MockRecord(id=6, company_id=1, type="general", code="MISC")
 
         mock_models = {
@@ -591,7 +611,9 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             ref="PO-2026-06-05",
             partner_id=mock_partner_unilever,
         )
-        mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_journal_bank = MockRecord(
+            id=5, company_id=1, type="bank", code="BNK1", default_account_id=MockRecord(id=90, code="101401"),
+        )
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
             "product.product": MockModel(auto_match=True),
@@ -707,7 +729,9 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             ref="PO-2026-06-050",  # Decoy! Should NOT match PO-2026-06-05
             partner_id=mock_partner_unilever,
         )
-        mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_journal_bank = MockRecord(
+            id=5, company_id=1, type="bank", code="BNK1", default_account_id=MockRecord(id=90, code="101401"),
+        )
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
             "product.product": MockModel(auto_match=True),
@@ -746,7 +770,9 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
             ref="PO-2026-06-05",
             partner_id=mock_partner_unilever,
         )
-        mock_journal_bank = MockRecord(id=5, company_id=1, type="bank")
+        mock_journal_bank = MockRecord(
+            id=5, company_id=1, type="bank", code="BNK1", default_account_id=MockRecord(id=90, code="101401"),
+        )
         mock_models = {
             "res.company": MockModel(records=[mock_company]),
             "res.partner": MockModel(records=[mock_partner_unilever]),
@@ -2677,6 +2703,11 @@ class TestRejectionsReturnQuarantine(unittest.TestCase):
         created_move_lines = []
 
         class MockPickingModel(MockModel):
+            def search(self, domain, limit=None):
+                if ("sale_id.client_order_ref", "=", "SO-202608-0045") in domain:
+                    return [MockRecord(id=42)]
+                return super().search(domain, limit)
+
             def create(self, vals):
                 p = MockRecord(id=len(created_pickings) + 1, **vals)
                 created_pickings.append(p)
@@ -2717,6 +2748,10 @@ class TestRejectionsReturnQuarantine(unittest.TestCase):
             "sku_code": "ULV-CLR-02",
             "lot_number": "LOT-VER-20260704-32",
             "qty_cartons": "12",
+            "rejection_reason": "SEGEL_PABRIK_BOCOR",
+            "incident_batch_ref": "TEST-INCIDENT",
+            "evidence_type": "SYNTHETIC",
+            "evidence_photo_ref": "data/evidence/example.jpg",
         }]
         loader.reader.set_override("rejections.csv", single_rej)
         processed = loader._apply_rejections_and_quarantine()
@@ -2724,6 +2759,9 @@ class TestRejectionsReturnQuarantine(unittest.TestCase):
         self.assertEqual(len(created_pickings), 1)
         self.assertEqual(created_pickings[0].location_id, cust_loc.id)
         self.assertEqual(created_pickings[0].location_dest_id, quarantine_loc.id)
+        self.assertEqual(created_pickings[0].fmcg_seed_rejection_delivery_id, 42)
+        self.assertEqual(created_pickings[0].fmcg_seed_rejection_incident_ref, "TEST-INCIDENT")
+        self.assertEqual(created_pickings[0].fmcg_seed_rejection_evidence_ref, "data/evidence/example.jpg")
         self.assertEqual(len(created_moves), 1)
         self.assertNotIn(
             "name", getattr(created_moves[0], "_data", {}), "stock.move must not have 'name' field (Odoo 19)."
@@ -2751,7 +2789,10 @@ class TestTaxPkpNonPkpIdentity(unittest.TestCase):
     def test_invoice_creation_populates_buyer_identity_mock(self):
         """_apply_invoices must populate Indonesian tax buyer identity fields."""
         mock_company = MockRecord(id=1, name="PT Salva Inti Mandiri", currency_id=MockRecord(id=1))
-        cust = MockRecord(id=50, ref="CUST-RTL-006", name="Warung Dani")
+        cust = MockRecord(id=50, ref="CUST-RTL-006", name="Warung Dani", vat=False, l10n_id_pkp=False,
+                          l10n_id_buyer_document_type="TIN", l10n_id_buyer_document_number=False)
+        cust.commercial_partner_id = cust
+        cust._fields = {"vat", "l10n_id_pkp", "l10n_id_buyer_document_type", "l10n_id_buyer_document_number"}
         prod = MockRecord(id=101, default_code="MYR-CND-02", name="Koppiko", uom_id=MockRecord(id=1))
         tax_04 = MockRecord(id=14, name="PPN 12% (Kode 04)", amount=12.0, type_tax_use="sale")
         sol = MockRecord(id=701, product_id=prod, product_uom_qty=120.0, price_unit=3000.0)
@@ -2800,8 +2841,8 @@ class TestTaxPkpNonPkpIdentity(unittest.TestCase):
         self.assertEqual(processed, 1)
         self.assertEqual(len(created_invoices), 1)
         inv = created_invoices[0]
-        self.assertEqual(inv.l10n_id_buyer_document_type, "id")
-        self.assertEqual(inv.l10n_id_buyer_document_number, "7171010808890090")
+        self.assertEqual(cust.l10n_id_buyer_document_type, "NIK")
+        self.assertEqual(cust.l10n_id_buyer_document_number, "7171010808890090")
         self.assertEqual(inv.l10n_id_kode_transaksi, "04")
 
 

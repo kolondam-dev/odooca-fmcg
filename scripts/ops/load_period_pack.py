@@ -359,6 +359,9 @@ class PeriodPackReader:
         return self.read_csv("opex.csv")
 
 
+# Frozen synthetic register label -> company-local journal and bank GL codes.
+AP_BANK_SOURCE_ACCOUNTS = {"Bank Mandiri Rekening Operasional": ("BNK1", "101401")}
+
 OPEX_CATEGORY_ACCOUNT_MAP = {
     "Logistik Rutin": "610100",
     "Uang Jalan Ritase": "610100",
@@ -2931,6 +2934,38 @@ class GenericPeriodPackLoader:
                     f"but only {available:g} on hand at location {location}."
                 )
 
+    def _rejection_source_metadata(self, picking_model, row, delivery_rows):
+        source_do = row["do_number"]
+        source_so = row["so_number"]
+        if delivery_rows.get(source_do) != source_so:
+            raise StateInconsistencyError(f"Rejection {row['rejection_id']}: invalid source DO {source_do}.")
+        deliveries = picking_model.search([
+            ("company_id", "=", self.company.id),
+            ("sale_id.client_order_ref", "=", source_so),
+            ("picking_type_id.code", "=", "outgoing"),
+            ("state", "=", "done"),
+        ], limit=2)
+        if len(deliveries) != 1:
+            raise StateInconsistencyError(f"Rejection {row['rejection_id']}: source DO {source_do} is not unique.")
+        return {
+            "fmcg_seed_rejection_delivery_id": deliveries[0].id,
+            "fmcg_seed_rejection_do_ref": source_do,
+            "fmcg_seed_rejection_reason": row.get("rejection_reason") or False,
+            "fmcg_seed_rejection_incident_ref": row.get("incident_batch_ref") or False,
+            "fmcg_seed_rejection_evidence_type": row.get("evidence_type") or False,
+            "fmcg_seed_rejection_evidence_ref": row.get("evidence_photo_ref") or False,
+        }
+
+    def _validate_rejection_source_metadata(self, picking, row, metadata):
+        for field, expected in metadata.items():
+            actual = getattr(picking, field, False)
+            if field == "fmcg_seed_rejection_delivery_id":
+                actual = getattr(actual, "id", actual)
+            if (actual or False) != expected:
+                raise StateInconsistencyError(
+                    f"Rejection {row['rejection_id']}: source trace mismatch in {field}."
+                )
+
     def _apply_rejections_and_quarantine(self, rejection_rows=None) -> int:
         """Create and validate return transfers to Quarantine for rejected delivery items (P2-H)."""
         if rejection_rows is None:
@@ -2947,6 +2982,7 @@ class GenericPeriodPackLoader:
         if StockPicking is None or not self.seed_customer_loc or not self.quarantine_loc:
             return 0
 
+        delivery_rows = {row["do_number"]: row["so_number"] for row in self.reader.deliveries}
         processed = 0
         for rrow in rejection_rows:
             rej_id = rrow.get("rejection_id")
@@ -2957,19 +2993,12 @@ class GenericPeriodPackLoader:
             rej_date = rrow.get("rejection_date")
 
             if qty_cartons <= 0.0 or not sku:
-                continue
+                raise StateInconsistencyError(f"Rejection {rej_id}: invalid quantity or SKU.")
 
-            existing_pick = StockPicking.search([
-                ("origin", "=", rej_id),
-                ("company_id", "in", [getattr(self.company, "id", False), False]),
-            ], limit=1)
-            if existing_pick:
-                processed += 1
-                continue
-
+            metadata = self._rejection_source_metadata(StockPicking, rrow, delivery_rows)
             prod = Product.search([("default_code", "=", sku)], limit=1) if Product is not None else None
             if not prod:
-                continue
+                raise StateInconsistencyError(f"Rejection {rej_id}: unresolved SKU {sku}.")
 
             carton_qty = 1.0
             for lrow in getattr(self.reader, "order_lines", []):
@@ -2986,6 +3015,31 @@ class GenericPeriodPackLoader:
                     ("company_id", "in", [getattr(self.company, "id", False), False]),
                 ], limit=1)
 
+            if not lot_obj:
+                raise StateInconsistencyError(f"Rejection {rej_id}: unresolved lot {lot_num}.")
+            existing = list(_iter_records(StockPicking.search([
+                ("origin", "=", rej_id), ("company_id", "=", self.company.id),
+            ], limit=2)))
+            if len(existing) > 1:
+                raise StateInconsistencyError(f"Rejection {rej_id}: multiple quarantine transfers.")
+            if existing:
+                picking = existing[0]
+                lines = picking.move_line_ids
+                if (
+                    picking.state != "done" or str(picking.date_done)[:10] != rej_date
+                    or picking.location_id != self.seed_customer_loc
+                    or picking.location_dest_id != self.quarantine_loc
+                    or lines.product_id != prod or lines.lot_id != lot_obj
+                    or abs(sum(lines.mapped("quantity_product_uom")) - qty_units) > 1e-6
+                ):
+                    raise StateInconsistencyError(f"Rejection {rej_id}: quarantine transfer differs from source.")
+                # Upgrade an old transfer only after verifying its physical facts.
+                if not any(getattr(picking, field, False) for field in metadata):
+                    picking.write(metadata)
+                self._validate_rejection_source_metadata(picking, rrow, metadata)
+                processed += 1
+                continue
+
             StockPickingType = self.env["stock.picking.type"].sudo() if "stock.picking.type" in self.env else None
             pick_type = None
             if StockPickingType is not None:
@@ -2997,6 +3051,7 @@ class GenericPeriodPackLoader:
 
             uom_rec = getattr(prod, "uom_id", None)
             pick_vals = {
+                **metadata,
                 "origin": rej_id,
                 "location_id": self.seed_customer_loc.id,
                 "location_dest_id": self.quarantine_loc.id,
@@ -3061,6 +3116,31 @@ class GenericPeriodPackLoader:
             processed += 1
 
         return processed
+
+    def _sync_source_buyer_identity(self, partner, row):
+        """Populate the commercial partner fields read by native Coretax."""
+        profile = row.get("buyer_id_type")
+        if not profile:
+            return
+        if profile not in ("NIK", "NPWP16", "TIN_0"):
+            raise StateInconsistencyError(f"Unsupported source buyer profile {profile!r}.")
+        number = row.get("customer_tax_id") or row.get("customer_vat") or ""
+        values = {
+            "l10n_id_buyer_document_type": "NIK" if profile == "NIK" else "TIN",
+            "l10n_id_buyer_document_number": number if profile == "NIK" else False,
+            "l10n_id_pkp": str(row.get("is_pkp")).strip().lower() in ("true", "1", "t"),
+            "vat": (row.get("customer_vat") or False) if profile == "NIK" else number,
+        }
+        partner = partner.commercial_partner_id
+        if len(number) != 16 or not number.isascii() or not number.isdecimal():
+            raise StateInconsistencyError(f"Invalid source buyer identity for {row['invoice_number']}.")
+        if set(values) - set(partner._fields):
+            raise PreflightContinuityError("Install native Indonesian Coretax fields before loading buyer profiles.")
+        changed = {key: value for key, value in values.items() if (getattr(partner, key) or False) != value}
+        if changed:
+            if row.get("tax_id_status") in ("SYNTHETIC_TEST_IDENTITY", "UNREGISTERED_ZERO_IDENTITY"):
+                partner = partner.with_context(no_vat_validation=True)
+            partner.write(changed)
 
     def _apply_invoices(self, invoices=None) -> int:
         """Create and post out_invoice records with tax code 04 and DPP Nilai Lain."""
@@ -3143,6 +3223,7 @@ class GenericPeriodPackLoader:
                 ).account_id != receivable:
                     raise StateInconsistencyError(f"Invoice {inv_num} is outside receivable account 112000.")
                 self._validate_existing_invoice(existing, inv_row)
+                self._sync_source_buyer_identity(existing.partner_id, inv_row)
                 continue
 
             so = SaleOrder.search(
@@ -3361,38 +3442,10 @@ class GenericPeriodPackLoader:
             if "l10n_id_tax_transaction_code" in am_fields or not am_fields:
                 inv_vals["l10n_id_tax_transaction_code"] = "04"
 
-            # P2-I: PKP / Non-PKP buyer identity & Indonesian tax compliance (PER-11/PJ/2025, PMK 131/2024)
-            _buyer_id_type_map = {"NIK": "id", "NPWP": "npwp", "PASSPORT": "passport", "NITKU": "nitku"}
-            buyer_id_type_raw = str(inv_row.get("buyer_id_type") or "")
-            buyer_doc_type = _buyer_id_type_map.get(buyer_id_type_raw, "id")
-            buyer_doc_number = inv_row.get("customer_tax_id") or inv_row.get("customer_vat") or ""
-            buyer_name = inv_row.get("customer", "")
+            self._sync_source_buyer_identity(so.partner_id, inv_row)
+            if "l10n_id_kode_transaksi" in am_fields or not am_fields:
+                inv_vals["l10n_id_kode_transaksi"] = "04"
 
-            for fname, fval in [
-                ("l10n_id_buyer_document_type", buyer_doc_type),
-                ("l10n_id_buyer_document_number", buyer_doc_number),
-                ("l10n_id_buyer_name", extract_ref(buyer_name) or buyer_name),
-                ("l10n_id_kode_transaksi", "04"),
-            ]:
-                if fname in am_fields or not am_fields:
-                    inv_vals[fname] = fval
-
-            # Synchronize buyer tax identity to customer partner if fields exist
-            if hasattr(so.partner_id, "_fields"):
-                partner_fields = _safe_fields(so.partner_id)
-                p_upd = {}
-                if "vat" in partner_fields and not getattr(so.partner_id, "vat", None) and buyer_doc_number:
-                    p_upd["vat"] = buyer_doc_number
-                if "l10n_id_nik" in partner_fields and buyer_id_type_raw == "NIK" and not getattr(so.partner_id, "l10n_id_nik", None):
-                    p_upd["l10n_id_nik"] = buyer_doc_number
-                if "l10n_id_pkp" in partner_fields and "is_pkp" in inv_row:
-                    is_pkp_val = str(inv_row["is_pkp"]).strip().lower() in ("true", "1", "t")
-                    p_upd["l10n_id_pkp"] = is_pkp_val
-                if p_upd and callable(getattr(so.partner_id, "write", None)):
-                    try:
-                        so.partner_id.write(p_upd)
-                    except Exception as e:
-                        _logger.warning(f"write partner tax identity non-fatal: {e}")
             exp_dpp = float(inv_row.get("commercial_dpp") or inv_row.get("dpp_amount", 0.0))
             exp_ppn = float(inv_row.get("ppn_amount", 0.0))
             exp_tb = float(inv_row.get("dpp_amount", 0.0)) or (exp_dpp * 11.0 / 12.0)
@@ -3653,6 +3706,22 @@ class GenericPeriodPackLoader:
 
         return reconciled
 
+    def _resolve_ap_bank_journal(self, row):
+        source = row.get("bank_source")
+        mapping = AP_BANK_SOURCE_ACCOUNTS.get(source)
+        if not mapping:
+            raise PreflightContinuityError(f"AP payment {row['ap_payment_id']}: unmapped bank source {source!r}.")
+        code, account_code = mapping
+        journals = self.env["account.journal"].sudo().search([
+            ("company_id", "=", self.company.id), ("type", "=", "bank"), ("code", "=", code),
+        ], limit=2)
+        if (len(journals) != 1 or not journals[0].default_account_id
+                or journals[0].default_account_id.with_company(self.company).code != account_code):
+            raise PreflightContinuityError(
+                f"AP payment {row['ap_payment_id']}: expected one company bank journal {code} linked to account {account_code}."
+            )
+        return journals[0]
+
     def _apply_ap_payments(self, ap_payments=None) -> int:
         """Reconcile vendor payments against existing vendor bills (e.g. July Unilever bill)."""
         if ap_payments is None:
@@ -3663,27 +3732,9 @@ class GenericPeriodPackLoader:
         AccountMove = self.env["account.move"].sudo()
         AccountPayment = self.env["account.payment"].sudo()
         Partner = self.env["res.partner"].sudo()
-        Journal = self.env["account.journal"].sudo()
-
-        bank_journals = list(
-            Journal.search([("company_id", "=", self.company.id), ("type", "=", "bank")])
-        )
-        if not bank_journals:
-            bank_journals = list(
-                Journal.search([("company_id", "=", self.company.id), ("type", "in", ["bank", "cash"])])
-            )
-        if len(bank_journals) > 1 and self.strict:
-            # Prefer code BANK or explicit primary bank
-            primary = [j for j in bank_journals if getattr(j, "code", "") == "BANK"]
-            bank_journal = primary[0] if primary else bank_journals[0]
-        else:
-            bank_journal = bank_journals[0] if bank_journals else None
-
-        if not bank_journal and self.strict:
-            raise PreflightContinuityError("Bank journal not found for AP payment settlement")
-
         reconciled = 0
         for ap_row in ap_payments:
+            bank_journal = self._resolve_ap_bank_journal(ap_row)
             pay_ref = ap_row["ap_payment_id"]
             po_num = ap_row["po_number"]
             amt = float(ap_row["amount_paid_dpp"])
@@ -3733,6 +3784,8 @@ class GenericPeriodPackLoader:
 
             existing = _find_payment(AccountPayment, self.company.id, [pay_ref], payment_type="outbound")
             if existing:
+                if existing.journal_id != bank_journal:
+                    raise StateInconsistencyError(f"AP payment {pay_ref}: source bank journal mismatch.")
                 self._validate_existing_ap_payment(existing, ap_row, bill)
                 continue
 

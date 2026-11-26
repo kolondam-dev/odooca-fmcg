@@ -82,7 +82,7 @@ jobs:
           docker run --rm -v ui-filestore:/var/lib/odoo --network host --entrypoint bash fmcg-odoo:ci -c '
             odoo -d ci_db --db_host localhost --db_port 5432 -r odoo -w odoo \
               --addons-path "$(/opt/deploy/addons_path.sh)" --without-demo=true \
-              -i id_base,id_approval,id_ui_form,id_mobile_api,id_promo_governance,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,sale_management,account,fleet,l10n_id --stop-after-init --log-level=warn
+              -i id_base,id_approval,id_ui_form,id_mobile_api,id_promo_governance,id_dashboard_monetary,id_dashboard_wms,id_dashboard_sales,sale_management,account,fleet,l10n_id,l10n_id_efaktur_coretax --stop-after-init --log-level=warn
           ' 2>&1 | tee odoo-init.log
 
       - name: F4 Generic period pack loader runtime proof (two disposable databases)

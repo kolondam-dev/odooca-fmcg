@@ -9,3 +9,4 @@ from . import account_tax
 from . import sale_order
 from . import sale_order_line
 from . import document_uom_breakdown
+from . import stock_picking
