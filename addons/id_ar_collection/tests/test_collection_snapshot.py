@@ -188,7 +188,7 @@ class TestCollectionSnapshot(TransactionCase):
         self.assertEqual(lines[0]["due_date"], (day - timedelta(days=9)).isoformat())
         self.assertEqual(set(lines[0]), {
             "id", "reference", "partner", "partner_id", "outlet_id", "due_date", "overdue",
-            "amount_due", "balance", "outcome", "document_return"})
+            "amount_due", "balance", "outcome", "document_return", "receipt_state", "receipt_amount"})
 
     # ---- batas dan digest ----------------------------------------------------------------------
     @freeze_time("2026-11-16 01:00:00", tick=True)

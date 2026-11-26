@@ -4,8 +4,10 @@ Kelas terpisah tanpa fixture tak ter-commit (kunci baris milik transaksi tes aka
 akhir). Fixture BENAR-BENAR di-commit pada perusahaan utama dan dibersihkan penuh. Setiap tes menahan satu transaksi
 terbuka, menjalankan transaksi kedua di thread, memastikan yang kedua MENUNGGU, lalu commit.
 """
+import sys
 import threading
 import time
+import traceback
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -120,16 +122,30 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             try:
                 cr.execute("SET LOCAL lock_timeout = '20s'")
                 outcome["result"] = work(cr)
-                cr.commit()
+                # Commit PostgreSQL mentah: hook postcommit ORM (signal_changes) membuka registry.cursor() yang pada
+                # mode tes memakai satu cursor bersama berkunci milik thread tes utama dan menggantung thread ini.
+                cr.precommit.clear()
+                cr.postcommit.clear()
+                cr._cnx.commit()
             except Exception as exc:  # noqa: BLE001
                 outcome["error"] = exc
-                cr.rollback()
+                cr._cnx.rollback()
             finally:
                 cr.close()
 
         thread = threading.Thread(target=runner, daemon=True)
         thread.start()
         return thread
+
+    def _hang_report(self, db, thread):
+        frame = sys._current_frames().get(thread.ident)
+        stack = "".join(traceback.format_stack(frame)[-12:]) if frame else "(thread selesai)"
+        with db.cursor() as cr:
+            cr.execute(
+                "SELECT pid, state, wait_event_type, wait_event, left(query, 120) FROM pg_stat_activity "
+                "WHERE datname = current_database() AND pid <> pg_backend_pid()")
+            activity = cr.fetchall()
+        return f"\n--- stack thread ---\n{stack}\n--- pg_stat_activity ---\n{activity}"
 
     def _db_state(self, db, ids):
         with db.cursor() as cr:
@@ -155,7 +171,9 @@ class TestCollectionReceiptConcurrency(TransactionCase):
 
             def other(cr):
                 env2 = api.Environment(cr, ids["collector"], {})
-                return env2["id.mobile.command"].process_command(self._command(ids, [first, second]))
+                result = env2["id.mobile.command"].process_command(self._command(ids, [first, second]))
+                env2.flush_all()
+                return result
 
             thread = self._run_in_thread(db, other, outcome)
             time.sleep(WAIT)
@@ -164,7 +182,7 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         finally:
             cr1.close()
         thread.join(JOIN)
-        self.assertFalse(thread.is_alive(), "tidak boleh deadlock/menggantung")
+        self.assertFalse(thread.is_alive(), "tidak boleh deadlock/menggantung" + self._hang_report(db, thread))
         self.assertNotIn("error", outcome, outcome.get("error"))
         self.assertEqual(outcome["result"]["status"], "rejected")  # baris sudah dilaporkan transaksi pertama
         receipts, commands = self._db_state(db, ids)
@@ -201,7 +219,9 @@ class TestCollectionReceiptConcurrency(TransactionCase):
 
             def command(cr):
                 env2 = api.Environment(cr, ids["collector"], {})
-                return env2["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+                result = env2["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+                env2.flush_all()
+                return result
 
             thread = self._run_in_thread(db, command, outcome)
             time.sleep(WAIT)
@@ -210,7 +230,7 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         finally:
             cr_native.close()
         thread.join(JOIN)
-        self.assertFalse(thread.is_alive())
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
         self.assertNotIn("error", outcome, outcome.get("error"))
         # Setelah menunggu, saldo dibaca ulang (600): expected_balance 1000 basi => ditolak, tanpa efek.
         self.assertEqual((outcome["result"]["status"], outcome["result"]["reference"]), ("rejected", "balance"))
@@ -232,7 +252,7 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             env1.flush_all()
 
             def native(cr):
-                return self._native_reconcile(api.Environment(cr, SUPERUSER_ID, {}), ids, 400.0)
+                return self._native_reconcile(api.Environment(cr, SUPERUSER_ID, {}), ids, 400.0)  # flush di dalam
 
             thread = self._run_in_thread(db, native, outcome)
             time.sleep(WAIT)
@@ -241,7 +261,7 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         finally:
             cr1.close()
         thread.join(JOIN)
-        self.assertFalse(thread.is_alive())
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
         self.assertNotIn("error", outcome, outcome.get("error"))
         self.assertEqual(outcome["result"], 600.0)
         receipts, commands = self._db_state(db, ids)
