@@ -535,6 +535,44 @@
 - [F] No merge, deployment, or server-data change was performed by this work.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-20T08:41:39+07:00
+[2026-11-20T22:40:22+07:00] [INFO] PR #110: sinkronisasi main dan patch scope DO
+- [F] Merge origin/main 69c6e05; kedua sisi konflik HANDOFF dipertahankan.
+- [F] ORM Odoo 19 disposable: filter lama 0, filter patch tepat 1; tiga kontrol negatif dikecualikan. 77 unit test, Ruff, dan 14 manifest lulus.
+- Task managed by codex agent at 2026-11-20T22:40:22+07:00
+
+[2026-11-21T06:06:45+07:00] [INFO] PR #110: cache kontrak Android dan pajak native F4
+- [F] Android: FROM-CACHE sebelumnya menghilangkan check_in.json; deklarasi output memulihkan 3 sampel dan validator OpenAPI lulus.
+- [F] ORM Odoo: test faktur Kode 04 gagal tanpa patch karena tax_line_id kosong dan lulus dengan patch.
+- [BU] CI exact-SHA baru serta vendor bill, stok, AR-to-GL dan digest F4 masih terbuka.
+- Task managed by codex agent at 2026-11-21T06:06:45+07:00
+
+[2026-11-21T09:58:20+07:00] [INFO] PR #110: akun kontrol piutang seed Juli–Agustus
+- [F] Reproduksi pack pada 44ffa4f membuktikan 4.843 AML piutang dan saldo Rp2.368.135.989,94 pada 121000; 112000 tidak memiliki AML.
+- [F] Patch memilih 112000 pada payment terms draft dan tujuan pembayaran. ORM disposable membuktikan pembayaran lintas periode dan replay.
+- Task managed by codex agent at 2026-11-21T09:58:20+07:00
+
+[2026-11-21T13:02:21+07:00] [INFO] PR #110: scope periode audit GL PPN keluaran
+- [F] Run 44858700079 membuktikan AR 112000 cocok Rp2.368.135.989,94 pada A dan B.
+- [F] Selisih PPN Rp19.371.395,89 tepat sama dengan 50 faktur September; oracle cutoff kini mengikuti tanggal posting dalam register.
+- [BU] Tagihan vendor, stok dan digest A/B tetap terbuka.
+- Task managed by codex agent at 2026-11-21T13:02:21+07:00
+
+[2026-11-21T15:54:38+07:00] [INFO] PR #110: posting tagihan vendor dan cutoff PPN Masukan
+- [F] Run 44873643566 membuktikan audit AR dan PPN keluaran cocok.
+- [F] ORM disposable memposting 16 tagihan, replay 0 duplikasi. PPN pack Rp782.852.400; PPN Agustus Rp720.627.600.
+- [BU] F4 dua database, stock-to-GL dan digest A/B belum lulus.
+- Task managed by codex agent at 2026-11-21T15:54:38+07:00
+
+[2026-11-22T09:39:47+07:00] [INFO] PR #110: stok per cutoff, akun interim tagihan, dan bukti diff A/B
+- [F] Run 44887074713: AR, AP dan PPN cocok; GL persediaan bertambah tepat sebesar DPP tagihan Agustus.
+- [F] Probe Odoo disposable: 16 tagihan posted dan receipt sampai cutoff tie-out Rp6.551.160.000 pada 113000; tagihan memakai 113900.
+- [BU] F4 penuh dan digest A/B menunggu run.
+- Task managed by codex agent at 2026-11-22T09:39:47+07:00
+
+[2026-11-22T09:43:08+07:00] [INFO] PR #110: pembanding dokumen stok lintas database
+- [F] Sequence picking Odoo standard maju meski savepoint rollback. Probe native: transaksi yang sama menghasilkan digest raw berbeda, digest lintas DB sama.
+- [F] Replay dan rollback tetap memakai digest raw; perubahan lot dan nilai jurnal tetap mengubah digest lintas DB.
+- Task managed by codex agent at 2026-11-22T09:43:08+07:00
 
 [2026-11-20T22:27:23+07:00] [INFO] Sinkronkan DEV-01 dengan toolchain PR #173
 - [F] Main 69c6e05, arahan 6b894ca, checkpoint historis dcad215. Android required jobs identik dengan main.
@@ -571,6 +609,27 @@
 - [F] No merge, deployment, or server-data change was performed by this work.
 - [BU] Emulator API 24/35, Redmi 4X, POCO M3, live backend and any targetSdk acceptance remain the separate N2 stage.
 - Task managed by codex agent at 2026-11-22T08:33:20+07:00
+
+[2026-11-22T15:31:02+07:00] [INFO] PR #110: follow-up review HPP dan order-to-cash
+- Sinkron dengan main a66b4d6; riwayat handoff dan log digabung.
+- Guard HPP memverifikasi seluruh nominal dengan stock move pendukung; test golden chain native mencakup approval, picking ber-lot, invoice, dan rekonsiliasi.
+- Acceptance operasional Agustus yang masih terbuka dicatat di handoff.
+- Task managed by codex agent at 2026-11-22T15:31:02+07:00
+
+[2026-11-22T16:07:51+07:00] [INFO] PR #110: sinkronisasi BE-19 dari main
+- Sinkron ke main 16b909e dan gabungkan kedua riwayat handoff.
+- 33 tes Odoo terarah lulus setelah integrasi; replay sumber Agustus cocok per SKU dan lot.
+- Task managed by codex agent at 2026-11-22T16:07:51+07:00
+
+[2026-11-22T22:06:21+07:00] [INFO] PR #110: owner dan tanggal SO historis
+- Register outlet yang dipin menentukan owner 1.240 SO; F4 mengaudit owner dan tanggal.
+- 146 tes Python, probe Odoo enam salesman, Ruff dan 14 manifest lulus.
+- Task managed by codex agent at 2026-11-22T22:06:21+07:00
+
+[2026-11-22T23:27:26+07:00] [INFO] F4: perbaiki urutan fixture rollback
+- Owner dan tanggal nol selisih di kedua skenario pada 82101d3; probe perlu menulis SO valid lebih dulu.
+- 83 tes Python terarah lulus.
+- Task managed by codex agent at 2026-11-22T23:27:26+07:00
 
 [2026-11-22T11:28:39+07:00] [INFO] DEV-01 patok arsip toolchain smoke API 24/35
 - [F] Tindak lanjut 5cbd64a untuk run 44881381326 pada a74613c. Platform Tools 37.0.3, emulator 37.3.10 dan image API 24 rev 27/API 35 rev 9 dipasang dari arsip Google dengan checksum.
@@ -626,9 +685,26 @@
 - Sinkron main, lengkapi POT, dan uji PDF DO selesai parsial; runtime menunggu CI.
 - Task managed by codex agent at 2026-11-22T22:01:20+07:00
 
+[2026-11-22T23:31:54+07:00] [INFO] F4: sinkronisasi PR gudang #135
+- Gabungkan main 6137b97 dan pertahankan riwayat handoff serta log kedua cabang.
+- Task managed by codex agent at 2026-11-22T23:31:54+07:00
+
+[2026-11-23T08:16:36+07:00] [INFO] F4 Paket A: urutkan event PO hingga pembayaran
+- Guard dispatch per lot dan tanggal, cek target AR, golden chain native lengkap, mini-pack bersumber dan oracle audited.
+- 148 tes Python, golden chain Odoo dan kontrol negatif mini-pack lokal lulus. Full F4 pending.
+- Task managed by codex agent at 2026-11-23T08:16:36+07:00
+
+[2026-11-23T08:17:07+07:00] [INFO] F4 Paket A: sinkron dengan BE-7 #187
+- Main c58ec3e dan riwayat handoff kedua cabang dipertahankan.
+- Task managed by codex agent at 2026-11-23T08:17:07+07:00
 [2026-11-23T07:44:32+07:00] [INFO] UoM pembelian vendor FMCG
 - Seed offer native per SKU dan vendor, pertahankan basis UoM PO historis, tambah kontrak PO-receipt-bill pada CI.
 - Task managed by codex agent at 2026-11-23T07:44:32+07:00
+
+[2026-11-23T11:29:37+07:00] [INFO] F4 Paket B: diskon, approval, dan histori promo
+- Golden native tactical line/footer dan promo Supervisor; replay mutasi metadata historis ditolak; source frozen tetap menjadi oracle.
+- Sinkron main b37a502, UoM PO historis eksplisit; kombinasi program-first, budget dan aktivasi v2 masih terbuka.
+- Task managed by codex agent at 2026-11-23T11:29:37+07:00
 
 [2026-11-22T22:46:50+07:00] [INFO] DEV-01B bersihkan APK smoke sebelum instalasi fixture UI
 - [F] Run 45038999868 pada fef6f3e menunjukkan Login lulus dan instalasi ulang target API 24 ditolak INSTALL_FAILED_ALREADY_EXISTS.
@@ -644,6 +720,56 @@
 - Mode dry-run dan apply eksplisit, validasi SKU dan rasio; tidak dijalankan di demo.
 - Task managed by codex agent at 2026-11-23T10:45:07+07:00
 
+[2026-11-25T15:24:34+07:00] [INFO] PR #110: perbaiki setup KPI dan uji paket komersial gabungan
+- Dashboard menggunakan approval tactical sesuai kebijakan; nominal KPI dipertahankan.
+- Golden native promo nominal tetap dibuktikan hingga rekonsiliasi. Sync main 2cf2626; log dan handoff kedua cabang dipertahankan.
+- Task managed by codex agent at 2026-11-25T15:24:34+07:00
+
+[2026-11-25T15:43:26+07:00] [INFO] PR #110: jalankan approval di fixture visual dashboard
+- GitHub: 337 tes addon lulus pada 582b7a1; tahap shell visual menemukan SO diskon belum disetujui.
+- Patch lokal pada DB kosong lulus hingga DASHBOARD_VISUAL_FIXTURE=PASS.
+- Task managed by codex agent at 2026-11-25T15:43:26+07:00
+
+[2026-11-25T19:06:54+07:00] [INFO] Paket B: chain native dua SKU dan kontrol approval total tetap
+- Buktikan promo nominal, stack/footer, pajak invoice, role, relasi pembayaran dan residual; kontrol eligibility dan split principal lulus.
+- Lima golden chain Odoo dan 127 tes Python lulus. Budget/mapping/order v2 tetap membutuhkan keputusan atau penugasan.
+- Task managed by codex agent at 2026-11-25T19:06:54+07:00
+
 [2026-11-25T19:06:25+07:00] [INFO] Sinkronisasi PR 177 setelah review supervisor
 - Main 2cf2626. Log kedua sisi dipertahankan.
 - Task managed by codex agent at 2026-11-25T19:06:25+07:00
+
+[2026-11-25T20:52:36+07:00] [INFO] PR #110: audit efek samping promo dan replay binding legacy
+- Mini-pack Odoo lulus dan seluruh counter efek samping nol. Persetujuan pemilik serta batas acceptance tercatat.
+- Sinkron main f0b3632; 127 tes Python lulus, F4 penuh masih menunggu CI.
+- Task managed by codex agent at 2026-11-25T20:52:36+07:00
+
+[2026-11-25T22:28:33+07:00] [INFO] PR #110: integrasi main dan gate final A/C/D
+- Main 23a4108, handoff kedua cabang dipertahankan. Catat asal keputusan pemilik dan gate sumber.
+- Correctness komersial a77dcb3 PASS; Ruff, manifest dan 127 tes Python lulus. CI/F4 exact SHA integrasi menunggu.
+- Task managed by codex agent at 2026-11-25T22:28:33+07:00
+
+[2026-11-26T07:55:33+07:00] [INFO] PR #110: trace retur, payload Coretax, dan rekening AP eksplisit
+- Tambah oracle dua DB dan kontrol replay/rollback. Coretax memakai field partner komersial; mapping AP BNK1/101401.
+- 129 tes Python, Ruff dan manifest lulus. F4 exact SHA menunggu.
+- Task managed by codex agent at 2026-11-26T07:55:33+07:00
+
+[2026-11-26T08:05:55+07:00] [INFO] PR #110: cegah recompute PKP saat VAT historis diisi
+- Probe lokal atas 1.240 profil menemukan empat NIK dengan flag PKP yang berubah. Kirim flag dari register bersama VAT.
+- Setelah koreksi seluruh profil fixture lulus, termasuk regresi unit.
+- Task managed by codex agent at 2026-11-26T08:05:55+07:00
+
+[2026-11-26T15:06:13+07:00] [INFO] PR #110: integrasi main ac9c5fe dan batas acceptance akhir
+- Konflik hanya HANDOFF, riwayat kedua cabang dipertahankan. Bukti tiga gate b258705 dicatat.
+- 137 tes Python lulus. Rekomendasi UNKNOWN/K5 menunggu persetujuan; ulang F4 exact SHA.
+- Task managed by codex agent at 2026-11-26T15:06:13+07:00
+
+[2026-11-26T15:10:46+07:00] [INFO] PR #110: integrasikan main a69fbd9
+- Main maju setelah push. BE-20d bersama tes terintegrasi tanpa konflik.
+- 137 tes lokal, Ruff dan manifest lulus. F4 exact SHA menunggu.
+- Task managed by codex agent at 2026-11-26T15:10:46+07:00
+
+[2026-11-26T15:27:06+07:00] [INFO] PR #110: keputusan pemilik tentang UNKNOWN dan K5
+- Pemilik menjawab Setujui kedua batas. Catat UNKNOWN picking/packing, trip dan driver per DO serta K5 sebagai slice terpisah.
+- Perubahan dokumentasi saja. Verdict merge tetap pada supervisor.
+- Task managed by codex agent at 2026-11-26T15:27:06+07:00

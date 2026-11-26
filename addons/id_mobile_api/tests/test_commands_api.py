@@ -766,7 +766,9 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
     def test_delivery_pod_and_trip_close_validation(self):
         """Delivery POD submit requires valid picking manifest and persistent evidence; trip close binds PODs."""
         model = self._command_model()
-        day_str = business_date().isoformat()
+        day = business_date()
+        day_str = day.isoformat()
+        scheduled_now = datetime.combine(day, datetime.min.time())
         dummy_base64 = base64.b64encode(b"valid-pod-photo")
 
         # 1. POD with nonexistent trip / manifest -> rejected
@@ -812,7 +814,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
 
@@ -830,7 +832,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
 
@@ -920,7 +922,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "cancel",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
         _add_picking_move(picking_cancelled, "cancel")
@@ -945,7 +947,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "draft",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
         with self.assertRaises(UserError):
@@ -1000,7 +1002,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": self.mobile.id,
         })
         _add_picking_move(picking_incoming, "assigned")
@@ -1031,7 +1033,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "location_dest_id": location_dest.id,
             "company_id": self.company.id,
             "state": "assigned",
-            "scheduled_date": fields.Datetime.now(),
+            "scheduled_date": scheduled_now,
             "user_id": other_courier.id,
         })
         _add_picking_move(picking_other_courier, "assigned")
@@ -1057,6 +1059,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "client_uuid": pod_uuid1,
             "type": "delivery.pod.submit",
             "payload": {
+                "business_date": day_str,
                 "pod_version": 1,
                 "source": {
                     "id": picking1.name,
@@ -1109,6 +1112,7 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             "client_uuid": pod_uuid2,
             "type": "delivery.pod.submit",
             "payload": {
+                "business_date": day_str,
                 "pod_version": 1,
                 "source": {
                     "id": picking2.name,
