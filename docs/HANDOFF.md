@@ -9,6 +9,35 @@
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
+## 2026-11-25 — [F] BE-20d: revisi custody vs alokasi (re-review #198, claude-design)
+
+- [F] Bagian 8.12: custody (uang/instrumen diterima) dipisah dari alokasi ke faktur; uang fisik selalu dapat dicatat (exception AR control, beralasan, beraudit); konflik hanya menahan alokasi (`held`), tanpa `active_claim` ganda dan tanpa melanggar indeks pending; resolusi atomik; selisih kas tidak mengubah klaim asli.
+- [F] 8.13: `unpaid` nol tanpa pending/pembayaran; metode campuran dipecah satu receipt per metode dalam satu savepoint; jalan pintas validasi hanya untuk tunai; cutoff dievaluasi di setiap entrypoint dengan waktu server saat lock (cron hanya catch-up); kalimat awal §8 dibersihkan.
+- [BU] Hanya dokumen; konfirmasi accountant giro tetap prasyarat 20e. `collection_v2` tetap OFF.
+
+## 2026-11-25 — [F] BE-20d: Q5/Q6 diputuskan, mekanisme meja kasir (claude-design)
+
+- [F] Q5a: penutupan SJP tengah malam WITA. Q5b: uang wajib diamankan di kasir dan dicatat tanpa bergantung PWA: bagian 8.11, penerimaan `source=cashier_desk` (langsung `cashier_validated`) atau kasir memvalidasi klaim `mobile`; invarian satu-pending-per-faktur dan lock sama; SJP tidak bisa `returned` sebelum kasir menghitung; laporan "uang di tangan kolektor" dan kontrol "uang bermalam"; setelah penutupan hanya pengecualian AR control dengan alasan.
+- [F] Q6 disetujui (best practice, 8.10; [BU] konfirmasi accountant). Tidak ada pertanyaan terbuka tersisa di rancangan 8.
+- [BU] Hanya dokumen; 20d menyiapkan model (`source`, `exception`), meja kasir dan validasi di 20e. `collection_v2` tetap OFF.
+
+## 2026-11-25 — [F] BE-20d: Q6 giro diputuskan (claude-design)
+
+- [F] Q6: pemilik setuju rekomendasi dan menyerahkan perlakuan ke best practice. Rancangan 8.10: giro diterima diposting ke akun perantara Giro Diterima saat divalidasi accounting (piutang turun, proteksi pending lepas), pencairan = pemindahan ke Bank, tolak = pembalikan dan faktur kembali kandidat. Mengoreksi rancangan sebelumnya (pembayaran saat cair). [BU] Perlu konfirmasi accountant sebelum implementasi.
+- [BU] Q5 (batas penutupan dan uang terlewat) masih terbuka; hanya dokumen; `collection_v2` tetap OFF.
+
+## 2026-11-25 — [F] BE-20d: keputusan pemilik D10 masuk rancangan (claude-design)
+
+- [F] Q1: one-day settlement (kecuali kasbon/kanvas): tanpa sinkron lintas hari; command hanya pada `collect_date` WITA; penutupan akhir hari menandai baris tak dilaporkan `lapsed`, SJP tanpa penerimaan `expired`, receipt pending tetap terproteksi; uang terlewat lewat pengecualian manual AR control (Q5 terbuka).
+- [F] Q2: tunai, transfer (hanya rekening perusahaan; verifikasi manual telepon/WA ke admin finance wajib tercatat), dan giro. Kontrak 20d memuat ketiganya; validasi per metode di 20e (tunai dulu, lalu transfer, lalu giro). Q6 (perlakuan akuntansi giro) terbuka.
+- [F] Q3 dan Q4 disetujui sesuai rekomendasi (satu hasil per baris; satu pending per faktur lintas SJP).
+- [BU] Hanya dokumen; `collection_v2` tetap OFF.
+
+## 2026-11-25 — [F] BE-20d: rancangan penerimaan penagihan (claude-design)
+
+- [F] `docs/ui/BE20_SJP_DESIGN.md` bagian 8: kontrak `collection.receipt.submit`, identitas server SJP+baris+faktur+kolektor+perusahaan (bukan `outlet_id`), idempotensi dua lapis (UUID command + indeks unik parsial satu penerimaan aktif per baris), kunci baris/faktur dan `expected_balance`, rollback atomik, titik perluasan dispatcher di `id_mobile_api`, rencana 10 tes, tiga pertanyaan terbuka (Q1-Q3, ada default).
+- [F] Revisi review #198: tiga kelas hasil command (`CommandRejected` dicatat di luar savepoint, nol efek bisnis), 23505 dipetakan menurut constraint, pending satu per faktur lintas SJP (indeks + guard lifecycle), urutan lock global + baca ulang setelah lock, audit lock rekonsiliasi native sebagai prasyarat [BU], rencana tes 10 butir termasuk dua transaksi nyata. Q1-Q4 hanya rekomendasi, menunggu pemilik; frasa 'default dipakai' dihapus.
+- [BU] Hanya dokumen; belum ada kode atau tes. Pembayaran/rekonsiliasi tetap BE-20e. `collection_v2` tetap OFF.
 
 ## 2026-11-24 — [BU] FIN36 oracle seluruh board posted pada DB disposable (opencode)
 
