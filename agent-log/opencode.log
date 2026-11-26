@@ -467,3 +467,9 @@
 - Ruleset main-quality-gate mewajibkan strict required checks; origin/main ef97d1f digabung. Upstream hanya docs/log BE-20d dan jalur oracle FIN36 byte-identik.
 - Exact-SHA CI dan artifact setelah sinkronisasi masih [BU]. Full Dataset runtime, penerimaan FIN36, merge, dan deployment tetap HOLD menunggu re-review independen.
 - Task managed by Agent Opencode at 2026-11-26T08:00:29+07:00
+[2026-11-26T08:46:26+07:00] [INFO] FIN36 population coverage dan cutoff multi-company
+- [F] PR #202 merged ac9c5fe (head b869e2b), review PASS/CUKUP; 22 SUCCESS / 7 SKIPPED, Finance I0 dan rollback PASS, Full Dataset runtime SKIPPED.
+- [BU] Oracle baru merekonstruksi register exact per asset/source-line/source-move dari populasi hasil pencarian, lalu merekonsiliasi bucket ke posted GL per company.
+- [BU] Fixture runtime menambah company kedua dengan salvage 4.000, draft GL noise, dan acquisition setelah cutoff; counterexample juga menutup disposal setelah cutoff, aset hilang/duplikat, source reuse, company leakage, serta komposisi salah dengan agregat tetap benar.
+- [F] Sebelas tes offline, Ruff, compile dan diff check PASS lokal. [BU] Odoo runtime/Finance I0 exact-SHA menunggu CI; FIN36, Full Dataset, produksi, katalog, merge dan deployment tetap HOLD.
+- Task managed by Agent Opencode at 2026-11-26T08:46:26+07:00

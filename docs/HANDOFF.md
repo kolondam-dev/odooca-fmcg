@@ -1,3 +1,10 @@
+## 2026-11-26 — [BU] FIN36 population coverage + cutoff/multi-company isolation (opencode)
+
+- [F] PR #202 merged ke `main` sebagai `ac9c5fe8b4880b0042c3f02d057b94d223fc4a76` (head uji `b869e2bd9e4b07b68aef3691ebfc997f5cb92e32`); review final PASS/CUKUP, 22 SUCCESS / 7 SKIPPED. Finance I0 dan rollback PASS; Full Dataset runtime SKIPPED. Early disposal residual/loss dan rollforward register→GL disposable tertutup, bukan acceptance FIN36.
+- [BU] Branch `agen/opencode-fin36-population-isolation` mengganti agregasi tiga aset terpilih dengan coverage exact per asset/source-line/source-move pada populasi hasil pencarian. Fixture menambah company kedua dengan salvage value 4.000, draft GL noise, dan acquisition setelah cutoff; oracle merekonsiliasi rollforward dan GL per company tanpa netting lintas aset/company.
+- [F] Sebelas tes offline menolak aset hilang/duplikat, source reuse, company leakage, komposisi per-aset salah walau agregat benar, serta draft dan acquisition/depreciation/disposal setelah cutoff. Ruff dan compile PASS lokal; runtime Odoo/Finance I0 exact-SHA masih [BU].
+- [BU] Dampak test TAMBAH. Full Dataset, ACL/export/live, lisensi/aktivasi produksi AGPL-3, populasi aset nyata, mapping Controller, sign-off, merge, dan deployment tetap HOLD; katalog tidak diubah.
+
 ## 2026-11-26 — [F] FIN36 PR #202 CI rerun dan sinkronisasi strict-main (opencode)
 
 - [F] Exact head historis `f9eeddd7f0e81ec7c35b02b527f5c7c1c7bffa1a`: Finance I0 run `45648307014` SUCCESS dengan artifact `finance-i0-candidate-evidence` id `15038838267`; early disposal residual/loss, register rollforward ke GL, lifecycle lama, dan rollback PASS.
