@@ -7,6 +7,9 @@ from unittest.mock import patch
 from odoo import Command, fields
 from odoo.exceptions import AccessError, UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
+from psycopg2 import IntegrityError
+from odoo.tools import mute_logger
+from ..models.mobile_command import CommandRejected
 from ..models.mobile_workday import MobileReadConflict
 from .test_read_api import MobileFixture, business_date, sunday_business_date
 
@@ -1166,6 +1169,137 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                     "type": cmd_type,
                     "payload": {},
                 })
+
+    # ---- titik perluasan dispatcher (BE-20d, generik) -----------------------------------------
+    def _extension_command(self, cmd_type="test.ext.submit", **payload):
+        return {"client_uuid": str(uuid.uuid4()), "type": cmd_type, "payload": payload}
+
+    def _patched_extension(self, handler, mapper=None):
+        """Daftarkan tipe uji lewat titik perluasan; handler berjalan di dalam savepoint dispatcher."""
+        cls = type(self.env["id.mobile.command"])
+        original = cls._supported_commands
+
+        def supported(model):
+            return set(original(model)) | {"test.ext.submit"}
+
+        def extension(model, cmd_type, payload, client_uuid):
+            if cmd_type != "test.ext.submit":
+                return None
+            return handler(model, payload, client_uuid)
+
+        stack = [patch.object(cls, "_supported_commands", supported),
+                 patch.object(cls, "_handle_extension", extension)]
+        if mapper is not None:
+            stack.append(patch.object(cls, "_map_integrity_error", mapper))
+        return stack
+
+    def _run_extension(self, command, handler, mapper=None):
+        stack = self._patched_extension(handler, mapper)
+        for item in stack:
+            item.start()
+            self.addCleanup(item.stop)
+        return self._command_model().process_command(command)
+
+    def _logged(self, client_uuid):
+        return self.env["id.mobile.command"].sudo().search([
+            ("client_uuid", "=", client_uuid), ("user_id", "=", self.mobile.id)])
+
+    def test_extension_accepted_is_logged_and_replayed_once(self):
+        calls = []
+
+        def handler(model, payload, client_uuid):
+            calls.append(client_uuid)
+            return "accepted", "ok", "EXT-1"
+
+        command = self._extension_command(x=1)
+        first = self._run_extension(command, handler)
+        self.assertEqual((first["status"], first["reference"]), ("accepted", "EXT-1"))
+        self.assertEqual(self._command_model().process_command(command), first)
+        self.assertEqual(len(calls), 1)  # replay tidak menjalankan handler lagi
+        self.assertEqual(len(self._logged(command["client_uuid"])), 1)
+
+    def test_extension_type_is_unsupported_until_an_addon_registers_it(self):
+        model = self._command_model()
+        with self.assertRaises(UserError):
+            model.process_command(self._extension_command(cmd_type="test.ext.submit"))
+
+    def test_command_rejected_rolls_back_business_effects_and_logs_one_rejected_command(self):
+        marker = "BE20D Rejected Partner %s" % uuid.uuid4()
+        calls = []
+
+        def handler(model, payload, client_uuid):
+            calls.append(client_uuid)
+            model.env["res.partner"].sudo().create({"name": marker})  # mutasi bisnis baris pertama
+            raise CommandRejected("Saldo berubah.", reference="REJ-1")  # lalu baris kedua gagal
+
+        command = self._extension_command(x=1)
+        first = self._run_extension(command, handler)
+        self.assertEqual((first["status"], first["message"], first["reference"]), ("rejected", "Saldo berubah.", "REJ-1"))
+        self.assertFalse(self.env["res.partner"].sudo().search([("name", "=", marker)]))  # nol efek bisnis
+        logged = self._logged(command["client_uuid"])
+        self.assertEqual((len(logged), logged.status), (1, "rejected"))
+        # Retry identik: hasil rejected sama, handler tidak dijalankan ulang, tetap satu log.
+        self.assertEqual(self._command_model().process_command(command), first)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(self._logged(command["client_uuid"])), 1)
+        # UUID sama dengan payload berbeda tetap konflik.
+        with self.assertRaises(MobileReadConflict):
+            self._command_model().process_command({**command, "payload": {"x": 2}})
+
+    def test_user_error_from_extension_is_not_logged(self):
+        def handler(model, payload, client_uuid):
+            raise UserError("malformed")
+
+        command = self._extension_command()
+        with self.assertRaises(UserError):
+            self._run_extension(command, handler)
+        self.assertFalse(self._logged(command["client_uuid"]))
+
+    @mute_logger("odoo.sql_db")
+    def test_integrity_error_is_mapped_by_constraint_not_blanket(self):
+        def duplicate_key(model, payload, client_uuid):
+            key = "be20d.dispatcher.%s" % uuid.uuid4()
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            return "accepted", "tidak tercapai", ""
+
+        # Tanpa pemetaan addon, 23505 dari constraint lain naik apa adanya (bukan "retry UUID").
+        with self.assertRaises(IntegrityError):
+            self._run_extension(self._extension_command(), duplicate_key)
+
+    @mute_logger("odoo.sql_db")
+    def test_mapped_integrity_error_becomes_persistent_rejection(self):
+        def duplicate_key(model, payload, client_uuid):
+            key = "be20d.dispatcher.%s" % uuid.uuid4()
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            model.env.cr.execute("INSERT INTO ir_config_parameter (key, value) VALUES (%s, '1')", (key,))
+            return "accepted", "tidak tercapai", ""
+
+        def mapper(model, error, cmd_type):
+            return CommandRejected("Sudah ada penerimaan aktif.", reference="DUP")
+
+        command = self._extension_command()
+        receipt = self._run_extension(command, duplicate_key, mapper)
+        self.assertEqual((receipt["status"], receipt["reference"]), ("rejected", "DUP"))
+        self.assertEqual(self._logged(command["client_uuid"]).status, "rejected")
+
+    @mute_logger("odoo.sql_db")
+    def test_command_uuid_race_is_a_retry_conflict_even_if_addon_maps_other_constraints(self):
+        command = self._extension_command()
+
+        def racing(model, payload, client_uuid):
+            # Sesi lain menyisipkan UUID yang sama lebih dulu: pelanggaran terjadi pada log command itu sendiri.
+            model.sudo().create({
+                "client_uuid": client_uuid, "command_type": "test.ext.submit", "fingerprint": "other",
+                "user_id": self.mobile.id, "company_id": self.company.id,
+                "payload_json": "{}", "status": "accepted"})
+            return "accepted", "ok", ""
+
+        def mapper(model, error, cmd_type):  # tidak boleh dipakai untuk konflik UUID command
+            return CommandRejected("salah dipetakan")
+
+        with self.assertRaises(MobileReadConflict):
+            self._run_extension(command, racing, mapper)
 
 
 @tagged("post_install", "-at_install")

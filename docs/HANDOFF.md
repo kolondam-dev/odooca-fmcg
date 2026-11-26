@@ -13,6 +13,13 @@
 - [BU] Populasi aset nyata, mapping Controller, lisensi AGPL-3 produksi, ACL/export/live dan sign-off Controller+QA tetap HOLD.
 
 ## 2026-11-25 — [F] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
+## 2026-11-26 — [F] BE-20d (1/2): titik perluasan dispatcher generik (claude-design)
+
+- [F] `id.mobile.command`: `_supported_commands()`, `_handle_extension()` dan `_map_integrity_error()` (default tidak berbuat apa-apa), kelas `CommandRejected`. Handler melempar `CommandRejected` dari dalam savepoint (rollback penuh); dispatcher mencatat satu command `rejected` di transaksi luar; retry identik mengembalikan hasil sama tanpa menjalankan handler. 23505 pada log command (UUID) tetap `MobileReadConflict`; 23505 constraint lain dipetakan addon atau naik apa adanya (perubahan perilaku: sebelumnya semua 23505 dianggap "retry UUID").
+- [F] 7 tes Odoo baru melalui `process_command` produksi (accepted+replay, rollback+rejected persisten, retry/konflik payload, UserError tak dicatat, 23505 per constraint, race UUID) [BU: hanya CI]. Tipe `collection.receipt.submit` belum didaftarkan (PR 2/2); tes `unsupported` lama tetap berlaku sampai PR itu.
+- [BU] Audit lock rekonsiliasi native Odoo tetap prasyarat PR 2/2. `collection_v2` tetap OFF.
+
+## 2026-11-25 — [BU] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
 
 - [F] PR #197 merged ke `main` sebagai `3056f3f0ce3bda8b4938d8aaa464e5be3de87e01`; head `aed9150c4af091b28f53c7ab97eed2a6f691c6d3`; 22 SUCCESS/6 SKIPPED, Full Dataset runtime SKIPPED. Artifact: tiga jurnal depresiasi (move 1/2/3), GL per cutoff, residual nol, rollback PASS. Katalog tetap 58/58 `BELUM_DITERIMA`.
 - [BU] Branch `agen/opencode-fin36-acquisition-disposal-oracle` mengganti aset manual dengan vendor bill posted; `type=create` wajib menunjuk `move_id` bill dan baris kapitalisasi tunggal. Disposal memakai wizard `account.asset.remove`; oracle memposting jurnal draft lalu mengikat debit akumulasi/kredit biaya perolehan 100.001. P2 review #199: oracle akuisisi juga mengikat tanggal bill/invoice, jurnal `purchase`, baris kredit payable beserta nilainya, dan tanggal baris kapitalisasi.
