@@ -768,3 +768,8 @@
 - Main maju setelah push. BE-20d bersama tes terintegrasi tanpa konflik.
 - 137 tes lokal, Ruff dan manifest lulus. F4 exact SHA menunggu.
 - Task managed by codex agent at 2026-11-26T15:10:46+07:00
+
+[2026-11-26T15:27:06+07:00] [INFO] PR #110: keputusan pemilik tentang UNKNOWN dan K5
+- Pemilik menjawab Setujui kedua batas. Catat UNKNOWN picking/packing, trip dan driver per DO serta K5 sebagai slice terpisah.
+- Perubahan dokumentasi saja. Verdict merge tetap pada supervisor.
+- Task managed by codex agent at 2026-11-26T15:27:06+07:00

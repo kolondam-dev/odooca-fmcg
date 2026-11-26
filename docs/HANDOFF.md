@@ -1,3 +1,14 @@
+## 2026-11-26T15:27:06+07:00 — Agent Codex-Cloud1 — PR #110: keputusan batas sumber akhir
+
+**Berubah:**
+- Catat jawaban pemilik “Setujui kedua batas”. Picking/packing historis, trip dan driver per DO diterima sebagai UNKNOWN. K5 ditangani pada slice likuiditas terpisah.
+**Diverifikasi:**
+- [F] Perubahan hanya dokumentasi dan log. Otorisasi merge tetap pada supervisor/reviewer.
+**Belum diuji:**
+- [BU] CI dan F4 exact SHA dokumentasi akhir.
+**Berikutnya:**
+- Serahkan hasil exact-SHA untuk re-review historical seeding. Apply loader ke demo memerlukan otorisasi tersendiri.
+
 ## 2026-11-26T15:10:46+07:00 — Agent Codex-Cloud1 — PR #110: integrasi main BE-20d
 
 **Berubah:**
