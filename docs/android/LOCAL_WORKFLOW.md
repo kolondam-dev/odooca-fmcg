@@ -169,6 +169,10 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Lead:** Integrasikan checkpoint perbaikan, jalankan ulang dan serahkan bukti untuk re-review. PR #201 tetap draft.
 - **Design:** Lanjutkan DES-02-r1.
 
+### Bukti cleanup B09 — PR #201 pada 4e09b39
+
+[Run API 35](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45851429258) lulus pada `4e09b39`. Kedua fase APK, tiga checkpoint dan verifier lulus. Cleanup runner KVM jalur normal membuktikan sembilan resource bersih, termasuk unregister ADB. Jalur gagal dibuktikan Dev pada backend disposable dan dengan simulasi host. Bukti untuk re-review ditautkan di PR. PR tetap draft/HOLD sambil menunggu CI dan verdict. Dev menunggu temuan baru; Design lanjut DES-02-r1.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
