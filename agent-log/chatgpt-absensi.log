@@ -14,3 +14,9 @@
 - [F] HTTP 422 dengan kode attendance_evidence_expired membuka pengambilan bukti baru. Retry ambigu mempertahankan UUID.
 - [F] Upgrade lokal, 12 tes Odoo ORM/HTTP, 574 Vitest dan 4 skenario browser pilot lulus. [BU] CI head baru dan perangkat staging menunggu.
 - Task managed by ChatGPT-ABSENSI at 2026-11-25T22:50:37+07:00
+
+[2026-11-26T07:36:50+07:00] [INFO] Stabilkan tes picking yang memblokir PR #200
+- [F] CI 45649200735 gagal saat fixture picking bergeser melewati tengah malam WITA.
+- [F] Tes mematok 23:56–00:08 WITA dan memeriksa nol pada hari mulai serta satu picking berdurasi 12 menit pada hari selesai.
+- [BU] Runtime Odoo diverifikasi lewat CI pada commit perbaikan.
+- Task managed by ChatGPT-ABSENSI at 2026-11-26T07:36:50+07:00

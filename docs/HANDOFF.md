@@ -1,3 +1,9 @@
+## 2026-11-26 — Tes picking lintas hari WITA PR #200 (ChatGPT-ABSENSI)
+
+- [F] Satu kegagalan install-test pada run 45649200735 berasal dari fixture WMS yang melewati tengah malam WITA.
+- [F] Fixture memakai 23.56–00.08 WITA dan menguji kedua tanggal. Durasi 12 menit masuk pada tanggal selesai.
+- [BU] CI head perbaikan dan verifikasi perangkat staging absensi menunggu.
+
 ## 2026-11-25 — Recovery bukti kedaluwarsa PR #200 (ChatGPT-ABSENSI)
 
 - [F] P2: respons definitif `attendance_evidence_expired` melepas draft dan membuka foto/GPS baru. Respons jaringan ambigu tetap memakai UUID yang sama. Receipt accepted yang ditemukan tetap di-replay.
