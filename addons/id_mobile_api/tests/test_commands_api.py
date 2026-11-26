@@ -1297,11 +1297,121 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
                 "payload_json": "{}", "status": "accepted"})
             return "accepted", "ok", ""
 
+        mapped = []
+
         def mapper(model, error, cmd_type):  # tidak boleh dipakai untuk konflik UUID command
+            mapped.append(error)
             return CommandRejected("salah dipetakan")
 
         with self.assertRaises(MobileReadConflict):
             self._run_extension(command, racing, mapper)
+        self.assertFalse(mapped)  # satu transaksi (cabang unique violation), BUKAN bukti dua transaksi bersaing
+
+    # ---- klasifikasi 23505 menurut constraint nyata (bukan tabel) -------------------------------
+    def _raw_log_insert(self, cr, row_id, client_uuid, user=None):
+        cr.execute(
+            "INSERT INTO id_mobile_command (id, client_uuid, command_type, fingerprint, user_id, company_id,"
+            " payload_json, status) VALUES (%s, %s, 'x', 'f', %s, %s, '{}', 'accepted')",
+            (row_id, client_uuid, (user or self.mobile).id, self.company.id),
+        )
+
+    def _inject_on_log_create(self, kind, only_status=None, once=False):
+        """Sisipkan tabrakan tepat sebelum pembuatan log command; kind: 'uuid' atau 'pkey'."""
+        cls = type(self.env["id.mobile.command"])
+        original = cls._create_log_record
+        state = {"done": False}
+
+        def patched(model, vals):
+            if (only_status is None or vals.get("status") == only_status) and not (once and state["done"]):
+                state["done"] = True
+                cr = model.env.cr
+                cr.execute("SELECT nextval(pg_get_serial_sequence('id_mobile_command', 'id'))")
+                row_id = cr.fetchone()[0]
+                if kind == "uuid":
+                    owner = model.env["res.users"].browse(vals["user_id"])
+                    self._raw_log_insert(cr, row_id, vals["client_uuid"], user=owner)
+                else:
+                    self._raw_log_insert(cr, row_id, str(uuid.uuid4()))
+                    cr.execute(
+                        "SELECT setval(pg_get_serial_sequence('id_mobile_command', 'id'), %s, true)", (row_id - 1,)
+                    )
+            return original(model, vals)
+
+        item = patch.object(cls, "_create_log_record", patched)
+        item.start()
+        self.addCleanup(item.stop)
+
+    @mute_logger("odoo.sql_db")
+    def test_uuid_constraint_name_comes_from_schema_and_matches_real_violation(self):
+        model = self.env["id.mobile.command"]
+        names = model._command_uuid_constraint_names()
+        self.assertTrue(names)
+        cr = self.env.cr
+        cr.execute("SELECT nextval(pg_get_serial_sequence('id_mobile_command', 'id'))")
+        row_id = cr.fetchone()[0]
+        dup = str(uuid.uuid4())
+        self._raw_log_insert(cr, row_id, dup)
+        cr.execute("SELECT nextval(pg_get_serial_sequence('id_mobile_command', 'id'))")
+        other_id = cr.fetchone()[0]
+        with self.assertRaises(IntegrityError) as uuid_clash:
+            with cr.savepoint():
+                self._raw_log_insert(cr, other_id, dup)  # (user_id, client_uuid) sama
+        self.assertIn(uuid_clash.exception.diag.constraint_name, names)
+        self.assertTrue(model._is_command_uuid_conflict(uuid_clash.exception))
+        with self.assertRaises(IntegrityError) as pkey_clash:
+            with cr.savepoint():
+                self._raw_log_insert(cr, row_id, str(uuid.uuid4()))  # primary key sama, UUID beda
+        self.assertEqual(pkey_clash.exception.diag.table_name, "id_mobile_command")
+        self.assertNotIn(pkey_clash.exception.diag.constraint_name, names)
+        self.assertFalse(model._is_command_uuid_conflict(pkey_clash.exception))
+
+    @mute_logger("odoo.sql_db")
+    def test_accepted_log_uuid_collision_is_retry_conflict_and_skips_mapper(self):
+        mapped = []
+        self._inject_on_log_create("uuid")
+        with self.assertRaises(MobileReadConflict):
+            self._run_extension(
+                self._extension_command(),
+                lambda model, payload, client_uuid: ("accepted", "ok", ""),
+                lambda model, error, cmd_type: mapped.append(error),
+            )
+        self.assertFalse(mapped)
+
+    @mute_logger("odoo.sql_db")
+    def test_accepted_log_non_uuid_unique_goes_to_mapper_or_raises(self):
+        handler = lambda model, payload, client_uuid: ("accepted", "ok", "")  # noqa: E731
+        self._inject_on_log_create("pkey", only_status="accepted", once=True)
+        with self.assertRaises(IntegrityError):  # tanpa pemetaan: naik, bukan "retry UUID"
+            self._run_extension(self._extension_command(), handler)
+        mapped = []
+
+        def mapper(model, error, cmd_type):
+            mapped.append(error.diag.constraint_name)
+            return CommandRejected("Tabrakan non-UUID.", reference="PK")
+
+        self._inject_on_log_create("pkey", only_status="accepted", once=True)
+        command = self._extension_command()
+        receipt = self._run_extension(command, handler, mapper)
+        self.assertEqual((receipt["status"], receipt["reference"]), ("rejected", "PK"))
+        self.assertNotIn(mapped[0], self.env["id.mobile.command"]._command_uuid_constraint_names())
+
+    @mute_logger("odoo.sql_db")
+    def test_rejected_log_uuid_collision_is_retry_conflict(self):
+        def handler(model, payload, client_uuid):
+            raise CommandRejected("Ditolak.")
+
+        self._inject_on_log_create("uuid", only_status="rejected")
+        with self.assertRaises(MobileReadConflict):
+            self._run_extension(self._extension_command(), handler)
+
+    @mute_logger("odoo.sql_db")
+    def test_rejected_log_non_uuid_unique_is_not_reported_as_uuid_retry(self):
+        def handler(model, payload, client_uuid):
+            raise CommandRejected("Ditolak.")
+
+        self._inject_on_log_create("pkey", only_status="rejected")
+        with self.assertRaises(IntegrityError):
+            self._run_extension(self._extension_command(), handler)
 
 
 @tagged("post_install", "-at_install")

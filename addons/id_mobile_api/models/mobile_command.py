@@ -196,7 +196,7 @@ class MobileCommand(models.Model):
                         raise UserError(_("Unsupported command handler for %s") % cmd_type)
                     status, message, reference = extension
 
-                record = self.sudo().create({
+                record = self._create_log_record({
                     "client_uuid": client_uuid,
                     "command_type": cmd_type,
                     "fingerprint": fingerprint,
@@ -233,15 +233,45 @@ class MobileCommand(models.Model):
                 user, company, client_uuid, cmd_type, fingerprint, command_data, mapped
             )
 
+    def _command_uuid_constraint_names(self):
+        """Nama unique constraint/index NYATA pada (user_id, client_uuid), dibaca dari skema PostgreSQL.
+
+        Tidak mengarang nama dari atribut Python: constraint-backed unique index memakai nama yang sama dengan
+        constraint-nya, sehingga ``diag.constraint_name`` dapat dicocokkan langsung.
+        """
+        self.env.cr.execute(
+            """
+            SELECT i.relname
+              FROM pg_index x
+              JOIN pg_class i ON i.oid = x.indexrelid
+              JOIN pg_class t ON t.oid = x.indrelid
+              JOIN pg_namespace n ON n.oid = t.relnamespace
+             WHERE t.relname = %s AND n.nspname = current_schema()
+               AND x.indisunique AND NOT x.indisprimary AND x.indpred IS NULL
+               AND (SELECT array_agg(a.attname::text ORDER BY a.attname)
+                      FROM pg_attribute a
+                     WHERE a.attrelid = t.oid AND a.attnum = ANY(x.indkey)) = ARRAY['client_uuid', 'user_id']
+            """,
+            (self._table,),
+        )
+        return {row[0] for row in self.env.cr.fetchall()}
+
     def _is_command_uuid_conflict(self, error):
-        """True hanya bila 23505 berasal dari tabel log command (UUID per pengguna), bukan constraint lain."""
+        """True hanya bila 23505 berasal dari constraint UUID (user_id, client_uuid), bukan unique lain."""
         diag = getattr(error, "diag", None)
-        return bool(diag and getattr(diag, "table_name", None) == self._table)
+        if not diag or getattr(diag, "table_name", None) != self._table:
+            return False
+        name = getattr(diag, "constraint_name", None)
+        return bool(name) and name in self._command_uuid_constraint_names()
+
+    def _create_log_record(self, vals):
+        """Satu-satunya titik pembuatan log command (accepted maupun rejected)."""
+        return self.sudo().create(vals)
 
     def _record_rejection(self, user, company, client_uuid, cmd_type, fingerprint, command_data, rejection):
         try:
             with self.env.cr.savepoint():
-                record = self.sudo().create({
+                record = self._create_log_record({
                     "client_uuid": client_uuid,
                     "command_type": cmd_type,
                     "fingerprint": fingerprint,

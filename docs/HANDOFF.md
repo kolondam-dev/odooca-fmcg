@@ -13,6 +13,12 @@
 - [BU] Populasi aset nyata, mapping Controller, lisensi AGPL-3 produksi, ACL/export/live dan sign-off Controller+QA tetap HOLD.
 
 ## 2026-11-25 — [F] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
+## 2026-11-26 — [F] BE-20d (1/2): klasifikasi 23505 menurut constraint nyata (review #203, claude-design)
+
+- [F] `_is_command_uuid_conflict` kini mencocokkan `diag.constraint_name` dengan nama unique index/constraint pada `(user_id, client_uuid)` yang dibaca dari skema PostgreSQL (`_command_uuid_constraint_names`), bukan tabel semata; PK atau unique lain pada tabel yang sama tidak lagi dianggap "retry UUID" (dipetakan addon atau naik). Seam `_create_log_record` menjadi satu-satunya titik pembuatan log (accepted dan rejected).
+- [F] 5 tes baru: nama constraint dari skema cocok dengan pelanggaran nyata dan PK tidak cocok; jalur log accepted dan rejected untuk tabrakan UUID (konflik retry, mapper tidak dipanggil) dan non-UUID (mapper atau IntegrityError). Tes race lama diberi label jujur: satu transaksi, bukan bukti concurrency [BU: hanya CI]. Koordinasi PR #200 (`_supported_commands`/`_dispatch_extra_command`) dicatat: satukan API extension saat salah satunya terintegrasi.
+- [BU] collection_v2 tetap OFF.
+
 ## 2026-11-26 — [F] BE-20d (1/2): titik perluasan dispatcher generik (claude-design)
 
 - [F] `id.mobile.command`: `_supported_commands()`, `_handle_extension()` dan `_map_integrity_error()` (default tidak berbuat apa-apa), kelas `CommandRejected`. Handler melempar `CommandRejected` dari dalam savepoint (rollback penuh); dispatcher mencatat satu command `rejected` di transaksi luar; retry identik mengembalikan hasil sama tanpa menjalankan handler. 23505 pada log command (UUID) tetap `MobileReadConflict`; 23505 constraint lain dipetakan addon atau naik apa adanya (perubahan perilaku: sebelumnya semua 23505 dianggap "retry UUID").
