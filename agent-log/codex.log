@@ -821,3 +821,7 @@
 - Acuan e23a0d1 dan f9719ea. Log lama tidak mengidentifikasi resource yang gagal.
 - Probe HTTPS sukses dan fault setelah siap membuktikan cleanup gateway dan Docker. Unregister nyata menunggu runner ber-KVM.
 - Task managed by codex agent at 2026-11-26T22:22:37+07:00
+
+[2026-11-26T22:40:10+07:00] [INFO] Integrasi cleanup B09 PR 201
+- Dev bafed8d dan main 2ccfb2d. Dampak test SESUAIKAN; status per resource tetap fail closed dan runtime ditinjau ulang.
+- Task managed by codex agent at 2026-11-26T22:40:10+07:00
