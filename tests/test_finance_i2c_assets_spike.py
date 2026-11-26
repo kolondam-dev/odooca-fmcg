@@ -1,4 +1,4 @@
-"""Offline counterexamples for the disposable FIN36 source/provenance spike."""
+"""Offline counterexamples for the disposable FIN36 lifecycle/register oracle."""
 
 from datetime import date
 from pathlib import Path
@@ -264,6 +264,229 @@ class AssetSpikeOracleTest(unittest.TestCase):
         move.journal_id = object()
         with self.assertRaisesRegex(AssertionError, "profile journal"):
             spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+
+    def test_early_disposal_requires_residual_sale_and_loss_gl(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        cost = SimpleNamespace(id=7)
+        accumulated = SimpleNamespace(id=8)
+        sale = SimpleNamespace(id=9)
+        loss = SimpleNamespace(id=10)
+        journal = object()
+        removed_on = date(2026, 8, 16)
+        move = SimpleNamespace(
+            state="posted", date=removed_on, company_id=self.company,
+            journal_id=journal,
+            line_ids=[
+                SimpleNamespace(
+                    account_id=accumulated, debit=14838.71,
+                    credit=0.0, balance=14838.71,
+                ),
+                SimpleNamespace(
+                    account_id=cost, debit=0.0,
+                    credit=120000.0, balance=-120000.0,
+                ),
+                SimpleNamespace(
+                    account_id=sale, debit=100000.0,
+                    credit=0.0, balance=100000.0,
+                ),
+                SimpleNamespace(
+                    account_id=loss, debit=5161.29,
+                    credit=0.0, balance=5161.29,
+                ),
+            ],
+        )
+        removal = SimpleNamespace(
+            type="remove", move_id=move, move_check=True,
+            amount=105161.29, line_date=removed_on,
+        )
+        asset = SimpleNamespace(
+            state="removed", date_remove=removed_on, company_id=self.company,
+            currency_id=currency,
+            profile_id=SimpleNamespace(journal_id=journal),
+        )
+        spike.verify_early_disposal_gl(
+            asset, removal, move, cost, accumulated, sale, loss,
+        )
+
+        removal.amount = 0.0
+        with self.assertRaisesRegex(AssertionError, "residual/date mismatch"):
+            spike.verify_early_disposal_gl(
+                asset, removal, move, cost, accumulated, sale, loss,
+            )
+        removal.amount = 105161.29
+
+        move.line_ids[-1].debit = 5160.29
+        move.line_ids[-1].balance = 5160.29
+        move.line_ids.append(SimpleNamespace(
+            account_id=loss, debit=1.0, credit=0.0, balance=1.0,
+        ))
+        with self.assertRaisesRegex(AssertionError, "GL posting mismatch"):
+            spike.verify_early_disposal_gl(
+                asset, removal, move, cost, accumulated, sale, loss,
+            )
+        move.line_ids.pop()
+        move.line_ids[-1].debit = 5161.29
+        move.line_ids[-1].balance = 5161.29
+
+        move.state = "draft"
+        with self.assertRaisesRegex(AssertionError, "not posted"):
+            spike.verify_early_disposal_gl(
+                asset, removal, move, cost, accumulated, sale, loss,
+            )
+
+    def test_register_rollforward_rejects_balanced_bucket_tamper(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        expected = {
+            "opening": 50000.0,
+            "additions": 220001.0,
+            "disposals": 105161.29,
+            "depreciation": 124839.71,
+            "closing": 40000.0,
+        }
+        spike.verify_register_rollforward(expected, dict(expected), currency)
+
+        for bucket in ("opening", "additions", "disposals", "depreciation", "closing"):
+            mutant = dict(expected)
+            mutant[bucket] += 1.0
+            with self.subTest(bucket=bucket), self.assertRaisesRegex(
+                AssertionError, f"Register {bucket} source/GL mismatch",
+            ):
+                spike.verify_register_rollforward(expected, mutant, currency)
+
+        # This mutation keeps the arithmetic equation closed but shifts one
+        # unit from additions to depreciation. Per-bucket provenance must fail.
+        balanced = dict(expected)
+        balanced["additions"] += 1.0
+        balanced["depreciation"] += 1.0
+        with self.assertRaisesRegex(AssertionError, "Register additions"):
+            spike.verify_register_rollforward(expected, balanced, currency)
+
+        source_bad = dict(expected)
+        source_bad["closing"] = 1.0
+        with self.assertRaisesRegex(AssertionError, "source rollforward"):
+            spike.verify_register_rollforward(source_bad, source_bad, currency)
+
+    def test_population_row_excludes_draft_and_post_cutoff_sources(self):
+        company = SimpleNamespace(id=41)
+        asset = SimpleNamespace(id=51, company_id=company)
+
+        def source(source_id, source_type, amount, source_date, posted=True):
+            move = SimpleNamespace(
+                id=source_id + 100,
+                state="posted" if posted else "draft",
+                date=source_date,
+            )
+            return SimpleNamespace(
+                id=source_id,
+                type=source_type,
+                amount=amount,
+                line_date=source_date,
+                move_check=posted,
+                move_id=move,
+                asset_id=asset,
+                company_id=company,
+            )
+
+        asset.depreciation_line_ids = [
+            source(1, "create", 60_000.0, date(2026, 6, 1)),
+            source(2, "depreciate", 10_000.0, date(2026, 6, 30)),
+            source(3, "depreciate", 10_000.0, date(2026, 7, 31)),
+            source(4, "depreciate", 10_000.0, date(2026, 8, 31), posted=False),
+            source(5, "depreciate", 10_000.0, date(2026, 11, 30)),
+            source(6, "remove", 40_000.0, date(2026, 11, 15)),
+        ]
+        row = spike.register_population_row(asset, "2026-07-01", "2026-10-31")
+        self.assertEqual(
+            {key: row[key] for key in spike.REGISTER_KEYS},
+            {
+                "opening": 50_000.0,
+                "additions": 0.0,
+                "disposals": 0.0,
+                "depreciation": 10_000.0,
+                "closing": 40_000.0,
+            },
+        )
+        self.assertEqual(row["source_line_ids"], (1, 2, 3))
+
+    def test_population_requires_exact_assets_company_and_unique_sources(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        expected = {
+            11: {
+                "opening": 50_000.0, "additions": 0.0,
+                "disposals": 0.0, "depreciation": 10_000.0,
+                "closing": 40_000.0, "source_count": 3,
+            },
+            12: {
+                "opening": 0.0, "additions": 120_000.0,
+                "disposals": 105_161.29, "depreciation": 14_838.71,
+                "closing": 0.0, "source_count": 4,
+            },
+        }
+        rows = [
+            {
+                "asset_id": 11, "company_id": 7,
+                "opening": 50_000.0, "additions": 0.0,
+                "disposals": 0.0, "depreciation": 10_000.0,
+                "closing": 40_000.0,
+                "source_line_ids": (1, 2, 3),
+                "source_move_ids": (101, 102, 103),
+            },
+            {
+                "asset_id": 12, "company_id": 7,
+                "opening": 0.0, "additions": 120_000.0,
+                "disposals": 105_161.29, "depreciation": 14_838.71,
+                "closing": 0.0,
+                "source_line_ids": (4, 5, 6, 7),
+                "source_move_ids": (104, 105, 106, 107),
+            },
+        ]
+        totals = spike.verify_register_population(rows, expected, 7, currency)
+        self.assertEqual(totals["closing"], 40_000.0)
+
+        with self.assertRaisesRegex(AssertionError, "coverage mismatch"):
+            spike.verify_register_population(rows[:1], expected, 7, currency)
+        with self.assertRaisesRegex(AssertionError, "duplicate assets"):
+            spike.verify_register_population(rows + [dict(rows[0])], expected, 7, currency)
+
+        cross_company = [dict(row) for row in rows]
+        cross_company[1]["company_id"] = 8
+        with self.assertRaisesRegex(AssertionError, "crosses company"):
+            spike.verify_register_population(cross_company, expected, 7, currency)
+
+        reused = [dict(row) for row in rows]
+        reused[1]["source_line_ids"] = (3, 5, 6, 7)
+        with self.assertRaisesRegex(AssertionError, "reuses a source line"):
+            spike.verify_register_population(reused, expected, 7, currency)
+
+    def test_population_rejects_correct_aggregate_with_wrong_asset_composition(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        expected = {
+            11: {
+                "opening": 50.0, "additions": 0.0, "disposals": 0.0,
+                "depreciation": 10.0, "closing": 40.0, "source_count": 1,
+            },
+            12: {
+                "opening": 0.0, "additions": 100.0, "disposals": 20.0,
+                "depreciation": 30.0, "closing": 50.0, "source_count": 1,
+            },
+        }
+        rows = [
+            {
+                "asset_id": 11, "company_id": 7,
+                "opening": 50.0, "additions": 1.0, "disposals": 0.0,
+                "depreciation": 11.0, "closing": 40.0,
+                "source_line_ids": (1,), "source_move_ids": (101,),
+            },
+            {
+                "asset_id": 12, "company_id": 7,
+                "opening": 0.0, "additions": 99.0, "disposals": 20.0,
+                "depreciation": 29.0, "closing": 50.0,
+                "source_line_ids": (2,), "source_move_ids": (102,),
+            },
+        ]
+        # Aggregate additions/depreciation and both closing values still match.
+        with self.assertRaisesRegex(AssertionError, "asset 11 additions mismatch"):
+            spike.verify_register_population(rows, expected, 7, currency)
 
 
 if __name__ == "__main__":

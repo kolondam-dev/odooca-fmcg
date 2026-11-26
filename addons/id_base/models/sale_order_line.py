@@ -12,6 +12,11 @@ class SaleOrderLine(models.Model):
         help="Rincian turunan dari satu kuantitas kanonis; tidak menambah kuantitas stok.",
     )
 
+    fmcg_seed_promo_ref = fields.Char(
+        string="Historical Promotion Reference", readonly=True, copy=False,
+        help="Promotion code from the source register. It does not establish approval or a claim.",
+    )
+
     @api.model_create_multi
     def create(self, vals_list):
         """Default new FMCG sales lines to the SKU's readable base-unit label."""

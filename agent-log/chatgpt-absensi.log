@@ -20,3 +20,9 @@
 - [F] Tes mematok 23:56–00:08 WITA dan memeriksa nol pada hari mulai serta satu picking berdurasi 12 menit pada hari selesai.
 - [BU] Runtime Odoo diverifikasi lewat CI pada commit perbaikan.
 - Task managed by ChatGPT-ABSENSI at 2026-11-26T07:36:50+07:00
+
+[2026-11-27T06:47:23+07:00] [INFO] Integrasi dispatcher PR #200 dengan main
+- [F] Handler attendance memakai _handle_extension PR #203. Validasi expiry tetap EvidenceRejected dan UUID replay tetap mendahului handler.
+- [F] Tambah uji ORM rollback saat simpan receipt gagal lalu retry UUID yang sama. Ruff, manifest, dan kompilasi Python lulus.
+- [BU] Runtime Odoo pada SHA integrasi menunggu CI.
+- Task managed by ChatGPT-ABSENSI at 2026-11-27T06:47:23+07:00

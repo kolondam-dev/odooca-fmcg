@@ -18,9 +18,16 @@ membuktikan vendor bill posted sebagai sumber `type=create` (`move_id` bill,
 satu baris kapitalisasi 100.001,00, tanggal bill/invoice, jurnal `purchase`,
 kredit payable) dan disposal via wizard `account.asset.remove` yang jurnal
 draft-nya diposting oracle (debit akumulasi = kredit biaya perolehan
-100.001,00). [BU] Masih tidak ada dependensi/aktivasi produksi; populasi aset,
-mapping Controller, lisensi AGPL-3, ACL/export/live dan sign-off tetap HOLD,
-dan PR belum di-merge.
+100.001,00). [F] PR #199 merged ke `main` sebagai `23a4108` (head uji
+`6ce53e6`), 22 SUCCESS / 7 SKIPPED; artifact Finance I0 yang benar
+`15034796540` membuktikan lifecycle dan rollback. [F] PR #202 merged sebagai
+`ac9c5fe` (head uji `b869e2b`), review final PASS/CUKUP dengan 22 SUCCESS / 7
+SKIPPED; Finance I0 dan rollback PASS. Register tiga aset (opening/closing
+nonnol) serta early disposal residual/loss terikat ke GL. [BU] Slice berikutnya
+memperluas coverage exact per aset/source, cutoff dan isolasi dua company pada
+DB disposable. Masih tidak ada dependensi/aktivasi produksi; populasi aset
+nyata, mapping Controller, lisensi AGPL-3, ACL/export/live dan sign-off tetap
+HOLD. Full Dataset runtime belum dijalankan.
 
 **Status:** 0/58 `DITERIMA`; `REPORT_CATALOG.csv` tetap sumber status dan tidak
 diubah oleh inventaris ini. Dokumen ini adalah urutan kerja dan register blocker,

@@ -1,5 +1,5 @@
 from odoo import fields
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import TransactionCase
 
 
@@ -539,13 +539,50 @@ class TestApprovalEngine(TransactionCase):
         self.assertTrue(order._has_program_discount())
         with self.assertRaises(UserError):  # promo baru belum ditinjau Supervisor
             order.action_confirm()
-        order.action_request_promo_usage_approval()
-        with self.assertRaises(UserError):  # pengajuan promo menunggu
-            order.action_confirm()
-        promo = order._approval_effective_request("promo_program_usage")
-        promo.with_user(self.user_spv).action_approve(notes="Sesuai alokasi")
+        replacement = order._mobile_auto_request_approvals()
+        self.assertEqual(replacement.category_code, "tactical_discount")
+        self._approve_chain(replacement)
         order.action_confirm()
         self.assertEqual(order.state, "sale")
+
+    def test_approval_blocks_same_total_discount_reallocation(self):
+        order = self._tactical_order(discount=8.0, extra_lines=[
+            (0, 0, {"product_id": self.product.id, "name": "Offset control",
+                     "product_uom_qty": 5.0, "price_unit": 12_000.0, "discount": 0.0}),
+        ])
+        line, other = order.order_line
+        other.write({"price_unit": line.price_unit, "product_uom_qty": line.product_uom_qty})
+        request = order._mobile_auto_request_approvals()
+        self.assertTrue(request)
+        with self.assertRaises(AccessError):
+            request.with_user(self.env.ref("base.public_user")).action_approve()
+        self._approve_chain(request)
+        approved_total = order.amount_total
+        line.discount = 0.0
+        other.discount = 8.0
+        self.assertEqual(order.amount_total, approved_total)
+        with self.assertRaisesRegex(UserError, "Komposisi komersial berubah"):
+            order.action_confirm()
+        self.assertFalse(order.picking_ids)
+
+    def test_footer_rounding_remainder_is_allocated_once(self):
+        order = self._tactical_order(discount=0.0, qty=1.0, extra_lines=[
+            (0, 0, {"product_id": self.product.id, "name": "Second SKU line",
+                     "product_uom_qty": 1, "price_unit": 100, "discount": 0}),
+        ])
+        quantum = order.currency_id.rounding
+        order.order_line.price_unit = 100 * quantum
+        order.action_apply_tactical_components({}, quantum)
+        first, second = order.order_line.sorted("id")
+        self.assertEqual(first.discount, 1)
+        self.assertEqual(second.discount, 0)
+        self.assertAlmostEqual(order.amount_untaxed, 199 * quantum)
+
+    def test_line_discount_cannot_bypass_required_header_approval(self):
+        order = self._tactical_order(discount=8)
+        with self.assertRaisesRegex(UserError, "Ajukan persetujuan diskon taktikal"):
+            order.action_confirm()
+        self.assertFalse(order.picking_ids)
 
     def test_31_manual_discount_raised_after_approval_blocks_confirmation(self):
         order = self._tactical_order(discount=5.0)

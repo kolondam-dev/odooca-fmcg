@@ -118,10 +118,12 @@ class TestWarehouseDepth(TransactionCase):
         move = self.env["stock.move"].create({"product_id": product.id, "product_uom": product.uom_id.id,
             "product_uom_qty": 1, "location_id": zone.id,
             "location_dest_id": self.env.ref("stock.stock_location_customers").id, "state": "done"})
+        now_dt = fields.Datetime.now()
         self.env["stock.move.line"].create({"move_id": move.id, "product_id": product.id,
             "product_uom_id": product.uom_id.id, "quantity": 1, "location_id": zone.id,
-            "location_dest_id": move.location_dest_id.id, "date": fields.Datetime.now()})
-        data = self.env["id.warehouse.depth"]._data(day, day, wh.id)
+            "location_dest_id": move.location_dest_id.id, "date": now_dt})
+        current_day = str(local_day(now_dt))
+        data = self.env["id.warehouse.depth"]._data(current_day, current_day, wh.id)
         self.assertEqual(data["flow_counts"]["shipped"], 1)
         sku = next(r for r in data["skus"] if r["product_id"] == product.id)
         self.assertFalse(sku["inactive"])

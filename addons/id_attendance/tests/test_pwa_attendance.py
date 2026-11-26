@@ -6,7 +6,7 @@ from uuid import uuid4
 from PIL import Image
 
 from odoo import Command
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
 from odoo.addons.id_attendance.models.mobile_command import WITA
@@ -144,3 +144,23 @@ class TestPwaAttendance(TransactionCase):
                 ("client_uuid", "=", command["client_uuid"]),
             ]))
         self.assertFalse(self.env["hr.attendance"].search([("employee_id", "=", self.employee.id)]))
+
+    def test_dispatcher_rolls_back_attendance_if_receipt_write_fails(self):
+        now, metadata = self._metadata(0, "check_in")
+        self._capture(now, metadata)
+        command = self._command(metadata)
+        attendance = self.env["hr.attendance"]
+        domain = [("employee_id", "=", self.employee.id)]
+
+        def fail_receipt(model, vals):
+            self.assertEqual(vals["client_uuid"], command["client_uuid"])
+            self.assertEqual(attendance.search_count(domain), 1)
+            raise UserError("Fixture receipt write failed.")
+
+        with patch.object(type(self.commands), "_create_log_record", fail_receipt):
+            with self.assertRaisesRegex(UserError, "Fixture receipt write failed"):
+                self._submit(now, command)
+        self.assertFalse(attendance.search_count(domain))
+        self.assertFalse(self.commands.sudo().search_count([("client_uuid", "=", command["client_uuid"])]))
+        self.assertEqual(self._submit(now, command)["status"], "accepted")
+        self.assertEqual(attendance.search_count(domain), 1)

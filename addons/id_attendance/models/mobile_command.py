@@ -2,6 +2,8 @@ import json
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
+from psycopg2 import IntegrityError
+
 from odoo import _, api, models
 from odoo.exceptions import AccessError, UserError
 
@@ -24,9 +26,21 @@ class MobileCommand(models.Model):
     def _supported_commands(self):
         return super()._supported_commands() | {ATTENDANCE_COMMAND}
 
-    def _dispatch_extra_command(self, cmd_type, payload, client_uuid):
+    def _handle_extension(self, cmd_type, payload, client_uuid):
         if cmd_type != ATTENDANCE_COMMAND:
-            return super()._dispatch_extra_command(cmd_type, payload, client_uuid)
+            return super()._handle_extension(cmd_type, payload, client_uuid)
+        try:
+            return self._handle_attendance(payload)
+        except IntegrityError as error:
+            if error.pgcode == "23505" and error.diag.constraint_name in {
+                "hr_attendance_unique_pwa_day",
+                "hr_attendance_unique_pwa_in",
+                "hr_attendance_unique_pwa_out",
+            }:
+                raise MobileReadConflict(_("Attendance submission raced; retry the same UUID.")) from None
+            raise
+
+    def _handle_attendance(self, payload):
         user, company = self._actor()
         employee = self.env["hr.employee"]._pwa_attendance_employee(user, company)
         evidence_uuid = payload.get("evidence_uuid")
