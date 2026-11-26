@@ -24,6 +24,21 @@ SUPPORTED_COMMANDS = {
 }
 
 
+class CommandRejected(Exception):
+    """Penolakan bisnis yang terotorisasi dan persisten, dilempar oleh handler command.
+
+    Bukan ``UserError``: dispatcher menangkapnya DI LUAR savepoint bisnis, sehingga seluruh mutasi handler
+    sudah di-rollback, lalu mencatat satu command berstatus ``rejected``. Retry dengan UUID dan payload
+    identik mengembalikan hasil yang sama tanpa menjalankan ulang handler. Kesalahan malformed/otorisasi
+    tetap memakai ``UserError``/``AccessError`` (tidak dicatat).
+    """
+
+    def __init__(self, message, reference=""):
+        super().__init__(message)
+        self.message = str(message)
+        self.reference = reference or ""
+
+
 def to_wita_date(dt):
     """Converts a UTC datetime from PostgreSQL or ISO string to a calendar date in Asia/Makassar (WITA)."""
     if not dt:
@@ -98,6 +113,26 @@ class MobileCommand(models.Model):
         return user, company
 
     @api.model
+    def _supported_commands(self):
+        """Titik perluasan: addon lain menambah tipe command dengan memperluas metode ini."""
+        return SUPPORTED_COMMANDS
+
+    def _handle_extension(self, cmd_type, payload, client_uuid):
+        """Titik perluasan handler untuk tipe command dari addon lain.
+
+        Mengembalikan ``(status, message, reference)`` atau ``None`` bila tipe tidak dikenali. Handler
+        berjalan di dalam savepoint dispatcher; ``CommandRejected`` dilempar untuk penolakan persisten.
+        """
+        return None
+
+    def _map_integrity_error(self, error, cmd_type):
+        """Titik perluasan: ubah ``IntegrityError`` milik constraint addon menjadi ``CommandRejected``.
+
+        Mengembalikan ``CommandRejected`` atau ``None`` (default: tidak dipetakan, error naik apa adanya).
+        """
+        return None
+
+    @api.model
     def process_command(self, command_data):
         """Dispatches an incoming PWA command idempotently and atomically."""
         user, company = self._actor()
@@ -117,7 +152,7 @@ class MobileCommand(models.Model):
         cmd_type = command_data.get("type")
         if not cmd_type:
             raise UserError(_("Invalid command format: type is required."))
-        if cmd_type not in SUPPORTED_COMMANDS:
+        if cmd_type not in self._supported_commands():
             raise UserError(_("Unsupported command type: %s") % cmd_type)
 
         payload = command_data.get("payload")
@@ -156,9 +191,12 @@ class MobileCommand(models.Model):
                 elif cmd_type in ("delivery.pod.submit", "delivery.trip.close", "delivery.proof.submit"):
                     status, message, reference = self._handle_delivery(cmd_type, payload, client_uuid)
                 else:
-                    raise UserError(_("Unsupported command handler for %s") % cmd_type)
+                    extension = self._handle_extension(cmd_type, payload, client_uuid)
+                    if extension is None:
+                        raise UserError(_("Unsupported command handler for %s") % cmd_type)
+                    status, message, reference = extension
 
-                record = self.sudo().create({
+                record = self._create_log_record({
                     "client_uuid": client_uuid,
                     "command_type": cmd_type,
                     "fingerprint": fingerprint,
@@ -178,10 +216,83 @@ class MobileCommand(models.Model):
                     "message": record.message,
                     "reference": record.reference,
                 }
+        except CommandRejected as rejection:
+            # Savepoint sudah di-rollback: nol efek bisnis. Catat penolakan di transaksi luar.
+            return self._record_rejection(
+                user, company, client_uuid, cmd_type, fingerprint, command_data, rejection
+            )
         except IntegrityError as error:
             if error.pgcode != "23505":
                 raise
-            raise MobileReadConflict(_("Command submission raced; retry the same UUID.")) from None
+            if self._is_command_uuid_conflict(error):
+                raise MobileReadConflict(_("Command submission raced; retry the same UUID.")) from None
+            mapped = self._map_integrity_error(error, cmd_type)
+            if mapped is None:
+                raise
+            return self._record_rejection(
+                user, company, client_uuid, cmd_type, fingerprint, command_data, mapped
+            )
+
+    def _command_uuid_constraint_names(self):
+        """Nama unique constraint/index NYATA pada (user_id, client_uuid), dibaca dari skema PostgreSQL.
+
+        Tidak mengarang nama dari atribut Python: constraint-backed unique index memakai nama yang sama dengan
+        constraint-nya, sehingga ``diag.constraint_name`` dapat dicocokkan langsung.
+        """
+        self.env.cr.execute(
+            """
+            SELECT i.relname
+              FROM pg_index x
+              JOIN pg_class i ON i.oid = x.indexrelid
+              JOIN pg_class t ON t.oid = x.indrelid
+              JOIN pg_namespace n ON n.oid = t.relnamespace
+             WHERE t.relname = %s AND n.nspname = current_schema()
+               AND x.indisunique AND NOT x.indisprimary AND x.indpred IS NULL
+               AND (SELECT array_agg(a.attname::text ORDER BY a.attname)
+                      FROM pg_attribute a
+                     WHERE a.attrelid = t.oid AND a.attnum = ANY(x.indkey)) = ARRAY['client_uuid', 'user_id']
+            """,
+            (self._table,),
+        )
+        return {row[0] for row in self.env.cr.fetchall()}
+
+    def _is_command_uuid_conflict(self, error):
+        """True hanya bila 23505 berasal dari constraint UUID (user_id, client_uuid), bukan unique lain."""
+        diag = getattr(error, "diag", None)
+        if not diag or getattr(diag, "table_name", None) != self._table:
+            return False
+        name = getattr(diag, "constraint_name", None)
+        return bool(name) and name in self._command_uuid_constraint_names()
+
+    def _create_log_record(self, vals):
+        """Satu-satunya titik pembuatan log command (accepted maupun rejected)."""
+        return self.sudo().create(vals)
+
+    def _record_rejection(self, user, company, client_uuid, cmd_type, fingerprint, command_data, rejection):
+        try:
+            with self.env.cr.savepoint():
+                record = self._create_log_record({
+                    "client_uuid": client_uuid,
+                    "command_type": cmd_type,
+                    "fingerprint": fingerprint,
+                    "user_id": user.id,
+                    "company_id": company.id,
+                    "occurred_at": fields.Datetime.now(),
+                    "payload_json": json.dumps(command_data, sort_keys=True, separators=(",", ":")),
+                    "status": "rejected",
+                    "reference": rejection.reference,
+                    "message": rejection.message,
+                })
+        except IntegrityError as error:
+            if error.pgcode == "23505" and self._is_command_uuid_conflict(error):
+                raise MobileReadConflict(_("Command submission raced; retry the same UUID.")) from None
+            raise
+        return {
+            "client_uuid": record.client_uuid,
+            "status": record.status,
+            "message": record.message,
+            "reference": record.reference,
+        }
 
     def _handle_sales_order_submit(self, payload, client_uuid):
         user, company = self._actor()
