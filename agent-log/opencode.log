@@ -461,3 +461,9 @@
 - [F] Delapan tes offline menolak residual/GL early disposal salah, extra line, draft removal, mismatch tiap bucket dan balanced bucket tamper; Ruff dan 15 manifest PASS. [BU] Finance I0 exact-SHA belum dijalankan.
 - [BU] Tidak ada dependensi/aktivasi produksi, data live atau perubahan katalog; mapping Controller, lisensi AGPL-3, ACL/export/live dan sign-off tetap HOLD.
 - Task managed by opencode at 2026-11-25T22:41:44+07:00
+[2026-11-26T08:00:29+07:00] [INFO] FIN36 PR #202 rerun PASS dan sinkronisasi strict-main
+- Exact head historis f9eeddd7f0e81ec7c35b02b527f5c7c1c7bffa1a: Finance I0 run 45648307014 dan CI run 45648306479 attempt 2 SUCCESS; 22 SUCCESS / 7 SKIPPED.
+- Kegagalan attempt 1 terisolasi pada boundary tengah malam WITA tes WMS; rerun pada SHA sama PASS tanpa perubahan oracle atau selector.
+- Ruleset main-quality-gate mewajibkan strict required checks; origin/main ef97d1f digabung. Upstream hanya docs/log BE-20d dan jalur oracle FIN36 byte-identik.
+- Exact-SHA CI dan artifact setelah sinkronisasi masih [BU]. Full Dataset runtime, penerimaan FIN36, merge, dan deployment tetap HOLD menunggu re-review independen.
+- Task managed by Agent Opencode at 2026-11-26T08:00:29+07:00
