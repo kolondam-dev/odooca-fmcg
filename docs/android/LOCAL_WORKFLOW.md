@@ -161,6 +161,14 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Lead:** Sinkronkan main saat menerima checkpoint, lalu jalankan job B09 dan cek CI pada SHA integrasi. Target HTTPS tetap mengikuti keputusan sebelumnya.
 - **Design:** Lanjutkan DES-02-r1.
 
+### Hasil runner B09 — PR #201 pada f9719ea
+
+[Run API 35](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45821754968) menghasilkan dua XML dan receipt APK, ketiga checkpoint Odoo, serta verifier PASS untuk satu ledger dan satu sales order S00001 tanpa perubahan pada replay. Artefak akhir mencatat `cleanup=failed` dan `phase=complete`, sehingga acceptance tetap HOLD.
+
+- **Dev:** Identifikasi pemeriksaan cleanup yang gagal pada runner KVM. Catat hasil tersanitasi per resource, termasuk unregister emulator dari ADB, penghentian gateway, container, volume, network dan direktori temporer. Buktikan cleanup pada jalur normal dan fault injection sesudah target siap. Pertahankan exit gagal saat residu terdeteksi.
+- **Lead:** Integrasikan checkpoint perbaikan, jalankan ulang dan serahkan bukti untuk re-review. PR #201 tetap draft.
+- **Design:** Lanjutkan DES-02-r1.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
