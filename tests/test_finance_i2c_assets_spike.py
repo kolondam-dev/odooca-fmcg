@@ -1,4 +1,4 @@
-"""Offline counterexamples for the disposable FIN36 source/provenance spike."""
+"""Offline counterexamples for the disposable FIN36 lifecycle/register oracle."""
 
 from datetime import date
 from pathlib import Path
@@ -264,6 +264,107 @@ class AssetSpikeOracleTest(unittest.TestCase):
         move.journal_id = object()
         with self.assertRaisesRegex(AssertionError, "profile journal"):
             spike.verify_disposal_gl(asset, removal, move, cost, accumulated)
+
+    def test_early_disposal_requires_residual_sale_and_loss_gl(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        cost = SimpleNamespace(id=7)
+        accumulated = SimpleNamespace(id=8)
+        sale = SimpleNamespace(id=9)
+        loss = SimpleNamespace(id=10)
+        journal = object()
+        removed_on = date(2026, 8, 16)
+        move = SimpleNamespace(
+            state="posted", date=removed_on, company_id=self.company,
+            journal_id=journal,
+            line_ids=[
+                SimpleNamespace(
+                    account_id=accumulated, debit=14838.71,
+                    credit=0.0, balance=14838.71,
+                ),
+                SimpleNamespace(
+                    account_id=cost, debit=0.0,
+                    credit=120000.0, balance=-120000.0,
+                ),
+                SimpleNamespace(
+                    account_id=sale, debit=100000.0,
+                    credit=0.0, balance=100000.0,
+                ),
+                SimpleNamespace(
+                    account_id=loss, debit=5161.29,
+                    credit=0.0, balance=5161.29,
+                ),
+            ],
+        )
+        removal = SimpleNamespace(
+            type="remove", move_id=move, move_check=True,
+            amount=105161.29, line_date=removed_on,
+        )
+        asset = SimpleNamespace(
+            state="removed", date_remove=removed_on, company_id=self.company,
+            currency_id=currency,
+            profile_id=SimpleNamespace(journal_id=journal),
+        )
+        spike.verify_early_disposal_gl(
+            asset, removal, move, cost, accumulated, sale, loss,
+        )
+
+        removal.amount = 0.0
+        with self.assertRaisesRegex(AssertionError, "residual/date mismatch"):
+            spike.verify_early_disposal_gl(
+                asset, removal, move, cost, accumulated, sale, loss,
+            )
+        removal.amount = 105161.29
+
+        move.line_ids[-1].debit = 5160.29
+        move.line_ids[-1].balance = 5160.29
+        move.line_ids.append(SimpleNamespace(
+            account_id=loss, debit=1.0, credit=0.0, balance=1.0,
+        ))
+        with self.assertRaisesRegex(AssertionError, "GL posting mismatch"):
+            spike.verify_early_disposal_gl(
+                asset, removal, move, cost, accumulated, sale, loss,
+            )
+        move.line_ids.pop()
+        move.line_ids[-1].debit = 5161.29
+        move.line_ids[-1].balance = 5161.29
+
+        move.state = "draft"
+        with self.assertRaisesRegex(AssertionError, "not posted"):
+            spike.verify_early_disposal_gl(
+                asset, removal, move, cost, accumulated, sale, loss,
+            )
+
+    def test_register_rollforward_rejects_balanced_bucket_tamper(self):
+        currency = SimpleNamespace(round=lambda value: round(value, 2))
+        expected = {
+            "opening": 50000.0,
+            "additions": 220001.0,
+            "disposals": 105161.29,
+            "depreciation": 124839.71,
+            "closing": 40000.0,
+        }
+        spike.verify_register_rollforward(expected, dict(expected), currency)
+
+        for bucket in ("opening", "additions", "disposals", "depreciation", "closing"):
+            mutant = dict(expected)
+            mutant[bucket] += 1.0
+            with self.subTest(bucket=bucket), self.assertRaisesRegex(
+                AssertionError, f"Register {bucket} source/GL mismatch",
+            ):
+                spike.verify_register_rollforward(expected, mutant, currency)
+
+        # This mutation keeps the arithmetic equation closed but shifts one
+        # unit from additions to depreciation. Per-bucket provenance must fail.
+        balanced = dict(expected)
+        balanced["additions"] += 1.0
+        balanced["depreciation"] += 1.0
+        with self.assertRaisesRegex(AssertionError, "Register additions"):
+            spike.verify_register_rollforward(expected, balanced, currency)
+
+        source_bad = dict(expected)
+        source_bad["closing"] = 1.0
+        with self.assertRaisesRegex(AssertionError, "source rollforward"):
+            spike.verify_register_rollforward(source_bad, source_bad, currency)
 
 
 if __name__ == "__main__":

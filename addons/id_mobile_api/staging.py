@@ -3,7 +3,7 @@
 from odoo import Command
 from odoo.exceptions import AccessError, ValidationError
 
-from .models.mobile_workday import business_date
+from .models import mobile_workday
 
 
 def provision(env, *, expected_database, disposable, passwords):
@@ -25,7 +25,7 @@ def provision(env, *, expected_database, disposable, passwords):
 
 def _provision_records(env, *, passwords):
     """Private implementation; exported provision() enforces the shell/DB guards."""
-    day = business_date()
+    day = mobile_workday.business_date()
     Data = env["ir.model.data"].sudo()
 
     def owned(key, model, values):

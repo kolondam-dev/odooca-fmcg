@@ -8,3 +8,4 @@ from . import test_credit_limit_approval
 from . import test_partner_pjp
 from . import test_geo_master
 from . import test_geo_master_loader
+from . import test_account_tax_dpp

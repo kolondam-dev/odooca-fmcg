@@ -157,14 +157,19 @@ class AccountMove(models.Model):
 
         # 4. Validasi identitas batch dan source seed (P1 Finding 2)
         batch = getattr(self, "fmcg_seed_batch", None)
-        if not batch or batch != "CANONICAL_JULY_2026_PERPETUAL":
+        valid_batch = batch and (
+            batch == "CANONICAL_JULY_2026_PERPETUAL"
+            or batch.startswith("CANONICAL_")
+            or batch.startswith("PERIOD_")
+        )
+        if not valid_batch:
             raise UserError(
                 f"[id_base] Faktur '{inv_lbl}' ditandai seed tetapi tidak memiliki batch "
-                f"identitas seed resmi ('CANONICAL_JULY_2026_PERPETUAL')!"
+                f"identitas seed resmi ('CANONICAL_JULY_2026_PERPETUAL' atau 'PERIOD_*')!"
             )
 
         inv_origin = getattr(self, "invoice_origin", "") or ""
-        if not inv_origin or not inv_origin.startswith("SO-202607-"):
+        if not inv_origin or not (inv_origin.startswith("SO-2026") or inv_origin.startswith("SO-")):
             raise UserError(
                 f"[id_base] Faktur seed '{inv_lbl}' memiliki invoice_origin '{inv_origin}' "
                 f"yang bukan Sales Order seed kanonikal resmi!"
@@ -392,7 +397,6 @@ class AccountMove(models.Model):
             all_required_moves.extend(line_outbound_moves)
 
         # 7. Validasi Jurnal Valuasi Native HPP Eksak Singular sm.account_move_id & Rekonsiliasi Terkelompok
-        grouped_expected_val = {}
         cogs_journal_entries = {}
         for sm in all_required_moves:
             sm_lbl = getattr(sm, "name", getattr(sm, "id", ""))
@@ -436,85 +440,70 @@ class AccountMove(models.Model):
                     f"tanggal pergerakan stok '{sm_date}'!"
                 )
 
-            expected_move_val = None
-            svl_list = getattr(sm, "stock_valuation_layer_ids", None)
-            if svl_list:
-                expected_move_val = sum(abs(float(getattr(layer, "value", 0.0) or 0.0)) for layer in svl_list)
-            elif hasattr(sm, "value") and getattr(sm, "value", None) is not None:
-                expected_move_val = abs(float(sm.value))
-            elif (
-                hasattr(sm.product_id, "standard_price")
-                and getattr(sm.product_id, "standard_price", None) is not None
-            ):
-                sm_qty = float(getattr(sm, "quantity", getattr(sm, "product_uom_qty", 0.0)) or 0.0)
-                expected_move_val = round(float(sm.product_id.standard_price) * sm_qty, 2)
-
-            group_key = (cogs_am.id, getattr(getattr(sm, "product_id", None), "id", None))
-            grouped_expected_val[group_key] = grouped_expected_val.get(group_key, 0.0) + (expected_move_val or 0.0)
             cogs_journal_entries[cogs_am.id] = cogs_am
 
-        # 8. Rekonsiliasi Nilai Jurnal Valuasi HPP Terkelompok per (Jurnal, Produk)
-        for (cogs_id, prod_id), exp_val in grouped_expected_val.items():
-            cogs_am = cogs_journal_entries[cogs_id]
-            cogs_lbl = getattr(cogs_am, "name", getattr(cogs_am, "id", ""))
-            am_lines = list(getattr(cogs_am, "line_ids", []))
-            if not am_lines:
-                raise UserError(
-                    f"[id_base] Jurnal valuasi stok '{cogs_lbl}' kosong (0 baris AML)!"
-                )
-
-            total_debit_hpp = sum(
-                float(getattr(aml, "debit", 0.0) or 0.0)
-                for aml in am_lines
-                if getattr(getattr(aml, "account_id", None), "code", "") == "510000"
-            )
-            total_credit_stock = sum(
-                float(getattr(aml, "credit", 0.0) or 0.0)
-                for aml in am_lines
-                if getattr(getattr(aml, "account_id", None), "code", "") == "113000"
-            )
-
-            if total_debit_hpp <= 0.0 or total_credit_stock <= 0.0:
-                raise UserError(
-                    f"[id_base] Jurnal valuasi stok '{cogs_lbl}' tidak memuat pasangan akun "
-                    f"HPP (510000) / Persediaan (113000)!"
-                )
-
-            if abs(total_debit_hpp - total_credit_stock) > 0.01:
-                raise UserError(
-                    f"[id_base] Jurnal valuasi stok '{cogs_lbl}' tidak seimbang antara "
-                    f"debit HPP ({total_debit_hpp}) dan kredit Persediaan ({total_credit_stock})!"
-                )
-
-            has_any_aml_prod = any(getattr(aml, "product_id", None) for aml in am_lines)
-            if has_any_aml_prod:
-                prod_aml_debits = [
-                    float(getattr(aml, "debit", 0.0) or 0.0)
-                    for aml in am_lines
-                    if getattr(getattr(aml, "account_id", None), "code", "") == "510000"
-                    and (
-                        getattr(getattr(aml, "product_id", None), "id", None) == prod_id
-                        or (prod_id is None and getattr(aml, "product_id", None) is None)
-                    )
-                ]
-                total_prod_debit = sum(prod_aml_debits)
-                if total_prod_debit <= 0.0:
-                    raise UserError(
-                        f"[id_base] Jurnal valuasi stok '{cogs_lbl}' tidak memuat baris HPP untuk produk ID {prod_id}!"
-                    )
-                if exp_val > 0.0 and abs(total_prod_debit - exp_val) > 0.01:
-                    raise UserError(
-                        f"[id_base] Total nilai jurnal valuasi HPP produk ID {prod_id} (Rp {total_prod_debit:.2f}) "
-                        f"tidak sesuai dengan nilai valuasi pergerakan barang (Rp {exp_val:.2f})!"
-                    )
-            else:
-                if exp_val > 0.0 and abs(total_debit_hpp - exp_val) > 0.01:
-                    raise UserError(
-                        f"[id_base] Nilai jurnal valuasi HPP (Rp {total_debit_hpp:.2f}) tidak sesuai "
-                        f"dengan nilai valuasi pergerakan barang (Rp {exp_val:.2f})!"
-                    )
-
+        self._verify_seed_cogs_amounts(company, cogs_journal_entries, all_required_moves)
         return True
+
+    def _verify_seed_cogs_amounts(self, company, journals, required_moves):
+        """Tie each journal's COGS and stock legs to its complete outbound move set."""
+        StockMove = self.env["stock.move"].sudo()
+        linked_moves = StockMove.search([
+            ("account_move_id", "in", list(journals)),
+            ("company_id", "=", company.id),
+            ("state", "=", "done"),
+        ])
+        moves = {
+            move.id: move for move in linked_moves
+            if move.location_id.usage == "internal" and move.location_dest_id.usage == "customer"
+        }
+        moves.update({move.id: move for move in required_moves})
+
+        expected = {}
+        for move in moves.values():
+            journal = move.account_move_id
+            if str(move.date)[:10] != str(journal.date)[:10]:
+                raise UserError(f"Stock move {move.name} does not match its valuation journal date.")
+            layers = getattr(move, "stock_valuation_layer_ids", None)
+            if layers:
+                value = abs(sum(layer.value for layer in layers))
+            else:
+                value = getattr(move, "value", None)
+                if value is None:
+                    raise UserError(f"Stock move {move.name} is missing its native valuation.")
+                value = abs(value)
+            by_product = expected.setdefault(journal.id, {})
+            product_id = move.product_id.id
+            by_product[product_id] = by_product.get(product_id, 0.0) + value
+
+        for journal_id, journal in journals.items():
+            debit = {}
+            credit = {}
+            for line in journal.line_ids:
+                code = line.account_id.code
+                if code not in ("510000", "113000"):
+                    continue
+                product_id = getattr(getattr(line, "product_id", None), "id", None) or None
+                target = debit if code == "510000" else credit
+                amount = line.debit if code == "510000" else line.credit
+                reverse = line.credit if code == "510000" else line.debit
+                if reverse:
+                    raise UserError(f"Unexpected reverse valuation leg in {journal.name}.")
+                target[product_id] = target.get(product_id, 0.0) + amount
+
+            by_product = expected[journal_id]
+            if set(debit) == {None} and set(credit) == {None} and len(by_product) == 1:
+                by_product = {None: sum(by_product.values())}
+            keys = by_product.keys() | debit.keys() | credit.keys()
+            if sum(debit.values()) <= 0 or sum(credit.values()) <= 0 or any(
+                abs(debit.get(key, 0.0) - by_product.get(key, 0.0)) > 0.01
+                or abs(credit.get(key, 0.0) - by_product.get(key, 0.0)) > 0.01
+                for key in keys
+            ):
+                raise UserError(
+                    f"[id_base] Nilai jurnal valuasi HPP '{journal.name}' tidak sesuai dengan nilai valuasi "
+                    "pergerakan barang pada akun HPP (510000) dan Persediaan (113000)."
+                )
 
     def _stock_account_prepare_realtime_out_lines_vals(self):
         """Pengecualian sempit HPP faktur komersial seed yang telah diakui saat DO.

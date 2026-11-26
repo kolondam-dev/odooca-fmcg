@@ -100,9 +100,18 @@ class TestOfficeMap(MobileFixture, TransactionCase):
             _provision_records(self.env, passwords=passwords)
 
     def test_rollover_rejects_provisioning_summary(self):
+        current_day = self.assignment.business_date
         with patch(
             "odoo.addons.id_mobile_api.models.mobile_workday.business_date",
-            return_value=self.assignment.business_date.replace(year=2025),
+            side_effect=lambda: current_day,
         ):
-            with self.assertRaises(UserError), self.env.cr.savepoint():
-                _provision_records(self.env, passwords=["test-password-one", "test-password-two"])
+            original_assert = self.env["id.mobile.workday"]._assert_day
+
+            def rollover_assert_day(day):
+                nonlocal current_day
+                current_day = day.replace(year=2025)
+                return original_assert(day)
+
+            with patch.object(type(self.env["id.mobile.workday"]), "_assert_day", side_effect=rollover_assert_day):
+                with self.assertRaises(UserError), self.env.cr.savepoint():
+                    _provision_records(self.env, passwords=["test-password-one", "test-password-two"])
