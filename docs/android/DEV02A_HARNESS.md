@@ -72,3 +72,72 @@ Gate lokal dengan `ANDROID_GATE_BASE=f0b3632 bash android/tools/integration_gate
 Planner memilih `android`, `odoo_install`, `mobile` dan `upgrade`. **Dampak test — TAMBAH.** Tes HTTP opt-in menutup risiko receipt tidak cocok, isolasi assignment antarakun, scope nonaktif, command dengan snapshot kedaluwarsa dan resource fixture tertinggal. Suite remote pilihan planner perlu diverifikasi oleh Lead saat integrasi.
 
 **[BU] APK → HTTPS Odoo disposable.** Bukti di atas berasal dari HTTP loopback di Odoo. Untuk menutup jalur APK, Lead perlu menyepakati target disposable HTTPS dan fixture TEST yang tersedia bagi runner, lalu mengumpulkan bukti login, snapshot dan receipt dari APK pada SHA integrasi. DEV-02B tetap menunggu slice perangkat fisik dan identity.
+
+## APK → HTTPS → Odoo
+
+Pakai emulator disposable dengan ADB dan target HTTPS yang disetujui Lead. Operator backend menyiapkan DB kosong bernama `fmcg_staging_…` dengan `id_mobile_api` dan `id_approval`, mengaktifkan IDR, lalu menjalankan `scripts/ops/provision_mobile_staging.py` melalui Odoo shell. Provisioner membuat dan commit fixture TEST. Gunakan kata sandi acak sekali pakai dalam bentuk heksadesimal untuk kedua akun TEST dan pilih hari operasional WITA. Selesaikan sekali jalan sebelum pergantian hari. Android memakai endpoint TLS yang sertifikatnya dipercaya emulator.
+
+Pada checkout kandidat, konfigurasi APK dengan origin HTTPS tanpa garis miring akhir dan nama DB fixture. Instal APK serta APK tes pada emulator baru.
+
+```bash
+cd android
+./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest \
+  "-Podooca.baseUrl=$DEV02A_BASE_URL" "-Podooca.database=$FMCG_STAGING_DATABASE"
+app=app/build/outputs/apk/debug/app-debug.apk
+tests=app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+sha256sum "$app" "$tests"
+adb install "$app"
+adb install "$tests"
+cd ..
+```
+
+Tetapkan `DEV02A_UUID` satu kali dengan `python3 -c 'import uuid; print(uuid.uuid4())'`. Pada host Odoo, ambil tiga checkpoint melalui Odoo shell dengan konfigurasi fixture. Pakai `FMCG_STAGING_DISPOSABLE=YES`, nama DB yang sama, dan UUID tersebut pada ketiga eksekusi `scripts/ops/verify_mobile_dev02a_receipt.py`. Simpan hanya objek JSON stdout dari setiap checkpoint. Contoh audit baseline di host Odoo dengan variabel fixture yang sudah diekspor.
+
+```bash
+odoo shell -c "$DEV02A_ODOO_CONF" -d "$FMCG_STAGING_DATABASE" --no-http \
+  < scripts/ops/verify_mobile_dev02a_receipt.py | sed -n '/^{"approvals":/p' > before.json
+```
+
+Urutannya harus sebagai berikut.
+
+| Urutan | Aksi | Bukti |
+| --- | --- | --- |
+| 1 | Audit sebelum submit. | `before.json`, company fixture belum memiliki ledger atau order. |
+| 2 | Jalankan instrumentation fase `first`. | `first.json`, login dan snapshot berhasil dari APK, lalu receipt dari HTTPS. |
+| 3 | Audit setelah submit dan sebelum replay. | `after.json`, satu ledger dan satu sales order. |
+| 4 | Jalankan fase `replay` dengan UUID, akun dan `snapshot_version` dari fase pertama. | `replay.json`, payload dan receipt harus sama. |
+| 5 | Audit setelah replay. | `after_replay.json`, checkpoint harus identik dengan langkah 3. |
+
+Gunakan credential akun pertama hanya di runner ephemeral. Jalankan cuplikan berikut di host ADB dengan `set -euo pipefail`, `set +x` dan `umask 077`. Jangan sertakan raw stdout atau logcat dalam artefak.
+
+```bash
+run_apk_phase() {
+  local phase=$1 version=${2:-} raw
+  [[ $phase == first || $phase == replay ]]
+  [[ $DEV02A_TEST_PASSWORD =~ ^[a-f0-9]{48}$ ]]
+  [[ $DEV02A_UUID =~ ^[a-f0-9-]{36}$ ]]
+  [[ -z $version || $version =~ ^odoo-read-v1:[a-f0-9]{64}$ ]]
+  raw=$(printf '%s\n' "am instrument -w -r \
+    -e class com.kolondam.odooca.field.DisposableOdooReceiptTest \
+    -e dev02a true -e phase $phase -e uuid $DEV02A_UUID \
+    -e fixturePassword $DEV02A_TEST_PASSWORD -e snapshotVersion '${version}' \
+    com.kolondam.odooca.field.test/androidx.test.runner.AndroidJUnitRunner" \
+    | timeout 120 adb shell)
+  grep -Fxq 'OK (1 test)' <<< "${raw//$'\r'/}"
+  sed -n 's/^INSTRUMENTATION_STATUS: dev02a_evidence=//p' <<< "${raw//$'\r'/}" > "$phase.json"
+}
+
+# Jalankan setelah before.json tersedia.
+run_apk_phase first
+
+# Jalankan setelah after.json tersedia.
+version=$(python3 -c 'import json; print(json.load(open("first.json"))["request"]["payload"]["snapshot_version"])')
+run_apk_phase replay
+
+# Jalankan setelah after_replay.json tersedia.
+python3 android/tools/verify_dev02a_apk.py first.json replay.json before.json after.json after_replay.json
+```
+
+Verifier mencocokkan UUID, status, referensi, fingerprint payload, scope akun, dan order dengan ledger Odoo. Verifier juga membandingkan ledger, order, picking, invoice, dan approval fixture sebelum dan setelah replay. Instrumentation berjalan di proses APK dan memakai `AppContainer`, sesi serta klien HTTP produksi. Skenario menguji jalur klien backend. Interaksi UI order dan pengiriman lewat antrean Android memiliki acceptance terpisah.
+
+Simpan lima JSON tersanitasi dan hasil verifier, SHA integrasi Android/Odoo, hash kedua APK, API/ABI dan image emulator, versi Odoo/PostgreSQL/addon/fixture, serta bukti cleanup. Operator menghentikan emulator dan menghapus DB, filestore, dan resource TLS disposable pada jalur sukses maupun gagal. Pastikan resource yang berlabel run sudah hilang sebelum menutup checkpoint.

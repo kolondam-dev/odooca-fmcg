@@ -1,3 +1,11 @@
+## 2026-11-26 — DEV-02A · Kandidat receipt/replay dari APK (Codex-Mobile Native)
+
+- [F] Handoff Lead `90f1bbc`, referensi PR #201 `4663563`, branch Dev berangkat dari `cd19d6f`. Tambah instrumentation opt-in melalui sesi dan klien HTTPS APK, audit ledger Odoo read-only, dan verifier untuk dua receipt serta tiga checkpoint.
+- [F] Build APK debug dan APK instrumentation lulus. Probe ORM pada Odoo/PostgreSQL disposable menghasilkan satu ledger dan satu SO `S00001` dengan status `accepted`. Replay mempertahankan checkpoint. Verifier menolak receipt berbeda, order ekstra, payload berbeda, dan fingerprint berbeda. Cleanup probe menyisakan nol container, volume, dan network.
+- [BU] APK → HTTPS → Odoo, replay dari APK, dan cleanup jalur APK masih memerlukan runner dan target disposable HTTPS yang disetujui Lead. Preflight emulator API 24/35 gagal karena Cloud tidak menyediakan KVM. Bukti ORM tidak memberi status lulus bagi APK.
+- [F] Basis kandidat diselaraskan ke PR #201 `4663563`. Entri Lead dan Dev dipertahankan. Gate statis dan Gradle serta build instrumentation lulus pada source kandidat yang sama. Planner memilih `android`, `odoo_install`, `mobile`, dan `upgrade`.
+- Dampak test **TAMBAH**. Instrumentation menguji contract produksi dari proses APK. Verifier gagal bila UUID/status/referensi berbeda, fingerprint tidak cocok, atau replay menambah/mengubah efek yang diaudit. Jalankan [prosedur dua fase](android/DEV02A_HARNESS.md#apk--https--odoo) pada SHA integrasi.
+
 ## 2026-11-25T22:30:17+07:00 — Codex — Integrasi DEV-02A/B09
 **Basis:** main `23a4108`, Dev `cd19d6f`; merge bersih. **Dampak test TAMBAH:** harness HttpCase opt-in membuktikan login, scope, receipt dan rollover di Odoo disposable; jalur APK/HTTPS masih [BU]. Kandidat harness diajukan untuk review dan CI.
 **Tindak lanjut:** gunakan satu runner Android ber-KVM dengan Odoo/PostgreSQL disposable dan endpoint HTTPS privat selama job. HttpCase menjalankan fixture dalam transaksi tes; fase APK memerlukan seed TEST yang dikomit hanya di DB fixture, proses Odoo yang tetap hidup, sertifikat yang dipercaya build test, dan cleanup pada sukses/gagal.
