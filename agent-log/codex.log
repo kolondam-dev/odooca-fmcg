@@ -681,3 +681,8 @@
 - Probe HTTPS dari host, checkout fixture dan cleanup startup gagal lulus.
 - CA debug terisolasi. Planner full regression 11 suite. APK tetap menunggu runner ber-KVM.
 - Task managed by codex agent at 2026-11-26T08:29:10+07:00
+
+[2026-11-26T15:30:30+07:00] [INFO] DEV-02A lengkapi review XML dan cleanup B09
+- Arahan e9e4907. Listener XML dan mutasi verifier lulus pemeriksaan lokal.
+- Injeksi gagal pasca HTTPS siap membuktikan cleanup backend. APK tetap menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-26T15:30:30+07:00

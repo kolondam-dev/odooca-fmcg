@@ -1,3 +1,10 @@
+## 2026-11-26 — DEV-02A · Review XML dan cleanup B09 (Codex-Mobile Native)
+
+- [F] Arahan `e9e4907` diterapkan di atas runner B09 `96288d9`. Listener JUnit membuat XML per invocation. Runner meminta tepat satu hasil lulus untuk test yang ditetapkan, mencocokkan UUID dan fase, serta hanya mengunggah XML yang lulus validasi.
+- [F] Dampak test **TAMBAH**. Host test memakai verifier produksi dan menolak fingerprint, duplikasi ledger/order, referensi, scope aktor, payload replay, serta perubahan checkpoint. XML hilang, dilewati, gagal, ganda, salah fase/test ID, atau usang ditolak.
+- [F] Build instrumentation dengan listener lulus. Probe sengaja keluar dengan status 77 setelah Odoo/PostgreSQL dan HTTPS siap. Cleanup helper yang juga dipakai runner menghapus dua container, satu volume dan network fixture, lalu gateway loopback berhenti. Probe HTTPS sukses pada checkpoint sebelumnya memakai backend yang sama.
+- [BU] XML dari emulator dan APK → HTTPS → Odoo menunggu dispatch Lead pada SHA integrasi. Cloud tanpa KVM. Planner tetap full regression 11 suite. PR #201 tetap DRAFT/HOLD.
+
 ## 2026-11-26 — DEV-02A · Job opt-in APK HTTPS B09 (Codex-Mobile Native)
 
 - [F] Arahan `c3e3090`, basis PR #201 `dcafd0d`. Job manual B09 di `android.yml` memakai SDK/emulator yang dipatok untuk API 24/35. Gate Android wajib memakai dependensi yang sama. [Dispatch dan bukti](android/DEV02A_HARNESS.md#job-opt-in-github).

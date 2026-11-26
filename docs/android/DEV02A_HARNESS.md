@@ -75,6 +75,8 @@ Planner memilih `android`, `odoo_install`, `mobile` dan `upgrade`. **Dampak test
 
 ## APK → HTTPS → Odoo
 
+Prosedur manual di bawah untuk diagnosis. Gunakan job opt-in untuk acceptance yang memerlukan XML baru per fase.
+
 Pakai emulator disposable dengan ADB dan target HTTPS yang disetujui Lead. Operator backend menyiapkan DB kosong bernama `fmcg_staging_…` dengan `id_mobile_api` dan `id_approval`, mengaktifkan IDR, lalu menjalankan `scripts/ops/provision_mobile_staging.py` melalui Odoo shell. Provisioner membuat dan commit fixture TEST. Gunakan kata sandi acak sekali pakai dalam bentuk heksadesimal untuk kedua akun TEST dan pilih hari operasional WITA. Selesaikan sekali jalan sebelum pergantian hari. Android memakai endpoint TLS yang sertifikatnya dipercaya emulator.
 
 Pada checkout kandidat, konfigurasi APK dengan origin HTTPS tanpa garis miring akhir dan nama DB fixture. Instal APK serta APK tes pada emulator baru.
@@ -153,4 +155,4 @@ gh workflow run android.yml --ref "$INTEGRATION_BRANCH" \
 
 Job menggunakan image emulator yang sama dengan smoke DEV-01. Odoo dan PostgreSQL disposable berbagi satu network milik run. Port Odoo dan gateway HTTPS hanya dipublikasikan pada loopback runner. Emulator menjangkau gateway melalui `adb reverse`. APK debug B09 mempercayai CA yang baru dibuat khusus untuk `127.0.0.1`. Trust APK release dan build biasa mengikuti konfigurasi yang ada. Kunci TLS, kata sandi TEST, log mentah, dan APK tidak diunggah.
 
-Runner membuat UUID baru dan memasangkannya dengan bukti instrumentation serta ketiga audit. Test yang dilewati, hasil yang hilang atau ganda, dan bukti dari UUID atau fase lain menggagalkan job. File receipt dan audit dipublikasikan setelah verifier lulus. `result.txt` mencatat hasil dan status cleanup, termasuk jika job berhenti sebelum runner dapat memverifikasinya. Kegagalan menghapus resource menggagalkan eksekusi. Langkah integrasi dan full regression mengikuti hasil planner.
+Runner membuat UUID baru dan memasangkannya dengan bukti instrumentation serta ketiga audit. Listener JUnit di APK tes menulis satu XML hasil per fase tanpa argumen atau rincian exception. Runner membersihkan nama file sebelum invocation, lalu memvalidasi UUID, fase, dan satu test ID yang lulus. XML `first.xml` dan `replay.xml` tervalidasi menjadi bagian dari artefak. Test yang dilewati, hasil yang hilang atau ganda, dan bukti dari UUID atau fase lain menggagalkan job. File receipt dan audit dipublikasikan setelah verifier lulus. `result.txt` mencatat hasil dan status cleanup, termasuk jika job berhenti sebelum runner dapat memverifikasinya. Kegagalan menghapus resource menggagalkan eksekusi. Langkah integrasi dan full regression mengikuti hasil planner.

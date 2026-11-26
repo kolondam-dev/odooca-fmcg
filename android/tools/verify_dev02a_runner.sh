@@ -133,13 +133,18 @@ done
 
 run_apk_phase() {
     local invocation=$1 version=${2:-}
+    local junit="files/b09-$DEV02A_UUID-$1.xml"
+    timeout 10 "$adb" shell run-as com.kolondam.odooca.field rm -f "$junit" > "$scratch/adb.log" 2>&1
     # Pass the random TEST password over stdin and never upload raw runner output.
     printf '%s\n' "am instrument -w -r -e class com.kolondam.odooca.field.DisposableOdooReceiptTest \
+        -e listener com.kolondam.odooca.field.B09XmlListener \
         -e dev02a true -e phase $invocation -e uuid $DEV02A_UUID \
         -e fixturePassword $FMCG_STAGING_PASSWORD_1 -e snapshotVersion '$version' \
         com.kolondam.odooca.field.test/androidx.test.runner.AndroidJUnitRunner" \
         | timeout 120 "$adb" shell > "$scratch/instrumentation" 2>&1
-    python3 android/tools/dev02a_instrumentation.py "$scratch/instrumentation" "$DEV02A_UUID" "$invocation" \
+    timeout 10 "$adb" exec-out run-as com.kolondam.odooca.field cat "$junit" > "$scratch/junit.xml" 2>"$scratch/adb.log"
+    python3 android/tools/dev02a_instrumentation.py "$scratch/instrumentation" "$scratch/junit.xml" \
+        "$evidence/$invocation.xml" "$DEV02A_UUID" "$invocation" \
         > "$scratch/$invocation.json"
 }
 

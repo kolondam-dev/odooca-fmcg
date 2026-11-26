@@ -367,6 +367,8 @@ jobs:
             ${{ runner.temp }}/b09-evidence/run.tsv
             ${{ runner.temp }}/b09-evidence/result.txt
             ${{ runner.temp }}/b09-evidence/apk.sha256
+            ${{ runner.temp }}/b09-evidence/first.xml
+            ${{ runner.temp }}/b09-evidence/replay.xml
             ${{ runner.temp }}/b09-evidence/first.json
             ${{ runner.temp }}/b09-evidence/replay.json
             ${{ runner.temp }}/b09-evidence/before.json

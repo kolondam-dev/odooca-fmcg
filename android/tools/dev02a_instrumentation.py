@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+from xml.etree import ElementTree as ET
 
 TEST = "com.kolondam.odooca.field.DisposableOdooReceiptTest"
 
@@ -65,15 +66,32 @@ def extract(raw, uuid, phase):
     }
 
 
+def verify_junit(path, uuid, phase):
+    suite = ET.parse(path).getroot()
+    expected = {"uuid": uuid, "phase": phase, "tests": "1", "failures": "0", "skipped": "0"}
+    if suite.tag != "testsuite" or suite.attrib != expected or len(suite) != 1:
+        raise ValueError("JUnit report missing, stale or unsuccessful")
+    case = suite[0]
+    if (case.tag != "testcase" or case.attrib != {"classname": TEST, "name": "submitOrReplay"}
+            or len(case) or (suite.text or "").strip() or (case.text or "").strip() or (case.tail or "").strip()):
+        raise ValueError("JUnit report contains an unexpected test or outcome")
+    # Serialize only the validated result, never arbitrary XML comments or processing instructions.
+    return ET.tostring(suite, encoding="unicode")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("raw", type=Path)
+    parser.add_argument("junit", type=Path)
+    parser.add_argument("validated_xml", type=Path)
     parser.add_argument("uuid")
     parser.add_argument("phase", choices=("first", "replay"))
     args = parser.parse_args()
     try:
         report = extract(args.raw.read_text(), args.uuid, args.phase)
-    except (OSError, KeyError, TypeError, ValueError):
+        xml = verify_junit(args.junit, args.uuid, args.phase)
+        args.validated_xml.write_text(xml + "\n")
+    except (OSError, KeyError, TypeError, ValueError, ET.ParseError):
         parser.exit(1, "B09 instrumentation missing, invalid or stale\n")
     print(json.dumps(report, sort_keys=True))
 

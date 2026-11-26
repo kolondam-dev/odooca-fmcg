@@ -8,6 +8,7 @@ import runpy
 import unittest
 import zipfile
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import yaml
 
@@ -260,7 +261,9 @@ class TestAndroidBootstrapContract(unittest.TestCase):
 class TestB09Evidence(unittest.TestCase):
     def setUp(self):
         tools = ANDROID / "tools"
-        self.extract = runpy.run_path(str(tools / "dev02a_instrumentation.py"))["extract"]
+        instrumentation = runpy.run_path(str(tools / "dev02a_instrumentation.py"))
+        self.extract = instrumentation["extract"]
+        self.verify_junit = instrumentation["verify_junit"]
         self.verify = runpy.run_path(str(tools / "verify_dev02a_apk.py"))["verify"]
         self.uuid = "a22a5b03-f435-4b9d-8b3a-d7cc94547d90"
         self.scope = {"user_id": "4", "company_id": "2"}
@@ -325,30 +328,64 @@ class TestB09Evidence(unittest.TestCase):
             with self.subTest(label=label), self.assertRaises(ValueError):
                 self.extract(candidate, uuid, phase)
 
-    def test_verifier_rejects_fingerprint_duplicate_scope_and_replay_mutations(self):
+    def test_junit_requires_one_fresh_success_in_each_phase(self):
+        test = '<testcase classname="com.kolondam.odooca.field.DisposableOdooReceiptTest" name="submitOrReplay" />'
+        with TemporaryDirectory() as work:
+            report = Path(work) / "report.xml"
+            with self.assertRaises(FileNotFoundError):
+                self.verify_junit(report, self.uuid, "first")
+            for phase in ("first", "replay"):
+                valid = (
+                    f'<testsuite uuid="{self.uuid}" phase="{phase}" tests="1" failures="0" skipped="0">'
+                    f"{test}</testsuite>"
+                )
+                report.write_text(valid)
+                self.assertIn('name="submitOrReplay"', self.verify_junit(report, self.uuid, phase))
+                for label, broken in (
+                    ("no_case", valid.replace(test, "")),
+                    ("skipped", valid.replace('skipped="0"', 'skipped="1"')),
+                    ("failed", valid.replace(" />", "><failure/></testcase>")),
+                    ("duplicate", valid.replace(test, test * 2)),
+                    ("stale", valid.replace(self.uuid, "e7b4fb53-4b4d-49ef-a74a-08cb92178339")),
+                    ("wrong_phase", valid.replace(phase, "replay" if phase == "first" else "first")),
+                    ("wrong_test", valid.replace("submitOrReplay", "otherTest")),
+                    ("raw_secret", valid.replace(" />", ' token="fake" />')),
+                ):
+                    with self.subTest(phase=phase, label=label), self.assertRaises(ValueError):
+                        report.write_text(broken)
+                        self.verify_junit(report, self.uuid, phase)
+
+    def test_verifier_rejects_each_reviewed_mutation(self):
+        def set_ledger(after, key, value):
+            after["ledger"][0][key] = value
+
+        def duplicate(after, key):
+            after[key].append({**after[key][0], "id": 100})
+
         self.assertEqual(
             self.verify(self.first, self.replay, self.before, self.after, deepcopy(self.after))["result"], "passed",
         )
-        for mutation, reason in (
-            ("fingerprint", "exact APK command"), ("duplicate", "exactly one"),
-            ("scope", "actor scope mismatch"), ("replay", "replay changed the Odoo checkpoint"),
+        for mutation, change, reason in (
+            ("fingerprint", lambda a: set_ledger(a, "fingerprint", "0" * 64), "exact APK command"),
+            ("duplicate_ledger", lambda a: duplicate(a, "ledger"), "exactly one"),
+            ("duplicate_order", lambda a: duplicate(a, "orders"), "exactly one"),
+            ("reference", lambda a: set_ledger(a, "reference", "S09999"), "receipt does not match ledger"),
+            ("scope", lambda a: set_ledger(a, "user_id", "44"), "actor scope mismatch"),
         ):
-            with self.subTest(mutation=mutation):
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, reason):
                 after = deepcopy(self.after)
-                replay = deepcopy(after)
-                if mutation == "fingerprint":
-                    after["ledger"][0]["fingerprint"] = "0" * 64
-                    replay = deepcopy(after)
-                elif mutation == "duplicate":
-                    after["orders"].append({**after["orders"][0], "id": 100})
-                    replay = deepcopy(after)
-                elif mutation == "scope":
-                    after["ledger"][0]["user_id"] = "44"
-                    replay = deepcopy(after)
-                else:
-                    replay["orders"][0]["picking_ids"] = [1]
-                with self.assertRaisesRegex(ValueError, reason):
-                    self.verify(self.first, self.replay, self.before, after, replay)
+                change(after)
+                self.verify(self.first, self.replay, self.before, after, deepcopy(after))
+
+        replay = deepcopy(self.replay)
+        replay["request"]["payload"]["lines"][0]["qty"] = "2"
+        with self.assertRaisesRegex(ValueError, "replay changed the wire payload"):
+            self.verify(self.first, replay, self.before, self.after, deepcopy(self.after))
+
+        after_replay = deepcopy(self.after)
+        after_replay["orders"][0]["picking_ids"] = [1]
+        with self.assertRaisesRegex(ValueError, "replay changed the Odoo checkpoint"):
+            self.verify(self.first, self.replay, self.before, self.after, after_replay)
 
 
 if __name__ == "__main__":
