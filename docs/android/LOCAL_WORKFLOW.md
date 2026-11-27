@@ -173,6 +173,15 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 
 [Run API 35](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/45851429258) lulus pada `4e09b39`. Kedua fase APK, tiga checkpoint dan verifier lulus. Cleanup runner KVM jalur normal membuktikan sembilan resource bersih, termasuk unregister ADB. Jalur gagal dibuktikan Dev pada backend disposable dan dengan simulasi host. Bukti untuk re-review ditautkan di PR. PR tetap draft/HOLD sambil menunggu CI dan verdict. Dev menunggu temuan baru; Design lanjut DES-02-r1.
 
+### Arahan Lead — DEV-02B Identity dan perangkat
+
+[PR #201](https://github.com/kolondam-dev/odooca-fmcg/pull/201) merged pada `bb84709283395383711598214877844117c163b5`. Acceptance DEV-02A/B09 API 35 selesai sesuai [review final](https://github.com/kolondam-dev/odooca-fmcg/pull/201#issuecomment-7206144201). Jadikan SHA merge ini acuan awal, lalu refresh main saat memulai dan saat menyerahkan checkpoint.
+
+- **Dev:** Mulai DEV-02B pada branch Dev. Inventarisasi build/OS, API, dan dukungan lokasi Redmi 4X serta POCO M3. Siapkan matriks per perangkat untuk install/cold start, izin lokasi (termasuk approximate bila OS mendukung), denied/stale/low accuracy, indoor/outdoor, lock/unlock, expiry dan logout. Rekam SHA dan hash APK serta hasil yang disanitasi. Tandai setiap kasus tanpa perangkat atau dukungan OS secara eksplisit dan ajukan keputusan minSdk dengan bukti. Uji login provisional dan bagian sesi yang dapat direproduksi melalui fixture disposable B09 sambil menunggu perangkat; pisahkan hasil itu dari bukti fisik.
+- **Dev dan Lead:** Catat gap B01 native auth dan B02 registrasi/kalibrasi bersama maintainer. Lanjutkan diagnostik lokal dengan adapter sesi yang ada. Adapter native dan aktivasi resmi mengikuti keputusan kontrak dan kebijakan B01/B02. Buat checkpoint dengan base/head, hasil gate/planner, matriks bukti dan blocker konkret.
+- **Design:** Lanjutkan review DES-02-r1 dan catat implikasi state izin, expiry/logout serta kualitas lokasi. Implementasi visual D01 dan binding dua foto tetap mengikuti slice terkait.
+- **Lead:** Review bagian yang dapat dijalankan sekarang. Jika Redmi 4X atau POCO M3 belum tersedia, catat kebutuhan operator/perangkat dan koordinasikan jalur pengujian fisik. DEV-03 tetap menunggu checkpoint terpisah.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
