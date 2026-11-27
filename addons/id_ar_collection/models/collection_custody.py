@@ -4,10 +4,15 @@
 Protokol lock sama dengan submit (8.4): SJP asal -> faktur -> baris receivable -> baris SJP (termasuk baris SJP lain
 yang mengklaim faktur yang sama), semuanya urut id naik, lalu saldo dibaca ulang dari DB.
 """
+import hashlib
+import json
+
+from psycopg2 import IntegrityError
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError
 
-from .collection_receipt import settlement_cutoff
+from .collection_receipt import DESK_TOKEN_INDEX, settlement_cutoff
 from .collection_receipt_submit import FUTURE_TOLERANCE, METHOD_ORDER
 
 CONTROL_GROUP = "id_ar_collection.group_ar_control"
@@ -43,6 +48,11 @@ class CollectionReceiptCustody(models.Model):
         occurred = self._parse_occurred_at(occurred_at)
         entries = self._parse_lines(lines, currency)
         sheet_id = self._int(sheet_id, "sheet_id")
+        # Token mengikat SATU operasi beserta payload-nya: payload berbeda dengan token sama ditolak.
+        fingerprint = hashlib.sha256(json.dumps({
+            "sheet": sheet_id, "reason": reason, "occurred": occurred.isoformat(),
+            "lines": sorted(entries, key=lambda entry: entry["line_id"]),
+        }, sort_keys=True, default=str, separators=(",", ":")).encode()).hexdigest()
         if any(entry["outcome"] == "unpaid" for entry in entries):
             raise UserError(_("Custody hanya untuk uang yang diterima (paid/partial)."))
 
@@ -57,8 +67,8 @@ class CollectionReceiptCustody(models.Model):
 
         existing = Receipt.search([("desk_token", "=", token)])
         if existing:  # retry/klik ganda: kembalikan hasil yang sama, tanpa efek ganda
-            if existing.sheet_id != sheet:
-                raise UserError(_("Token %s sudah dipakai untuk SJP lain.", token))
+            if any(receipt.desk_fingerprint != fingerprint for receipt in existing):
+                raise UserError(_("Token %s sudah dipakai untuk operasi custody yang berbeda.", token))
             return existing
 
         now = fields.Datetime.now()
@@ -94,24 +104,39 @@ class CollectionReceiptCustody(models.Model):
             line = by_line[entry["line_id"]]
             current = balance.get(line.move_id.id, 0.0)
             if Line.search_count([("sheet_line_id", "=", line.id), ("holds_line", "=", True)]):
-                raise UserError(_("Baris %s sudah memiliki penerimaan.", line.move_id.name))
-            if line.move_id.state != "posted" or current <= 0:
-                raise UserError(_("Faktur %s tidak lagi memiliki sisa tagihan.", line.move_id.name))
-            if currency.compare_amounts(entry["expected_balance"], current):
-                raise UserError(_("Saldo faktur %s berubah; baca ulang.", line.move_id.name))
-            if entry["outcome"] == "paid" and currency.compare_amounts(entry["amount"], current):
-                raise UserError(_("paid harus sama dengan saldo faktur %s.", line.move_id.name))
-            if entry["outcome"] == "partial" and not (0 < entry["amount"] < current):
-                raise UserError(_("partial harus lebih dari nol dan kurang dari saldo."))
+                raise UserError(_("Baris %s sudah memiliki penerimaan; validasi penerimaan itu.", line.move_id.name))
+            if entry["amount"] <= 0:
+                raise UserError(_("Nominal custody harus lebih dari nol."))
             entry["balance"] = current
+            # Uang fisik tidak pernah ditolak karena saldo/status faktur (8.12): bila faktur sudah lunas, tidak lagi
+            # posted, saldonya berubah, atau nominal melebihi saldo, penerimaan tetap tercatat dengan alokasi `held`.
+            allocatable = (
+                line.move_id.state == "posted" and current > 0
+                and not currency.compare_amounts(entry["expected_balance"], current)
+                and currency.compare_amounts(entry["amount"], current) <= 0
+                and (entry["outcome"] == "partial" or not currency.compare_amounts(entry["amount"], current))
+            )
             clash_claim = SheetLine.search([
                 ("move_id", "=", line.move_id.id), ("active_claim", "=", True), ("id", "!=", line.id)], limit=1)
             clash_pending = Line.search([("move_id", "=", line.move_id.id), ("holds_invoice", "=", True)], limit=1)
-            entry["allocation_state"] = "held" if (clash_claim or clash_pending) else "allocated"
+            entry["allocation_state"] = "allocated" if allocatable and not (clash_claim or clash_pending) else "held"
 
         self.env.cr.execute(
             "UPDATE id_collection_sheet SET write_date = (NOW() AT TIME ZONE 'UTC') WHERE id = %s", (sheet.id,))
+        try:
+            with self.env.cr.savepoint():
+                receipts = self._create_custody_receipts(Receipt, sheet, company, entries, vals_common={
+                    "reason": reason, "token": token, "fingerprint": fingerprint, "occurred": occurred, "now": now})
+        except IntegrityError as error:
+            if error.pgcode == "23505" and getattr(error.diag, "constraint_name", None) == DESK_TOKEN_INDEX:
+                raise UserError(_("Token %s sedang atau sudah dipakai untuk operasi custody lain.", token)) from None
+            raise
+        return receipts
+
+    def _create_custody_receipts(self, Receipt, sheet, company, entries, vals_common):
         receipts = Receipt.browse()
+        reason, token = vals_common["reason"], vals_common["token"]
+        occurred, now = vals_common["occurred"], vals_common["now"]
         for method in METHOD_ORDER:
             group = [e for e in entries if e["method"] == method]
             if not group:
@@ -120,6 +145,7 @@ class CollectionReceiptCustody(models.Model):
                 "name": self.env["ir.sequence"].sudo().next_by_code("id.collection.receipt") or _("Baru"),
                 "sheet_id": sheet.id, "company_id": company.id, "collector_id": sheet.collector_id.id,
                 "source": "cashier_desk", "exception": True, "exception_reason": reason, "desk_token": token,
+                "desk_fingerprint": vals_common["fingerprint"], "desk_primary": not receipts,
                 "method": method, "occurred_at": occurred, "submitted_at": now,
                 "line_ids": [(0, 0, {
                     "sheet_line_id": e["line_id"], "move_id": e["invoice_id"], "outcome": e["outcome"],
@@ -130,7 +156,7 @@ class CollectionReceiptCustody(models.Model):
                     "note": e["note"],
                 }) for e in group],
             })
-        self.env.flush_all()  # pagar terakhir: indeks unik DB bekerja sebelum method kembali
+        self.env.flush_all()  # pagar terakhir: indeks unik DB bekerja di dalam savepoint pemanggil
         return receipts
 
 

@@ -439,3 +439,7 @@
 [2026-11-27T18:41:11+07:00] [INFO] BE-20d: custody exception AR Control
 - record_custody_exception + resolve_held (reassign/release), allocation held tanpa indeks pending, token idempoten, lock protokol 8.4; tes fungsional + 2 race
 - Task managed by claude-dev agent at 2026-11-27T18:41:11+07:00
+
+[2026-11-27T19:14:42+07:00] [INFO] PR #210 P1/P2: custody held saat saldo berubah; token mengikat operasi
+- Uang tetap tercatat held bila faktur lunas/saldo berubah; fingerprint+indeks token utama lintas SJP/metode; tes campuran, binding, race lintas SJP
+- Task managed by claude-dev agent at 2026-11-27T19:14:42+07:00

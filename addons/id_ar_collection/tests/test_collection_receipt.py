@@ -583,3 +583,61 @@ class TestCollectionReceipt(TransactionCase):
         self.assertEqual(len(pending), 1)  # satu alokasi sah per faktur: milik B
         self.assertEqual(pending.receipt_id.sheet_id, other_sheet)
 
+    def _pay_elsewhere(self, move, amount):
+        """Pelunasan lewat jalur lain: jurnal umum mengkredit piutang lalu rekonsiliasi native."""
+        general = self.env["account.journal"].search([("code", "=", "RCPG"), ("company_id", "=", self.company.id)]) \
+            or self.env["account.journal"].create({
+                "name": "RCP General", "code": "RCPG", "type": "general", "company_id": self.company.id})
+        entry = self.env["account.move"].with_company(self.company).create({
+            "move_type": "entry", "journal_id": general.id, "date": business_date(),
+            "line_ids": [
+                Command.create({"account_id": self.receivable.id, "partner_id": self.partner.id,
+                                "credit": amount, "debit": 0.0}),
+                Command.create({"account_id": self.income.id, "debit": amount, "credit": 0.0}),
+            ]})
+        entry.action_post()
+        lines = move.line_ids.filtered(lambda line: line.display_type == "payment_term")
+        lines |= entry.line_ids.filtered(lambda line: line.account_id == self.receivable)
+        lines.reconcile()
+
+    def test_custody_is_recorded_held_when_invoice_is_already_paid_or_balance_changed(self):
+        paid, changed, fresh = self._invoice(1000), self._invoice(1000), self._invoice(1000)
+        sheet = self._sheet([paid, changed, fresh])
+        self.clock.move_to(CUTOFF_UTC)
+        control = self._control()
+        entries = [{
+            "line_id": self._line_of(sheet, move).id, "invoice_id": move.id, "outcome": "paid", "amount": 1000.0,
+            "expected_balance": 1000.0, "method": method, **extra,
+        } for move, method, extra in [
+            (paid, "cash", {}), (changed, "transfer", {"transfer": {"reference": "TRX-7"}}), (fresh, "cash", {})]]
+        self._pay_elsewhere(paid, 1000)  # lunas lewat jalur lain
+        self._pay_elsewhere(changed, 400)  # saldo berubah menjadi 600
+        residuals = [self._residual(move) for move in (paid, changed, fresh)]
+        receipts = self.env["id.collection.receipt"].with_user(control).record_custody_exception(
+            sheet.id, "TOK-MIX", "Setoran terlambat", self.CUSTODY_OCCURRED, entries)
+        self.assertEqual(sorted(receipts.mapped("method")), ["cash", "transfer"])  # uang tercatat utuh, tanpa penolakan
+        states = {line.move_id: line.allocation_state for line in receipts.line_ids}
+        self.assertEqual(states, {paid: "held", changed: "held", fresh: "allocated"})
+        self.assertEqual(receipts.line_ids.filtered(lambda line: line.move_id == paid).amount, 1000.0)  # nominal utuh
+        self.assertEqual([self._residual(move) for move in (paid, changed, fresh)], residuals)  # saldo tak diubah
+        self.assertFalse(receipts.line_ids.filtered(lambda line: line.allocation_state == "held").mapped(
+            "holds_invoice").count(True))
+        with self.assertRaises(UserError):  # reassign tidak mungkin: saldo tidak cukup; hanya release
+            receipts.line_ids.filtered(lambda line: line.move_id == changed).with_user(control).resolve_held(
+                "reassign", "coba")
+        receipts.line_ids.filtered(lambda line: line.move_id == changed).with_user(control).resolve_held(
+            "release", "saldo sudah berubah")
+
+    def test_custody_token_binds_the_whole_operation_and_payload(self):
+        move = self._invoice(1000)
+        sheet = self._sheet([move])
+        self.clock.move_to(CUTOFF_UTC)
+        control = self._control()
+        receipt = self._custody(sheet, move, token="TOK-BIND", user=control)
+        self.assertEqual(self._custody(sheet, move, token="TOK-BIND", user=control), receipt)  # replay identik
+        with self.assertRaises(UserError):  # nominal berbeda, token sama: bukan permintaan baru
+            self._custody(sheet, move, token="TOK-BIND", user=control, outcome="partial", amount=400.0)
+        with self.assertRaises(UserError):  # alasan berbeda, token sama
+            self._custody(sheet, move, token="TOK-BIND", user=control, reason="alasan lain")
+        self.assertEqual(self.env["id.collection.receipt"].sudo().search_count([("desk_token", "=", "TOK-BIND")]), 1)
+

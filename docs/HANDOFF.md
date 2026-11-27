@@ -11,6 +11,11 @@
 - [F] Upgrade Odoo 19 disposable dari addon v19.0.1.0.0 ke v19.0.2.0.0: 12 tes ORM lulus. Termasuk oracle jam istirahat, jadwal historis, libur tumpang tindih, izin parsial, WITA, checkout otomatis, dan aturan akses.
 - [A] HR mengisi tanggal awal cakupan, kebijakan kalender, dan referensi libur tahunan. Hari terbuka dan hari di luar cakupan tidak dilabel alpa. Tidak ada pengisian kalender otomatis.
 - [BU] CI exact SHA dan acceptance HR menunggu. Tidak ada perubahan deployment demo atau pilot.
+## 2026-11-27 — [BU] BE-20d PR #210 P1/P2 custody (claude-dev)
+
+- [F] P1: `record_custody_exception` tidak lagi menolak karena saldo/status faktur (lunas, tidak posted, saldo berubah, nominal melebihi saldo): receipt tetap tercatat utuh dengan alokasi `held` (saldo faktur dan klaim SJP lain tidak diubah); `reassign` mensyaratkan saldo cukup, selain itu `release`. Yang tetap ditolak: baris yang sudah punya penerimaan (validasi yang ada), nominal <= 0.
+- [F] P2: token mengikat satu operasi: `desk_fingerprint` (sha256 sheet+alasan+waktu+baris) menolak payload berbeda dengan token sama; indeks unik parsial `desk_token WHERE desk_primary` (satu receipt utama per token, lintas SJP dan metode) mencegah dua operasi paralel; pecundang mendapat UserError.
+- [F] Tes: batch metode campuran (lunas/saldo berubah/normal), replay identik vs payload/alasan berbeda, race lintas SJP dengan metode berbeda (dua transaksi PG). Bukti Odoo hanya dari CI. `collection_v2` tetap OFF.
 
 ## 2026-11-27 — [BU] BE-20d custody exception AR Control (claude-dev)
 

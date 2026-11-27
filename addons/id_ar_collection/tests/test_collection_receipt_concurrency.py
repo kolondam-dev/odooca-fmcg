@@ -53,7 +53,7 @@ class TestCollectionReceiptConcurrency(TransactionCase):
                 env, login=f"rcp-ctl-{uuid.uuid4().hex[:10]}", groups="id_ar_collection.group_ar_control",
                 company_id=company.id)
             moves = env["account.move"]
-            for _ in range(2):
+            for _ in range(3):
                 move = env["account.move"].create({
                     "move_type": "out_invoice", "company_id": company.id, "journal_id": sales.id,
                     "partner_id": partner.id, "invoice_date": business_date() - timedelta(days=30),
@@ -64,24 +64,31 @@ class TestCollectionReceiptConcurrency(TransactionCase):
                 moves |= move
             sheet = env["id.collection.sheet"].create({
                 "company_id": company.id, "collector_id": collector.id, "collect_date": business_date(),
-                "line_ids": [Command.create({"move_id": move.id}) for move in moves]})
+                "line_ids": [Command.create({"move_id": move.id}) for move in moves[:2]]})
             sheet.action_issue()
+            sheet2 = env["id.collection.sheet"].create({
+                "company_id": company.id, "collector_id": collector.id, "collect_date": business_date(),
+                "line_ids": [Command.create({"move_id": moves[2].id})]})
+            sheet2.action_issue()
             return {
                 "company": company.id, "receivable": receivable.id, "income": income.id, "general": general.id,
                 "journals": (sales | general).ids, "accounts": (receivable | income).ids, "partner": partner.id,
-                "collector": collector.id, "control": control.id, "moves": sorted(moves.ids), "sheet": sheet.id,
+                "collector": collector.id, "control": control.id, "moves": sorted(moves.ids)[:2], "sheet": sheet.id,
                 "lines": {line.move_id.id: line.id for line in sheet.line_ids},
+                "sheet2": sheet2.id, "move2": moves[2].id, "line2": sheet2.line_ids.id,
+                "all_moves_fixture": sorted(moves.ids),
             }
 
     def _cleanup_fixture(self, db, ids):
         """Hapus semua yang di-commit; kegagalan membersihkan SENGAJA tidak ditelan (mencemari langkah CI lain)."""
         with db.cursor() as cr:
             cr.execute("SET LOCAL lock_timeout = '20s'")
-            cr.execute("DELETE FROM id_collection_receipt_line WHERE move_id = ANY(%s)", (ids["moves"],))
-            cr.execute("DELETE FROM id_collection_receipt WHERE sheet_id = %s", (ids["sheet"],))
+            sheets = [ids["sheet"], ids["sheet2"]]
+            cr.execute("DELETE FROM id_collection_receipt_line WHERE move_id = ANY(%s)", (ids["all_moves_fixture"],))
+            cr.execute("DELETE FROM id_collection_receipt WHERE sheet_id = ANY(%s)", (sheets,))
             cr.execute("DELETE FROM id_mobile_command WHERE user_id = %s", (ids["collector"],))
-            cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = %s", (ids["sheet"],))
-            cr.execute("DELETE FROM id_collection_sheet WHERE id = %s", (ids["sheet"],))
+            cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = ANY(%s)", (sheets,))
+            cr.execute("DELETE FROM id_collection_sheet WHERE id = ANY(%s)", (sheets,))
             cr.execute(
                 "SELECT DISTINCT move_id FROM account_move_line WHERE partner_id = %s", (ids["partner"],))
             all_moves = [row[0] for row in cr.fetchall()]
@@ -376,7 +383,8 @@ class TestCollectionReceiptConcurrency(TransactionCase):
     def _setup_past_cutoff(self):
         db, ids = self._setup()
         with db.cursor() as cr:  # mundurkan hari SJP: cutoff (00:00 WITA hari berikutnya) sudah lewat
-            cr.execute("UPDATE id_collection_sheet SET collect_date = collect_date - 1 WHERE id = %s", (ids["sheet"],))
+            cr.execute("UPDATE id_collection_sheet SET collect_date = collect_date - 1 WHERE id = ANY(%s)",
+                       ([ids["sheet"], ids["sheet2"]],))
         return db, ids
 
     def _closed_state(self, db, ids):
@@ -512,4 +520,37 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         self.assertNotIn("error", outcome, outcome.get("error"))
         self.assertEqual(outcome["result"]["status"], "rejected")
         self.assertEqual(self._db_state(db, ids), (1, {"rejected": 1}))  # satu receipt (custody), tanpa ganda
+
+    def test_same_token_across_sheets_and_methods_cannot_both_win(self):
+        db, ids = self._setup_past_cutoff()
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, ids["control"], {})
+        outcome = {}
+        occurred = datetime.now(timezone.utc).isoformat()
+        try:
+            first = env1["id.collection.receipt"].record_custody_exception(*self._custody_args(ids, "TOK-X"))
+            self.assertEqual(first.method, "cash")
+            env1.flush_all()
+
+            def other_sheet(env2):  # SJP dan metode berbeda, token sama
+                env2["id.collection.receipt"].record_custody_exception(
+                    ids["sheet2"], "TOK-X", "Setoran terlambat", occurred, [{
+                        "line_id": ids["line2"], "invoice_id": ids["move2"], "outcome": "paid", "amount": 1000,
+                        "expected_balance": 1000, "method": "transfer", "transfer": {"reference": "TRX-1"}}])
+                env2.flush_all()
+
+            thread = self._run_in_thread(db, other_sheet, outcome, ids["control"])
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "operasi kedua harus menunggu pemegang token pertama")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertIsInstance(outcome.get("error"), UserError, "token tidak boleh mengikat dua operasi")
+        with db.cursor() as cr:
+            cr.execute("SELECT count(*) FROM id_collection_receipt WHERE desk_token = 'TOK-X'")
+            self.assertEqual(cr.fetchone()[0], 1)
 

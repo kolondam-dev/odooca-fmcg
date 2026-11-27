@@ -30,6 +30,7 @@ ONE_PER_SHEET_LINE = "id_collection_receipt_line_one_per_sheet_line"
 ONE_PENDING_PER_MOVE = "id_collection_receipt_line_one_pending_per_move"
 COMMAND_METHOD_INDEX = "id_collection_receipt_command_method"
 DESK_METHOD_INDEX = "id_collection_receipt_desk_method"
+DESK_TOKEN_INDEX = "id_collection_receipt_desk_token_primary"
 RECEIPT_CONSTRAINTS = {ONE_PER_SHEET_LINE, ONE_PENDING_PER_MOVE, COMMAND_METHOD_INDEX}
 
 
@@ -59,6 +60,8 @@ class CollectionReceipt(models.Model):
     exception = fields.Boolean(string="Pengecualian", readonly=True)
     exception_reason = fields.Char(string="Alasan Pengecualian", readonly=True)
     desk_token = fields.Char(string="Token Idempotensi Meja/Custody", index=True, readonly=True)
+    desk_fingerprint = fields.Char(string="Sidik Operasi Custody", readonly=True)
+    desk_primary = fields.Boolean(string="Receipt Utama Operasi", readonly=True)
     method = fields.Selection(METHODS, required=True, readonly=True)
     state = fields.Selection(RECEIPT_STATES, default="posted", required=True, readonly=True, index=True)
     occurred_at = fields.Datetime(string="Waktu Kejadian", readonly=True)
@@ -78,6 +81,11 @@ class CollectionReceipt(models.Model):
         self.env.cr.execute(
             f"CREATE UNIQUE INDEX IF NOT EXISTS {DESK_METHOD_INDEX} "
             "ON id_collection_receipt (desk_token, method) WHERE desk_token IS NOT NULL"
+        )
+        # Satu token = satu operasi utuh (lintas SJP dan metode): hanya satu receipt utama per token.
+        self.env.cr.execute(
+            f"CREATE UNIQUE INDEX IF NOT EXISTS {DESK_TOKEN_INDEX} "
+            "ON id_collection_receipt (desk_token) WHERE desk_token IS NOT NULL AND desk_primary"
         )
 
     @api.depends("line_ids.amount")
