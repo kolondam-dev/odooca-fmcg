@@ -270,7 +270,7 @@ class TestMobileRead(MobileFixture, TransactionCase):
         }])
         self.assertTrue(first_task["version"].startswith("odoo-delivery-v1:"))
         uuid = "11111111-1111-4111-8111-111111111111"
-        self.env["id.mobile.command"].sudo().create({
+        pod = self.env["id.mobile.command"].sudo().create({
             "client_uuid": uuid,
             "fingerprint": uuid,
             "command_type": "delivery.pod.submit",
@@ -279,6 +279,13 @@ class TestMobileRead(MobileFixture, TransactionCase):
             "status": "accepted",
             "payload_json": json.dumps({"source": first_task}),
         })
+        # PostgreSQL audit timestamps use the database clock, independent of freezegun.
+        pod.flush_recordset()
+        self.env.cr.execute(
+            "UPDATE id_mobile_command SET create_date = %s WHERE id = %s",
+            (MOBILE_TEST_UTC, pod.id),
+        )
+        pod.invalidate_recordset(["create_date"])
         after_pod = self.service()._snapshot_payload()
         self.assertEqual(after_pod["accepted_delivery_pods"], {first.name: uuid})
         self.assertEqual(after_pod["version"], snapshot["version"])
