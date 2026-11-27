@@ -58,3 +58,19 @@ Catat [BU] jika kondisi yang diperlukan tidak muncul. Keputusan `minSdk` menungg
 - **B01** memerlukan keputusan native auth, TTL/revoke, identitas owner/company, perilaku perpindahan akun dan sumber capability. Logout adapter saat ini membersihkan sesi lokal. Probe server destroy hanya membuktikan penolakan sesi yang dicabut.
 - **B02** memerlukan registrasi dan pemulihan perangkat, kebijakan penerimaan kalibrasi, sinyal integritas, serta qualification/requalification. Pengukuran di atas mencatat diagnostik lokal sambil menunggu keputusan itu.
 - Lead perlu menetapkan operator, unit fisik, dan target HTTPS fixture yang bisa dijangkau perangkat. Mount gateway loopback CI berlaku untuk runner emulator. Untuk uji fisik yang memakai lokasi nyata, kumpulkan metrik kualitas dan state tanpa membagikan koordinat.
+
+## Hasil checkpoint Cloud
+
+Probe host lulus pada `f0c2172` dengan fixture `b09-dev02b-session-v1`, Odoo `19.0.20261112`, PostgreSQL `16.16`, `id_mobile_api` `19.0.1.4.0`, `id_base` `19.0.1.3.5` dan `id_approval` `19.0.1.0.0`.
+
+| Kasus host HTTPS | Hasil |
+| --- | --- |
+| Tanpa sesi dan password salah | Bootstrap/snapshot tanpa sesi mengembalikan 401. Password salah ditolak. |
+| Dua akun TEST | Login, bootstrap, dan snapshot lulus. Identitas dan outlet sesuai assignment masing-masing. |
+| Pencabutan server | Cookie lama mendapat 401 pada bootstrap dan snapshot. Akun kedua tetap mendapat 200. |
+| Login ulang | Akun asal kembali ke scope yang sama. |
+| Cleanup | Gateway berhenti. Tersisa nol container, volume dan network fixture. |
+
+Gate pada sumber yang sama lulus dengan 40 tes kontrak CI, 72 tes domain, 5 tes data/Robolectric, lint, build debug, dan validasi OpenAPI. SHA-256 APK debug lokal `320e008987a9817fd235fae776e53a4ff1f297b12b938d257c2e6e0d4d21f534`. Build ini memakai endpoint `https://ci.invalid` dan dicatat sebagai bukti build. Tes adapter memakai cipher sintetis dan belum membuktikan Keystore perangkat.
+
+**Bukti fisik [BU]**. Cloud tidak menampilkan perangkat USB. ADB lokal berhenti saat akan membuat direktori `.android` di home yang hanya-baca. KVM juga tidak tersedia. Matriks menunggu unit Redmi 4X dan POCO M3, operator, build OS aktual, dan akses ke target fixture. TTL alami sesi masih [BU].

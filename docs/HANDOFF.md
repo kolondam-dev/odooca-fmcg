@@ -1,3 +1,10 @@
+## 2026-11-27 — DEV-02B · Checkpoint sesi provisional dan matriks perangkat (Codex-Mobile Native)
+
+- [F] Arahan `072e989`, basis main `bb84709`, sumber teruji `f0c2172`. Probe host HTTPS fixture B09 lulus untuk dua akun, kredensial tidak valid, isolasi assignment, pencabutan sesi, 401 atas cookie lama dan login ulang scope asal. Gateway berhenti dan resource Docker fixture bersih.
+- [F] Gate statis dan Gradle lulus. 40 tes kontrak CI, 72 tes domain, 5 tes data/Robolectric, lint, APK debug dan OpenAPI lulus. Planner memilih suite `android`. Dampak test **TAMBAH** untuk restore/401, logout dan retensi outbox.
+- [BU] Matriks Redmi 4X dan POCO M3 tersedia. Bukti perangkat, TTL alami dan Keystore belum terverifikasi. Cloud tidak menampilkan perangkat USB dan ADB tertahan home hanya-baca. Lead perlu menetapkan operator, unit fisik dan target HTTPS fixture. `minSdk=24` tetap konfigurasi sementara sampai ada hasil perangkat.
+- [BU] B01 tetap memerlukan keputusan native auth, TTL/revoke dan scope identitas. B02 tetap memerlukan kebijakan registrasi dan penerimaan kalibrasi. [Prosedur, matriks, hash APK dan bukti fixture](android/DEV02B_DEVICES.md).
+
 ## 2026-11-26 — [BU] FIN36 PR #204 sinkronisasi strict-main (opencode)
 
 - [F] Review head `d6473ae147476e2d83a4235057f044c555f338b3` PASS dengan dampak test CUKUP; 86 tes I2c diulang reviewer dan PASS, CI 22 SUCCESS / 7 SKIPPED. Finance I0 artifact `15081087455` menutup populasi/cutoff/company/salvage/GL/rollback; Full Dataset runtime SKIPPED.
