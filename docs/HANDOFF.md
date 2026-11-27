@@ -9,6 +9,11 @@
 - [F] Sinkron ke main `2ccfb2d`. Attendance memakai `_handle_extension` PR #203 dan jalur receipt/savepoint bersama. Kode PWA serta capture evidence tetap sama.
 - [F] Konflik tes WMS mempertahankan fixture lintas tengah malam WITA dengan assertion pada kedua tanggal. Tes ORM attendance menutup rollback saat receipt gagal dan retry UUID yang sama.
 - [BU] Runtime pada SHA integrasi menunggu CI. Bukti perangkat pada kandidat sebelumnya sudah diterima supervisor.
+## 2026-11-27 — [BU] BE-20d PR #205 CI hijau (claude-design)
+
+- [F] CI hijau pada `b1088a87ae9ef41cc084de2e6cc8bb1d356ec4ee`: snapshot memuat `receipt_state`/`receipt_amount`; tes konkurensi memakai Environment dari thread utama (Registry._lock) dan meniru retry Odoo pada SerializationFailure.
+- [A] Belum: penutupan akhir hari, custody/`held`, meja kasir, BE-20e. `collection_v2` tetap OFF.
+- [BU] Menunggu review Supervisor; merge setelah PASS.
 
 ## 2026-11-26 — [BU] FIN36 PR #204 sinkronisasi strict-main (opencode)
 
