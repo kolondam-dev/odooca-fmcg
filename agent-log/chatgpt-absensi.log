@@ -37,3 +37,8 @@
 - [F] Upgrade dari id_attendance 19.0.1.0.0 pada DB disposable lulus 12 tes ORM, termasuk isolasi HR, oracle 480/443 menit, dan perubahan tanggal WITA.
 - [A] Cakupan PWA diisi HR. Rekap tidak menganggap jam pulang otomatis sebagai bukti PWA. Aktivasi demo mengikuti keputusan terpisah.
 - Task managed by ChatGPT-ABSENSI at 2026-11-27T12:18:42+07:00
+
+[2026-11-27T18:52:15+07:00] [INFO] PR #209: integrasikan main setelah acceptance browser HR
+- Konflik HANDOFF diselesaikan dengan mempertahankan entri kedua sisi. Addon id_attendance byte-identik dengan 019720b.
+- Chromium: HR menyimpan libur, 960 menit terjadwal / 443 menit tercatat / 50% hadir cocok; akses non-HR ditolak.
+- Task managed by ChatGPT-ABSENSI at 2026-11-27T18:52:15+07:00

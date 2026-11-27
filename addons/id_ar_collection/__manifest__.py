@@ -11,6 +11,7 @@
         "security/collection_security.xml",
         "security/ir.model.access.csv",
         "data/ir_sequence_data.xml",
+        "data/ir_cron_data.xml",
         "report/collection_sheet_report.xml",
         "views/collection_sheet_views.xml",
         "wizard/collection_sheet_generate_views.xml",

@@ -375,3 +375,117 @@ class TestCollectionReceipt(TransactionCase):
     def test_unsupported_without_valid_payload_fails_closed(self):
         with self.assertRaises(UserError):
             self._submit({"client_uuid": str(uuid.uuid4()), "type": "collection.receipt.submit", "payload": {}})
+
+    # ---- penutupan akhir hari (D10-Q5a, 8.13-4) -----------------------------------------------------
+    def _lock_free_candidate(self, move):
+        """Faktur kembali kandidat: dapat dimasukkan ke SJP baru tanpa bentrok klaim atau pending."""
+        sheet = self.env["id.collection.sheet"].create({
+            "company_id": self.company.id, "collector_id": self.other.id, "collect_date": business_date(),
+            "line_ids": [Command.create({"move_id": move.id})]})
+        return sheet
+
+    def test_closing_before_cutoff_is_noop(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.clock.move_to("2026-11-24 15:59:59")
+        self.assertFalse(sheet._close_settlement_day())
+        self.assertEqual((sheet.state, self._line_of(sheet, move).outcome), ("issued", "pending"))
+
+    def test_closing_without_any_receipt_expires_sheet_and_frees_invoices(self):
+        first, second = self._invoice(), self._invoice()
+        sheet = self._sheet([first, second])
+        with self.assertRaises(ValidationError):  # selama aktif, faktur terklaim
+            self._lock_free_candidate(first)
+        self.clock.move_to(CUTOFF_UTC)
+        self.assertEqual(sheet._close_settlement_day(), sheet)
+        self.assertEqual(sheet.state, "expired")
+        self.assertEqual({line.outcome for line in sheet.line_ids}, {"lapsed"})
+        self.assertFalse(any(sheet.line_ids.mapped("active_claim")))
+        self._lock_free_candidate(first)  # kembali kandidat: tanpa lubang atau loop
+        self.assertFalse(sheet._close_settlement_day())  # idempoten
+        with self.assertRaises(UserError):  # terminal
+            sheet.action_cancel()
+        command = self._command(sheet, [self._entry(sheet, second)])
+        self.assertEqual(self._submit(command)["status"], "rejected")
+        self.assertFalse(self._receipts(sheet))
+
+    def test_closing_keeps_reported_lines_and_lapses_only_the_rest(self):
+        reported, silent = self._invoice(), self._invoice()
+        sheet = self._sheet([reported, silent])
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, reported)]))["status"], "accepted")
+        self.clock.move_to(CUTOFF_UTC)
+        self.assertEqual(sheet._close_settlement_day(), sheet)
+        self.assertEqual(sheet.state, "issued")  # penerimaan pending lanjut ke validasi (20e)
+        self.assertEqual(self._line_of(sheet, reported).outcome, "paid")
+        self.assertTrue(self._line_of(sheet, reported).active_claim)
+        self.assertEqual(self._line_of(sheet, silent).outcome, "lapsed")
+        self.assertFalse(self._line_of(sheet, silent).active_claim)
+        self._lock_free_candidate(silent)
+        with self.assertRaises(ValidationError):  # faktur dengan uang pending tetap terproteksi
+            self._lock_free_candidate(reported)
+        self.assertFalse(sheet._close_settlement_day())  # idempoten
+        self.assertEqual(self._line_of(sheet, reported).outcome, "paid")
+
+    def test_cron_catches_up_idempotently_and_skips_fully_reported_sheets(self):
+        silent_move, reported_move = self._invoice(), self._invoice()
+        silent = self._sheet([silent_move])
+        reported = self._sheet([reported_move], collector=self.other)
+        self.assertEqual(
+            self._submit(self._command(reported, [self._entry(reported, reported_move)]), user=self.other)["status"],
+            "accepted")
+        self.env["id.collection.sheet"]._cron_close_settlement_day()  # sebelum cutoff: SJP uji tidak tersentuh
+        self.assertEqual((silent.state, silent.line_ids.outcome), ("issued", "pending"))
+        self.clock.move_to("2026-11-25 02:00:00")  # 10:00 WITA hari berikutnya
+        self.assertGreaterEqual(self.env["id.collection.sheet"]._cron_close_settlement_day(), 1)
+        self.assertEqual((silent.state, reported.state), ("expired", "issued"))
+        self.assertEqual(self.env["id.collection.sheet"]._cron_close_settlement_day(), 0)
+
+    # ---- command setelah cutoff menutup SJP di bawah lock walau cron belum berjalan (§8.13-4) ------------
+    def _residual(self, move):
+        self.env.flush_all()
+        self.env.cr.execute("SELECT amount_residual FROM account_move WHERE id = %s", (move.id,))
+        return self.env.cr.fetchone()[0]
+
+    def _logs(self, command):
+        return self.env["id.mobile.command"].sudo().search([("client_uuid", "=", command["client_uuid"])])
+
+    def test_command_after_cutoff_before_cron_persists_rejection_and_closes_sheet(self):
+        first, second = self._invoice(), self._invoice()
+        sheet = self._sheet([first, second])
+        balances = (self._residual(first), self._residual(second))
+        command = self._command(sheet, [self._entry(sheet, first)])
+        self.clock.move_to(CUTOFF_UTC)
+        result = self._submit(command)  # cron belum berjalan
+        self.assertEqual((result["status"], result["reference"]), ("rejected", "cutoff"))
+        self.assertFalse(self._receipts(sheet))
+        self.assertEqual((self._residual(first), self._residual(second)), balances)
+        self.assertEqual(sheet.state, "expired")
+        self.assertEqual({line.outcome for line in sheet.line_ids}, {"lapsed"})
+        self.assertFalse(any(sheet.line_ids.mapped("active_claim")))
+        self._lock_free_candidate(first)  # klaim terlepas: kembali kandidat tanpa menunggu cron
+        self.assertEqual(len(self._logs(command)), 1)
+        # Replay UUID: hasil sama, tidak ada log baru, tidak ada efek ganda.
+        self.assertEqual(self._submit(command), result)
+        self.assertEqual(len(self._logs(command)), 1)
+        self.assertEqual(self.env["id.mobile.command"].sudo().search_count([
+            ("client_uuid", "=", command["client_uuid"]), ("status", "=", "rejected")]), 1)
+        self.assertFalse(sheet._close_settlement_day())  # cron sesudahnya: idempoten
+
+    def test_command_after_cutoff_on_mixed_sheet_lapses_only_unreported_lines(self):
+        reported, silent = self._invoice(), self._invoice()
+        sheet = self._sheet([reported, silent])
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, reported)]))["status"], "accepted")
+        pending_receipts = self._receipts(sheet)
+        self.clock.move_to(CUTOFF_UTC)
+        late = self._command(sheet, [self._entry(sheet, silent)])
+        self.assertEqual(self._submit(late)["reference"], "cutoff")
+        self.assertEqual(self._receipts(sheet), pending_receipts)  # uang pending tidak tersentuh
+        self.assertEqual(sheet.state, "issued")
+        self.assertEqual((self._line_of(sheet, reported).outcome, self._line_of(sheet, reported).active_claim),
+                         ("paid", True))
+        self.assertEqual((self._line_of(sheet, silent).outcome, self._line_of(sheet, silent).active_claim),
+                         ("lapsed", False))
+        self._lock_free_candidate(silent)
+        with self.assertRaises(ValidationError):
+            self._lock_free_candidate(reported)
+

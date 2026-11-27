@@ -1,9 +1,29 @@
+## 2026-11-27 — Sinkronisasi dan acceptance browser HR PR #209 (ChatGPT-ABSENSI)
+
+- [F] Main `cbabfee` digabung. Konflik hanya di HANDOFF dan entri kedua sisi dipertahankan.
+- [F] Chromium pada Odoo 19 disposable di `019720b`: HR menyimpan libur bersumber, lalu ringkasan, detail harian, dan pivot cocok (960 menit terjadwal, 443 menit tercatat, 50% hadir). Non-HR ditolak lewat tautan langsung dan permintaan baca.
+- [F] Seluruh addon `id_attendance` byte-identik dengan kandidat yang diuji. Perubahan dispatcher dari main menambahkan callback opsional untuk penutupan penagihan.
+- [BU] CI pada SHA sinkronisasi menunggu hasil sebelum supervisor merge.
+
 ## 2026-11-27 — Kalender kerja dan rekap absensi PWA (ChatGPT-ABSENSI)
 
 - [F] Satu PR pada `agen/absensi-kalender-rekap`. Menu Karyawan → Rekap Absensi PWA berisi jadwal native, libur dengan cakupan dan sumber, serta ringkasan dan detail harian/pivot/grafik. Jadwal mengikuti versi HR efektif dan Time Off native mengurangi kewajiban hadir.
 - [F] Upgrade Odoo 19 disposable dari addon v19.0.1.0.0 ke v19.0.2.0.0: 12 tes ORM lulus. Termasuk oracle jam istirahat, jadwal historis, libur tumpang tindih, izin parsial, WITA, checkout otomatis, dan aturan akses.
 - [A] HR mengisi tanggal awal cakupan, kebijakan kalender, dan referensi libur tahunan. Hari terbuka dan hari di luar cakupan tidak dilabel alpa. Tidak ada pengisian kalender otomatis.
 - [BU] CI exact SHA dan acceptance HR menunggu. Tidak ada perubahan deployment demo atau pilot.
+
+
+## 2026-11-27 — [BU] BE-20d PR #208 P1: command setelah cutoff menutup SJP (claude-dev)
+
+- [F] `CommandRejected(after=...)` (dispatcher generik): efek handler di-rollback, lalu `after` dijalankan sekali di savepoint yang sama dengan log `rejected` (gagal -> penolakan ikut batal dan permintaan diulang). Handler receipt memakainya pada penolakan `cutoff` untuk `_close_settlement_day()` di bawah lock, jadi `lapsed`/klaim lepas/`expired` tersimpan tanpa menunggu cron. Koreksi catatan sebelumnya: batas "lapse malas dibuang rollback" tidak berlaku lagi.
+- [F] Tes: process_command setelah cutoff (tanpa receipt, saldo tetap, satu log, replay UUID identik), SJP campuran (uang pending utuh), race cron vs submit dua transaksi PG (pemblokir dibuktikan `pg_blocking_pids`). Bukti Odoo hanya dari CI.
+- [A] Belum: custody/`held`, meja kasir, BE-20e. `collection_v2` tetap OFF.
+
+## 2026-11-27 — [BU] BE-20d penutupan akhir hari SJP (claude-dev)
+
+- [F] `id.collection.sheet._close_settlement_day()`: setelah cutoff (00:00 WITA hari berikutnya, waktu server setelah lock SJP lalu baris SJP) baris tanpa penerimaan -> `lapsed` (klaim faktur lepas per baris; `active_claim` kini bergantung `outcome`), SJP tanpa penerimaan -> `expired` (terminal). SJP berpenerimaan tetap `issued` menuju validasi 20e; faktur dengan uang pending tetap terproteksi. Cron `_cron_close_settlement_day` tiap 15 menit, idempoten, satu savepoint per SJP, hanya SJP berbaris `pending` (tidak kelaparan batch).
+- [F] Enum `outcome` snapshot PWA + openapi menambah `lapsed`. 4 tes Odoo baru (belum diverifikasi CI).
+- [A] Batas jujur: command setelah cutoff tetap `rejected` (rollback savepoint membuang lapse malas); penutupan efektif lewat cron/entrypoint non-command (meja kasir). Belum: custody exception/`held`, meja kasir, BE-20e. FE-8b: PWA harus menampilkan `lapsed`/`expired`. `collection_v2` tetap OFF.
 
 ## 2026-11-27 — [BU] BE-20d PR #205 P1 race SJP batal vs submit (claude-dev)
 

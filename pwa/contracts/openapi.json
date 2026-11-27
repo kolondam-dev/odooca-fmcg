@@ -6582,7 +6582,8 @@
                               "pending",
                               "paid",
                               "partial",
-                              "unpaid"
+                              "unpaid",
+                              "lapsed"
                             ]
                           },
                           "document_return": {
