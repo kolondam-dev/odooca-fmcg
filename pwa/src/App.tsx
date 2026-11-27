@@ -119,8 +119,8 @@ export function App() {
         const source = new HttpProvider();
         const identity = await source.bootstrap();
         const { MockProvider } = await import("./data/mock");
-        // Authentication, identity and work data are real. All sales orders,
-        // including discount requests, go to Odoo. Delivery remains simulated.
+        // Authentication, identity and work data are real. Sales orders and
+        // native delivery POD/closing use Odoo; other demo workflows stay local.
         const actor =
             identity.roles.includes("delivery") &&
             !identity.roles.includes("sales")

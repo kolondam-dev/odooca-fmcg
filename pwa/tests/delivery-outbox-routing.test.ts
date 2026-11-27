@@ -61,6 +61,15 @@ it("routes POD and closing once with unchanged UUIDs and terminally rejects serv
                 message: "Accepted by Odoo",
             };
         }),
+        submitWithEvidence: vi.fn(async (command) => {
+            submitted.push(command.client_uuid);
+            return {
+                client_uuid: command.client_uuid,
+                status: "accepted" as const,
+                reference: "POD-OFFICIAL",
+                message: "Accepted after evidence upload",
+            };
+        }),
     };
     const engine = new Outbox(store, owner, provider);
     const source = {
@@ -148,7 +157,12 @@ it("routes POD and closing once with unchanged UUIDs and terminally rejects serv
 
     await engine.flush();
     expect([...submitted].sort()).toEqual([podUuid, closeUuid].sort());
-    expect(provider.submit).toHaveBeenCalledTimes(2);
+    expect(provider.submit).toHaveBeenCalledTimes(1);
+    expect(provider.submitWithEvidence).toHaveBeenCalledWith(
+        podCommand,
+        store,
+        owner,
+    );
     expect(
         (await store.list(owner)).map((row) => row.command.client_uuid).sort(),
     ).toEqual([podUuid, closeUuid].sort());

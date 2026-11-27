@@ -850,3 +850,10 @@
 - [F] Manifest uji dipetakan ulang ke outlet pengganti dengan owner/hari scope; alert snapshot memakai detail server. Rerun phone 8 case PASS, typecheck dan Prettier PASS.
 - [BU] Exact-SHA CI berikutnya dan acceptance PWA-Odoo disposable masih wajib; merge/deploy tidak diotorisasi.
 - Task managed by codex agent at 2026-11-27T11:47:29+07:00
+
+[2026-11-27T18:18:55+07:00] [INFO] Runtime fork PR206 menemukan evidence POD tidak terunggah
+- [F] Fork pr206-acceptance terpisah: Odoo/PWA/gateway dan Postgres sehat; dua stock picking native dan assignment hari ini di-seed melalui ORM pada fork saja.
+- [F] Browser driver: snapshot/layar dua DO benar; POD A dari PWA ditolak Odoo 422 karena `/api/v1/evidence` tidak dipanggil. Ini bukan acceptance PASS.
+- [F] Fix in-progress menambahkan upload foto resmi + hash server sebelum command, tes transport/outbox; dampak test TAMBAH.
+- [BU] CI fix, POD B/closing/resync/cleanup tertunda; jangan merge/deploy pilot.
+- Task managed by codex agent at 2026-11-27T18:18:55+07:00

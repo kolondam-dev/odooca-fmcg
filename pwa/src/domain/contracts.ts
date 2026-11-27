@@ -497,6 +497,12 @@ export interface FieldProvider {
     bootstrap(): Promise<Identity>;
     snapshot(): Promise<Snapshot>;
     submit(command: Command): Promise<Receipt>;
+    /** Upload official POD media before posting the immutable command envelope. */
+    submitWithEvidence?(
+        command: Command,
+        store: import("../storage/store").FieldStore,
+        owner: string,
+    ): Promise<Receipt>;
     deliveryTasks?(): Promise<import("./delivery-contracts").DeliveryTask[]>;
     collectionTasks?(): Promise<
         import("./collection-contracts").CollectionTask[]

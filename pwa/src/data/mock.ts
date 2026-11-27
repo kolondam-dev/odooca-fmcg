@@ -55,6 +55,7 @@ export class MockProvider implements FieldProvider {
             "bootstrap" | "snapshot"
         > & {
             submit?: FieldProvider["submit"];
+            submitWithEvidence?: FieldProvider["submitWithEvidence"];
         },
     ) {}
     get relaxedLocation(): boolean {
@@ -478,6 +479,27 @@ export class MockProvider implements FieldProvider {
     async expensePolicy() {
         // Fixture only, never a company approval limit.
         return { version: "SIM-EXPENSE-POLICY-1", supervisor_limit: "250000" };
+    }
+    async submitWithEvidence(
+        command: Command,
+        store: FieldStore,
+        owner: string,
+    ): Promise<Receipt> {
+        if (this.authenticated) {
+            // The QA-only HTTP simulator serves SIM-MANIFEST-1 with non-numeric
+            // outlet IDs; it has no Odoo evidence API. Never permit this path
+            // for a native manifest or in a runtime build without QA tools.
+            if (
+                __QA_TOOLS__ &&
+                command.type === "delivery.pod.submit" &&
+                command.payload.source.version === "SIM-MANIFEST-1"
+            )
+                return this.submit(command);
+            if (!this.authenticated.submitWithEvidence)
+                throw new ApiError(409, "Unggah bukti resmi belum tersedia.");
+            return this.authenticated.submitWithEvidence(command, store, owner);
+        }
+        return this.submit(command);
     }
     async submit(command: Command): Promise<Receipt> {
         if (!navigator.onLine)

@@ -217,7 +217,14 @@ export class Outbox {
                     await validateRevisionMedia(item, this.owner, this.store);
                     await validateTripCloseMedia(item, this.owner, this.store);
                     const receipt = ReceiptSchema.parse(
-                        await this.provider.submit(item.command),
+                        item.command.type === "delivery.pod.submit" &&
+                            this.provider.submitWithEvidence
+                            ? await this.provider.submitWithEvidence(
+                                  item.command,
+                                  this.store,
+                                  this.owner,
+                              )
+                            : await this.provider.submit(item.command),
                     );
                     if (receipt.client_uuid !== item.command.client_uuid)
                         throw new Error("Receipt UUID tidak cocok.");

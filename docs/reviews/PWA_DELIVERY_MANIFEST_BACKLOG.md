@@ -2,6 +2,13 @@
 
 Status: **IMPLEMENTED — exact-SHA CI dan acceptance disposable masih wajib**
 
+## 2026-11-27 — Acceptance runtime disposable PR #206 (berjalan)
+
+- [F] Fork Railway `pr206-acceptance` (`76986ccf-843e-4084-b67a-c357717c3c5e`) terpisah copy-on-write dari pilot. Fork sumber tidak memiliki DO `WH/OUT/06409`/`06410`; dua stock picking native berstatus `assigned` dibuat lewat Odoo ORM hanya pada fork, assignment driver hari WITA dibuat, dengan outlet 8/9 dan kuantitas 60+160 / 90+320.
+- [F] Runtime SHA `b2a9076a27fd3ace8da38f1396b4562114a1249e`: driver login dari PWA, snapshot API 200 tepat dua DO dan browser menampilkan keduanya terpasang ke outlet tepat. Foto/GPS browser menggunakan fixture sintetis pada salinan disposable, bukan bukti kunjungan lapangan.
+- [F] POD penuh dari layar PWA menghasilkan HTTP 422 `Bukti POD ... tidak ditemukan`: command diteruskan tetapi foto resmi tidak diunggah ke `/api/v1/evidence`. Fix menambah upload opening/POD dan penerjemahan hash foto server sebelum command, tanpa mengubah outbox lokal. **Bukti runtime fix, CI SHA baru, POD kedua, closing, resync dan cleanup belum lulus.**
+- [BU] Verdict tetap **HOLD — CI head sebelumnya PASS, runtime acceptance pending**. Fork wajib dilepas setelah bukti atau saat pengujian dihentikan; jangan merge/deploy ke pilot.
+
 Prioritas: **tinggi untuk menutup acceptance driver PWA**
 
 Acceptance gudang/DO/closing API: **PASS** — lihat

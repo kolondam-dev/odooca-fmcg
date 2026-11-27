@@ -8063,3 +8063,9 @@ The previous attempt's assumption that one PO entry with multiple view occurrenc
 - Corrective approach: do not share one PO msgid across report views. Picklist keeps `Lot / Serial`; Packlist uses `Lot / Serial Number`; Delivery Order now uses the distinct `Lot / Batch / Serial`. Each PO entry has exactly one report-view occurrence and maps to `Lot / Nomor Seri`.
 - Updated the importer-chain matrix to assert all three source terms against their individual view XML IDs. No assertion was removed or weakened; no business/runtime stock logic changed.
 - New exact-HEAD CI, including install-test and live HTTP PDF render smoke, is required. No merge or deployment.
+## 2026-11-27T18:18:55+07:00 — [BU] PR #206: runtime fork menemukan upload bukti POD hilang (codex)
+
+- [F] Fork `pr206-acceptance` (`76986ccf-843e-4084-b67a-c357717c3c5e`) memuat layanan Odoo/PWA/gateway SHA awal `b2a9076`, Postgres serta volume copy-on-write; pilot tidak dimutasi. Sumber fork tidak memiliki dua DO target; dua DO native 06409/06410 dan assignment driver 27 Nov dibuat dengan ORM di fork saja.
+- [F] Browser driver login, snapshot 200 dan UI menampilkan dua DO asli dengan outlet 8/9, kuantitas 60+160/90+320. POD penuh di PWA ditolak Odoo 422 karena foto belum masuk `/api/v1/evidence`; command tanpa bukti tidak dicatat.
+- [F] Fix in-progress: upload dua media POD resmi sebelum command, validasi receipt+hash, lalu kirim command UUID tetap; tes transport dan outbox ditambah. Dampak test **TAMBAH**: counterexample command tanpa evidence harus fail-closed, upload ditolak tidak boleh memposting, hash lokal tidak boleh mencemari payload resmi. Trigger `pwa/**` memilih suite `pwa` lewat `.ci/test-impact.yml`.
+- [BU] CI exact-SHA fix, acceptance POD parsial/closing/resync, dan cleanup belum terbukti. Merge/pilot deploy tidak diotorisasi.
