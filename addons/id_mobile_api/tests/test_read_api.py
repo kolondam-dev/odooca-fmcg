@@ -269,6 +269,20 @@ class TestMobileRead(MobileFixture, TransactionCase):
             "unit": self.product.uom_id.name,
         }])
         self.assertTrue(first_task["version"].startswith("odoo-delivery-v1:"))
+        uuid = "11111111-1111-4111-8111-111111111111"
+        self.env["id.mobile.command"].sudo().create({
+            "client_uuid": uuid,
+            "fingerprint": uuid,
+            "command_type": "delivery.pod.submit",
+            "user_id": self.mobile.id,
+            "company_id": self.company.id,
+            "status": "accepted",
+            "payload_json": json.dumps({"source": first_task}),
+        })
+        after_pod = self.service()._snapshot_payload()
+        self.assertEqual(after_pod["accepted_delivery_pods"], {first.name: uuid})
+        self.assertEqual(after_pod["version"], snapshot["version"])
+        self.assertEqual(after_pod["deliveries"], snapshot["deliveries"])
         serialized = json.dumps(snapshot["deliveries"])
         for excluded in (
             "DO-OTHER-WAREHOUSE", "DO-OTHER-DRIVER", "DO-OTHER-OUTLET",

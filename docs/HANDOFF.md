@@ -1,3 +1,8 @@
+## PR #206 — Tindak lanjut acceptance driver (codex)
+
+- Snapshot driver memulihkan UUID POD accepted pada manifest yang sama. Progres sesi baru dan referensi closing memakai receipt Odoo. Saat POD belum lengkap, UI menyebut nomor DO yang masih menunggu dan trip tetap terbuka.
+- Dampak tes **TAMBAH**: regresi snapshot Odoo, progres PWA, dan browser untuk sesi baru dengan satu POD serta percobaan closing. Bukti runtime Odoo → PWA pada salinan disposable masih diperlukan.
+
 ## PR #206 — Re-review integrasi manifest driver PWA (codex)
 
 - [F] Sinkronisasi dari `fdc4b97` dengan main `8e83a301` (PR #209 dan #210). Konflik dua file tes AR diselesaikan dengan mengambil versi main karena selisih di branch PR hanya baris kosong. Kedua riwayat HANDOFF dipertahankan.

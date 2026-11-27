@@ -22,7 +22,10 @@ import { collectionV2Enabled } from "../domain/collection-settlement";
 import { PenagihanScreen } from "./PenagihanScreen";
 import { useCollectionTasks } from "./useCollectionTasks";
 import type { Snapshot } from "../domain/contracts";
-import { deliveryDoneChecker } from "../domain/delivery-progress";
+import {
+    acceptedDeliveryPod,
+    deliveryDoneChecker,
+} from "../domain/delivery-progress";
 import { useBackLayer } from "../ui/navigation";
 import { NavigationScreen } from "./NavigationScreen";
 import {
@@ -130,7 +133,7 @@ export function DeliveryWorkspace({
      * DO selesai hanya bila ada POD di antrean yang bersumber manifest sama (bukan sisa hari/manifest lain)
      * dan tidak ditolak server. POD ditolak masih butuh koreksi; koreksi valid (anak) baru menghitung selesai.
      */
-    const isDone = deliveryDoneChecker(queue);
+    const isDone = deliveryDoneChecker(queue, snapshot);
     const trips = [...new Set((tasks ?? []).map((t) => t.trip))];
     const openTrip = tripOpen
         ? tasks?.filter((t) => t.trip === tripOpen)
@@ -196,7 +199,10 @@ export function DeliveryWorkspace({
                     rows={openTrip}
                     isDone={isDone}
                     next={next}
-                    open={(t) => setTaskOpen(podKey(t))}
+                    open={(t) => {
+                        if (!acceptedDeliveryPod(snapshot, t))
+                            setTaskOpen(podKey(t));
+                    }}
                     navigate={(t) => setNavOpen(podKey(t))}
                     collect={(t) => setCollectOpen(podKey(t))}
                     hasReceivables={(t) => receivablesOf(t).length > 0}
@@ -214,7 +220,7 @@ export function DeliveryWorkspace({
                     }}
                 />
             ) : null}
-            {openTask ? (
+            {openTask && !acceptedDeliveryPod(snapshot, openTask) ? (
                 <DeliveryTaskEditor
                     key={JSON.stringify(openTask)}
                     task={openTask}

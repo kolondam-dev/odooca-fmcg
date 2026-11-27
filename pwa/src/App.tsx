@@ -706,6 +706,7 @@ function Workspace({
                                         ? deliveryProgress(
                                               morning.deliveryManifest,
                                               queue,
+                                              morning.snapshot,
                                           )
                                         : undefined
                                 }

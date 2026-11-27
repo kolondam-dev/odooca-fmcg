@@ -432,6 +432,7 @@ export const SnapshotSchema = z
             )
             .optional(),
         deliveries: z.array(DeliveryTaskSchema),
+        accepted_delivery_pods: z.record(z.string(), z.uuid()).optional(),
     })
     .superRefine((snapshot, ctx) => {
         if (snapshot.catalog_version === 2) {

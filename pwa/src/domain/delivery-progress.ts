@@ -1,3 +1,4 @@
+import type { Snapshot } from "./contracts";
 import type { DeliveryTask } from "./delivery-contracts";
 import { businessRejected } from "./outbox-state";
 import type { QueueItem } from "../storage/store";
@@ -6,7 +7,23 @@ import type { QueueItem } from "../storage/store";
  * DO selesai hanya bila ada POD di antrean yang bersumber manifest sama dan
  * tidak ditolak server. Aturan ini juga dipakai DeliveryWorkspace.
  */
-export function deliveryDoneChecker(queue: QueueItem[]) {
+export function acceptedDeliveryPod(
+    snapshot: Snapshot | null | undefined,
+    task: DeliveryTask,
+) {
+    const receipt = snapshot?.accepted_delivery_pods?.[task.id];
+    if (
+        receipt &&
+        snapshot?.deliveries.some(
+            (source) => JSON.stringify(source) === JSON.stringify(task),
+        )
+    )
+        return receipt;
+}
+export function deliveryDoneChecker(
+    queue: QueueItem[],
+    snapshot?: Snapshot | null,
+) {
     const sources = new Set(
         queue.flatMap((r) =>
             r.command.type === "delivery.pod.submit" && !businessRejected(r)
@@ -14,7 +31,8 @@ export function deliveryDoneChecker(queue: QueueItem[]) {
                 : [],
         ),
     );
-    return (t: DeliveryTask) => sources.has(JSON.stringify(t));
+    return (t: DeliveryTask) =>
+        !!acceptedDeliveryPod(snapshot, t) || sources.has(JSON.stringify(t));
 }
 
 /** Ringkasan satuan muatan, mis. "20 karton · 8 pak". */
@@ -38,8 +56,9 @@ export type DeliveryProgress = {
 export function deliveryProgress(
     tasks: DeliveryTask[],
     queue: QueueItem[],
+    snapshot?: Snapshot | null,
 ): DeliveryProgress {
-    const isDone = deliveryDoneChecker(queue);
+    const isDone = deliveryDoneChecker(queue, snapshot);
     const nextTask = tasks.find((t) => !isDone(t));
     const trip = nextTask?.trip;
     const rows = trip ? tasks.filter((t) => t.trip === trip) : [];

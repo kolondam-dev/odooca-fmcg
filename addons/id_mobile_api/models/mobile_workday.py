@@ -315,6 +315,32 @@ class MobileWorkday(models.Model):
             result.append({**core, "version": f"odoo-delivery-v1:{manifest_hash}"})
         return result
 
+    def _accepted_delivery_pods(self, assignment, day, deliveries):
+        from .mobile_command import extract_cmd_payload
+
+        manifests = {task["id"]: task for task in deliveries}
+        start = datetime.combine(day, datetime.min.time(), tzinfo=ZoneInfo("Asia/Makassar"))
+        start = start.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
+        commands = self.env["id.mobile.command"].sudo().search([
+            ("company_id", "=", assignment.company_id.id),
+            ("user_id", "=", assignment.user_id.id),
+            ("command_type", "=", "delivery.pod.submit"),
+            ("status", "=", "accepted"),
+            ("create_date", ">=", start),
+            ("create_date", "<", start + timedelta(days=1)),
+        ], order="id")
+        accepted = {}
+        for command in commands:
+            payload = extract_cmd_payload(command)
+            source = payload.get("source")
+            if not isinstance(source, dict):
+                continue
+            do_id = source.get("id")
+            task = manifests.get(do_id) if isinstance(do_id, str) else None
+            if task and source == task:
+                accepted[task["id"]] = command.client_uuid
+        return accepted
+
     @api.model
     def _outlet_receivables(self, partners, company, day):
         """BE-7: piutang berjalan dan daftar faktur terbuka per outlet ditugaskan (baca-saja).
@@ -459,6 +485,8 @@ class MobileWorkday(models.Model):
             version=f"odoo-read-v1:{digest}",
             updatedAt=datetime.now(ZoneInfo("UTC")).isoformat().replace("+00:00", "Z"),
         )
+        if include_volatile and deliveries:
+            result["accepted_delivery_pods"] = self._accepted_delivery_pods(assignment, day, deliveries)
         # BE-18: id_approval opsional (tanpa dependensi manifest); tier dipakai PWA hanya untuk pratinjau.
         # Sengaja DI LUAR digest versi: pemakaian berubah setiap order dan konfigurasi bisa berubah kapan
         # saja; bila ikut digest, command offline berikutnya ditolak 'Stale catalog snapshot version'.

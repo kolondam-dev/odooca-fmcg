@@ -874,3 +874,8 @@
 - Main 8e83a301 digabung; tes AR mengikuti main, kedua entri HANDOFF dipertahankan.
 - Kode mobile/PWA identik dengan fdc4b97. Bukti runtime pada ancestor dan batas UI dicatat di HANDOFF.
 - Task managed by codex agent at 2026-11-28T00:10:15+07:00
+
+[2026-11-28T01:17:05+07:00] [INFO] Tindak lanjut review PR #206
+- Pulihkan POD dari snapshot dan tampilkan DO yang belum lengkap pada percobaan closing.
+- Tes unit 579 lulus; tambah oracle ORM dan browser. Acceptance disposable belum dijalankan.
+- Task managed by codex agent at 2026-11-28T01:17:05+07:00
