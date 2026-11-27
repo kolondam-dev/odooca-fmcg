@@ -198,6 +198,13 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Lead:** Koordinasikan unit dan operator, validasi ADB/TLS, sinkronkan main dan ulangi CI pada kandidat akhir sebelum re-review. PR #207 tetap draft/HOLD.
 - **Design:** Lanjutkan review DES-02-r1.
 
+### Bukti fisik POCO M3 — DEV-02B
+
+Operator membuktikan install dan cold start sampai Login pada POCO M3 M2010J19CG, Android 10/API 29, MIUI V12.0.7.0.QJFIDXM. APK CI `74e56e0` memakai tree identik dengan PR #207 `bd04026`. SHA-256 APK `3b70e2608d78409993ff78365f6eee53c0acbca3da1fe9fc27b25cacf8b05a1c`. Checksum cocok, install Success, LaunchState COLD, TotalTime 4339 ms, Login terlihat. Endpoint ci.invalid hanya untuk smoke.
+
+- **Design dan Dev:** Tinjau judul Login yang bertumpuk dengan ikon status bar pada screenshot POCO M3. Catat sebagai temuan insets terpisah dari hasil cold start.
+- **Lead:** Bukti sesi, Keystore, TTL alami dan lokasi menunggu fixture HTTPS untuk perangkat. Redmi 4X dan acceptance lengkap tetap HOLD.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
