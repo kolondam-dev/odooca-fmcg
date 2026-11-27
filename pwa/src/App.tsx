@@ -388,6 +388,8 @@ function Workspace({
             active = false;
         };
     }, [morningService, morningRevision]);
+    const officialAttendance =
+        runningMode === "live" && !!identity.attendanceOffice;
     async function startSession(
         event: "check_in" | "check_out",
         evidence: EvidenceRef,
@@ -399,9 +401,11 @@ function Workspace({
         setMorning(record);
         setMorningRevision((value) => value + 1);
         setToast(
-            event === "check_out"
-                ? "Clock out tersimpan di perangkat."
-                : "Check-in tersimpan di perangkat. Sesi kerja aktif.",
+            officialAttendance
+                ? "Absensi tercatat di Odoo."
+                : event === "check_out"
+                  ? "Clock out tersimpan di perangkat."
+                  : "Check-in tersimpan di perangkat. Sesi kerja aktif.",
         );
         haptic();
     }
@@ -1065,7 +1069,12 @@ function Workspace({
                             store={store}
                             owner={owner}
                             identity={identity}
-                            office={snapshot.office}
+                            office={
+                                officialAttendance
+                                    ? identity.attendanceOffice
+                                    : snapshot.office
+                            }
+                            official={officialAttendance}
                             startSession={startSession}
                             close={() => setDialog(undefined)}
                         />

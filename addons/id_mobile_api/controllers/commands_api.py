@@ -4,6 +4,7 @@ from odoo import http
 from odoo.exceptions import AccessError, UserError
 from odoo.http import request
 from .read_api import MobileReadApi
+from ..models.mobile_evidence import EvidenceRejected
 from ..models.mobile_workday import MobileReadConflict
 
 _logger = logging.getLogger(__name__)
@@ -57,6 +58,8 @@ class MobileCommandsApi(MobileReadApi):
             return self._response({"error": str(e) or "conflict"}, 409)
         except AccessError as e:
             return self._response({"error": str(e) or "forbidden"}, 403)
+        except EvidenceRejected as e:
+            return self._response({"error": e.code}, 422)
         except UserError as e:
             return self._response({"error": str(e)}, 422)
         except Exception as e:

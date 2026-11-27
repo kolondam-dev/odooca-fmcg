@@ -1,0 +1,74 @@
+msgid ""
+msgstr ""
+"Language: id\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_hr_employee__pwa_attendance_office_id
+msgid "PWA Attendance Office"
+msgstr "Kantor Absensi PWA"
+
+#. module: id_attendance
+#: model:ir.model.fields,help:id_attendance.field_hr_employee__pwa_attendance_office_id
+msgid "Set a verified office to enable PWA attendance for this employee."
+msgstr "Tetapkan kantor terverifikasi untuk mengaktifkan absensi PWA bagi karyawan ini."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/employee.py:0
+msgid "An active employee mapping is required for PWA attendance."
+msgstr "Absensi PWA memerlukan pemetaan pengguna ke karyawan aktif."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/employee.py:0
+msgid "A verified attendance office is required."
+msgstr "Absensi memerlukan kantor dengan lokasi terverifikasi."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "PWA attendance receipts can only be created by the dispatcher."
+msgstr "Konfirmasi absensi PWA hanya dapat dibuat oleh layanan sinkronisasi."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "An attendance evidence reference is required."
+msgstr "Referensi bukti absensi wajib disertakan."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "The evidence is not valid for this employee and office."
+msgstr "Bukti tidak valid untuk karyawan dan kantor ini."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "Attendance evidence expired before posting."
+msgstr "Bukti absensi kedaluwarsa sebelum dicatat."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "PWA check-in already exists for this day."
+msgstr "Absen masuk PWA sudah tercatat untuk hari ini."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "An earlier attendance is still open. Contact HR."
+msgstr "Absensi sebelumnya belum ditutup. Hubungi HR."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "No open PWA attendance for this day."
+msgstr "Tidak ada sesi absensi PWA terbuka untuk hari ini."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "Check-out must be later than check-in."
+msgstr "Jam pulang harus sesudah jam masuk."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/mobile_command.py:0
+msgid "PWA attendance recorded."
+msgstr "Absensi PWA tercatat."
+
+#. module: id_attendance
+#: code:addons/id_attendance/models/attendance.py:0
+msgid "PWA attendance provenance can only be set by the dispatcher."
+msgstr "Asal catatan absensi PWA hanya dapat ditetapkan oleh layanan sinkronisasi."

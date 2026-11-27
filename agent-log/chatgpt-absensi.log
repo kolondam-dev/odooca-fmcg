@@ -1,0 +1,33 @@
+[2026-11-25T21:50:04+07:00] [INFO] Susun rencana implementasi absensi PWA dan kalender kerja
+- [F] Basis origin/main f0b3632, rencana pada agen/absensi.
+- [A] Tiga PR berurutan: posting PWA, kalender dan rekap, lalu Time Off dan approval.
+- [F] Pemeriksaan manifest dan diff lulus. [BU] Ruff tidak tersedia. Implementasi dan runtime belum diuji.
+- Task managed by ChatGPT-ABSENSI at 2026-11-25T21:50:04+07:00
+
+[2026-11-25T22:10:32+07:00] [INFO] Implementasi PR 1 absensi PWA pilot
+- [F] Addon id_attendance menyimpan bukti kantor terverifikasi dan absensi resmi per karyawan pada Odoo. PWA menyimpan event pending untuk pengiriman ulang dengan UUID sama.
+- [F] Instal Odoo 19 id_ID, upgrade DB persisten, 10 tes ORM terpilih, 574 Vitest, dan acceptance retry browser phone/tablet lulus. Ruff, manifest, TypeScript, kontrak dan build gate lulus.
+- [BU] Dua skenario GPS outlet gagal pada Chromium alternatif di basis dan kandidat. CI exact SHA, browser resmi, dan acceptance perangkat staging belum dijalankan.
+- Task managed by ChatGPT-ABSENSI at 2026-11-25T22:10:32+07:00
+
+[2026-11-25T22:50:37+07:00] [INFO] Perbaiki recovery retry bukti kedaluwarsa PR #200
+- [F] HTTP 422 dengan kode attendance_evidence_expired membuka pengambilan bukti baru. Retry ambigu mempertahankan UUID.
+- [F] Upgrade lokal, 12 tes Odoo ORM/HTTP, 574 Vitest dan 4 skenario browser pilot lulus. [BU] CI head baru dan perangkat staging menunggu.
+- Task managed by ChatGPT-ABSENSI at 2026-11-25T22:50:37+07:00
+
+[2026-11-26T07:36:50+07:00] [INFO] Stabilkan tes picking yang memblokir PR #200
+- [F] CI 45649200735 gagal saat fixture picking bergeser melewati tengah malam WITA.
+- [F] Tes mematok 23:56–00:08 WITA dan memeriksa nol pada hari mulai serta satu picking berdurasi 12 menit pada hari selesai.
+- [BU] Runtime Odoo diverifikasi lewat CI pada commit perbaikan.
+- Task managed by ChatGPT-ABSENSI at 2026-11-26T07:36:50+07:00
+
+[2026-11-27T06:47:23+07:00] [INFO] Integrasi dispatcher PR #200 dengan main
+- [F] Handler attendance memakai _handle_extension PR #203. Validasi expiry tetap EvidenceRejected dan UUID replay tetap mendahului handler.
+- [F] Tambah uji ORM rollback saat simpan receipt gagal lalu retry UUID yang sama. Ruff, manifest, dan kompilasi Python lulus.
+- [BU] Runtime Odoo pada SHA integrasi menunggu CI.
+- Task managed by ChatGPT-ABSENSI at 2026-11-27T06:47:23+07:00
+
+[2026-11-27T07:31:25+07:00] [INFO] Sinkronkan PR #200 ke main bb84709
+- [F] Konflik dokumentasi diselesaikan dengan mempertahankan entri kedua sisi. Tidak ada perubahan implementasi attendance atau tesnya.
+- [BU] CI SHA baru menunggu.
+- Task managed by ChatGPT-ABSENSI at 2026-11-27T07:31:25+07:00

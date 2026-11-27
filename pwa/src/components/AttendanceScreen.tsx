@@ -1,3 +1,7 @@
+import {
+    AttendanceRecaptureRequired,
+    postAttendance,
+} from "../data/attendance";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Identity, Snapshot } from "../domain/contracts";
 import { distanceMeters } from "../domain/format";
@@ -33,14 +37,23 @@ import type { EvidenceRef } from "./Evidence";
 /**
  * Layar penuh absen masuk/pulang (DS: Absen_info, Absen_dalam, Absen_luar, Absen_selfie, Absen_pulang).
  * Alur: lokasi → status area → Ambil selfie (kamera depan, terkunci di luar area) → Selfie tersimpan → simpan.
- * Bukti tetap lokal: hash, watermark, dan kedaluwarsa lokasi 60 detik tidak berubah.
+ * Pilot resmi mengirim foto dan lokasi ke Odoo sebelum membuka atau menutup sesi lokal.
  */
+type PendingAttendance = {
+    businessDate: string;
+    evidence: EvidenceRef;
+    original: Blob;
+    preview: Blob;
+    fixAt: string;
+};
+
 export function AttendanceScreen({
     event,
     store,
     owner,
     identity,
     office,
+    official = false,
     startSession,
     close,
 }: {
@@ -49,12 +62,16 @@ export function AttendanceScreen({
     owner: string;
     identity: Identity;
     office?: Snapshot["office"];
+    official?: boolean;
     startSession: (
         event: "check_in" | "check_out",
         evidence: EvidenceRef,
     ) => Promise<void>;
     close: () => void;
 }) {
+    const pendingKey = `attendance:${event}`;
+    const pending = useRef<PendingAttendance | undefined>(undefined);
+    const [awaitingReceipt, setAwaitingReceipt] = useState(false);
     const [evidence, setEvidence] = useState<EvidenceRef>();
     const [fix, setFix] = useState<MapFix & { timestamp: number }>();
     const [address, setAddress] = useState("");
@@ -152,8 +169,44 @@ export function AttendanceScreen({
         );
     }
     useEffect(() => {
-        locate(false);
+        let active = true;
+        if (official) {
+            setWorking(true);
+            void store
+                .draft(owner, pendingKey)
+                .then(async (value) => {
+                    if (!active) return;
+                    const saved = value as PendingAttendance | undefined;
+                    if (
+                        !saved ||
+                        saved.businessDate !== identity.businessDate
+                    ) {
+                        if (saved) await store.removeDraft(owner, pendingKey);
+                        if (active) locate(false);
+                        return;
+                    }
+                    pending.current = saved;
+                    setAwaitingReceipt(true);
+                    setEvidence(saved.evidence);
+                    setPhoto(saved.preview);
+                    setCaptured(saved.evidence.capturedAt);
+                    setError(
+                        "Kirim ulang untuk memastikan status absensi di Odoo.",
+                    );
+                    setWorking(false);
+                })
+                .catch(() => {
+                    if (!active) return;
+                    setError(
+                        "Catatan absensi lokal belum bisa dibaca. Muat ulang aplikasi.",
+                    );
+                    setWorking(false);
+                });
+        } else {
+            locate(false);
+        }
         return () => {
+            active = false;
             generation.current++;
         };
     }, []);
@@ -207,7 +260,18 @@ export function AttendanceScreen({
             if (ticket !== generation.current) return;
             setPhoto(row.blob);
             setCaptured(at);
-            setEvidence({ ...ref, packageHash: row.visual!.bindingSha256 });
+            const reference = {
+                ...ref,
+                packageHash: row.visual!.bindingSha256,
+            };
+            pending.current = {
+                businessDate: identity.businessDate,
+                evidence: reference,
+                original: result.blob,
+                preview: row.blob,
+                fixAt: new Date(fix.timestamp).toISOString(),
+            };
+            setEvidence(reference);
         } catch (failure) {
             if (ticket === generation.current) {
                 // Tanpa bukti aktif, kembali ke langkah lokasi agar Perbarui lokasi tersedia (tidak buntu).
@@ -228,7 +292,40 @@ export function AttendanceScreen({
         setSaving(true);
         setError("");
         try {
-            await startSession(event, evidence);
+            if (official) {
+                const source = pending.current;
+                if (!source) throw new Error("Bukti absensi belum tersedia.");
+                const saved = (await store.createDraftIfAbsent(
+                    owner,
+                    pendingKey,
+                    source,
+                )) as PendingAttendance;
+                if (saved.businessDate !== identity.businessDate)
+                    throw new Error(
+                        "Tanggal absensi berubah. Muat ulang aplikasi.",
+                    );
+                setAwaitingReceipt(true);
+                try {
+                    await postAttendance(
+                        identity,
+                        event,
+                        saved.evidence,
+                        saved.original,
+                        saved.fixAt,
+                    );
+                } catch (error) {
+                    if (error instanceof AttendanceRecaptureRequired) {
+                        await store.removeDraft(owner, pendingKey);
+                        setAwaitingReceipt(false);
+                        locate(true);
+                    }
+                    throw error;
+                }
+                await startSession(event, saved.evidence);
+                await store.removeDraft(owner, pendingKey);
+            } else {
+                await startSession(event, evidence);
+            }
             close();
         } catch (failure) {
             setError(
@@ -291,8 +388,9 @@ export function AttendanceScreen({
                                   : "Absen masuk"}
                         </Button>
                         <ActionCaption>
-                            Foto dan lokasi tersimpan di perangkat · belum
-                            diverifikasi server.
+                            {official
+                                ? "Foto dan lokasi dikirim ke Odoo saat absen disimpan."
+                                : "Foto dan lokasi tersimpan di perangkat · belum diverifikasi server."}
                         </ActionCaption>
                     </>
                 ) : (
@@ -369,7 +467,7 @@ export function AttendanceScreen({
                         <Button
                             variant="sec"
                             icon="camera"
-                            disabled={busy}
+                            disabled={busy || awaitingReceipt}
                             onClick={() => setCamera(true)}
                         >
                             Ulangi foto

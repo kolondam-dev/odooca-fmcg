@@ -152,7 +152,7 @@ class MobileCommand(models.Model):
         cmd_type = command_data.get("type")
         if not cmd_type:
             raise UserError(_("Invalid command format: type is required."))
-        if cmd_type not in self._supported_commands():
+        if not isinstance(cmd_type, str) or cmd_type not in self._supported_commands():
             raise UserError(_("Unsupported command type: %s") % cmd_type)
 
         payload = command_data.get("payload")

@@ -10,6 +10,7 @@ from odoo.tests import HttpCase, TransactionCase, tagged
 from psycopg2 import IntegrityError
 from odoo.tools import mute_logger
 from ..models.mobile_command import CommandRejected
+from ..models.mobile_evidence import EvidenceRejected
 from ..models.mobile_workday import MobileReadConflict
 from .test_read_api import MobileFixture, business_date, sunday_business_date
 
@@ -1479,3 +1480,10 @@ class TestMobileCommandsHttp(MobileFixture, HttpCase):
         receipt = res.json()
         self.assertEqual(receipt["client_uuid"], cmd["client_uuid"])
         self.assertIn(receipt["status"], ["accepted", "needs_approval"])
+
+        # A definitive evidence rejection preserves the stable code over HTTP.
+        with patch.object(type(self.env["id.mobile.command"]), "process_command",
+                          side_effect=EvidenceRejected("attendance_evidence_expired")):
+            res = self.url_open(url, data=body, headers={"X-CSRF-Token": csrf})
+        self.assertEqual(res.status_code, 422)
+        self.assertEqual(res.json(), {"error": "attendance_evidence_expired"})

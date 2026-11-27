@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from odoo import fields
@@ -51,7 +51,9 @@ class TestWarehouseDepth(TransactionCase):
             wh.write({"slow_stock_days": 200, "dead_stock_days": 100})
 
     def test_clock_server_facts_native_completion_and_worker_guard(self):
-        wh, product, zone, day = self._source()
+        wh, product, zone, _ = self._source()
+        started_at = datetime(2026, 11, 25, 15, 56)  # 23:56 WITA
+        finished_at = started_at + timedelta(minutes=12)
         pick = self.env["stock.picking"].create({"picking_type_id": wh.out_type_id.id,
             "location_id": zone.id, "location_dest_id": self.env.ref("stock.stock_location_customers").id,
             "move_ids": [(0, 0, {"product_id": product.id, "product_uom": product.uom_id.id,
@@ -63,8 +65,9 @@ class TestWarehouseDepth(TransactionCase):
             "name": "Picking elapsed", "picking_id": pick.id, "kind": "picking"})
         self.assertEqual(clock.state, "draft")
         self.assertFalse(clock.started_at)
-        clock.action_start()
-        clock.action_start()
+        with patch.object(fields.Datetime, "now", return_value=started_at):
+            clock.action_start()
+            clock.action_start()
         duplicate = Clock.create({"name": "Duplicate", "picking_id": pick.id, "kind": "picking"})
         with self.assertRaises(UserError):
             duplicate.action_start()
@@ -79,7 +82,7 @@ class TestWarehouseDepth(TransactionCase):
         pick.move_ids.state = "done"
         with self.assertRaises(AccessError):
             clock.with_user(worker).action_complete()
-        with patch.object(fields.Datetime, "now", return_value=clock.started_at+timedelta(minutes=12)):
+        with patch.object(fields.Datetime, "now", return_value=finished_at):
             clock.action_complete()
         self.assertEqual(clock.duration_minutes, 12)
         ended = clock.ended_at
@@ -87,9 +90,15 @@ class TestWarehouseDepth(TransactionCase):
         self.assertEqual(clock.ended_at, ended)
         with self.assertRaises(AccessError):
             clock.unlink()
-        ended_day = str(local_day(clock.ended_at))
-        data = self.env["id.warehouse.depth"]._data(ended_day, ended_day, wh.id)
-        row = next(c for c in data["clocks"] if c["kind"] == "picking")
+        depth = self.env["id.warehouse.depth"]
+        start_day = str(local_day(started_at))
+        end_day = str(local_day(finished_at))
+        self.assertNotEqual(start_day, end_day)
+        before_completion = depth._data(start_day, start_day, wh.id)
+        row = next(c for c in before_completion["clocks"] if c["kind"] == "picking")
+        self.assertEqual((row["count"], row["median_minutes"], row["p90_minutes"]), (0, None, None))
+        on_completion = depth._data(end_day, end_day, wh.id)
+        row = next(c for c in on_completion["clocks"] if c["kind"] == "picking")
         self.assertEqual((row["count"], row["median_minutes"], row["p90_minutes"]), (1, 12, 12))
         self.assertFalse(self.env["id.warehouse.depth"].with_user(worker)._valuation_control()["available"])
         with self.assertRaises(AccessError):

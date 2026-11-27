@@ -1,4 +1,6 @@
 import {
+    AttendanceEvidenceMetadataSchema,
+    AttendanceEvidenceReceiptSchema,
     OfficialEvidenceMetadataSchema,
     OfficialEvidenceReceiptSchema,
 } from "../src/domain/official-evidence.ts";
@@ -84,6 +86,8 @@ function photoPairDependencies(schema) {
 }
 const schemas = Object.fromEntries(
     Object.entries({
+        AttendanceEvidenceMetadata: AttendanceEvidenceMetadataSchema,
+        AttendanceEvidenceReceipt: AttendanceEvidenceReceiptSchema,
         OfficialEvidenceMetadata: OfficialEvidenceMetadataSchema,
         OfficialEvidenceReceipt: OfficialEvidenceReceiptSchema,
         Packaging: PackagingSchema,
@@ -150,6 +154,25 @@ const response = (name) => ({
         },
     },
 });
+function evidenceResponse() {
+    return {
+        description: "Captured or replayed evidence receipt",
+        content: {
+            "application/json": {
+                schema: {
+                    oneOf: [
+                        {
+                            $ref: "#/components/schemas/OfficialEvidenceReceipt",
+                        },
+                        {
+                            $ref: "#/components/schemas/AttendanceEvidenceReceipt",
+                        },
+                    ],
+                },
+            },
+        },
+    };
+}
 const spec = {
     openapi: "3.1.0",
     info: {
@@ -220,7 +243,7 @@ const spec = {
                                     metadata: {
                                         type: "string",
                                         description:
-                                            "JSON OfficialEvidenceMetadata",
+                                            "JSON OfficialEvidenceMetadata or AttendanceEvidenceMetadata",
                                     },
                                     photo: { type: "string", format: "binary" },
                                     csrf_token: { type: "string" },
@@ -230,8 +253,8 @@ const spec = {
                     },
                 },
                 responses: {
-                    201: response("OfficialEvidenceReceipt"),
-                    200: response("OfficialEvidenceReceipt"),
+                    201: evidenceResponse(),
+                    200: evidenceResponse(),
                     400: { description: "Invalid native CSRF or request" },
                     403: { description: "Evidence capability or scope denied" },
                     409: { description: "UUID/scope/day conflict" },

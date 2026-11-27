@@ -1,3 +1,15 @@
+## 2026-11-27 — Sinkronisasi PR #200 setelah PR #201 (ChatGPT-ABSENSI)
+
+- [F] Main `bb84709` digabung ke kandidat `11bdee6`. Konflik terbatas pada HANDOFF dan log, dengan entri kedua sisi dipertahankan.
+- [F] Sinkronisasi mempertahankan kode dan tes attendance yang direview pada `11bdee6`. Bukti ponsel tetap tercatat pada `6b81421`.
+- [BU] CI pada SHA sinkronisasi menunggu hasil sebelum merge.
+
+## 2026-11-27 — Integrasi dispatcher PR #200 (ChatGPT-ABSENSI)
+
+- [F] Sinkron ke main `2ccfb2d`. Attendance memakai `_handle_extension` PR #203 dan jalur receipt/savepoint bersama. Kode PWA serta capture evidence tetap sama.
+- [F] Konflik tes WMS mempertahankan fixture lintas tengah malam WITA dengan assertion pada kedua tanggal. Tes ORM attendance menutup rollback saat receipt gagal dan retry UUID yang sama.
+- [BU] Runtime pada SHA integrasi menunggu CI. Bukti perangkat pada kandidat sebelumnya sudah diterima supervisor.
+
 ## 2026-11-26 — [BU] FIN36 PR #204 sinkronisasi strict-main (opencode)
 
 - [F] Review head `d6473ae147476e2d83a4235057f044c555f338b3` PASS dengan dampak test CUKUP; 86 tes I2c diulang reviewer dan PASS, CI 22 SUCCESS / 7 SKIPPED. Finance I0 artifact `15081087455` menutup populasi/cutoff/company/salvage/GL/rollback; Full Dataset runtime SKIPPED.
@@ -146,6 +158,39 @@
 ## 2026-11-25T22:30:17+07:00 — Codex — Integrasi DEV-02A/B09
 **Basis:** main `23a4108`, Dev `cd19d6f`; merge bersih. **Dampak test TAMBAH:** harness HttpCase opt-in membuktikan login, scope, receipt dan rollover di Odoo disposable; jalur APK/HTTPS masih [BU]. Kandidat harness diajukan untuk review dan CI.
 **Tindak lanjut:** gunakan satu runner Android ber-KVM dengan Odoo/PostgreSQL disposable dan endpoint HTTPS privat selama job. HttpCase menjalankan fixture dalam transaksi tes; fase APK memerlukan seed TEST yang dikomit hanya di DB fixture, proses Odoo yang tetap hidup, sertifikat yang dipercaya build test, dan cleanup pada sukses/gagal.
+
+## 2026-11-26 — Tes picking lintas hari WITA PR #200 (ChatGPT-ABSENSI)
+
+- [F] Satu kegagalan install-test pada run 45649200735 berasal dari fixture WMS yang melewati tengah malam WITA.
+- [F] Fixture memakai 23.56–00.08 WITA dan menguji kedua tanggal. Durasi 12 menit masuk pada tanggal selesai.
+- [BU] CI head perbaikan dan verifikasi perangkat staging absensi menunggu.
+
+## 2026-11-25 — Recovery bukti kedaluwarsa PR #200 (ChatGPT-ABSENSI)
+
+- [F] P2: respons definitif `attendance_evidence_expired` melepas draft dan membuka foto/GPS baru. Respons jaringan ambigu tetap memakai UUID yang sama. Receipt accepted yang ditemukan tetap di-replay.
+- [F] Upgrade lokal, 12 tes ORM/HTTP (expiry, WITA, replay, respons HTTP), 574 Vitest, dan 4 skenario browser ponsel/tablet lulus.
+- [BU] CI head perbaikan dan penerimaan perangkat staging masuk–pulang menunggu sebelum merge.
+
+## 2026-11-25 — PR 1 absensi PWA pilot (ChatGPT-ABSENSI)
+
+- [F] `agen/absensi`, basis `f0b3632`. Odoo merekam `hr.attendance` dari foto/GPS kantor terverifikasi untuk karyawan pilot. Mode sumber PWA dan tautan bukti tersimpan. PWA mengulang event pending dengan UUID sama setelah reload. Lihat `addons/id_attendance/README.md`.
+- [F] Instal DB kosong dengan id_ID dan persisted upgrade Odoo 19 lulus. Rangkaian akhir 10 tes ORM (absensi dan bukti outlet), 574 Vitest, dua tes browser retry (phone/tablet), Ruff, manifest, TypeScript, OpenAPI dan gate build lulus.
+- [F] Penambahan addon dan tag uji ke workflow install memicu full regression menurut aturan impact planner.
+- [BU] Dua skenario akurasi GPS outlet gagal di basis dan kandidat dengan Chromium alternatif. CI exact SHA, uji perangkat staging, dan aktivasi pilot menunggu. Kalender/rekap dan approval mengikuti PR 2 dan 3.
+
+## 2026-11-25 — Rencana implementasi absensi PWA dan kalender kerja (ChatGPT-ABSENSI)
+
+- [F] Rencana di `docs/ui/ATTENDANCE_IMPLEMENTATION_PLAN.md`, branch `agen/absensi`, basis `f0b3632`.
+- [A] Tiga PR berurutan: posting PWA, kalender dan rekap, Time Off dan approval. Dokumen ikut PR pertama. Kalender meliputi libur nasional, cuti bersama, daerah, dan internal.
+- [F] Cakupan dokumen dan log. Sesuai impact map, gate static berlaku dan runtime no-op.
+- [BU] Validasi live, keputusan kebijakan HR, dan uji runtime menunggu milestone terkait.
+
+## 2026-11-25 — Discovery riwayat absensi Odoo dan PWA (codex)
+
+- [F] Basis `main` `f0b3632`. Clock-in/out PWA tersimpan lokal; dispatcher belum mendukung command HRIS. Attendance dan Time Off native tersedia sebagai dependensi `id_ui`.
+- [F] Kategori `hr_leave_2line` tersedia; penghubung status approval ke `hr.leave` belum ada.
+- [A] Usulan: addon `id_attendance` untuk integrasi PWA, alur pengecualian dan pelaporan periodik. Kebijakan kalender, istirahat, toleransi dan tanggal awal cakupan perlu disepakati.
+- [BU] Discovery berbasis kode dan riwayat Git. Runtime Odoo, riwayat live, serta penerimaan perangkat belum diverifikasi.
 
 ## 2026-11-25 — [BU] FIN36 oracle lifecycle: akuisisi bill + disposal wizard (opencode)
 

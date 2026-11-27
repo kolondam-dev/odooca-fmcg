@@ -778,6 +778,12 @@
 - Injeksi gagal pasca HTTPS siap membuktikan cleanup backend. APK tetap menunggu runner ber-KVM.
 - Task managed by codex agent at 2026-11-26T15:30:30+07:00
 
+[2026-11-25T20:57:33+07:00] [INFO] Discovery riwayat absensi Odoo dan PWA
+- [F] Basis main f0b3632; clock-in/out PWA lokal, dispatcher belum memproses command HRIS.
+- [F] Kategori approval cuti dua tingkat tersedia; adaptor hr.leave belum ada.
+- [A] Rencana: integrasi sumber PWA dan Time Off, lalu rekap periodik Odoo; belum mengubah aplikasi.
+- Task managed by codex agent at 2026-11-25T20:57:33+07:00
+
 [2026-11-25T20:52:36+07:00] [INFO] PR #110: audit efek samping promo dan replay binding legacy
 - Mini-pack Odoo lulus dan seluruh counter efek samping nol. Persetujuan pemilik serta batas acceptance tercatat.
 - Sinkron main f0b3632; 127 tes Python lulus, F4 penuh masih menunggu CI.

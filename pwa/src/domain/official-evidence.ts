@@ -50,3 +50,27 @@ export async function photoHash(photo: Blob) {
         .map((x) => x.toString(16).padStart(2, "0"))
         .join("");
 }
+
+export const AttendanceEvidenceMetadataSchema =
+    OfficialEvidenceMetadataSchema.omit({
+        outlet_id: true,
+        snapshot_version: true,
+        mode: true,
+    }).extend({
+        business_date: z.iso.date(),
+        attendance_event: z.enum(["check_in", "check_out"]),
+    });
+
+export const AttendanceEvidenceReceiptSchema =
+    AttendanceEvidenceMetadataSchema.extend({
+        user_id: z.string().min(1),
+        company_id: z.string().min(1),
+        office_id: z.string().min(1),
+        received_at: z.iso.datetime(),
+        distance_m: z.number().nonnegative(),
+        radius_m: z.number().min(5).max(500),
+        original_sha256: hash,
+        watermarked_sha256: hash,
+        original_url: z.string(),
+        watermarked_url: z.string(),
+    });
