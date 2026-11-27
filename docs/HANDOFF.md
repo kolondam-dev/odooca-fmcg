@@ -2,6 +2,7 @@
 
 - [F] Arahan `1d0b4ec` diterapkan di atas PR #207 `a8222dd`. Opsi manual `device_origin` memilih trust sistem Android dan mengharuskan DB eksplisit. ID APK fixture dan instrumentation tetap terpisah. Jalur CA loopback tersedia.
 - [F] Fase preflight APK memeriksa 401 pada bootstrap/snapshot tanpa sesi. Login TEST diberikan saat instrumentation. Tes isolation mencocokkan owner snapshot dan assignment outlet masing-masing sebelum memeriksa outbox.
+- [F] Build lokal pada `ebf34e2` memakai origin sintetis. Kedua mode menghasilkan dua APK. Pemeriksaan resource membuktikan pemisahan CA, dan konfigurasi origin/DB fixture kosong pada release. Origin ber-path ditolak. Gate statis, 41 tes kontrak, Gradle, lint dan build debug lulus.
 - [BU] Gateway demo tetap kandidat preflight. Lead dan maintainer mengonfirmasi DB, izin APK native, dua akun TEST aktif, assignment dan TTL. Trust dari POCO M3, login, Keystore dan expiry perangkat tetap belum diuji. PR #207 tetap draft.
 - Dampak test **TAMBAH** untuk kontrak mode TLS dan preflight di perangkat. Perubahan workflow memilih full regression 11 suite. [Prosedur build](android/DEV02B_POCO_PACKAGE.md#opsi-https-langsung--trust-sistem-android).
 
