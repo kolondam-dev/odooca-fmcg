@@ -29,6 +29,15 @@ on:
         description: Also run initial UI instrumentation when emulator smoke is enabled
         type: boolean
         default: false
+      b09:
+        description: Run optional APK to disposable Odoo over HTTPS
+        type: boolean
+        default: false
+      b09_api:
+        description: Emulator API for the B09 job
+        type: choice
+        default: '35'
+        options: ['35', '24']
   pull_request:
   push:
     branches: [main]
@@ -285,49 +294,7 @@ jobs:
         env:
           API: ${{ matrix.api }}
         run: |
-          install_archive() {
-            local package=$1 checksum=$2 destination=$3
-            local archive="$RUNNER_TEMP/${package##*/}"
-            curl --fail --silent --show-error --location --retry 3 \
-              "https://dl.google.com/android/repository/$package" -o "$archive"
-            printf '%s  %s\n' "$checksum" "$archive" | sha1sum --check --status
-            mkdir -p "$destination"
-            unzip -q "$archive" -d "$destination"
-          }
-
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-          install_archive commandlinetools-linux-13114758_latest.zip \
-            5fdcc763663eefb86a5b8879697aa6088b041e70 "$ANDROID_SDK_ROOT/cmdline-tools"
-          mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/19.0"
-          manager="$ANDROID_SDK_ROOT/cmdline-tools/19.0/bin/sdkmanager"
-          (set +o pipefail; yes | "$manager" --licenses >/dev/null)
-          "$manager" --channel=0 "platforms;android-37.0" "build-tools;36.0.0"
-
-          # Install the exact host tools and image archives to avoid rolling packages
-          # and the API 35 image pulling a second emulator through SDK Manager.
-          install_archive platform-tools_r37.0.3-linux.zip \
-            e1579b288a7ae4e9bc28dedec6a154d78b3c04ed "$ANDROID_SDK_ROOT"
-          install_archive emulator-linux_x64-16970787.zip \
-            5f7314368fc6c05c937f6991bb4106214dc389e7 "$ANDROID_SDK_ROOT"
-          # The emulator ZIP has source.properties but avdmanager requires a local package entry.
-          cat > "$ANDROID_SDK_ROOT/emulator/package.xml" <<'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <repo:repository xmlns:repo="http://schemas.android.com/repository/android/common/02" xmlns:generic="http://schemas.android.com/repository/android/generic/02" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <localPackage path="emulator" obsolete="false">
-              <type-details xsi:type="generic:genericDetailsType"/>
-              <revision><major>37</major><minor>3</minor><micro>10</micro></revision>
-              <display-name>Android Emulator</display-name>
-            </localPackage>
-          </repo:repository>
-          EOF
-          images="$ANDROID_SDK_ROOT/system-images/android-$API/google_apis"
-          case "$API" in
-            24) install_archive sys-img/google_apis/x86_64-24_r27.zip \
-                  46d09c0723b77ddba00f2281099a2c44a88ac971 "$images" ;;
-            35) install_archive sys-img/google_apis/x86_64-35_r09.zip \
-                  0103e6dab21290c4b9d16550a3ce99476f884eef "$images" ;;
-            *) echo "Unsupported smoke API: $API" >&2; exit 2 ;;
-          esac
+          bash android/tools/install_emulator_sdk.sh "$API"
       - name: Boot, install and verify Login
         env:
           API: ${{ matrix.api }}
@@ -337,5 +304,77 @@ jobs:
         with:
           name: odooca-emulator-api-${{ matrix.api }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/odooca-smoke-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+  apk-odoo:
+    name: Optional B09 APK to Odoo (API ${{ inputs.b09_api }})
+    if: github.event_name == 'workflow_dispatch' && inputs.b09
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      API: ${{ inputs.b09_api }}
+      DEV02A_EXPECTED_SHA: ${{ inputs.ref }}
+      WORKFLOW_SHA: ${{ github.workflow_sha }}
+      DEV02A_ODOO_IMAGE: odooca-fmcg-odoo:b09
+      DEV02A_POSTGRES_IMAGE: postgres:16
+    steps:
+      - name: Validate dispatch revision
+        run: |
+          [[ "$DEV02A_EXPECTED_SHA" =~ ^[a-f0-9]{40}$ && "$DEV02A_EXPECTED_SHA" == "$WORKFLOW_SHA" ]]
+          [[ "$API" == 24 || "$API" == 35 ]]
+          printf 'ANDROID_HOME=%s/odooca-b09-sdk\nANDROID_SDK_ROOT=%s/odooca-b09-sdk\n' \
+            "$RUNNER_TEMP" "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'sha=%s\napi=%s\n' "$DEV02A_EXPECTED_SHA" "$API" > "$RUNNER_TEMP/b09-preflight.txt"
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17.0.17+10'
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+      - name: Enable KVM
+        run: |
+          test -c /dev/kvm
+          sudo setfacl -m "u:$(id -un):rw" /dev/kvm
+          printf 'kvm_access=passed\n' >> "$RUNNER_TEMP/b09-preflight.txt"
+      - name: Install pinned emulator tools
+        run: bash android/tools/install_emulator_sdk.sh "$API"
+      - name: Build Odoo runtime and pull PostgreSQL
+        run: |
+          docker build -t "$DEV02A_ODOO_IMAGE" .
+          docker pull "$DEV02A_POSTGRES_IMAGE"
+      - name: Verify APK receipts and replay on disposable HTTPS
+        run: bash android/tools/verify_dev02a_runner.sh "$API" "$RUNNER_TEMP/b09-evidence"
+      - name: Record preflight failure if the runner did not start
+        if: always()
+        run: |
+          if [[ ! -s "$RUNNER_TEMP/b09-evidence/result.txt" ]]; then
+            mkdir -p "$RUNNER_TEMP/b09-evidence"
+            printf 'result=failed phase=preflight_or_interrupted\ncleanup=unverified\n' \
+              > "$RUNNER_TEMP/b09-evidence/result.txt"
+          fi
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: odooca-b09-api${{ inputs.b09_api }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/b09-preflight.txt
+            ${{ runner.temp }}/b09-evidence/run.tsv
+            ${{ runner.temp }}/b09-evidence/result.txt
+            ${{ runner.temp }}/b09-evidence/cleanup.tsv
+            ${{ runner.temp }}/b09-evidence/apk.sha256
+            ${{ runner.temp }}/b09-evidence/first.xml
+            ${{ runner.temp }}/b09-evidence/replay.xml
+            ${{ runner.temp }}/b09-evidence/first.json
+            ${{ runner.temp }}/b09-evidence/replay.json
+            ${{ runner.temp }}/b09-evidence/before.json
+            ${{ runner.temp }}/b09-evidence/after.json
+            ${{ runner.temp }}/b09-evidence/after_replay.json
+            ${{ runner.temp }}/b09-evidence/verifier.json
           if-no-files-found: error
           retention-days: 14

@@ -6,6 +6,7 @@ plugins {
 
 val baseUrl = (project.findProperty("odooca.baseUrl") as String?).orEmpty()
 val uiFixture = project.findProperty("odooca.uiFixture") == "true"
+val b09Resources = project.findProperty("odooca.b09Resources") as String?
 val database = (project.findProperty("odooca.database") as String?).orEmpty()
 
 android {
@@ -27,6 +28,11 @@ android {
 
     if (uiFixture) {
         sourceSets["debug"].res.srcDir("src/uiFixture/res")
+    }
+
+    if (b09Resources != null) {
+        require(!uiFixture && baseUrl == "https://127.0.0.1:18443" && database.startsWith("fmcg_staging_"))
+        sourceSets["debug"].res.srcDir(b09Resources)
     }
 
     buildTypes {
