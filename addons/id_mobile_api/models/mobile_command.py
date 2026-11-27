@@ -695,59 +695,28 @@ class MobileCommand(models.Model):
                 raise UserError(_("Trip ID atau Manifest ID wajib disertakan untuk pengiriman."))
             if not do_id:
                 raise UserError(_("DO ID wajib disertakan untuk pengiriman."))
+            if not outlet_id:
+                raise UserError(_("Outlet ID is required to bind the POD to its delivery order."))
             if not evidence_uuid:
                 raise UserError(_("POD submit wajib menyertakan bukti foto atau tanda tangan penerima."))
             if not recipient or len(recipient) < 2:
                 raise UserError(_("Nama penerima POD wajib diisi (minimal 2 karakter)."))
 
-            # 1. Authoritative manifest resolution: bind exact trip + DO + company pair (no OR bypass)
-            picking = self.env["stock.picking"].sudo().search([
-                ("company_id", "=", company.id),
-                ("name", "=", do_id),
-                ("origin", "=", trip_id),
-            ], limit=1)
+            # One resolver defines the read manifest and both write boundaries.
+            # This prevents a valid-looking DO from another warehouse, driver,
+            # outlet assignment or WITA business day from being submitted.
+            picking = Workday._delivery_manifest_pickings(
+                assignment, day, trip_id=trip_id,
+            ).filtered(lambda row: row.name == do_id)[:1]
             if not picking:
                 raise UserError(
                     _("DO %s dengan trip %s tidak ditemukan dalam manifest operasional.") % (do_id, trip_id)
                 )
 
-            # Validasi tipe picking: wajib outgoing delivery
-            if picking.picking_type_id.code != "outgoing":
-                raise UserError(_("Dokumen %s bukan dokumen pengiriman barang (outgoing delivery).") % do_id)
-
-            # Validasi state: hanya state operasional valid ('assigned', 'done') yang diterima
-            if picking.state == "cancel":
-                raise UserError(_("DO %s telah dibatalkan (cancelled) dan tidak dapat diproses.") % do_id)
-            if picking.state == "draft":
-                raise UserError(_("DO %s masih berstatus draft dan belum siap untuk pengiriman.") % do_id)
-            if picking.state not in ("assigned", "done"):
-                raise UserError(_("DO %s berstatus '%s', belum siap untuk pengiriman.") % (do_id, picking.state))
-
-            # Validasi tanggal operasional pengiriman: wajib hari kerja hari ini (WITA)
-            picking_date = picking.scheduled_date or picking.date_deadline or picking.date_done
-            if not picking_date:
-                raise UserError(_("DO %s tidak memiliki jadwal pengiriman yang valid.") % do_id)
-            picking_wita_date = to_wita_date(picking_date)
-            if picking_wita_date != day:
-                raise UserError(
-                    _("DO %s dijadwalkan pada %s, bukan untuk pengiriman hari ini (%s).")
-                    % (do_id, picking_wita_date.isoformat(), day.isoformat())
-                )
-
-            # Validasi kurir penanggung jawab jika picking ditugaskan secara spesifik
-            if picking.user_id and picking.user_id != user:
-                raise UserError(
-                    _("DO %s ditugaskan kepada kurir lain (%s), bukan %s.")
-                    % (do_id, picking.user_id.name, user.name)
-                )
-
-            # 2. DO outlet binding: must match DO partner and active workday assignment
+            # 2. DO outlet binding: must match the authoritative manifest row.
             do_partner_id = picking.partner_id.id
-            if outlet_id and do_partner_id != outlet_id:
+            if do_partner_id != outlet_id:
                 raise UserError(_("DO %s bukan untuk outlet %s.") % (do_id, outlet_id))
-
-            if do_partner_id not in assignment.outlet_ids.ids:
-                raise UserError(_("Outlet %s tidak termasuk dalam scope assignment aktif hari ini.") % do_partner_id)
 
             # 3. Persistent evidence binding: must match DO partner, actor, company, current day, and media
             evidence = self.env["id.mobile.evidence"].sudo().search([
@@ -787,15 +756,8 @@ class MobileCommand(models.Model):
                 raise UserError(_("Trip closure hanya dapat dilakukan untuk hari kerja hari ini."))
 
             # Trip must exist in authoritative operational pickings
-            manifest_pickings = self.env["stock.picking"].sudo().search([
-                ("company_id", "=", company.id),
-                ("origin", "=", trip_id),
-                ("picking_type_id.code", "=", "outgoing"),
-                ("state", "not in", ("cancel", "draft")),
-            ])
-            manifest_pickings = manifest_pickings.filtered(
-                lambda p: to_wita_date(p.scheduled_date or p.date_deadline or p.date_done) == day
-                and (not p.user_id or p.user_id == user)
+            manifest_pickings = Workday._delivery_manifest_pickings(
+                assignment, day, trip_id=trip_id,
             )
             if not manifest_pickings:
                 raise UserError(_("Trip pengiriman %s tidak ditemukan dalam manifest operasional.") % trip_id)
@@ -811,6 +773,7 @@ class MobileCommand(models.Model):
             ])
             accepted_dos_in_trip = set()
             valid_pod_uuids_for_trip = set()
+            pod_do_by_uuid = {}
             for pod_cmd in submitted_pods:
                 p = extract_cmd_payload(pod_cmd)
                 cmd_date = to_wita_date(pod_cmd.create_date)
@@ -818,10 +781,14 @@ class MobileCommand(models.Model):
                 p_src = p.get("source") or {}
                 p_trip = str(p_src.get("trip") or p.get("trip_id") or p.get("manifest_id") or "").strip()
                 p_do = str(p_src.get("id") or p.get("do_id") or "").strip()
-                if p_trip == trip_id and p_do:
-                    if p_do in required_do_names or cmd_date == day or cmd_day == day.isoformat():
-                        accepted_dos_in_trip.add(p_do)
-                        valid_pod_uuids_for_trip.add(pod_cmd.client_uuid)
+                if (
+                    p_trip == trip_id
+                    and p_do in required_do_names
+                    and (cmd_date == day or cmd_day == day.isoformat())
+                ):
+                    accepted_dos_in_trip.add(p_do)
+                    valid_pod_uuids_for_trip.add(pod_cmd.client_uuid)
+                    pod_do_by_uuid[pod_cmd.client_uuid] = p_do
 
             missing_dos = required_do_names - accepted_dos_in_trip
             if missing_dos:
@@ -833,12 +800,21 @@ class MobileCommand(models.Model):
             pod_uuids = payload.get("pod_uuids") or []
             if not pod_uuids:
                 raise UserError(_("Trip closure wajib menyertakan daftar POD yang diverifikasi."))
+            if len(pod_uuids) != len(set(pod_uuids)):
+                raise UserError(_("The trip closure POD list must not contain duplicate UUIDs."))
 
             for pid in pod_uuids:
                 if pid not in valid_pod_uuids_for_trip:
                     raise UserError(
                         _("POD %s bukan milik manifest trip %s pada hari ini atau belum diterima.") % (pid, trip_id)
                     )
+            submitted_do_names = {pod_do_by_uuid[pid] for pid in pod_uuids}
+            omitted_dos = required_do_names - submitted_do_names
+            if omitted_dos:
+                raise UserError(
+                    _("Trip closure does not include a POD for delivery order %s.")
+                    % ", ".join(sorted(omitted_dos))
+                )
 
             close_note = str(payload.get("note") or "").strip()
             if len(close_note) > 500:

@@ -95,7 +95,6 @@ export function DeliveryWorkspace({
                 );
             const manifest = z
                 .array(DeliveryTaskSchema)
-                .min(1)
                 .parse(morning.deliveryManifest);
             if (
                 manifest.some(
@@ -114,7 +113,7 @@ export function DeliveryWorkspace({
                 // materialize the validated local projection for the first visit.
                 value = await store.createDraftIfAbsent(owner, cache, manifest);
             }
-            const parsed = z.array(DeliveryTaskSchema).min(1).parse(value);
+            const parsed = z.array(DeliveryTaskSchema).parse(value);
             if (JSON.stringify(parsed) !== JSON.stringify(manifest))
                 throw new Error(
                     "Manifest tidak cocok dengan petugas/hari ini.",
@@ -157,6 +156,9 @@ export function DeliveryWorkspace({
                     {error}
                 </Callout>
             )}
+            {!error && tasks?.length === 0 ? (
+                <Callout tone="neu">Tidak ada delivery order hari ini.</Callout>
+            ) : null}
             {trips.map((trip) => {
                 const rows = tasks!.filter((t) => t.trip === trip);
                 const finished = rows.filter(isDone).length;
@@ -295,6 +297,7 @@ function TripStores({
                 return (
                     <Card key={podKey(t)}>
                         <CardHead title={t.outlet} status={status} />
+                        <p class="ui-sub">{t.id}</p>
                         <p class="ui-sub">{t.address}</p>
                         <p class="ui-sub">
                             <Icon name="truck" size={18} /> Drop:{" "}

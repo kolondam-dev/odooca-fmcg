@@ -9,6 +9,36 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "Delivery %s requires positive whole base-unit quantities within the mobile limit."
+msgstr "Pengiriman %s memerlukan kuantitas satuan dasar bulat positif dalam batas mobile."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "Delivery %s has no operational product lines."
+msgstr "Pengiriman %s tidak memiliki baris produk operasional."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_workday.py:0
+msgid "Unassigned vehicle"
+msgstr "Kendaraan belum ditetapkan"
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_command.py:0
+msgid "Outlet ID is required to bind the POD to its delivery order."
+msgstr "ID outlet wajib disertakan untuk mengikat POD ke DO."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_command.py:0
+msgid "The trip closure POD list must not contain duplicate UUIDs."
+msgstr "Daftar POD penutupan trip tidak boleh berisi UUID ganda."
+
+#. module: id_mobile_api
+#: code:addons/id_mobile_api/models/mobile_command.py:0
+msgid "Trip closure does not include a POD for delivery order %s."
+msgstr "Penutupan trip belum menyertakan POD untuk DO %s."
+
+#. module: id_mobile_api
 #: model:res.groups,name:id_mobile_api.group_mobile_sales
 msgid "FMCG Mobile Sales Read"
 msgstr "Akses Baca Sales Mobile FMCG"

@@ -46,14 +46,18 @@ describe("penjaga jam kejadian", () => {
     );
     it("clockHM( hanya dipakai di format.ts", () => {
         const offenders = sources
-            .filter(([f]) => !f.endsWith("domain/format.ts"))
+            .filter(
+                ([f]) => !f.replaceAll("\\", "/").endsWith("domain/format.ts"),
+            )
             .filter(([, s]) => /\bclockHM\(/.test(s))
             .map(([f]) => f);
         expect(offenders).toEqual([]);
     });
     it("format jam Intl selalu memuat detik", () => {
         const offenders = sources
-            .filter(([f]) => !f.endsWith("domain/format.ts"))
+            .filter(
+                ([f]) => !f.replaceAll("\\", "/").endsWith("domain/format.ts"),
+            )
             .filter(
                 ([, s]) =>
                     /\bhour:\s*"(?:2-digit|numeric)"/.test(s) &&

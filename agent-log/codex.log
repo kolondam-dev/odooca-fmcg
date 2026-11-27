@@ -831,3 +831,9 @@
 [2026-11-26T22:40:10+07:00] [INFO] Integrasi cleanup B09 PR 201
 - Dev bafed8d dan main 2ccfb2d. Dampak test SESUAIKAN; status per resource tetap fail closed dan runtime ditinjau ulang.
 - Task managed by codex agent at 2026-11-26T22:40:10+07:00
+[2026-11-27T07:59:40+07:00] [INFO] Manifest DO native PWA siap exact-SHA CI
+- [F] Resolver manifest bersama membatasi DO berdasarkan company, warehouse, driver, outlet, trip, status, dan hari WITA; snapshot membawa task dan stock move native.
+- [F] PWA authenticated memakai outlet_id, tidak membuat fallback sintetis, mempertahankan [] resmi, dan meneruskan POD/closing lewat HTTP outbox/idempotensi.
+- [F] Lokal PASS: Ruff, compile, manifest, Vitest 574, typecheck, format, contracts, tiga build, hosting, dan browser manifest 4 case.
+- [BU] Odoo runtime/exact-SHA CI, acceptance disposable, cleanup, review, merge, dan deploy belum selesai/diotorisasi.
+- Task managed by codex agent at 2026-11-27T07:59:40+07:00

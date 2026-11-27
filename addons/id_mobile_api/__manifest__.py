@@ -1,7 +1,7 @@
 {
     "name": "FMCG Mobile API",
     "summary": "Scoped mobile reads, immutable geolocation/photo evidence capture, and command ingestion.",
-    "version": "19.0.1.4.0",
+    "version": "19.0.1.5.0",
     "license": "LGPL-3",
     "author": "kolondam-dev",
     "category": "Distribution",

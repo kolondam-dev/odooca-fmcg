@@ -15,7 +15,7 @@ import { VisitCheckInSchema, VisitCheckoutSchema } from "./visit-contracts.ts";
 import { z } from "zod";
 import { DiscountProgramSchema } from "./order-discount.ts";
 import { CollectionReceiptSchema } from "./collection-contracts.ts";
-import { DeliveryPodSchema } from "./delivery-contracts.ts";
+import { DeliveryPodSchema, DeliveryTaskSchema } from "./delivery-contracts.ts";
 export const OfficeMapSchema = z
     .object({
         id: z.string().min(1),
@@ -416,17 +416,7 @@ export const SnapshotSchema = z
                 }),
             )
             .optional(),
-        deliveries: z.array(
-            z.object({
-                id: z.string(),
-                outlet: z.string(),
-                address: z.string(),
-                items: z.number(),
-                cartons: z.number(),
-                trip: z.string(),
-                vehicle: z.string(),
-            }),
-        ),
+        deliveries: z.array(DeliveryTaskSchema),
     })
     .superRefine((snapshot, ctx) => {
         if (snapshot.catalog_version === 2) {
@@ -458,6 +448,27 @@ export const SnapshotSchema = z
                 ctx.addIssue({
                     code: "custom",
                     message: "Identitas/kode SKU ganda.",
+                });
+            const outletIds = new Set(
+                snapshot.outlets.map((outlet) => outlet.id),
+            );
+            const taskKeys = snapshot.deliveries.map(
+                (task) => `${task.trip}:${task.id}`,
+            );
+            if (
+                snapshot.deliveries.some(
+                    (task) =>
+                        !outletIds.has(task.outlet_id) ||
+                        task.owner !==
+                            `${snapshot.scope?.company_id}:${snapshot.scope?.user_id}` ||
+                        task.business_date !== snapshot.scope?.business_date,
+                ) ||
+                new Set(taskKeys).size !== taskKeys.length
+            )
+                ctx.addIssue({
+                    code: "custom",
+                    message:
+                        "Manifest delivery wajib unik dan terikat ke owner, hari, serta outlet snapshot.",
                 });
         }
     });

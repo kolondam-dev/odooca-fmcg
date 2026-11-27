@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from odoo import api, fields, models, _
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.addons.id_base.models.business_day import business_date as _business_date
+from odoo.tools.float_utils import float_is_zero
 
 
 def business_date():
@@ -215,6 +216,106 @@ class MobileWorkday(models.Model):
     COLLECT_WINDOW_DAYS = 7
 
     @api.model
+    def _delivery_manifest_pickings(self, assignment, day, trip_id=None):
+        """Return the exact operational delivery scope shared by read and write APIs.
+
+        The mobile account does not receive generic stock ACLs.  Sudo is safe only
+        after every assignment boundary is present in the domain and the WITA day
+        is checked below.  In particular, unassigned pickings are not a driver
+        manifest: the driver on the DO must be the active assignment user.
+        """
+        domain = [
+            ("company_id", "=", assignment.company_id.id),
+            ("picking_type_id.code", "=", "outgoing"),
+            ("picking_type_id.warehouse_id", "=", assignment.warehouse_id.id),
+            ("user_id", "=", assignment.user_id.id),
+            ("partner_id", "in", assignment.outlet_ids.ids),
+            ("state", "in", ("assigned", "done")),
+            ("origin", "!=", False),
+        ]
+        if trip_id is not None:
+            domain.append(("origin", "=", trip_id))
+        pickings = self.env["stock.picking"].sudo().search(
+            domain, order="origin, name, id",
+        )
+        return pickings.filtered(
+            lambda picking: (
+                picking.scheduled_date
+                or picking.date_deadline
+                or picking.date_done
+            )
+            and fields.Datetime.context_timestamp(
+                picking.with_context(tz="Asia/Makassar"),
+                picking.scheduled_date
+                or picking.date_deadline
+                or picking.date_done,
+            ).date()
+            == day
+        )
+
+    @api.model
+    def _delivery_manifest_payload(self, assignment, day):
+        """Map native DOs and stock moves to immutable PWA delivery tasks."""
+        result = []
+        owner = f"{assignment.company_id.id}:{assignment.user_id.id}"
+        for picking in self._delivery_manifest_pickings(assignment, day):
+            partner = picking.partner_id
+            lines = []
+            for move in picking.move_ids.filtered(lambda row: row.state != "cancel"):
+                quantity = move.product_uom._compute_quantity(
+                    move.product_uom_qty, move.product_id.uom_id, round=False,
+                )
+                rounded = round(quantity)
+                if (
+                    not math.isfinite(quantity)
+                    or quantity <= 0
+                    or not float_is_zero(quantity - rounded, precision_digits=6)
+                    or rounded > 1_000_000_000
+                ):
+                    raise UserError(
+                        _("Delivery %s requires positive whole base-unit quantities within the mobile limit.")
+                        % picking.name
+                    )
+                code = (move.product_id.default_code or "").strip()
+                lines.append({
+                    "id": str(move.id),
+                    "name": f"[{code}] {move.product_id.name}" if code else move.product_id.name,
+                    "quantity": rounded,
+                    "unit": move.product_id.uom_id.name,
+                })
+            if not lines:
+                raise UserError(_("Delivery %s has no operational product lines.") % picking.name)
+            vehicle = getattr(picking, "fmcg_vehicle_id", False)
+            vehicle_name = ""
+            if vehicle:
+                vehicle_name = (vehicle.license_plate or vehicle.name or "").strip()
+            if not vehicle_name:
+                vehicle_name = _("Unassigned vehicle")
+            latitude, longitude = partner.partner_latitude, partner.partner_longitude
+            core = {
+                "workflow_version": 2,
+                "id": picking.name,
+                "trip": picking.origin.strip(),
+                "vehicle": vehicle_name,
+                "outlet": partner.name,
+                "outlet_id": str(partner.id),
+                "address": ", ".join(filter(None, [partner.street, partner.street2, partner.city])),
+                "owner": owner,
+                "business_date": day.isoformat(),
+                "site": {
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "radius": assignment.outlet_radius,
+                },
+                "lines": lines,
+            }
+            manifest_hash = hashlib.sha256(
+                json.dumps(core, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            result.append({**core, "version": f"odoo-delivery-v1:{manifest_hash}"})
+        return result
+
+    @api.model
     def _outlet_receivables(self, partners, company, day):
         """BE-7: piutang berjalan dan daftar faktur terbuka per outlet ditugaskan (baca-saja).
 
@@ -343,11 +444,12 @@ class MobileWorkday(models.Model):
                 "image_url": f"/api/v1/outlets/{partner.id}/image" if partner.image_128 else None,
                 "commercial": self._outlet_commercial(partner, company),
             })
+        deliveries = self._delivery_manifest_payload(assignment, day)
         result = {
             "catalog_version": 2,
             "scope": {"company_id": str(company.id), "user_id": str(self.env.uid),
                       "warehouse_id": str(assignment.warehouse_id.id), "business_date": day.isoformat()},
-            "products": catalog, "outlets": outlets, "deliveries": [],
+            "products": catalog, "outlets": outlets, "deliveries": deliveries,
             "warehouseName": assignment.warehouse_id.name,
         }
         if assignment.office_id:

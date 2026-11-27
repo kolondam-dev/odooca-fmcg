@@ -7,6 +7,7 @@ import {
     type Command,
     type FieldProvider,
     type Identity,
+    type Snapshot,
 } from "../domain/contracts";
 export class HttpProvider implements FieldProvider {
     readonly mode = "live" as const;
@@ -15,9 +16,11 @@ export class HttpProvider implements FieldProvider {
         ++this.bootstrapGeneration;
         this.identity = undefined;
         this.csrf = undefined;
+        this.lastSnapshot = undefined;
     }
     private csrf?: string;
     private identity?: Identity;
+    private lastSnapshot?: Snapshot;
     private bootstrapGeneration = 0;
     private async request(path: string, body?: unknown) {
         const response = await fetch(`/api/v1/${path}`, {
@@ -37,19 +40,28 @@ export class HttpProvider implements FieldProvider {
             method: body ? "POST" : "GET",
             ...(body ? { body: JSON.stringify(body) } : {}),
         });
-        if (!response.ok)
+        if (!response.ok) {
+            let detail = "";
+            try {
+                const error = await response.clone().json();
+                detail = typeof error?.error === "string" ? error.error : "";
+            } catch {
+                // Keep the status-based message for non-JSON gateway errors.
+            }
             throw new ApiError(
                 response.status,
                 response.status === 401
                     ? "Sesi resmi belum tersedia. Silakan login melalui layanan perusahaan."
-                    : `Layanan belum siap (${response.status}).`,
+                    : detail || `Layanan belum siap (${response.status}).`,
             );
+        }
         return response.json();
     }
     async bootstrap() {
         const generation = ++this.bootstrapGeneration;
         this.identity = undefined;
         this.csrf = undefined;
+        this.lastSnapshot = undefined;
         try {
             const identity = IdentitySchema.parse(
                 await this.request("me/bootstrap"),
@@ -95,7 +107,16 @@ export class HttpProvider implements FieldProvider {
             throw new PayloadRejectedError(
                 "Scope/satuan snapshot tidak cocok dengan sesi bootstrap.",
             );
+        this.lastSnapshot = snapshot;
         return snapshot;
+    }
+    async deliveryTasks() {
+        if (!this.lastSnapshot)
+            throw new ApiError(
+                409,
+                "Snapshot wajib dibaca sebelum manifest delivery.",
+            );
+        return this.lastSnapshot.deliveries;
     }
     async submit(command: Command) {
         if (this.options.readOnly)
