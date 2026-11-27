@@ -7,6 +7,7 @@
             <field name="work_location_id" position="after">
                 <field name="pwa_attendance_office_id" domain="[('company_id', '=', company_id)]"
                        options="{'no_create': True, 'no_open': True}"/>
+                <field name="pwa_attendance_report_from"/>
             </field>
         </field>
     </record>

@@ -74,3 +74,11 @@ Probe host lulus pada `f0c2172` dengan fixture `b09-dev02b-session-v1`, Odoo `19
 Gate pada sumber yang sama lulus dengan 40 tes kontrak CI, 72 tes domain, 5 tes data/Robolectric, lint, build debug, dan validasi OpenAPI. SHA-256 APK debug lokal `320e008987a9817fd235fae776e53a4ff1f297b12b938d257c2e6e0d4d21f534`. Build ini memakai endpoint `https://ci.invalid` dan dicatat sebagai bukti build. Tes adapter memakai cipher sintetis dan belum membuktikan Keystore perangkat.
 
 Bukti POCO M3 awal dicatat pada [handoff Lead f840da4](https://github.com/kolondam-dev/odooca-fmcg/blob/f840da4/docs/android/LOCAL_WORKFLOW.md). Bukti fisik fixture tetap [BU]. Gunakan [paket POCO M3](DEV02B_POCO_PACKAGE.md) saat transport disetujui. Cloud tidak menampilkan perangkat USB. ADB lokal berhenti saat akan membuat direktori `.android` di home yang hanya-baca. KVM juga tidak tersedia. Matriks menunggu unit Redmi 4X dan POCO M3, operator, build OS aktual, dan akses ke target fixture. TTL alami sesi masih [BU].
+
+## Re-review checkpoint POCO M3
+
+[Supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/207#pullrequestreview-6091929853) menerima bukti APK `5ab7088` pada POCO M3 Android 10/API 29: install/cold start, HTTPS/401, login/snapshot, Keystore dan isolasi outbox, pemulihan izin lokasi, GPS indoor/outdoor serta kelanjutan pengukuran setelah unlock. Laju sampling selama layar terkunci tidak diukur. **Dampak test CUKUP** untuk checkpoint ini.
+
+Redmi 4X [BU] sampai validasi sebelum full deploy. `minSdk=24` sementara. Stale fix fisik [BU] di DEV-04A; expiry alami perangkat dan idle TTL server [BU] di B01. Cookie sekitar tujuh hari tidak membuktikan idle TTL.
+
+Sinkronisasi main `8e83a301` mempertahankan tree Android, workflow Android, Mobile API dan OpenAPI dari APK yang diuji. Bukti perangkat tetap merujuk ke SHA APK `5ab7088`; CI dijalankan ulang pada kandidat integrasi.

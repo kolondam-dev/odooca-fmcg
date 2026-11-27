@@ -1,0 +1,17 @@
+<odoo>
+    <record id="rule_attendance_holiday_company" model="ir.rule">
+        <field name="name">Attendance holidays: allowed companies</field>
+        <field name="model_id" ref="model_id_attendance_holiday"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_attendance_report_company" model="ir.rule">
+        <field name="name">Attendance reports: allowed companies</field>
+        <field name="model_id" ref="model_id_attendance_report"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_attendance_report_line_company" model="ir.rule">
+        <field name="name">Attendance report details: allowed companies and report owner</field>
+        <field name="model_id" ref="model_id_attendance_report_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids), ('report_id.company_id', 'in', company_ids), ('report_id.create_uid', '=', user.id)]</field>
+    </record>
+</odoo>

@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Language: id\n"
@@ -11,7 +12,9 @@ msgstr "Kantor Absensi PWA"
 #. module: id_attendance
 #: model:ir.model.fields,help:id_attendance.field_hr_employee__pwa_attendance_office_id
 msgid "Set a verified office to enable PWA attendance for this employee."
-msgstr "Tetapkan kantor terverifikasi untuk mengaktifkan absensi PWA bagi karyawan ini."
+msgstr ""
+"Tetapkan kantor terverifikasi untuk mengaktifkan absensi PWA bagi karyawan "
+"ini."
 
 #. module: id_attendance
 #: code:addons/id_attendance/models/employee.py:0
@@ -71,4 +74,352 @@ msgstr "Absensi PWA tercatat."
 #. module: id_attendance
 #: code:addons/id_attendance/models/attendance.py:0
 msgid "PWA attendance provenance can only be set by the dispatcher."
-msgstr "Asal catatan absensi PWA hanya dapat ditetapkan oleh layanan sinkronisasi."
+msgstr ""
+"Asal catatan absensi PWA hanya dapat ditetapkan oleh layanan sinkronisasi."
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_hr_employee__pwa_attendance_report_from
+msgid "PWA Reporting Coverage Start"
+msgstr "Mulai Cakupan Rekap PWA"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_hr_leave_type__pwa_report_category
+msgid "Pwa Report Category"
+msgstr "Kategori Rekap Absensi"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_holiday__name
+msgid "Name"
+msgstr "Nama"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_holiday__calendar_id
+msgid "Calendar"
+msgstr "Kalender"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_holiday__work_location_id
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__work_location_id
+msgid "Work Location"
+msgstr "Lokasi Kerja"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_holiday__date_from
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__date_from
+msgid "Date From"
+msgstr "Tanggal Mulai"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_holiday__date_to
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__date_to
+msgid "Date To"
+msgstr "Tanggal Selesai"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_holiday__kind
+msgid "Kind"
+msgstr "Jenis"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_holiday__source
+msgid "Source"
+msgstr "Sumber"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__employee_ids
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__employee_id
+msgid "Employee"
+msgstr "Karyawan"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__grace_minutes
+msgid "Grace Period (Minutes)"
+msgstr "Toleransi (Menit)"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__attendance_rate
+msgid "Attendance Rate (%)"
+msgstr "Tingkat Kehadiran (%)"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__required_day_total
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__required_days
+msgid "Closed Required Days"
+msgstr "Hari Wajib Hadir yang Sudah Berakhir"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__present_day_total
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__present_days
+msgid "Present on Closed Required Days"
+msgstr "Hadir pada Hari Wajib yang Sudah Berakhir"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__planned_minute_total
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__planned_minutes
+msgid "Planned Minutes"
+msgstr "Menit Terjadwal"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__scheduled_minute_total
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__scheduled_minutes
+msgid "Recorded Within Required Schedule (Minutes)"
+msgstr "Menit Tercatat dalam Jadwal Wajib"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__absent_day_total
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__absent_days
+msgid "Absent Days"
+msgstr "Hari Alpa"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report__incomplete_day_total
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__incomplete_days
+msgid "Incomplete Days"
+msgstr "Hari Belum Lengkap"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__business_date
+msgid "Business Date"
+msgstr "Tanggal Bisnis"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__department_id
+msgid "Department"
+msgstr "Departemen"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__status
+msgid "Status"
+msgstr "Status"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__holiday_notes
+msgid "Holiday Notes"
+msgstr "Catatan Hari Libur"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__covered
+msgid "PWA Coverage"
+msgstr "Cakupan PWA"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__check_in
+msgid "Check In"
+msgstr "Absen Masuk"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__check_out
+msgid "Check Out"
+msgstr "Absen Pulang"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__actual_minutes
+msgid "Actual Minutes"
+msgstr "Menit Aktual"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__required_minutes
+msgid "Required Minutes"
+msgstr "Menit Wajib Hadir"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__outside_minutes
+msgid "Outside Minutes"
+msgstr "Menit di Luar Jadwal"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__overlap_minutes
+msgid "Attendance and Time Off Overlap (Minutes)"
+msgstr "Irisan Kehadiran dan Izin (Menit)"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__late_minutes
+msgid "Late Minutes"
+msgstr "Menit Terlambat"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__early_minutes
+msgid "Early Minutes"
+msgstr "Menit Pulang Awal"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__leave_minutes
+msgid "Leave Minutes"
+msgstr "Menit Cuti"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__sick_minutes
+msgid "Sick Minutes"
+msgstr "Menit Sakit"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__permission_minutes
+msgid "Permission Minutes"
+msgstr "Menit Izin"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__pending_minutes
+msgid "Pending Minutes"
+msgstr "Menit Pengajuan Tertunda"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__planned_days
+msgid "Planned Days"
+msgstr "Hari Terjadwal"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__recorded_days
+msgid "Recorded Days"
+msgstr "Hari dengan Absen PWA"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__late_days
+msgid "Late Days"
+msgstr "Hari Terlambat"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_holiday__kind__national
+msgid "National Holiday"
+msgstr "Libur Nasional"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_holiday__kind__joint
+msgid "Collective Leave"
+msgstr "Cuti Bersama"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_holiday__kind__regional
+msgid "Regional Holiday"
+msgstr "Libur Daerah"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_holiday__kind__internal
+msgid "Company Holiday"
+msgstr "Libur Perusahaan"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__hr_leave_type__pwa_report_category__leave
+msgid "Time Off"
+msgstr "Cuti"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__hr_leave_type__pwa_report_category__sick
+msgid "Sick Leave"
+msgstr "Sakit"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__hr_leave_type__pwa_report_category__permission
+msgid "Permission"
+msgstr "Izin"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__present
+msgid "Present"
+msgstr "Hadir"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__unscheduled
+msgid "Present Outside Required Schedule"
+msgstr "Hadir di Luar Jadwal Wajib"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__incomplete
+msgid "Missing PWA Check-out"
+msgstr "Absen Pulang PWA Belum Ada"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__holiday
+msgid "Holiday"
+msgstr "Hari Libur"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__rest
+msgid "Rest Day"
+msgstr "Hari Istirahat"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__time_off
+msgid "Approved Time Off"
+msgstr "Cuti atau Izin Disetujui"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__not_covered
+msgid "Outside PWA Coverage"
+msgstr "Di Luar Cakupan PWA"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__pending
+msgid "Pending Time Off"
+msgstr "Pengajuan Menunggu"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__open
+msgid "Day Not Closed"
+msgstr "Hari Belum Berakhir"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__absent
+msgid "Absent"
+msgstr "Alpa"
+
+#. module: id_attendance
+#: model:ir.model.fields.selection,name:id_attendance.selection__id_attendance_report_line__status__no_calendar
+msgid "No Fixed Working Schedule"
+msgstr "Tanpa Jadwal Kerja Tetap"
+
+#. module: id_attendance
+#: model:ir.ui.menu,name:id_attendance.menu_attendance_recap
+#: model:ir.actions.act_window,name:id_attendance.action_attendance_report
+msgid "PWA Attendance Recap"
+msgstr "Rekap Absensi PWA"
+
+#. module: id_attendance
+#: model:ir.ui.menu,name:id_attendance.menu_attendance_report
+msgid "Period Report"
+msgstr "Rekap Periode"
+
+#. module: id_attendance
+#: model:ir.ui.menu,name:id_attendance.menu_attendance_working_schedules
+msgid "Working Schedules"
+msgstr "Jadwal Kerja"
+
+#. module: id_attendance
+#: model:ir.ui.menu,name:id_attendance.menu_attendance_holidays
+#: model:ir.actions.act_window,name:id_attendance.action_attendance_holidays
+msgid "Attendance Holidays"
+msgstr "Hari Libur Absensi"
+
+#. module: id_attendance
+#: model:ir.actions.act_window,name:id_attendance.action_attendance_report_lines
+msgid "Daily PWA Attendance"
+msgstr "Absensi PWA Harian"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_report_form
+msgid "Period Overview"
+msgstr "Ringkasan Periode"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_report_form
+msgid "Generate Report"
+msgstr "Buat Rekap"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_report_form
+msgid "Open Daily Details"
+msgstr "Buka Detail Harian"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_report_form
+msgid "Close"
+msgstr "Tutup"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_report_line_form
+msgid "Schedule and Record"
+msgstr "Jadwal dan Catatan"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_report_line_form
+msgid "Attendance Minutes"
+msgstr "Rincian Menit Absensi"

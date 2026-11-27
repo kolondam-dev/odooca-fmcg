@@ -1,3 +1,32 @@
+## 2026-11-28T01:12:48+07:00 — Codex — Re-review DEV-02B dan sinkronisasi PR #207
+**Basis:** main `8e83a301`, APK perangkat `5ab7088`. [Matriks DEV-02B](android/DEV02B_DEVICES.md) mencatat cakupan POCO M3 diterima, Redmi 4X sebelum full deploy, stale fix fisik di DEV-04A, dan expiry alami/idle TTL di B01. Dampak test **CUKUP** untuk checkpoint.
+**Menunggu:** CI pada kandidat integrasi dan verdict akhir. PR tetap draft.
+
+## 2026-11-27 — Sinkronisasi dan acceptance browser HR PR #209 (ChatGPT-ABSENSI)
+
+- [F] Main `cbabfee` digabung. Konflik hanya di HANDOFF dan entri kedua sisi dipertahankan.
+- [F] Chromium pada Odoo 19 disposable di `019720b`: HR menyimpan libur bersumber, lalu ringkasan, detail harian, dan pivot cocok (960 menit terjadwal, 443 menit tercatat, 50% hadir). Non-HR ditolak lewat tautan langsung dan permintaan baca.
+- [F] Seluruh addon `id_attendance` byte-identik dengan kandidat yang diuji. Perubahan dispatcher dari main menambahkan callback opsional untuk penutupan penagihan.
+- [BU] CI pada SHA sinkronisasi menunggu hasil sebelum supervisor merge.
+
+## 2026-11-27 — Kalender kerja dan rekap absensi PWA (ChatGPT-ABSENSI)
+
+- [F] Satu PR pada `agen/absensi-kalender-rekap`. Menu Karyawan → Rekap Absensi PWA berisi jadwal native, libur dengan cakupan dan sumber, serta ringkasan dan detail harian/pivot/grafik. Jadwal mengikuti versi HR efektif dan Time Off native mengurangi kewajiban hadir.
+- [F] Upgrade Odoo 19 disposable dari addon v19.0.1.0.0 ke v19.0.2.0.0: 12 tes ORM lulus. Termasuk oracle jam istirahat, jadwal historis, libur tumpang tindih, izin parsial, WITA, checkout otomatis, dan aturan akses.
+- [A] HR mengisi tanggal awal cakupan, kebijakan kalender, dan referensi libur tahunan. Hari terbuka dan hari di luar cakupan tidak dilabel alpa. Tidak ada pengisian kalender otomatis.
+- [BU] CI exact SHA dan acceptance HR menunggu. Tidak ada perubahan deployment demo atau pilot.
+## 2026-11-27 — [BU] BE-20d PR #210 P1/P2 custody (claude-dev)
+
+- [F] P1: `record_custody_exception` tidak lagi menolak karena saldo/status faktur (lunas, tidak posted, saldo berubah, nominal melebihi saldo): receipt tetap tercatat utuh dengan alokasi `held` (saldo faktur dan klaim SJP lain tidak diubah); `reassign` mensyaratkan saldo cukup, selain itu `release`. Yang tetap ditolak: baris yang sudah punya penerimaan (validasi yang ada), nominal <= 0.
+- [F] P2: token mengikat satu operasi: `desk_fingerprint` (sha256 sheet+alasan+waktu+baris) menolak payload berbeda dengan token sama; indeks unik parsial `desk_token WHERE desk_primary` (satu receipt utama per token, lintas SJP dan metode) mencegah dua operasi paralel; pecundang mendapat UserError.
+- [F] Tes: batch metode campuran (lunas/saldo berubah/normal), replay identik vs payload/alasan berbeda, race lintas SJP dengan metode berbeda (dua transaksi PG). Bukti Odoo hanya dari CI. `collection_v2` tetap OFF.
+
+## 2026-11-27 — [BU] BE-20d custody exception AR Control (claude-dev)
+
+- [F] `id.collection.receipt.record_custody_exception(sheet_id, desk_token, reason, occurred_at, lines)` (hanya `group_ar_control`, SJP sudah lewat cutoff; menormalkan SJP via `_close_settlement_day`): uang selalu tercatat (`source=cashier_desk`, `exception=True`, alasan wajib, `desk_token` unik per metode = idempoten); baris yang fakturnya dipegang SJP/penerimaan lain `held` (tanpa `holds_invoice`, klaim B utuh), sisanya `allocated`. Lock protokol 8.4 (SJP asal -> faktur -> receivable -> baris SJP termasuk baris pengklaim lain), saldo dibaca ulang.
+- [F] `id.collection.receipt.line.resolve_held(mode, reason)`: `reassign` (B belum menagih dan tanpa pending: baris B `lapsed` "Digantikan custody X", A `allocated`) atau `release` (uang belum teralokasi); audit `resolution_*`, seam `_apply_allocation`.
+- [A] Belum: selisih kas (klaim asli vs hitungan fisik), notifikasi ke B, form UI/wizard AR Control, meja kasir reguler, validasi dan pembayaran (BE-20e), `returned` tertahan custody `held`. `collection_v2` tetap OFF. Bukti Odoo hanya dari CI.
+
 ## 2026-11-27 — [BU] BE-20d PR #208 P1: command setelah cutoff menutup SJP (claude-dev)
 
 - [F] `CommandRejected(after=...)` (dispatcher generik): efek handler di-rollback, lalu `after` dijalankan sekali di savepoint yang sama dengan log `rejected` (gagal -> penolakan ikut batal dan permintaan diulang). Handler receipt memakainya pada penolakan `cutoff` untuk `_close_settlement_day()` di bawah lock, jadi `lapsed`/klaim lepas/`expired` tersimpan tanpa menunggu cron. Koreksi catatan sebelumnya: batas "lapse malas dibuang rollback" tidak berlaku lagi.

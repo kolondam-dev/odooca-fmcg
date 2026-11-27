@@ -1,0 +1,228 @@
+<odoo>
+    <record id="view_pwa_time_off_type_form" model="ir.ui.view">
+        <field name="name">hr.leave.type.form.pwa.attendance</field>
+        <field name="model">hr.leave.type</field>
+        <field name="inherit_id" ref="hr_holidays.edit_holiday_status_form"/>
+        <field name="arch" type="xml">
+            <field name="request_unit" position="after">
+                <field name="pwa_report_category" groups="hr_holidays.group_hr_holidays_manager"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_attendance_holiday_list" model="ir.ui.view">
+        <field name="name">id.attendance.holiday.list</field>
+        <field name="model">id.attendance.holiday</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="kind"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="calendar_id"/>
+                <field name="work_location_id"/>
+                <field name="source"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_attendance_holiday_form" model="ir.ui.view">
+        <field name="name">id.attendance.holiday.form</field>
+        <field name="model">id.attendance.holiday</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="kind"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="source"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="calendar_id"/>
+                            <field name="work_location_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_attendance_holidays" model="ir.actions.act_window">
+        <field name="name">Attendance Holidays</field>
+        <field name="res_model">id.attendance.holiday</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_attendance_report_form" model="ir.ui.view">
+        <field name="name">id.attendance.report.form</field>
+        <field name="model">id.attendance.report</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="generated" invisible="1"/>
+                <group>
+                    <group>
+                        <field name="date_from" readonly="generated"/>
+                        <field name="date_to" readonly="generated"/>
+                        <field name="grace_minutes" readonly="generated"/>
+                    </group>
+                    <group>
+                        <field name="company_id" readonly="generated"/>
+                        <field name="employee_ids" widget="many2many_tags" readonly="generated"
+                               context="{'active_test': False}" options="{'no_create': True}"/>
+                    </group>
+                </group>
+                <group string="Period Overview" invisible="not generated">
+                    <group>
+                        <field name="planned_minute_total"/>
+                        <field name="scheduled_minute_total"/>
+                        <field name="absent_day_total"/>
+                        <field name="incomplete_day_total"/>
+                    </group>
+                    <group>
+                        <field name="required_day_total"/>
+                        <field name="present_day_total"/>
+                        <field name="attendance_rate" invisible="not required_day_total"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_generate" string="Generate Report" type="object"
+                            class="btn-primary" invisible="generated"/>
+                    <button name="action_open_details" string="Open Daily Details" type="object"
+                            class="btn-primary" invisible="not generated"/>
+                    <button string="Close" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_attendance_report" model="ir.actions.act_window">
+        <field name="name">PWA Attendance Recap</field>
+        <field name="res_model">id.attendance.report</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="view_attendance_report_line_search" model="ir.ui.view">
+        <field name="name">id.attendance.report.line.search</field>
+        <field name="model">id.attendance.report.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="department_id"/>
+                <field name="work_location_id"/>
+                <field name="status"/>
+                <filter name="date" date="business_date"/>
+                <group>
+                    <filter name="group_employee" string="Employee" context="{'group_by': 'employee_id'}"/>
+                    <filter name="group_date" string="Business Date" context="{'group_by': 'business_date:day'}"/>
+                    <filter name="group_location" string="Work Location" context="{'group_by': 'work_location_id'}"/>
+                    <filter name="group_status" string="Status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_attendance_report_line_list" model="ir.ui.view">
+        <field name="name">id.attendance.report.line.list</field>
+        <field name="model">id.attendance.report.line</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="business_date"/>
+                <field name="employee_id"/>
+                <field name="status"/>
+                <field name="planned_minutes" sum="Total"/>
+                <field name="required_minutes" optional="hide" sum="Total"/>
+                <field name="scheduled_minutes" sum="Total"/>
+                <field name="late_minutes" sum="Total"/>
+                <field name="early_minutes" optional="hide" sum="Total"/>
+                <field name="leave_minutes" optional="hide" sum="Total"/>
+                <field name="sick_minutes" optional="hide" sum="Total"/>
+                <field name="permission_minutes" optional="hide" sum="Total"/>
+                <field name="pending_minutes" optional="hide" sum="Total"/>
+                <field name="work_location_id" optional="hide"/>
+                <field name="department_id" optional="hide"/>
+                <field name="check_in" optional="hide"/>
+                <field name="check_out" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_attendance_report_line_form" model="ir.ui.view">
+        <field name="name">id.attendance.report.line.form</field>
+        <field name="model">id.attendance.report.line</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <group string="Schedule and Record">
+                            <field name="employee_id"/>
+                            <field name="business_date"/>
+                            <field name="department_id"/>
+                            <field name="work_location_id"/>
+                            <field name="calendar_id"/>
+                            <field name="holiday_notes"/>
+                            <field name="covered"/>
+                            <field name="status"/>
+                            <field name="attendance_id"/>
+                            <field name="check_in"/>
+                            <field name="check_out"/>
+                        </group>
+                        <group string="Attendance Minutes">
+                            <field name="planned_minutes"/>
+                            <field name="required_minutes"/>
+                            <field name="actual_minutes"/>
+                            <field name="scheduled_minutes"/>
+                            <field name="outside_minutes"/>
+                            <field name="overlap_minutes"/>
+                            <field name="late_minutes"/>
+                            <field name="early_minutes"/>
+                            <field name="leave_minutes"/>
+                            <field name="sick_minutes"/>
+                            <field name="permission_minutes"/>
+                            <field name="pending_minutes"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_attendance_report_line_pivot" model="ir.ui.view">
+        <field name="name">id.attendance.report.line.pivot</field>
+        <field name="model">id.attendance.report.line</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="employee_id" type="row"/>
+                <field name="planned_minutes" type="measure"/>
+                <field name="scheduled_minutes" type="measure"/>
+                <field name="recorded_days" type="measure"/>
+                <field name="absent_days" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_attendance_report_line_graph" model="ir.ui.view">
+        <field name="name">id.attendance.report.line.graph</field>
+        <field name="model">id.attendance.report.line</field>
+        <field name="arch" type="xml">
+            <graph type="bar">
+                <field name="employee_id"/>
+                <field name="scheduled_minutes" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_attendance_report_lines" model="ir.actions.act_window">
+        <field name="name">Daily PWA Attendance</field>
+        <field name="res_model">id.attendance.report.line</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_attendance_report_line_search"/>
+    </record>
+
+    <menuitem id="menu_attendance_recap" name="PWA Attendance Recap" parent="hr.menu_hr_root"
+              groups="hr.group_hr_manager" sequence="40"/>
+    <menuitem id="menu_attendance_report" name="Period Report" parent="menu_attendance_recap"
+              action="action_attendance_report" sequence="10"/>
+    <menuitem id="menu_attendance_working_schedules" name="Working Schedules" parent="menu_attendance_recap"
+              action="resource.action_resource_calendar_form" sequence="20"/>
+    <menuitem id="menu_attendance_holidays" parent="menu_attendance_recap" action="action_attendance_holidays"
+              sequence="30"/>
+</odoo>
