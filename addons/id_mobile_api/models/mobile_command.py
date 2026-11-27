@@ -31,12 +31,18 @@ class CommandRejected(Exception):
     sudah di-rollback, lalu mencatat satu command berstatus ``rejected``. Retry dengan UUID dan payload
     identik mengembalikan hasil yang sama tanpa menjalankan ulang handler. Kesalahan malformed/otorisasi
     tetap memakai ``UserError``/``AccessError`` (tidak dicatat).
+
+    ``after`` (opsional): callable tanpa argumen untuk pemeliharaan yang HARUS tetap tersimpan walau command ditolak
+    (mis. penutupan akhir hari yang dipicu penolakan cutoff). Dijalankan sekali oleh dispatcher di savepoint yang sama
+    dengan log penolakan, SETELAH efek handler di-rollback; bila gagal, penolakan ikut dibatalkan dan error naik
+    sehingga permintaan diulang utuh. Retry UUID tidak menjalankannya lagi.
     """
 
-    def __init__(self, message, reference=""):
+    def __init__(self, message, reference="", after=None):
         super().__init__(message)
         self.message = str(message)
         self.reference = reference or ""
+        self.after = after
 
 
 def to_wita_date(dt):
@@ -283,6 +289,8 @@ class MobileCommand(models.Model):
                     "reference": rejection.reference,
                     "message": rejection.message,
                 })
+                if rejection.after is not None:
+                    rejection.after()
         except IntegrityError as error:
             if error.pgcode == "23505" and self._is_command_uuid_conflict(error):
                 raise MobileReadConflict(_("Command submission raced; retry the same UUID.")) from None

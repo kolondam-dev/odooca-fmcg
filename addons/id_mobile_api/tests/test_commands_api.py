@@ -1253,6 +1253,28 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         with self.assertRaises(MobileReadConflict):
             self._command_model().process_command({**command, "payload": {"x": 2}})
 
+    def test_command_rejected_after_hook_persists_once_while_handler_effects_roll_back(self):
+        marker, kept = "BE20D Rolled %s" % uuid.uuid4(), "BE20D Kept %s" % uuid.uuid4()
+        calls = []
+
+        def handler(model, payload, client_uuid):
+            model.env["res.partner"].sudo().create({"name": marker})
+
+            def after():
+                calls.append(client_uuid)
+                model.env["res.partner"].sudo().create({"name": kept})
+
+            raise CommandRejected("Lewat cutoff.", reference="CUT", after=after)
+
+        command = self._extension_command()
+        first = self._run_extension(command, handler)
+        self.assertEqual((first["status"], first["reference"]), ("rejected", "CUT"))
+        self.assertFalse(self.env["res.partner"].sudo().search([("name", "=", marker)]))
+        self.assertEqual(len(self.env["res.partner"].sudo().search([("name", "=", kept)])), 1)
+        self.assertEqual(self._command_model().process_command(command), first)  # replay: after tidak diulang
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(len(self.env["res.partner"].sudo().search([("name", "=", kept)])), 1)
+
     def test_user_error_from_extension_is_not_logged(self):
         def handler(model, payload, client_uuid):
             raise UserError("malformed")

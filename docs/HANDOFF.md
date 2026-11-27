@@ -1,3 +1,9 @@
+## 2026-11-27 — [BU] BE-20d PR #208 P1: command setelah cutoff menutup SJP (claude-dev)
+
+- [F] `CommandRejected(after=...)` (dispatcher generik): efek handler di-rollback, lalu `after` dijalankan sekali di savepoint yang sama dengan log `rejected` (gagal -> penolakan ikut batal dan permintaan diulang). Handler receipt memakainya pada penolakan `cutoff` untuk `_close_settlement_day()` di bawah lock, jadi `lapsed`/klaim lepas/`expired` tersimpan tanpa menunggu cron. Koreksi catatan sebelumnya: batas "lapse malas dibuang rollback" tidak berlaku lagi.
+- [F] Tes: process_command setelah cutoff (tanpa receipt, saldo tetap, satu log, replay UUID identik), SJP campuran (uang pending utuh), race cron vs submit dua transaksi PG (pemblokir dibuktikan `pg_blocking_pids`). Bukti Odoo hanya dari CI.
+- [A] Belum: custody/`held`, meja kasir, BE-20e. `collection_v2` tetap OFF.
+
 ## 2026-11-27 — [BU] BE-20d penutupan akhir hari SJP (claude-dev)
 
 - [F] `id.collection.sheet._close_settlement_day()`: setelah cutoff (00:00 WITA hari berikutnya, waktu server setelah lock SJP lalu baris SJP) baris tanpa penerimaan -> `lapsed` (klaim faktur lepas per baris; `active_claim` kini bergantung `outcome`), SJP tanpa penerimaan -> `expired` (terminal). SJP berpenerimaan tetap `issued` menuju validasi 20e; faktur dengan uang pending tetap terproteksi. Cron `_cron_close_settlement_day` tiap 15 menit, idempoten, satu savepoint per SJP, hanya SJP berbaris `pending` (tidak kelaparan batch).

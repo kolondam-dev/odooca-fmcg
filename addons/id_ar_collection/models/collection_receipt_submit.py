@@ -219,7 +219,12 @@ class CollectionReceiptSubmit(models.Model):
             raise CommandRejected(_("SJP %s tidak lagi berstatus diterbitkan.", sheet.name), "sheet_state")
         now = fields.Datetime.now()
         if now >= settlement_cutoff(sheet.collect_date):
-            raise CommandRejected(_("SJP %s melewati hari penyelesaian.", sheet.name), "cutoff")
+            # Penutupan akhir hari diterapkan di bawah lock yang sama walau cron belum berjalan (§8.13-4): hook `after`
+            # dijalankan dispatcher setelah efek handler di-rollback dan tersimpan bersama log penolakan.
+            sheet_id = sheet.id
+            raise CommandRejected(
+                _("SJP %s melewati hari penyelesaian.", sheet.name), "cutoff",
+                after=lambda: self.env["id.collection.sheet"].sudo().browse(sheet_id)._close_settlement_day())
         occurred_wita = occurred_at.replace(tzinfo=timezone.utc).astimezone(BUSINESS_TZ).date()
         if occurred_wita != sheet.collect_date or occurred_at > now + FUTURE_TOLERANCE:
             raise CommandRejected(_("Waktu kejadian tidak sah untuk SJP %s.", sheet.name), "occurred_at")

@@ -431,3 +431,7 @@
 [2026-11-27T12:17:47+07:00] [INFO] BE-20d: penutupan akhir hari SJP
 - SJP expired + baris lapsed (klaim lepas per baris), cron 15 menit idempoten, lock SJP->baris, 4 tes; enum PWA lapsed; collection_v2 OFF
 - Task managed by claude-dev agent at 2026-11-27T12:17:47+07:00
+
+[2026-11-27T18:03:33+07:00] [INFO] PR #208 P1: command setelah cutoff menutup SJP
+- CommandRejected.after (hook dispatcher) menyimpan penutupan bersama log rejected; tes process_command, replay UUID, SJP campuran, race cron vs submit 2 transaksi PG
+- Task managed by claude-dev agent at 2026-11-27T18:03:33+07:00
