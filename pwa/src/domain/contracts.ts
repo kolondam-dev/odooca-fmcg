@@ -362,6 +362,7 @@ export const SnapshotSchema = z
                                     "paid",
                                     "partial",
                                     "unpaid",
+                                    "lapsed",
                                 ]),
                                 document_return: z.enum([
                                     "none",

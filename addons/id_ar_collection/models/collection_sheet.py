@@ -13,7 +13,8 @@ OPEN_PAYMENT_STATES = ("not_paid", "partial")
 # dan pekerjaan berikutnya.
 TRANSITIONS = {
     "draft": {"issued", "cancelled"},
-    "issued": {"cancelled", "returned"},
+    "issued": {"cancelled", "returned", "expired"},
+    "expired": set(),
     "returned": {"reconciled"},
     "reconciled": set(),
     "cancelled": {"draft"},
@@ -54,6 +55,7 @@ class CollectionSheet(models.Model):
             ("returned", "Dikembalikan"),
             ("reconciled", "Ditutup"),
             ("cancelled", "Dibatalkan"),
+            ("expired", "Kedaluwarsa"),
         ],
         default="draft",
         required=True,
@@ -187,6 +189,55 @@ class CollectionSheet(models.Model):
         # Paksa penulisan klaim aktif sekarang: indeks unik parsial DB menolak bentrok (juga antar sesi).
         self.env["id.collection.sheet.line"].flush_model(["active_claim"])
 
+    # ---- penutupan akhir hari (D10-Q5a, rancangan 8.13-4) --------------------------------------------
+    def _close_settlement_day(self):
+        """Tutup SJP `issued` yang cutoff-nya (00:00 WITA hari berikutnya) sudah lewat; idempoten.
+
+        Protokol lock sama dengan submit: baris SJP `FOR UPDATE` lebih dulu (menunggu pemegang lain), lalu baris SJP,
+        semuanya urut id; waktu server diambil SETELAH lock. Baris tanpa penerimaan menjadi `lapsed` (klaim faktur
+        lepas, faktur kembali kandidat); SJP tanpa satu pun penerimaan menjadi `expired`. Penerimaan pending tetap
+        terproteksi dan SJP-nya lanjut ke validasi (BE-20e). Mengembalikan SJP yang diubah pada panggilan ini.
+        """
+        from .collection_receipt import settlement_cutoff  # impor lokal: hindari siklus antar modul model
+
+        closed = self.browse()
+        if not self.ids:
+            return closed
+        self.env.cr.execute(
+            'SELECT id FROM "id_collection_sheet" WHERE id IN %s ORDER BY id FOR UPDATE', (tuple(sorted(self.ids)),))
+        self.env.invalidate_all()
+        now = fields.Datetime.now()
+        for sheet in self.sudo():
+            if sheet.state != "issued" or now < settlement_cutoff(sheet.collect_date):
+                continue
+            self.env.cr.execute(
+                'SELECT id FROM "id_collection_sheet_line" WHERE sheet_id = %s ORDER BY id FOR UPDATE', (sheet.id,))
+            self.env.invalidate_all()
+            reported = self.env["id.collection.receipt.line"].search([
+                ("sheet_line_id.sheet_id", "=", sheet.id), ("holds_line", "=", True)])
+            reported_ids = set(reported.sheet_line_id.ids)
+            open_lines = sheet.line_ids.filtered(lambda line: line.id not in reported_ids and line.outcome == "pending")
+            if open_lines:
+                open_lines._apply_outcome({"outcome": "lapsed"})
+                closed |= sheet
+            if not reported_ids:
+                sheet._apply_state("expired")
+                closed |= sheet
+        self.env.flush_all()
+        return closed
+
+    @api.model
+    def _cron_close_settlement_day(self, batch=200):
+        """Catch-up idempoten: hanya SJP berbaris `pending` yang cutoff-nya lewat; satu savepoint per SJP."""
+        sheets = self.search([
+            ("state", "=", "issued"), ("collect_date", "<", business_date()), ("line_ids.outcome", "=", "pending"),
+        ], limit=batch, order="collect_date, id")
+        closed = 0
+        for sheet in sheets:
+            with self.env.cr.savepoint():
+                closed += len(sheet._close_settlement_day())
+        return closed
+
     def _check_no_pending_receipt(self):
         """Uang yang sudah diterima harus lewat validasi: SJP berpenerimaan pending tidak boleh dibatalkan/didraf."""
         pending = self.env["id.collection.receipt.line"].sudo().search([
@@ -279,6 +330,7 @@ class CollectionSheetLine(models.Model):
             ("paid", "Lunas"),
             ("partial", "Dibayar Sebagian"),
             ("unpaid", "Tidak Tertagih"),
+            ("lapsed", "Lewat Hari Penyelesaian"),
         ],
         default="pending",
         required=True,
@@ -302,10 +354,11 @@ class CollectionSheetLine(models.Model):
             "ON id_collection_sheet_line (move_id) WHERE active_claim"
         )
 
-    @api.depends("sheet_id.state")
+    @api.depends("sheet_id.state", "outcome")
     def _compute_active_claim(self):
+        # `lapsed` (penutupan akhir hari, D10-Q5a) melepas klaim per baris walau SJP masih menunggu validasi 20e.
         for line in self:
-            line.active_claim = line.sheet_id.state in ACTIVE_STATES
+            line.active_claim = line.sheet_id.state in ACTIVE_STATES and line.outcome != "lapsed"
 
     @api.model
     def _validate_invoice(self, move, company):

@@ -1,3 +1,27 @@
+## 2026-11-27T19:05:00+07:00 — [F] Fork PR #206 dilepas, pilot utuh (codex)
+
+- [F] `release-fork` untuk `pr206-acceptance` berhasil. `fork-list` kosong, environment fork tidak ditemukan; empat layanan pilot `SUCCESS` dan kedua volumenya masih terdaftar. Tidak ada merge PR/deploy pilot.
+- [BU] Verdict PR **HOLD**: API 422 bukan UI 422; browser baru tidak memulihkan progres 2 POD dan closing; transaksi sukses terjadi pada ancestor `b2efacd`, bukan SHA final. CI SHA setelah main PR #208 belum terbukti tuntas.
+
+## 2026-11-27T19:02:00+07:00 — [BU] PR #206 browser acceptance dan sinkronisasi main #208 (codex)
+
+- [F] Fork `pr206-acceptance`: browser PWA build `b2efacd` mengirim full POD 06409 HTTP 200 (`411fc337`), partial POD 06410 HTTP 200 (`f0dc6ee1`, 90+110 dengan alasan item `QTY TERLALU BANYAK`), dan closing final HTTP 200 (`69d542b7`, kedua POD). API closing prematur dari sesi browser yang sama HTTP 422; **bukan** tampilan 422 di layar PWA. Audit DB tepat 2 POD + 1 closing accepted, stock pickings tetap `assigned`.
+- [F] Odoo/PWA fork SHA `7d5fa2e` sukses; browser dua sesi dan refresh membuktikan satu task per DO dengan pasangan outlet 8/9, tanpa command baru; DB tetap 2+1. Sesi baru menampilkan `0/2` dan `Belum ditutup` karena status accepted lokal tidak terpulihkan dari server. **Bukti transaksi ada di ancestor `b2efacd`, bukan exact-head.**
+- [F] Main baru `cbabfee` (PR #208) digabung; satu-satunya konflik `docs/HANDOFF.md`, riwayat kedua sisi dipertahankan. Dampak test **TAMBAH**: browser/Odoo end-to-end rekonsiliasi status accepted lintas sesi, oracle 2 POD + 1 closing tanpa duplikasi; path `pwa/**` → suite pwa. Test transport upload/hash yang ada memadai untuk upload tetapi tidak menutup status lintas sesi.
+- [BU] Verdict HOLD hingga exact-head CI dan bukti runtime/cleanup selesai; UI 422 dan pemulihan status belum dibuktikan. Dilarang merge/pilot deploy.
+
+## 2026-11-27 — [BU] BE-20d PR #208 P1: command setelah cutoff menutup SJP (claude-dev)
+
+- [F] `CommandRejected(after=...)` (dispatcher generik): efek handler di-rollback, lalu `after` dijalankan sekali di savepoint yang sama dengan log `rejected` (gagal -> penolakan ikut batal dan permintaan diulang). Handler receipt memakainya pada penolakan `cutoff` untuk `_close_settlement_day()` di bawah lock, jadi `lapsed`/klaim lepas/`expired` tersimpan tanpa menunggu cron. Koreksi catatan sebelumnya: batas "lapse malas dibuang rollback" tidak berlaku lagi.
+- [F] Tes: process_command setelah cutoff (tanpa receipt, saldo tetap, satu log, replay UUID identik), SJP campuran (uang pending utuh), race cron vs submit dua transaksi PG (pemblokir dibuktikan `pg_blocking_pids`). Bukti Odoo hanya dari CI.
+- [A] Belum: custody/`held`, meja kasir, BE-20e. `collection_v2` tetap OFF.
+
+## 2026-11-27 — [BU] BE-20d penutupan akhir hari SJP (claude-dev)
+
+- [F] `id.collection.sheet._close_settlement_day()`: setelah cutoff (00:00 WITA hari berikutnya, waktu server setelah lock SJP lalu baris SJP) baris tanpa penerimaan -> `lapsed` (klaim faktur lepas per baris; `active_claim` kini bergantung `outcome`), SJP tanpa penerimaan -> `expired` (terminal). SJP berpenerimaan tetap `issued` menuju validasi 20e; faktur dengan uang pending tetap terproteksi. Cron `_cron_close_settlement_day` tiap 15 menit, idempoten, satu savepoint per SJP, hanya SJP berbaris `pending` (tidak kelaparan batch).
+- [F] Enum `outcome` snapshot PWA + openapi menambah `lapsed`. 4 tes Odoo baru (belum diverifikasi CI).
+- [A] Batas jujur: command setelah cutoff tetap `rejected` (rollback savepoint membuang lapse malas); penutupan efektif lewat cron/entrypoint non-command (meja kasir). Belum: custody exception/`held`, meja kasir, BE-20e. FE-8b: PWA harus menampilkan `lapsed`/`expired`. `collection_v2` tetap OFF.
+
 ## 2026-11-27T18:24:00+07:00 — [BU] Sinkronisasi PR #206 dengan main PR #205 (codex)
 
 - [F] Main `f6e2826` digabung ke branch PR #206, termasuk BE-20d. Konflik hanya `docs/HANDOFF.md`; kedua entri dan log agen dipertahankan.
