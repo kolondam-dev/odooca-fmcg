@@ -1,3 +1,9 @@
+## 2026-11-27 — [BU] BE-20d PR #205 P1 race SJP batal vs submit (claude-dev)
+
+- [F] `_apply_state` (batal/draf/terbit) kini mengunci baris SJP `FOR UPDATE` lebih dulu (protokol submit) lalu membaca ulang status; submit meng-UPDATE header SJP sehingga pembatal yang menunggu pada snapshot REPEATABLE READ gagal SerializationFailure dan diulang Odoo, lalu guard melihat receipt pending. Tanpa sentuhan header guard membaca snapshot basi (ditemukan reviewer).
+- [F] Tes: submit menang -> batal ditolak, SJP tetap `issued`; batal menang -> submit `rejected sheet_state`, tanpa receipt. Sesi pemblokir dibuktikan via `pg_blocking_pids`. Fixture membatasi penghapusan `account_full_reconcile` ke ID fixture; snapshot dengan/tanpa receipt di-assert.
+- [BU] Bukti Odoo hanya dari CI pada SHA akhir. Identitas log/commit dikoreksi ke `claude-dev` (append-only). `collection_v2` tetap OFF.
+
 ## 2026-11-27 — Sinkronisasi PR #200 setelah PR #201 (ChatGPT-ABSENSI)
 
 - [F] Main `bb84709` digabung ke kandidat `11bdee6`. Konflik terbatas pada HANDOFF dan log, dengan entri kedua sisi dipertahankan.

@@ -190,6 +190,25 @@ class TestCollectionSnapshot(TransactionCase):
             "id", "reference", "partner", "partner_id", "outlet_id", "due_date", "overdue",
             "amount_due", "balance", "outcome", "document_return", "receipt_state", "receipt_amount"})
 
+    @freeze_time("2026-11-16 01:00:00", tick=True)
+    def test_line_receipt_fields_are_empty_without_receipt_and_filled_after_submit(self):
+        day = business_date()
+        outlet = self._partner("SJP Snap Receipt", is_company=True)
+        self._assign(self.mobile, outlet)
+        invoice = self._invoice(outlet, day, 1000)
+        sheet = self._sheet([invoice])
+        line = self._sheets()["sheets"][0]["lines"][0]
+        self.assertEqual((line["receipt_state"], line["receipt_amount"]), (None, 0.0))
+        result = self.env["id.mobile.command"].with_user(self.mobile).process_command({
+            "client_uuid": "00000000-0000-4000-8000-0000000000a5", "type": "collection.receipt.submit",
+            "payload": {"sheet_id": sheet.id, "occurred_at": "2026-11-16T07:30:00+07:00", "lines": [{
+                "line_id": sheet.line_ids.id, "invoice_id": invoice.id, "outcome": "partial",
+                "amount": 400, "expected_balance": 1000}]}})
+        self.assertEqual(result["status"], "accepted")
+        line = self._sheets()["sheets"][0]["lines"][0]
+        self.assertEqual((line["receipt_state"], line["receipt_amount"]), ("posted", 400.0))
+        self.assertEqual(line["balance"], 1000.0)  # 20d tidak mengubah saldo faktur
+
     # ---- batas dan digest ----------------------------------------------------------------------
     @freeze_time("2026-11-16 01:00:00", tick=True)
     def test_caps_are_flagged_not_silently_truncated(self):

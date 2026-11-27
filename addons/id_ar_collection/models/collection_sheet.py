@@ -164,6 +164,15 @@ class CollectionSheet(models.Model):
 
     def _apply_state(self, new_state):
         """Satu-satunya jalan mengubah status: validasi transisi, klaim faktur aktif, lalu tulis."""
+        # Protokol lock yang sama dengan submit penerimaan (urutan: SJP lebih dulu): kunci baris header, tunggu bila
+        # dipegang transaksi lain, lalu baca ulang status. Bila pemegang lock meng-UPDATE header (submit melakukannya),
+        # menunggu pada snapshot REPEATABLE READ berakhir SerializationFailure dan Odoo mengulang transaksi utuh
+        # sehingga guard di bawah melihat receipt yang baru di-commit.
+        if self.ids:
+            sheet_ids = tuple(sorted(self.ids))
+            self.env.cr.execute(
+                'SELECT id FROM "id_collection_sheet" WHERE id IN %s ORDER BY id FOR UPDATE', (sheet_ids,))
+            self.env.invalidate_all()
         for sheet in self:
             if new_state not in TRANSITIONS.get(sheet.state, ()):
                 raise UserError(

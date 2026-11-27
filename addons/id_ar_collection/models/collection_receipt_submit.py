@@ -254,6 +254,12 @@ class CollectionReceiptSubmit(models.Model):
             if entry["outcome"] == "unpaid" and entry["amount"]:
                 raise UserError(_("Payload tidak valid: unpaid harus bernilai nol."))
 
+        # Sentuh baris header SJP (UPDATE nyata): transaksi lifecycle yang menunggu lock baris ini dengan snapshot lama
+        # (REPEATABLE READ) harus gagal SerializationFailure lalu diulang Odoo dan MELIHAT receipt ini, bukan lanjut
+        # menulis di atas snapshot basi. Lihat `_apply_state` di collection_sheet.py.
+        self.env.cr.execute("UPDATE id_collection_sheet SET write_date = (NOW() AT TIME ZONE 'UTC') WHERE id = %s",
+                            (sheet.id,))
+
         # ---- tulis: satu receipt per metode (cash, transfer, giro), seluruhnya atomik -----------------
         Receipt = self.sudo().with_company(company)
         names = []

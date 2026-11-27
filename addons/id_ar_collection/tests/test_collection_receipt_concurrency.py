@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 from psycopg2 import errors
 
 from odoo import SUPERUSER_ID, Command, api, sql_db
+from odoo.exceptions import UserError
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
 from odoo.tools import mute_logger
@@ -85,9 +86,11 @@ class TestCollectionReceiptConcurrency(TransactionCase):
                 "DELETE FROM account_partial_reconcile WHERE debit_move_id IN "
                 "(SELECT id FROM account_move_line WHERE move_id = ANY(%s)) OR credit_move_id IN "
                 "(SELECT id FROM account_move_line WHERE move_id = ANY(%s))", (all_moves, all_moves))
+            cr.execute("SELECT DISTINCT full_reconcile_id FROM account_move_line "
+                       "WHERE move_id = ANY(%s) AND full_reconcile_id IS NOT NULL", (all_moves,))
+            full_ids = [row[0] for row in cr.fetchall()]
             cr.execute("UPDATE account_move_line SET full_reconcile_id = NULL WHERE move_id = ANY(%s)", (all_moves,))
-            cr.execute("DELETE FROM account_full_reconcile WHERE id NOT IN "
-                       "(SELECT full_reconcile_id FROM account_move_line WHERE full_reconcile_id IS NOT NULL)")
+            cr.execute("DELETE FROM account_full_reconcile WHERE id = ANY(%s)", (full_ids,))
             cr.execute("DELETE FROM account_move_line WHERE move_id = ANY(%s)", (all_moves,))
             cr.execute("DELETE FROM account_move WHERE id = ANY(%s)", (all_moves,))
             env = api.Environment(cr, SUPERUSER_ID, {})
@@ -125,6 +128,8 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         cr = db.cursor()
         cr.execute("SET LOCAL lock_timeout = '20s'")
         thread_env = api.Environment(cr, uid, {})
+
+        outcome["pid"] = cr._cnx.get_backend_pid()
 
         def runner():
             try:
@@ -168,6 +173,20 @@ class TestCollectionReceiptConcurrency(TransactionCase):
                 "WHERE datname = current_database() AND pid <> pg_backend_pid()")
             activity = cr.fetchall()
         return f"\n--- stack thread ---\n{stack}\n--- pg_stat_activity ---\n{activity}"
+
+    def _assert_blocked_by(self, db, waiter_pid, holder_pid):
+        """Bukti di database: sesi penunggu benar-benar diblokir sesi pemegang lock (bukan sekadar lambat)."""
+        with db.cursor() as cr:
+            cr.execute("SELECT wait_event_type, pg_blocking_pids(%s) FROM pg_stat_activity WHERE pid = %s",
+                       (waiter_pid, waiter_pid))
+            wait_type, blockers = cr.fetchone()
+        self.assertEqual(wait_type, "Lock", "sesi harus menunggu lock PostgreSQL")
+        self.assertIn(holder_pid, blockers, "pemblokir harus sesi pemegang lock")
+
+    def _sheet_row(self, db, ids):
+        with db.cursor() as cr:
+            cr.execute("SELECT state FROM id_collection_sheet WHERE id = %s", (ids["sheet"],))
+            return cr.fetchone()[0]
 
     def _db_state(self, db, ids):
         with db.cursor() as cr:
@@ -287,3 +306,64 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         receipts, commands = self._db_state(db, ids)
         # Penerimaan dicatat terhadap saldo yang terkunci (1000); 20e wajib memvalidasi ulang saldo saat posting.
         self.assertEqual((receipts, commands), (1, {"accepted": 1}))
+
+    # ---- (c) pembatalan/kembali-ke-draf SJP vs submit penerimaan -------------------------------------------
+    def test_submit_wins_then_cancel_is_rejected_and_sheet_stays_issued(self):
+        db, ids = self._setup()
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, ids["collector"], {})
+        outcome = {}
+        try:
+            result = env1["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+            self.assertEqual(result["status"], "accepted")
+            env1.flush_all()
+
+            def cancel(env_t):
+                env_t["id.collection.sheet"].browse(ids["sheet"]).action_cancel()
+                env_t.flush_all()
+
+            thread = self._run_in_thread(db, cancel, outcome, SUPERUSER_ID)
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "pembatalan harus menunggu submit yang belum commit")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertGreaterEqual(outcome.get("retries", 0), 1, "menunggu pada snapshot lama harus diulang ala Odoo")
+        self.assertIsInstance(outcome.get("error"), UserError, "pembatalan harus ditolak: ada penerimaan pending")
+        self.assertEqual(self._sheet_row(db, ids), "issued")
+        receipts, commands = self._db_state(db, ids)
+        self.assertEqual((receipts, commands), (1, {"accepted": 1}))
+
+    def test_cancel_wins_then_submit_is_rejected_without_receipt(self):
+        db, ids = self._setup()
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, SUPERUSER_ID, {})
+        outcome = {}
+        try:
+            env1["id.collection.sheet"].browse(ids["sheet"]).action_cancel()
+            env1.flush_all()
+
+            def submit(env2):
+                result = env2["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+                env2.flush_all()
+                return result
+
+            thread = self._run_in_thread(db, submit, outcome, ids["collector"])
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "submit harus menunggu pembatalan yang belum commit")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertNotIn("error", outcome, outcome.get("error"))
+        self.assertEqual((outcome["result"]["status"], outcome["result"]["reference"]), ("rejected", "sheet_state"))
+        self.assertEqual(self._sheet_row(db, ids), "cancelled")
+        receipts, commands = self._db_state(db, ids)
+        self.assertEqual((receipts, commands), (0, {"rejected": 1}))
