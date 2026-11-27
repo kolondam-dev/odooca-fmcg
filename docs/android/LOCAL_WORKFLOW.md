@@ -182,6 +182,14 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Design:** Lanjutkan review DES-02-r1 dan catat implikasi state izin, expiry/logout serta kualitas lokasi. Implementasi visual D01 dan binding dua foto tetap mengikuti slice terkait.
 - **Lead:** Review bagian yang dapat dijalankan sekarang. Jika Redmi 4X atau POCO M3 belum tersedia, catat kebutuhan operator/perangkat dan koordinasikan jalur pengujian fisik. DEV-03 tetap menunggu checkpoint terpisah.
 
+### Checkpoint Lead — sesi provisional DEV-02B
+
+[Draft PR #207](https://github.com/kolondam-dev/odooca-fmcg/pull/207) mengintegrasikan `d554aeb` dengan main `f66e4cc` pada `bd04026`. Gate statis lulus. **Dampak test TAMBAH** untuk regresi pembersihan sesi dan preservasi antrean serta bukti revoke/isolasi akun yang dijalankan pada fixture.
+
+- **Dev:** Pertahankan matriks fisik REDMI 4X/POCO M3 dan minSdk sementara 24. Bukti revoke dari fixture dan Robolectric tidak menutup TTL alami, Keystore atau perilaku perangkat. Lanjutkan setelah unit/operator tersedia; catat APK yang sama pada kedua perangkat.
+- **Lead:** Jalur yang dipilih untuk sesi TEST adalah fixture B09 disposable pada host ADB operator, dengan gateway privat loopback melalui adb reverse dan CA fixture hanya pada build debug pengujian. Validasi konektivitas USB/ADB dan TLS pada kedua unit sebelum skenario perangkat. Catat operator dan unit saat tersedia. Native auth/aktivasi tetap mengikuti B01/B02.
+- **Design:** Lanjutkan review DES-02-r1, termasuk state izin dan sesi.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
