@@ -655,6 +655,8 @@ it("snapshot menerima collection_sheets opsional (BE-20c)", () => {
         balance: 40000,
         outcome: "pending",
         document_return: "none",
+        receipt_state: "posted",
+        receipt_amount: 40000,
     };
     const sheet = {
         id: "3",
@@ -673,6 +675,9 @@ it("snapshot menerima collection_sheets opsional (BE-20c)", () => {
         collection_sheets: { sheets: [sheet], truncated: false },
     });
     expect(parsed.collection_sheets?.sheets[0].lines[0].balance).toBe(40000);
+    expect(parsed.collection_sheets?.sheets[0].lines[0].receipt_state).toBe(
+        "posted",
+    );
     const bad = (patch: object) =>
         SnapshotSchema.safeParse({
             ...base,

@@ -1,3 +1,21 @@
+## 2026-11-27T18:24:00+07:00 — [BU] Sinkronisasi PR #206 dengan main PR #205 (codex)
+
+- [F] Main `f6e2826` digabung ke branch PR #206, termasuk BE-20d. Konflik hanya `docs/HANDOFF.md`; kedua entri dan log agen dipertahankan.
+- [BU] Head hasil merge harus menjalankan CI exact-SHA; runtime acceptance masih terbuka dan layanan fork belum dilepas. Merge/pilot deploy tidak diotorisasi.
+
+## 2026-11-27T18:18:55+07:00 — [BU] PR #206: runtime fork menemukan upload bukti POD hilang (codex)
+
+- [F] Fork `pr206-acceptance` (`76986ccf-843e-4084-b67a-c357717c3c5e`) memuat layanan Odoo/PWA/gateway SHA awal `b2a9076`, Postgres serta volume copy-on-write; pilot tidak dimutasi. Sumber fork tidak memiliki dua DO target; dua DO native 06409/06410 dan assignment driver 27 Nov dibuat dengan ORM di fork saja.
+- [F] Browser driver login, snapshot 200 dan UI menampilkan dua DO asli dengan outlet 8/9, kuantitas 60+160/90+320. POD penuh di PWA ditolak Odoo 422 karena foto belum masuk `/api/v1/evidence`; command tanpa bukti tidak dicatat.
+- [F] Fix in-progress: upload dua media POD resmi sebelum command, validasi receipt+hash, lalu kirim command UUID tetap; tes transport dan outbox ditambah. Dampak test **TAMBAH**: counterexample command tanpa evidence harus fail-closed, upload ditolak tidak boleh memposting, hash lokal tidak boleh mencemari payload resmi. Trigger `pwa/**` memilih suite `pwa` lewat `.ci/test-impact.yml`.
+- [BU] CI exact-SHA fix, acceptance POD parsial/closing/resync, dan cleanup belum terbukti. Merge/pilot deploy tidak diotorisasi.
+
+## 2026-11-27 — [BU] BE-20d PR #205 P1 race SJP batal vs submit (claude-dev)
+
+- [F] `_apply_state` (batal/draf/terbit) kini mengunci baris SJP `FOR UPDATE` lebih dulu (protokol submit) lalu membaca ulang status; submit meng-UPDATE header SJP sehingga pembatal yang menunggu pada snapshot REPEATABLE READ gagal SerializationFailure dan diulang Odoo, lalu guard melihat receipt pending. Tanpa sentuhan header guard membaca snapshot basi (ditemukan reviewer).
+- [F] Tes: submit menang -> batal ditolak, SJP tetap `issued`; batal menang -> submit `rejected sheet_state`, tanpa receipt. Sesi pemblokir dibuktikan via `pg_blocking_pids`. Fixture membatasi penghapusan `account_full_reconcile` ke ID fixture; snapshot dengan/tanpa receipt di-assert.
+- [BU] Bukti Odoo hanya dari CI pada SHA akhir. Identitas log/commit dikoreksi ke `claude-dev` (append-only). `collection_v2` tetap OFF.
+
 ## 2026-11-27T13:05:00+07:00 — [BU] Manifest DO native PWA disinkronkan ke main terbaru (codex)
 
 - [F] Branch `agen/pwa-delivery-manifest` direbase ke `origin/main` `f66e4cc60fe53d71d07b407194d95c7c57d1b429` (PR #200 attendance). Konflik hanya `docs/HANDOFF.md` dan `pwa/src/domain/contracts.ts`; kedua riwayat serta skema attendance/manifest dipertahankan.
@@ -17,6 +35,11 @@
 - [F] Sinkron ke main `2ccfb2d`. Attendance memakai `_handle_extension` PR #203 dan jalur receipt/savepoint bersama. Kode PWA serta capture evidence tetap sama.
 - [F] Konflik tes WMS mempertahankan fixture lintas tengah malam WITA dengan assertion pada kedua tanggal. Tes ORM attendance menutup rollback saat receipt gagal dan retry UUID yang sama.
 - [BU] Runtime pada SHA integrasi menunggu CI. Bukti perangkat pada kandidat sebelumnya sudah diterima supervisor.
+## 2026-11-27 — [BU] BE-20d PR #205 CI hijau (claude-design)
+
+- [F] CI hijau pada `b1088a87ae9ef41cc084de2e6cc8bb1d356ec4ee`: snapshot memuat `receipt_state`/`receipt_amount`; tes konkurensi memakai Environment dari thread utama (Registry._lock) dan meniru retry Odoo pada SerializationFailure.
+- [A] Belum: penutupan akhir hari, custody/`held`, meja kasir, BE-20e. `collection_v2` tetap OFF.
+- [BU] Menunggu review Supervisor; merge setelah PASS.
 
 ## 2026-11-26 — [BU] FIN36 PR #204 sinkronisasi strict-main (opencode)
 
@@ -73,6 +96,12 @@
 - [F] Sebelas tes offline menolak aset hilang/duplikat, source reuse, company leakage, komposisi per-aset salah walau agregat benar, serta draft dan acquisition/depreciation/disposal setelah cutoff. Ruff dan compile PASS lokal; runtime Odoo/Finance I0 exact-SHA masih [BU].
 - [F] Finance I0 head awal `1873deb` gagal fail-closed pada fixture salvage: OCA `value_residual` adalah sisa basis depresiasi 10.000 (purchase 24.000 − salvage 4.000 − depresiasi 10.000), sedangkan NBV register/GL tetap 14.000. Ekspektasi field dikoreksi tanpa mengubah oracle closing register/GL.
 - [BU] Dampak test TAMBAH. Full Dataset, ACL/export/live, lisensi/aktivasi produksi AGPL-3, populasi aset nyata, mapping Controller, sign-off, merge, dan deployment tetap HOLD; katalog tidak diubah.
+## 2026-11-26 — [F] BE-20d (2/2): model penerimaan dan handler `collection.receipt.submit` (claude-design)
+
+- [F] `id_ar_collection`: `id.collection.receipt` (+ baris), indeks unik parsial (satu aktif per baris SJP; satu pending per faktur), indeks (kolektor, UUID, metode); handler lewat titik perluasan dispatcher (3 kelas hasil, `CommandRejected`), protokol lock sheet -> faktur (NO KEY UPDATE) -> baris receivable (UPDATE) -> baris SJP, baca ulang saldo setelah lock; satu receipt per metode; guard: SJP berpenerimaan pending tidak dapat dibatalkan/didraf, faktur pending tidak masuk kandidat/SJP lain; snapshot memuat `receipt_state`/`receipt_amount` (kontrak zod opsional + openapi).
+- [F] Audit lock native dari sumber Odoo 19.0 (`439a87c`): bagian 8.14 rancangan. API `lock_for_update` ORM = SKIP LOCKED, jadi dipakai SQL `FOR UPDATE` yang menunggu.
+- [F] Tes Odoo: 15 fungsional via `process_command` + 3 dua-transaksi nyata [BU: hanya CI]. Tes `unsupported` lama memakai `collection.settlement.submit` (tipe penerimaan kini terdaftar bila addon terpasang).
+- [BU] Belum: penutupan akhir hari/`lapsed`/`expired` (job idempoten), `held`/custody exception, meja kasir, validasi (20e); PWA masih mengirim payload lama untuk tipe ini (FE-8b); addon belum di `INIT_MODULES` LIVE; `collection_v2` OFF.
 
 ## 2026-11-26 — [F] FIN36 PR #202 CI rerun dan sinkronisasi strict-main (opencode)
 
@@ -8063,9 +8092,3 @@ The previous attempt's assumption that one PO entry with multiple view occurrenc
 - Corrective approach: do not share one PO msgid across report views. Picklist keeps `Lot / Serial`; Packlist uses `Lot / Serial Number`; Delivery Order now uses the distinct `Lot / Batch / Serial`. Each PO entry has exactly one report-view occurrence and maps to `Lot / Nomor Seri`.
 - Updated the importer-chain matrix to assert all three source terms against their individual view XML IDs. No assertion was removed or weakened; no business/runtime stock logic changed.
 - New exact-HEAD CI, including install-test and live HTTP PDF render smoke, is required. No merge or deployment.
-## 2026-11-27T18:18:55+07:00 — [BU] PR #206: runtime fork menemukan upload bukti POD hilang (codex)
-
-- [F] Fork `pr206-acceptance` (`76986ccf-843e-4084-b67a-c357717c3c5e`) memuat layanan Odoo/PWA/gateway SHA awal `b2a9076`, Postgres serta volume copy-on-write; pilot tidak dimutasi. Sumber fork tidak memiliki dua DO target; dua DO native 06409/06410 dan assignment driver 27 Nov dibuat dengan ORM di fork saja.
-- [F] Browser driver login, snapshot 200 dan UI menampilkan dua DO asli dengan outlet 8/9, kuantitas 60+160/90+320. POD penuh di PWA ditolak Odoo 422 karena foto belum masuk `/api/v1/evidence`; command tanpa bukti tidak dicatat.
-- [F] Fix in-progress: upload dua media POD resmi sebelum command, validasi receipt+hash, lalu kirim command UUID tetap; tes transport dan outbox ditambah. Dampak test **TAMBAH**: counterexample command tanpa evidence harus fail-closed, upload ditolak tidak boleh memposting, hash lokal tidak boleh mencemari payload resmi. Trigger `pwa/**` memilih suite `pwa` lewat `.ci/test-impact.yml`.
-- [BU] CI exact-SHA fix, acceptance POD parsial/closing/resync, dan cleanup belum terbukti. Merge/pilot deploy tidak diotorisasi.
