@@ -837,3 +837,10 @@
 - [F] Lokal PASS: Ruff, compile, manifest, Vitest 574, typecheck, format, contracts, tiga build, hosting, dan browser manifest 4 case.
 - [BU] Odoo runtime/exact-SHA CI, acceptance disposable, cleanup, review, merge, dan deploy belum selesai/diotorisasi.
 - Task managed by codex agent at 2026-11-27T07:59:40+07:00
+
+[2026-11-27T11:28:14+07:00] [INFO] Rebase PR 206 dan stabilisasi fixture browser
+- [F] Rebase `agen/pwa-delivery-manifest` ke `origin/main` f66e4cc; konflik HANDOFF dan kontrak Zod diselesaikan dengan mempertahankan attendance serta manifest native.
+- [F] Fixture HTTP menyelaraskan owner/business_date manifest dengan scope peramban, meneruskan mode respons QA ke simulator, dan alert snapshot memakai detail 503 server.
+- [F] Lokal PASS: Ruff, manifest 16 addon, typecheck, Prettier, contracts, tiga build, check:build, hosting, serta rerun 1-worker delivery/next-policy 11 case dan snapshot retry 2 case.
+- [BU] Exact-SHA CI dan acceptance PWA-Odoo disposable belum selesai; merge/deploy tidak diotorisasi.
+- Task managed by codex agent at 2026-11-27T11:28:14+07:00
