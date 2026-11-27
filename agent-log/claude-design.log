@@ -524,3 +524,11 @@ Task Managed by agent claude-design-takeoverby-codex at 2026-10-29T18:55:00+07:0
 [2026-11-26T09:05:55+07:00] [INFO] BE-20d dispatcher P2 #203
 - Constraint UUID dibaca dari skema; seam _create_log_record; 5 tes baru; hanya CI
 - Task managed by claude-design agent at 2026-11-26T09:05:55+07:00
+
+[2026-11-26T15:34:12+07:00] [INFO] BE-20d 2/2 model dan handler
+- id.collection.receipt, handler collection.receipt.submit, lock sheet>faktur>aml>baris, audit native 8.14, 15+3 tes Odoo (hanya CI)
+- Task managed by claude-design agent at 2026-11-26T15:34:12+07:00
+
+[2026-11-27T07:48:16+07:00] [INFO] PR #205 CI hijau (BE-20d 2/2)
+- CI hijau pada b1088a8; tes konkurensi dibuat di thread utama + retry SerializationFailure; collection_v2 tetap OFF
+- Task managed by claude-design agent at 2026-11-27T07:48:16+07:00

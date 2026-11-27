@@ -47,4 +47,44 @@
         <field name="groups" eval="[(4, ref('group_ar_admin'))]"/>
         <field name="domain_force">[(1, '=', 1)]</field>
     </record>
+    <record id="receipt_company_rule" model="ir.rule">
+        <field name="name">Penerimaan: isolasi perusahaan</field>
+        <field name="model_id" ref="model_id_collection_receipt"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="receipt_line_company_rule" model="ir.rule">
+        <field name="name">Baris penerimaan: isolasi perusahaan</field>
+        <field name="model_id" ref="model_id_collection_receipt_line"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="receipt_collector_rule" model="ir.rule">
+        <field name="name">Penerimaan: kolektor hanya membaca miliknya</field>
+        <field name="model_id" ref="model_id_collection_receipt"/>
+        <field name="groups" eval="[(4, ref('id_mobile_api.group_mobile_sales'))]"/>
+        <field name="domain_force">[('collector_id', '=', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="receipt_admin_rule" model="ir.rule">
+        <field name="name">Penerimaan: admin AR melihat semua</field>
+        <field name="model_id" ref="model_id_collection_receipt"/>
+        <field name="groups" eval="[(4, ref('group_ar_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+    <record id="receipt_line_collector_rule" model="ir.rule">
+        <field name="name">Baris penerimaan: kolektor hanya membaca miliknya</field>
+        <field name="model_id" ref="model_id_collection_receipt_line"/>
+        <field name="groups" eval="[(4, ref('id_mobile_api.group_mobile_sales'))]"/>
+        <field name="domain_force">[('receipt_id.collector_id', '=', user.id)]</field>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+    <record id="receipt_line_admin_rule" model="ir.rule">
+        <field name="name">Baris penerimaan: admin AR melihat semua</field>
+        <field name="model_id" ref="model_id_collection_receipt_line"/>
+        <field name="groups" eval="[(4, ref('group_ar_admin'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
 </odoo>
