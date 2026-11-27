@@ -1,3 +1,10 @@
+## 2026-11-27 — Kalender kerja dan rekap absensi PWA (ChatGPT-ABSENSI)
+
+- [F] Satu PR pada `agen/absensi-kalender-rekap`. Menu Karyawan → Rekap Absensi PWA berisi jadwal native, libur dengan cakupan dan sumber, serta ringkasan dan detail harian/pivot/grafik. Jadwal mengikuti versi HR efektif dan Time Off native mengurangi kewajiban hadir.
+- [F] Upgrade Odoo 19 disposable dari addon v19.0.1.0.0 ke v19.0.2.0.0: 12 tes ORM lulus. Termasuk oracle jam istirahat, jadwal historis, libur tumpang tindih, izin parsial, WITA, checkout otomatis, dan aturan akses.
+- [A] HR mengisi tanggal awal cakupan, kebijakan kalender, dan referensi libur tahunan. Hari terbuka dan hari di luar cakupan tidak dilabel alpa. Tidak ada pengisian kalender otomatis.
+- [BU] CI exact SHA dan acceptance HR menunggu. Tidak ada perubahan deployment demo atau pilot.
+
 ## 2026-11-27 — [BU] BE-20d PR #205 P1 race SJP batal vs submit (claude-dev)
 
 - [F] `_apply_state` (batal/draf/terbit) kini mengunci baris SJP `FOR UPDATE` lebih dulu (protokol submit) lalu membaca ulang status; submit meng-UPDATE header SJP sehingga pembatal yang menunggu pada snapshot REPEATABLE READ gagal SerializationFailure dan diulang Odoo, lalu guard melihat receipt pending. Tanpa sentuhan header guard membaca snapshot basi (ditemukan reviewer).
