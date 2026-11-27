@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Catch-up idempoten penutupan akhir hari SJP (00:00 WITA). Cutoff tetap dievaluasi oleh setiap entrypoint. -->
+    <record id="ir_cron_collection_close_settlement_day" model="ir.cron">
+        <field name="name">SJP Penagihan: Tutup Hari Penyelesaian</field>
+        <field name="model_id" ref="model_id_collection_sheet"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_close_settlement_day()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

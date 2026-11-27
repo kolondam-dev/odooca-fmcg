@@ -367,3 +367,80 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         self.assertEqual(self._sheet_row(db, ids), "cancelled")
         receipts, commands = self._db_state(db, ids)
         self.assertEqual((receipts, commands), (0, {"rejected": 1}))
+
+    # ---- (d) cron penutupan akhir hari vs submit setelah cutoff ----------------------------------------------
+    def _setup_past_cutoff(self):
+        db, ids = self._setup()
+        with db.cursor() as cr:  # mundurkan hari SJP: cutoff (00:00 WITA hari berikutnya) sudah lewat
+            cr.execute("UPDATE id_collection_sheet SET collect_date = collect_date - 1 WHERE id = %s", (ids["sheet"],))
+        return db, ids
+
+    def _closed_state(self, db, ids):
+        with db.cursor() as cr:
+            cr.execute("SELECT state FROM id_collection_sheet WHERE id = %s", (ids["sheet"],))
+            state = cr.fetchone()[0]
+            cr.execute(
+                "SELECT outcome, active_claim FROM id_collection_sheet_line WHERE sheet_id = %s", (ids["sheet"],))
+            lines = cr.fetchall()
+        return state, lines
+
+    def test_cron_holds_lock_then_late_submit_waits_and_is_rejected_without_receipt(self):
+        db, ids = self._setup_past_cutoff()
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, SUPERUSER_ID, {})
+        outcome = {}
+        try:
+            self.assertEqual(len(env1["id.collection.sheet"].browse(ids["sheet"])._close_settlement_day()), 1)
+            env1.flush_all()
+
+            def submit(env2):
+                result = env2["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+                env2.flush_all()
+                return result
+
+            thread = self._run_in_thread(db, submit, outcome, ids["collector"])
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "submit harus menunggu cron yang belum commit")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertNotIn("error", outcome, outcome.get("error"))
+        self.assertEqual(outcome["result"]["status"], "rejected")
+        self.assertGreaterEqual(outcome.get("retries", 0), 1)
+        self.assertEqual(self._closed_state(db, ids), ("expired", [("lapsed", False), ("lapsed", False)]))
+        self.assertEqual(self._db_state(db, ids), (0, {"rejected": 1}))
+
+    def test_late_submit_holds_lock_then_cron_waits_and_is_idempotent(self):
+        db, ids = self._setup_past_cutoff()
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, ids["collector"], {})
+        outcome = {}
+        try:
+            result = env1["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+            self.assertEqual((result["status"], result["reference"]), ("rejected", "cutoff"))
+            env1.flush_all()
+
+            def cron(env_t):
+                closed = env_t["id.collection.sheet"].browse(ids["sheet"])._close_settlement_day()
+                env_t.flush_all()
+                return len(closed)
+
+            thread = self._run_in_thread(db, cron, outcome, SUPERUSER_ID)
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "cron harus menunggu submit yang belum commit")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertNotIn("error", outcome, outcome.get("error"))
+        self.assertEqual(outcome["result"], 0, "cron tidak boleh menutup dua kali")
+        self.assertEqual(self._closed_state(db, ids), ("expired", [("lapsed", False), ("lapsed", False)]))
+        self.assertEqual(self._db_state(db, ids), (0, {"rejected": 1}))
+
