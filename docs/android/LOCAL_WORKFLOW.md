@@ -205,6 +205,14 @@ Operator membuktikan install dan cold start sampai Login pada POCO M3 M2010J19CG
 - **Design dan Dev:** Tinjau judul Login yang bertumpuk dengan ikon status bar pada screenshot POCO M3. Catat sebagai temuan insets terpisah dari hasil cold start.
 - **Lead:** Bukti sesi, Keystore, TTL alami dan lokasi menunggu fixture HTTPS untuk perangkat. Redmi 4X dan acceptance lengkap tetap HOLD.
 
+### Keputusan pemilik — fokus re-review DEV-02B pada POCO M3
+
+Pemilik meminta Redmi 4X ditunda ke validasi end-to-end sebelum full deploy. Tandai Redmi 4X [BU]; emulator dapat menambah bukti kompatibilitas API pada tahap itu. Minta reviewer mengonfirmasi cakupan POCO M3 untuk PR #207. minSdk 24 tetap sementara.
+
+- **Dev:** Siapkan paket pengujian POCO M3 untuk operator Windows yang sudah memiliki Platform-Tools dan akses USB/ADB. Build APK fixture di CI dengan SHA/hash yang jelas. Gunakan fixture B09 HTTPS disposable; pisahkan start/stop fixture dari probe host yang langsung cleanup. Siapkan jalur privat tervalidasi ke loopback laptop dan adb reverse, dengan CA fixture khusus debug, tanpa Android Studio. Sertakan akun TEST sementara, langkah verifikasi TLS dan cleanup, serta cara membuktikan Keystore dan TTL alami tanpa revoke manual. Catat blocker akses atau TTL bila ada.
+- **Lead:** Buktikan jalur fixture sebelum operator menjalankan matriks. Pakai bukti instalasi dan cold start POCO M3 yang sudah tercatat; ulangi cold start pada APK fixture. Kumpulkan sesi/isolasi outbox, Keystore, TTL alami, izin/GPS dan lock/unlock. Sinkronkan main dan ulangi CI pada kandidat akhir untuk re-review. PR tetap draft/HOLD sampai bukti dan persetujuan cakupan tersedia.
+- **Design:** Tinjau temuan overlap status bar POCO M3 pada jalur visual.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
