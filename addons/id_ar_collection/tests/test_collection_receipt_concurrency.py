@@ -11,6 +11,8 @@ import traceback
 import uuid
 from datetime import datetime, timedelta, timezone
 
+from psycopg2 import errors
+
 from odoo import SUPERUSER_ID, Command, api, sql_db
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
@@ -125,7 +127,19 @@ class TestCollectionReceiptConcurrency(TransactionCase):
 
         def runner():
             try:
-                outcome["result"] = work(thread_env)
+                # Meniru Odoo `service.model.retrying`: cursor REPEATABLE READ yang menunggu lock baris lalu melihat
+                # baris itu diubah transaksi lain gagal SerializationFailure dan permintaan diulang utuh.
+                for attempt in range(3):
+                    try:
+                        outcome["result"] = work(thread_env)
+                        break
+                    except errors.SerializationFailure:
+                        outcome["retries"] = attempt + 1
+                        cr._cnx.rollback()
+                        thread_env.invalidate_all()
+                        cr.execute("SET LOCAL lock_timeout = '20s'")
+                else:
+                    raise AssertionError("serialization failure berulang")
                 # Commit PostgreSQL mentah: hook postcommit ORM (signal_changes) membuka registry.cursor() yang pada
                 # mode tes memakai satu cursor bersama berkunci milik thread tes utama dan menggantung thread ini.
                 cr.precommit.clear()
