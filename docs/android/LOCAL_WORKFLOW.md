@@ -190,6 +190,14 @@ Untuk Lead yang memiliki akses Actions, verifikasi identitas berizin `Actions: w
 - **Lead:** Jalur yang dipilih untuk sesi TEST adalah fixture B09 disposable pada host ADB operator, dengan gateway privat loopback melalui adb reverse dan CA fixture hanya pada build debug pengujian. Validasi konektivitas USB/ADB dan TLS pada kedua unit sebelum skenario perangkat. Catat operator dan unit saat tersedia. Native auth/aktivasi tetap mengikuti B01/B02.
 - **Design:** Lanjutkan review DES-02-r1, termasuk state izin dan sesi.
 
+### Tindak lanjut review perangkat — PR #207
+
+[Request Changes](https://github.com/kolondam-dev/odooca-fmcg/pull/207#pullrequestreview-6083782748) pada `bd04026`. CI selesai 23 lulus dan 8 dilewati. **Dampak test TAMBAH untuk acceptance fisik.** Probe host dan tes adapter menunjukkan isolasi, revoke dan cleanup sesi. Cipher sintetis dan revoke eksplisit meninggalkan Keystore perangkat serta TTL alami terbuka.
+
+- **Dev dan operator:** Jalankan matriks Redmi 4X/POCO M3 pada fixture HTTPS disposable di host ADB operator. Catat SHA/hash APK, API/OS aktual, install/cold start, izin dan kualitas lokasi, lock/unlock, isolasi akun/outbox saat 401/logout/login ulang, perilaku Keystore, serta kedaluwarsa alami. Gunakan TTL fixture terdokumentasi jika tersedia; tandai [BU] bila TTL belum bisa dibuktikan. Pertahankan `minSdk=24` sementara.
+- **Lead:** Koordinasikan unit dan operator, validasi ADB/TLS, sinkronkan main dan ulangi CI pada kandidat akhir sebelum re-review. PR #207 tetap draft/HOLD.
+- **Design:** Lanjutkan review DES-02-r1.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
