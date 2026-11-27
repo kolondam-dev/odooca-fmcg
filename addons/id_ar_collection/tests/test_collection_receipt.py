@@ -489,3 +489,155 @@ class TestCollectionReceipt(TransactionCase):
         with self.assertRaises(ValidationError):
             self._lock_free_candidate(reported)
 
+    # ---- custody exception (rancangan 8.12) ------------------------------------------------------------------
+    CUSTODY_OCCURRED = "2026-11-24T22:00:00+08:00"
+
+    def _control(self):
+        return new_test_user(
+            self.env, login=f"rcp-control-{uuid.uuid4().hex[:6]}", groups="id_ar_collection.group_ar_control",
+            company_id=self.company.id)
+
+    def _custody(self, sheet, move, token="TOK-1", user=None, reason="Setoran terlambat", **entry_extra):
+        line = self._line_of(sheet, move)
+        entry = {"line_id": line.id, "invoice_id": move.id, "outcome": "paid", "amount": move.amount_residual,
+                 "expected_balance": move.amount_residual, **entry_extra}
+        model = self.env["id.collection.receipt"].with_user(user or self._control())
+        return model.record_custody_exception(sheet.id, token, reason, self.CUSTODY_OCCURRED, [entry])
+
+    def test_custody_after_close_is_recorded_allocated_and_idempotent(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        balance = self._residual(move)
+        self.clock.move_to(CUTOFF_UTC)  # cron belum berjalan: custody menormalkan SJP lebih dulu
+        control = self._control()
+        receipt = self._custody(sheet, move, user=control)
+        self.assertEqual((receipt.source, receipt.exception, receipt.state, receipt.exception_reason),
+                         ("cashier_desk", True, "posted", "Setoran terlambat"))
+        line = receipt.line_ids
+        self.assertEqual((line.allocation_state, line.holds_invoice, line.amount), ("allocated", True, balance))
+        self.assertEqual((sheet.state, self._line_of(sheet, move).outcome), ("expired", "lapsed"))
+        self.assertEqual(self._residual(move), balance)  # pembayaran/rekonsiliasi baru di 20e
+        with self.assertRaises(ValidationError):  # alokasi memegang proteksi pending
+            self._lock_free_candidate(move)
+        self.assertEqual(self._custody(sheet, move, user=control), receipt)  # retry token sama: hasil sama
+        self.assertEqual(self.env["id.collection.receipt"].sudo().search_count([("sheet_id", "=", sheet.id)]), 1)
+        other = self._invoice()
+        other_sheet = self._sheet([other])
+        with self.assertRaises(UserError):  # token milik SJP lain
+            self._custody(other_sheet, other, user=control)
+
+    def test_custody_requires_control_cutoff_reason_and_method_proof(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        with self.assertRaises(UserError):  # sebelum cutoff: pakai jalur biasa
+            self._custody(sheet, move)
+        self.clock.move_to(CUTOFF_UTC)
+        with self.assertRaises(AccessError):
+            self._custody(sheet, move, user=self.admin)  # group_ar_admin saja tidak cukup
+        with self.assertRaises(UserError):
+            self._custody(sheet, move, reason="")
+        with self.assertRaises(UserError):
+            self._custody(sheet, move, method="transfer")  # transfer wajib referensi/bukti
+        with self.assertRaises(UserError):
+            self._custody(sheet, move, outcome="unpaid", amount=0, unpaid_reason="closed")
+        self.assertTrue(self._custody(sheet, move, method="transfer", transfer={"reference": "TRX-9"}))
+
+    def test_custody_is_held_when_invoice_is_in_another_sheet_then_reassigned(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.clock.move_to(CUTOFF_UTC)
+        sheet._close_settlement_day()
+        other_sheet = self._sheet([move], collector=self.other)  # B menagih faktur yang sama
+        other_line = self._line_of(other_sheet, move)
+        control = self._control()
+        receipt = self._custody(sheet, move, user=control)
+        line = receipt.line_ids
+        self.assertEqual((line.allocation_state, line.holds_invoice, line.holds_line), ("held", False, True))
+        self.assertTrue(other_line.active_claim)  # klaim B utuh; indeks pending tidak diambil baris held
+        line.with_user(control).resolve_held("reassign", "B belum menagih")
+        self.assertEqual((line.allocation_state, line.holds_invoice, line.resolution_by), ("allocated", True, control))
+        self.assertEqual((other_line.outcome, other_line.active_claim), ("lapsed", False))
+        self.assertIn(receipt.name, other_line.unpaid_reason)
+        with self.assertRaises(UserError):  # sudah tidak held
+            line.with_user(control).resolve_held("release", "lagi")
+
+    def test_custody_held_against_pending_receipt_can_only_be_released(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.clock.move_to(CUTOFF_UTC)
+        sheet._close_settlement_day()
+        other_sheet = self._sheet([move], collector=self.other)
+        self.assertEqual(self._submit(self._command(
+            other_sheet, [self._entry(other_sheet, move)], occurred="2026-11-25T00:00:00+08:00"),
+            user=self.other)["status"], "accepted")
+        control = self._control()
+        receipt = self._custody(sheet, move, user=control)
+        line = receipt.line_ids
+        self.assertEqual(line.allocation_state, "held")
+        with self.assertRaises(UserError):
+            line.with_user(control).resolve_held("reassign", "coba")
+        line.with_user(control).resolve_held("release", "faktur sudah dibayar lewat SJP lain")
+        self.assertEqual((line.allocation_state, line.holds_invoice, line.holds_line), ("released", False, True))
+        pending = self.env["id.collection.receipt.line"].sudo().search([
+            ("move_id", "=", move.id), ("holds_invoice", "=", True)])
+        self.assertEqual(len(pending), 1)  # satu alokasi sah per faktur: milik B
+        self.assertEqual(pending.receipt_id.sheet_id, other_sheet)
+
+    def _pay_elsewhere(self, move, amount):
+        """Pelunasan lewat jalur lain: jurnal umum mengkredit piutang lalu rekonsiliasi native."""
+        general = self.env["account.journal"].search([("code", "=", "RCPG"), ("company_id", "=", self.company.id)]) \
+            or self.env["account.journal"].create({
+                "name": "RCP General", "code": "RCPG", "type": "general", "company_id": self.company.id})
+        entry = self.env["account.move"].with_company(self.company).create({
+            "move_type": "entry", "journal_id": general.id, "date": business_date(),
+            "line_ids": [
+                Command.create({"account_id": self.receivable.id, "partner_id": self.partner.id,
+                                "credit": amount, "debit": 0.0}),
+                Command.create({"account_id": self.income.id, "debit": amount, "credit": 0.0}),
+            ]})
+        entry.action_post()
+        lines = move.line_ids.filtered(lambda line: line.display_type == "payment_term")
+        lines |= entry.line_ids.filtered(lambda line: line.account_id == self.receivable)
+        lines.reconcile()
+
+    def test_custody_is_recorded_held_when_invoice_is_already_paid_or_balance_changed(self):
+        paid, changed, fresh = self._invoice(1000), self._invoice(1000), self._invoice(1000)
+        sheet = self._sheet([paid, changed, fresh])
+        self.clock.move_to(CUTOFF_UTC)
+        control = self._control()
+        entries = [{
+            "line_id": self._line_of(sheet, move).id, "invoice_id": move.id, "outcome": "paid", "amount": 1000.0,
+            "expected_balance": 1000.0, "method": method, **extra,
+        } for move, method, extra in [
+            (paid, "cash", {}), (changed, "transfer", {"transfer": {"reference": "TRX-7"}}), (fresh, "cash", {})]]
+        self._pay_elsewhere(paid, 1000)  # lunas lewat jalur lain
+        self._pay_elsewhere(changed, 400)  # saldo berubah menjadi 600
+        residuals = [self._residual(move) for move in (paid, changed, fresh)]
+        receipts = self.env["id.collection.receipt"].with_user(control).record_custody_exception(
+            sheet.id, "TOK-MIX", "Setoran terlambat", self.CUSTODY_OCCURRED, entries)
+        self.assertEqual(sorted(receipts.mapped("method")), ["cash", "transfer"])  # uang tercatat utuh, tanpa penolakan
+        states = {line.move_id: line.allocation_state for line in receipts.line_ids}
+        self.assertEqual(states, {paid: "held", changed: "held", fresh: "allocated"})
+        self.assertEqual(receipts.line_ids.filtered(lambda line: line.move_id == paid).amount, 1000.0)  # nominal utuh
+        self.assertEqual([self._residual(move) for move in (paid, changed, fresh)], residuals)  # saldo tak diubah
+        self.assertFalse(receipts.line_ids.filtered(lambda line: line.allocation_state == "held").mapped(
+            "holds_invoice").count(True))
+        with self.assertRaises(UserError):  # reassign tidak mungkin: saldo tidak cukup; hanya release
+            receipts.line_ids.filtered(lambda line: line.move_id == changed).with_user(control).resolve_held(
+                "reassign", "coba")
+        receipts.line_ids.filtered(lambda line: line.move_id == changed).with_user(control).resolve_held(
+            "release", "saldo sudah berubah")
+
+    def test_custody_token_binds_the_whole_operation_and_payload(self):
+        move = self._invoice(1000)
+        sheet = self._sheet([move])
+        self.clock.move_to(CUTOFF_UTC)
+        control = self._control()
+        receipt = self._custody(sheet, move, token="TOK-BIND", user=control)
+        self.assertEqual(self._custody(sheet, move, token="TOK-BIND", user=control), receipt)  # replay identik
+        with self.assertRaises(UserError):  # nominal berbeda, token sama: bukan permintaan baru
+            self._custody(sheet, move, token="TOK-BIND", user=control, outcome="partial", amount=400.0)
+        with self.assertRaises(UserError):  # alasan berbeda, token sama
+            self._custody(sheet, move, token="TOK-BIND", user=control, reason="alasan lain")
+        self.assertEqual(self.env["id.collection.receipt"].sudo().search_count([("desk_token", "=", "TOK-BIND")]), 1)
+

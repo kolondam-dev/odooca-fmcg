@@ -29,6 +29,8 @@ RECEIPT_STATES = [
 ONE_PER_SHEET_LINE = "id_collection_receipt_line_one_per_sheet_line"
 ONE_PENDING_PER_MOVE = "id_collection_receipt_line_one_pending_per_move"
 COMMAND_METHOD_INDEX = "id_collection_receipt_command_method"
+DESK_METHOD_INDEX = "id_collection_receipt_desk_method"
+DESK_TOKEN_INDEX = "id_collection_receipt_desk_token_primary"
 RECEIPT_CONSTRAINTS = {ONE_PER_SHEET_LINE, ONE_PENDING_PER_MOVE, COMMAND_METHOD_INDEX}
 
 
@@ -56,6 +58,10 @@ class CollectionReceipt(models.Model):
         default="mobile", required=True, readonly=True,
     )
     exception = fields.Boolean(string="Pengecualian", readonly=True)
+    exception_reason = fields.Char(string="Alasan Pengecualian", readonly=True)
+    desk_token = fields.Char(string="Token Idempotensi Meja/Custody", index=True, readonly=True)
+    desk_fingerprint = fields.Char(string="Sidik Operasi Custody", readonly=True)
+    desk_primary = fields.Boolean(string="Receipt Utama Operasi", readonly=True)
     method = fields.Selection(METHODS, required=True, readonly=True)
     state = fields.Selection(RECEIPT_STATES, default="posted", required=True, readonly=True, index=True)
     occurred_at = fields.Datetime(string="Waktu Kejadian", readonly=True)
@@ -70,6 +76,16 @@ class CollectionReceipt(models.Model):
         self.env.cr.execute(
             f"CREATE UNIQUE INDEX IF NOT EXISTS {COMMAND_METHOD_INDEX} "
             "ON id_collection_receipt (collector_id, command_uuid, method) WHERE command_uuid IS NOT NULL"
+        )
+        # Custody/meja kasir: satu receipt per (token, metode); retry atau klik ganda tidak menggandakan uang.
+        self.env.cr.execute(
+            f"CREATE UNIQUE INDEX IF NOT EXISTS {DESK_METHOD_INDEX} "
+            "ON id_collection_receipt (desk_token, method) WHERE desk_token IS NOT NULL"
+        )
+        # Satu token = satu operasi utuh (lintas SJP dan metode): hanya satu receipt utama per token.
+        self.env.cr.execute(
+            f"CREATE UNIQUE INDEX IF NOT EXISTS {DESK_TOKEN_INDEX} "
+            "ON id_collection_receipt (desk_token) WHERE desk_token IS NOT NULL AND desk_primary"
         )
 
     @api.depends("line_ids.amount")
@@ -109,6 +125,9 @@ class CollectionReceiptLine(models.Model):
         [("allocated", "Teralokasi"), ("held", "Ditahan"), ("released", "Dilepas")],
         default="allocated", required=True,
     )
+    resolution_note = fields.Char(string="Catatan Resolusi", readonly=True)
+    resolution_by = fields.Many2one("res.users", string="Diselesaikan Oleh", readonly=True)
+    resolution_at = fields.Datetime(string="Waktu Resolusi", readonly=True)
     unpaid_reason = fields.Char()
     document_return = fields.Selection(
         [("none", "Tidak Ada"), ("copy", "Copy Faktur"), ("original", "Faktur Asli")], default="none", required=True
@@ -146,6 +165,12 @@ class CollectionReceiptLine(models.Model):
 
     def write(self, vals):
         raise UserError(_("Baris penerimaan tidak dapat diubah langsung."))
+
+    def _apply_allocation(self, vals):
+        """Seam internal alokasi (resolusi custody, 8.12); tidak terjangkau RPC dan hanya kolom alokasi."""
+        allowed = {key: vals[key] for key in ("allocation_state", "resolution_note", "resolution_by", "resolution_at")
+                   if key in vals}
+        return super().write(allowed)
 
     def unlink(self):
         raise UserError(_("Baris penerimaan tidak dapat dihapus."))
