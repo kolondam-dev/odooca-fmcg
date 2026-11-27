@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.kolondam.odooca.field.data.db.OdoocaDatabase
 import com.kolondam.odooca.field.data.network.ApiConfig
+import com.kolondam.odooca.field.data.network.ApiException
 import com.kolondam.odooca.field.data.network.OdoocaApi
 import com.kolondam.odooca.field.data.network.PersistentCookieJar
 import com.kolondam.odooca.field.data.security.SecretCipher
@@ -27,6 +28,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -153,6 +155,52 @@ class OutboxSessionIntegrationTest {
         assertTrue(backend.snapshot().all { it.sessionOwner == "A" && it.csrf == "csrf-A" })
     }
 
+    @Test
+    fun restoredSessionLosesIdentityAndLeaseWhenBootstrapReturns401(): Unit = runBlocking {
+        session.login("A", "pw")
+        enqueue("A", "a-1", 1)
+        val (restored, store) = reopenSession()
+
+        assertEquals("A", restored.ownerId)
+        assertEquals("A", restored.refreshIdentity().id)
+        backend.rejectNextBootstrap.set(true)
+
+        assertEquals(401, assertFailsWith<ApiException> { restored.refreshIdentity() }.status)
+        assertNull(restored.identity.value)
+        assertNull(store.cookiesJson)
+        assertNull(store.csrfToken)
+        assertNull(store.identityJson)
+        assertEquals(SessionAccess.Denied, restored.withOwner("A") { error("Expired lease granted") })
+        assertEquals(CommandState.QUEUED.name, entity("a-1").state)
+
+        restored.login("A", "pw")
+        assertEquals("A", restored.ownerId)
+    }
+
+    @Test
+    fun logoutStaysClearedWhenReopeningSessionAndPreservesQueuedWork(): Unit = runBlocking {
+        session.login("A", "pw")
+        enqueue("A", "a-1", 1)
+        session.logout()
+        val (restored, store) = reopenSession()
+
+        assertNull(restored.identity.value)
+        assertNull(store.cookiesJson)
+        assertNull(store.csrfToken)
+        assertNull(store.identityJson)
+        assertEquals(401, assertFailsWith<ApiException> { restored.refreshIdentity() }.status)
+        assertEquals(SessionAccess.Denied, restored.withOwner("A") { error("Logged-out lease granted") })
+        assertEquals(CommandState.QUEUED.name, entity("a-1").state)
+        assertTrue(backend.snapshot().isEmpty())
+    }
+
+    private fun reopenSession(): Pair<SessionManager, SessionStore> {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val store = SessionStore(context, PlainCipher)
+        val client = OdoocaApi(ApiConfig(backend.start(), null), PersistentCookieJar(store), store)
+        return SessionManager(client, store) to store
+    }
+
     private suspend fun enqueue(owner: String, id: String, createdAt: Long) {
         repository.enqueueCommand(owner, id, "{\"client_uuid\":\"$id\"}", nowMs = createdAt)
     }
@@ -214,6 +262,7 @@ class OutboxSessionIntegrationTest {
         private val socket = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
         private val worker = thread(isDaemon = true, name = "session-backend") { serve() }
         val rejectNextCommand = AtomicBoolean(false)
+        val rejectNextBootstrap = AtomicBoolean(false)
 
         fun start(): String = "http://127.0.0.1:${socket.localPort}"
 
@@ -255,7 +304,7 @@ class OutboxSessionIntegrationTest {
             }
             "/api/v1/me/bootstrap" -> {
                 val owner = ownerOf(cookie)
-                if (owner == null) {
+                if (owner == null || rejectNextBootstrap.compareAndSet(true, false)) {
                     Reply(401, "{}")
                 } else {
                     Reply(
