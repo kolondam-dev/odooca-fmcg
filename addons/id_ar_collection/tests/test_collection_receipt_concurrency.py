@@ -16,6 +16,7 @@ from psycopg2 import errors
 from odoo import SUPERUSER_ID, Command, api, sql_db
 from odoo.tests import TransactionCase, tagged
 from odoo.tests.common import new_test_user
+from odoo.tools import mute_logger
 
 from odoo.addons.id_base.models.business_day import business_date
 
@@ -131,7 +132,10 @@ class TestCollectionReceiptConcurrency(TransactionCase):
                 # baris itu diubah transaksi lain gagal SerializationFailure dan permintaan diulang utuh.
                 for attempt in range(3):
                     try:
-                        outcome["result"] = work(thread_env)
+                        # SerializationFailure yang diharapkan dicatat odoo.sql_db sebagai ERROR; gerbang "log harus
+                        # bersih" CI menolaknya, jadi dibisukan hanya di sini.
+                        with mute_logger("odoo.sql_db"):
+                            outcome["result"] = work(thread_env)
                         break
                     except errors.SerializationFailure:
                         outcome["retries"] = attempt + 1
