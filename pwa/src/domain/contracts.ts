@@ -368,6 +368,20 @@ export const SnapshotSchema = z
                                     "copy",
                                     "original",
                                 ]),
+                                /** Penerimaan aktif atas baris ini (BE-20d); null = belum ada. */
+                                receipt_state: z
+                                    .enum([
+                                        "posted",
+                                        "cashier_validated",
+                                        "finance_verified",
+                                        "instrument_registered",
+                                        "accounting_validated",
+                                        "rejected",
+                                        "cancelled",
+                                    ])
+                                    .nullable()
+                                    .optional(),
+                                receipt_amount: z.number().optional(),
                             }),
                         ),
                     }),

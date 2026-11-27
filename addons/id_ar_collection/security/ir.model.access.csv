@@ -4,3 +4,7 @@ access_collection_sheet_collector,SJP kolektor baca,model_id_collection_sheet,id
 access_collection_sheet_line_admin,Baris SJP admin AR,model_id_collection_sheet_line,group_ar_admin,1,1,1,1
 access_collection_sheet_line_collector,Baris SJP kolektor baca,model_id_collection_sheet_line,id_mobile_api.group_mobile_sales,1,0,0,0
 access_collection_generate_admin,Generate SJP admin AR,model_id_collection_sheet_generate,group_ar_admin,1,1,1,1
+access_collection_receipt_admin,Penerimaan admin AR baca,model_id_collection_receipt,group_ar_admin,1,0,0,0
+access_collection_receipt_collector,Penerimaan kolektor baca,model_id_collection_receipt,id_mobile_api.group_mobile_sales,1,0,0,0
+access_collection_receipt_line_admin,Baris penerimaan admin AR baca,model_id_collection_receipt_line,group_ar_admin,1,0,0,0
+access_collection_receipt_line_collector,Baris penerimaan kolektor baca,model_id_collection_receipt_line,id_mobile_api.group_mobile_sales,1,0,0,0

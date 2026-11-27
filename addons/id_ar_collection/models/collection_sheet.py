@@ -99,6 +99,11 @@ class CollectionSheet(models.Model):
         result = []
         for sheet in sheets[: self.MOBILE_SHEET_CAP]:
             lines = sheet.sudo().line_ids.sorted(key=lambda line: (line.due_date or day.max, line.id))
+            receipt_by_line = {
+                rl.sheet_line_id.id: rl
+                for rl in self.env["id.collection.receipt.line"].sudo().search([
+                    ("sheet_line_id", "in", lines.ids), ("holds_line", "=", True)])
+            }
             result.append({
                 "id": str(sheet.id),
                 "name": sheet.name,
@@ -121,6 +126,8 @@ class CollectionSheet(models.Model):
                     "balance": line.move_id.amount_residual,
                     "outcome": line.outcome,
                     "document_return": line.document_return,
+                    "receipt_state": receipt_by_line[line.id].receipt_state if line.id in receipt_by_line else None,
+                    "receipt_amount": receipt_by_line[line.id].amount if line.id in receipt_by_line else 0.0,
                 } for line in lines[: self.MOBILE_LINE_CAP]],
             })
         return {"sheets": result, "truncated": len(sheets) > self.MOBILE_SHEET_CAP}
@@ -157,17 +164,38 @@ class CollectionSheet(models.Model):
 
     def _apply_state(self, new_state):
         """Satu-satunya jalan mengubah status: validasi transisi, klaim faktur aktif, lalu tulis."""
+        # Protokol lock yang sama dengan submit penerimaan (urutan: SJP lebih dulu): kunci baris header, tunggu bila
+        # dipegang transaksi lain, lalu baca ulang status. Bila pemegang lock meng-UPDATE header (submit melakukannya),
+        # menunggu pada snapshot REPEATABLE READ berakhir SerializationFailure dan Odoo mengulang transaksi utuh
+        # sehingga guard di bawah melihat receipt yang baru di-commit.
+        if self.ids:
+            sheet_ids = tuple(sorted(self.ids))
+            self.env.cr.execute(
+                'SELECT id FROM "id_collection_sheet" WHERE id IN %s ORDER BY id FOR UPDATE', (sheet_ids,))
+            self.env.invalidate_all()
         for sheet in self:
             if new_state not in TRANSITIONS.get(sheet.state, ()):
                 raise UserError(
                     _("Transisi status SJP %(name)s dari %(old)s ke %(new)s tidak diizinkan.",
                       name=sheet.name, old=sheet.state, new=new_state)
                 )
+        if new_state in ("cancelled", "draft"):
+            self._check_no_pending_receipt()
         if new_state in ACTIVE_STATES:
             self._check_no_active_clash()
         super().write({"state": new_state})
         # Paksa penulisan klaim aktif sekarang: indeks unik parsial DB menolak bentrok (juga antar sesi).
         self.env["id.collection.sheet.line"].flush_model(["active_claim"])
+
+    def _check_no_pending_receipt(self):
+        """Uang yang sudah diterima harus lewat validasi: SJP berpenerimaan pending tidak boleh dibatalkan/didraf."""
+        pending = self.env["id.collection.receipt.line"].sudo().search([
+            ("sheet_line_id.sheet_id", "in", self.ids), ("holds_invoice", "=", True)], limit=1)
+        if pending:
+            raise UserError(
+                _("SJP %(name)s memiliki penerimaan %(receipt)s yang belum selesai divalidasi.",
+                  name=pending.sheet_line_id.sheet_id.name, receipt=pending.receipt_id.name)
+            )
 
     def _check_no_active_clash(self):
         for sheet in self:
@@ -291,6 +319,13 @@ class CollectionSheetLine(models.Model):
                 move=move.name, cur=move.currency_id.name, base=company.currency_id.name))
         if move.payment_state not in OPEN_PAYMENT_STATES or move.amount_residual <= 0:
             raise ValidationError(_("Faktur %s sudah tidak memiliki sisa tagihan.", move.name))
+        pending = self.env["id.collection.receipt.line"].sudo().search([
+            ("move_id", "=", move.id), ("holds_invoice", "=", True)], limit=1)
+        if pending:
+            raise ValidationError(
+                _("Faktur %(move)s memiliki penerimaan pending %(receipt)s.",
+                  move=move.name, receipt=pending.receipt_id.name)
+            )
 
     def _check_invoice_eligible(self):
         for line in self:

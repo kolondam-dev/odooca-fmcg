@@ -855,3 +855,7 @@
 - Build dua APK dan TTL cookie dari host lulus pada 4832426.
 - Forward Windows dan uji fisik tetap menunggu Lead. Redmi 4X ditunda.
 - Task managed by codex agent at 2026-11-27T17:37:10+07:00
+
+[2026-11-27T18:00:16+07:00] [INFO] Integrasi paket fixture POCO M3 PR 207
+- Dev fb3c92d dan main f6e2826. Konflik HANDOFF dipertahankan. Dampak test TAMBAH untuk bukti Keystore, outbox dan idle expiry di perangkat.
+- Task managed by codex agent at 2026-11-27T18:00:16+07:00
