@@ -1,3 +1,9 @@
+## 2026-11-27 — [BU] BE-20d penutupan akhir hari SJP (claude-dev)
+
+- [F] `id.collection.sheet._close_settlement_day()`: setelah cutoff (00:00 WITA hari berikutnya, waktu server setelah lock SJP lalu baris SJP) baris tanpa penerimaan -> `lapsed` (klaim faktur lepas per baris; `active_claim` kini bergantung `outcome`), SJP tanpa penerimaan -> `expired` (terminal). SJP berpenerimaan tetap `issued` menuju validasi 20e; faktur dengan uang pending tetap terproteksi. Cron `_cron_close_settlement_day` tiap 15 menit, idempoten, satu savepoint per SJP, hanya SJP berbaris `pending` (tidak kelaparan batch).
+- [F] Enum `outcome` snapshot PWA + openapi menambah `lapsed`. 4 tes Odoo baru (belum diverifikasi CI).
+- [A] Batas jujur: command setelah cutoff tetap `rejected` (rollback savepoint membuang lapse malas); penutupan efektif lewat cron/entrypoint non-command (meja kasir). Belum: custody exception/`held`, meja kasir, BE-20e. FE-8b: PWA harus menampilkan `lapsed`/`expired`. `collection_v2` tetap OFF.
+
 ## 2026-11-27 — [BU] BE-20d PR #205 P1 race SJP batal vs submit (claude-dev)
 
 - [F] `_apply_state` (batal/draf/terbit) kini mengunci baris SJP `FOR UPDATE` lebih dulu (protokol submit) lalu membaca ulang status; submit meng-UPDATE header SJP sehingga pembatal yang menunggu pada snapshot REPEATABLE READ gagal SerializationFailure dan diulang Odoo, lalu guard melihat receipt pending. Tanpa sentuhan header guard membaca snapshot basi (ditemukan reviewer).
