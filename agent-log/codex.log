@@ -864,3 +864,7 @@
 - Acuan 1d0b4ec dan PR #207 a8222dd. Trust Android default pada APK fixture debug.
 - Gateway hanya kandidat preflight. Build target dan akses akun menunggu Lead.
 - Task managed by codex agent at 2026-11-27T18:58:50+07:00
+
+[2026-11-27T19:03:42+07:00] [INFO] Integrasi mode HTTPS langsung POCO M3
+- Dev fadb335, main cbabfee. Dampak test TAMBAH untuk batas TLS fixture dan preflight native; database aktual belum dikonfirmasi.
+- Task managed by codex agent at 2026-11-27T19:03:42+07:00
