@@ -1,3 +1,9 @@
+## 2026-11-27 — Sinkronisasi PR #200 setelah PR #201 (ChatGPT-ABSENSI)
+
+- [F] Main `bb84709` digabung ke kandidat `11bdee6`. Konflik terbatas pada HANDOFF dan log, dengan entri kedua sisi dipertahankan.
+- [F] Sinkronisasi mempertahankan kode dan tes attendance yang direview pada `11bdee6`. Bukti ponsel tetap tercatat pada `6b81421`.
+- [BU] CI pada SHA sinkronisasi menunggu hasil sebelum merge.
+
 ## 2026-11-27 — Integrasi dispatcher PR #200 (ChatGPT-ABSENSI)
 
 - [F] Sinkron ke main `2ccfb2d`. Attendance memakai `_handle_extension` PR #203 dan jalur receipt/savepoint bersama. Kode PWA serta capture evidence tetap sama.
@@ -9,6 +15,14 @@
 - [F] Review head `d6473ae147476e2d83a4235057f044c555f338b3` PASS dengan dampak test CUKUP; 86 tes I2c diulang reviewer dan PASS, CI 22 SUCCESS / 7 SKIPPED. Finance I0 artifact `15081087455` menutup populasi/cutoff/company/salvage/GL/rollback; Full Dataset runtime SKIPPED.
 - [F] `origin/main` maju dari `ac9c5fe` ke `57a5cb2` melalui PR #203 dan #110. Konflik hanya `docs/HANDOFF.md`; seluruh riwayat kedua sisi dipertahankan. Oracle dan tes FIN36 byte-identik dengan reviewed head; delta upstream Finance I0 hanya memperjelas healthcheck PostgreSQL memakai DB `postgres`.
 - [BU] Exact-SHA CI integrasi dan review delta masih wajib. Penerimaan FIN36, Full Dataset, produksi, katalog, deployment dan merge tetap HOLD; pemilik akan merge setelah delta review dan CI lulus tanpa izin ulang.
+
+## 2026-11-26 — DEV-02A · Diagnostik dan verifikasi cleanup B09 (Codex-Mobile Native)
+
+- [F] Arahan `e23a0d1` diterapkan di atas `f9719ea` (basis main integrasi `57a5cb2`). Log run API 35 lama hanya memuat exit 1 untuk cleanup. Resource historis penyebab kegagalan belum dapat ditetapkan.
+- [F] Runner menerbitkan `cleanup.tsv` per resource. Unregister ADB memeriksa transport sampai hilang, termasuk status offline sementara. Gateway, reverse port, Docker dan direktori temporer diperiksa terpisah. Residu atau hasil verifikasi yang tidak tersedia tetap menggagalkan job.
+- [F] Probe host HTTPS memakai helper cleanup produksi. Jalur normal menghasilkan satu receipt accepted, satu ledger dan satu SO, serta replay tanpa perubahan. Injeksi exit 77 setelah fixture HTTPS siap juga mempertahankan hasil gagal semula. Kedua jalur mengonfirmasi listener gateway ditutup dan 0 container, volume, serta network berlabel run.
+- [F] Dampak test **TAMBAH**. Tes host mencakup unregister terlambat, transport tetap ada, inventaris ADB tidak tersedia, penghapusan Docker dengan exit sementara, serta residu atau inventaris Docker yang tidak dapat dibuktikan.
+- [BU] Unregister pada emulator nyata dan hasil job pada SHA baru menunggu rerun Lead ber-KVM. PR #201 tetap DRAFT/HOLD. Planner memilih full regression 11 suite.
 
 ## 2026-11-26T15:27:06+07:00 — Agent Codex-Cloud1 — PR #110: keputusan batas sumber akhir
 
@@ -118,6 +132,33 @@
 **Berikutnya:**
 - Pantau run GitHub dan tautkan artefak pada deskripsi PR.
 
+## 2026-11-26 — DEV-02A · Review XML dan cleanup B09 (Codex-Mobile Native)
+
+- [F] Arahan `e9e4907` diterapkan di atas runner B09 `96288d9`. Listener JUnit membuat XML per invocation. Runner meminta tepat satu hasil lulus untuk test yang ditetapkan, mencocokkan UUID dan fase, serta hanya mengunggah XML yang lulus validasi.
+- [F] Dampak test **TAMBAH**. Host test memakai verifier produksi dan menolak fingerprint, duplikasi ledger/order, referensi, scope aktor, payload replay, serta perubahan checkpoint. XML hilang, dilewati, gagal, ganda, salah fase/test ID, atau usang ditolak.
+- [F] Build instrumentation dengan listener lulus. Probe sengaja keluar dengan status 77 setelah Odoo/PostgreSQL dan HTTPS siap. Cleanup helper yang juga dipakai runner menghapus dua container, satu volume dan network fixture, lalu gateway loopback berhenti. Probe HTTPS sukses pada checkpoint sebelumnya memakai backend yang sama.
+- [BU] XML dari emulator dan APK → HTTPS → Odoo menunggu dispatch Lead pada SHA integrasi. Cloud tanpa KVM. Planner tetap full regression 11 suite. PR #201 tetap DRAFT/HOLD.
+
+## 2026-11-26 — DEV-02A · Job opt-in APK HTTPS B09 (Codex-Mobile Native)
+
+- [F] Arahan `c3e3090`, basis PR #201 `dcafd0d`. Job manual B09 di `android.yml` memakai SDK/emulator yang dipatok untuk API 24/35. Gate Android wajib memakai dependensi yang sama. [Dispatch dan bukti](android/DEV02A_HARNESS.md#job-opt-in-github).
+- [F] Runner membuat Odoo/PostgreSQL disposable, CA lokal, gateway HTTPS loopback dan AVD baru. Workflow mengikat SHA dispatch dan checkout. Audit before → APK first → audit after → APK replay → audit after_replay → verifier. Cleanup memeriksa resource milik run pada sukses/gagal.
+- [F] Probe dari host melalui HTTPS pada Odoo `19.0.20261112` dan PostgreSQL `16.16` menghasilkan satu receipt `accepted`, satu ledger dan satu SO. Replay tidak mengubah checkpoint. Startup gagal yang disengaja dan jalur sukses menyisakan nol container, volume, dan network fixture. Pemeriksaan build menunjukkan CA fixture di APK debug B09 dan tidak ada di resource release.
+- [F] Dampak test **TAMBAH**. Tes menolak hasil instrumentation hilang, dilewati, gagal, duplikat atau stale, serta fingerprint, scope, duplikasi order dan mutasi replay. Perubahan workflow dan kontrol CI memilih **full regression 11 suite**.
+- [BU] Runtime APK API 24/35 belum terverifikasi. Cloud berhenti pada preflight KVM untuk kedua API. Lead menjalankan job pada SHA integrasi dan mengumpulkan bukti fase APK serta cleanup. PR #201 tetap DRAFT/HOLD.
+
+## 2026-11-26 — DEV-02A · Kandidat receipt/replay dari APK (Codex-Mobile Native)
+
+- [F] Handoff Lead `90f1bbc`, referensi PR #201 `4663563`, branch Dev berangkat dari `cd19d6f`. Tambah instrumentation opt-in melalui sesi dan klien HTTPS APK, audit ledger Odoo read-only, dan verifier untuk dua receipt serta tiga checkpoint.
+- [F] Build APK debug dan APK instrumentation lulus. Probe ORM pada Odoo/PostgreSQL disposable menghasilkan satu ledger dan satu SO `S00001` dengan status `accepted`. Replay mempertahankan checkpoint. Verifier menolak receipt berbeda, order ekstra, payload berbeda, dan fingerprint berbeda. Cleanup probe menyisakan nol container, volume, dan network.
+- [BU] APK → HTTPS → Odoo, replay dari APK, dan cleanup jalur APK masih memerlukan runner dan target disposable HTTPS yang disetujui Lead. Preflight emulator API 24/35 gagal karena Cloud tidak menyediakan KVM. Bukti ORM tidak memberi status lulus bagi APK.
+- [F] Basis kandidat diselaraskan ke PR #201 `4663563`. Entri Lead dan Dev dipertahankan. Gate statis dan Gradle serta build instrumentation lulus pada source kandidat yang sama. Planner memilih `android`, `odoo_install`, `mobile`, dan `upgrade`.
+- Dampak test **TAMBAH**. Instrumentation menguji contract produksi dari proses APK. Verifier gagal bila UUID/status/referensi berbeda, fingerprint tidak cocok, atau replay menambah/mengubah efek yang diaudit. Jalankan [prosedur dua fase](android/DEV02A_HARNESS.md#apk--https--odoo) pada SHA integrasi.
+
+## 2026-11-25T22:30:17+07:00 — Codex — Integrasi DEV-02A/B09
+**Basis:** main `23a4108`, Dev `cd19d6f`; merge bersih. **Dampak test TAMBAH:** harness HttpCase opt-in membuktikan login, scope, receipt dan rollover di Odoo disposable; jalur APK/HTTPS masih [BU]. Kandidat harness diajukan untuk review dan CI.
+**Tindak lanjut:** gunakan satu runner Android ber-KVM dengan Odoo/PostgreSQL disposable dan endpoint HTTPS privat selama job. HttpCase menjalankan fixture dalam transaksi tes; fase APK memerlukan seed TEST yang dikomit hanya di DB fixture, proses Odoo yang tetap hidup, sertifikat yang dipercaya build test, dan cleanup pada sukses/gagal.
+
 ## 2026-11-26 — Tes picking lintas hari WITA PR #200 (ChatGPT-ABSENSI)
 
 - [F] Satu kegagalan install-test pada run 45649200735 berasal dari fixture WMS yang melewati tengah malam WITA.
@@ -212,6 +253,21 @@
 - Pantau suite exact-SHA melalui CI dan sertakan hasil F4 dalam re-review Paket B.
 
 ## 2026-11-25T19:06:25+07:00 — Codex — Sinkronisasi PR #177 setelah review supervisor
+
+## 2026-11-25 — [F] Checkpoint DEV-02A · Harness Odoo B09 (Codex-Mobile Native)
+
+- [F] Branch `agen/android-dev-Codex-Mobile-Native`, base main `f0b3632ef0766d8f36f18ba7f47152ca3c596f11`, implementasi yang diuji `bb6a8008b3cd07f2a7329a1468be1c35196fd783`. Source Android terakhir `97c09a1853e7d2b7ff88652a5500251976d8b461`. Arahan Lead `e023d38`.
+- [F] Odoo `19.0.20261112`, PostgreSQL `16.16`, fixture `dev02a-v1`, `id_mobile_api` `19.0.1.4.0`, `id_base` `19.0.1.3.4`, `id_approval` `19.0.1.0.0`. Login dan bootstrap kedua akun, snapshot sesuai assignment, command dan receipt `accepted` dengan UUID cocok, 401 tanpa sesi, 403 lintas outlet, 403 setelah scope dicabut, rollover WITA dan 409 untuk snapshot lama, serta cleanup jalur sukses/gagal lulus. [Cara ulang, matriks dan laporan tersanitasi](android/DEV02A_HARNESS.md#bukti-runtime-cloud).
+- [F] Gate statis dan Gradle lulus. Ruff, 15 manifest, 34 tes CI, token desain, 72 tes domain, 3 tes data/Robolectric, lint, APK debug dan validasi OpenAPI. Planner memilih `android`, `odoo_install`, `mobile`, `upgrade`. Dampak test **TAMBAH** dengan fixture HTTP opt-in `dev02a`. Rollover memicu retry cursor Odoo yang terdokumentasi.
+- [BU] CI remote dan jalur APK → Odoo disposable melalui HTTPS menunggu review Lead. Fixture yang diuji berjalan melalui HTTP loopback dalam kontainer. DEV-02B berada di slice berikutnya.
+
+
+## 2026-11-25 — DEV-02A · Fixture HTTP Odoo disposable (Codex-Mobile Native)
+
+- [F] Base `f0b3632` dan arahan Lead `e023d38`. Tambah fixture HttpCase B09 untuk dua assignment, login hingga receipt dan batas akses, serta runner Docker dengan pemeriksaan cleanup.
+- [F] Cara ulang dan acceptance per skenario ada di [Harness DEV-02A](android/DEV02A_HARNESS.md).
+- [BU] Bukti runtime exact-SHA dan gate diserahkan pada checkpoint eksekusi. Jalur APK ke target HTTPS memerlukan target disposable yang dapat dijangkau runner Android.
+
 **Basis:** main `2cf26267aa81bff6b055db3b182daedaf7cd4e0d`, kandidat sebelumnya `5e893f8`. Konflik log diselesaikan dengan mempertahankan entri kedua sisi. HANDOFF tergabung otomatis.
 **Bukti historis:** [review supervisor](https://github.com/kolondam-dev/odooca-fmcg/pull/177#issuecomment-7161856596) memberi runtime DEV-01A/01B PASS pada `5e893f8`, dampak test CUKUP. Merge HOLD sampai CI, emulator dan review pada hasil integrasi.
 ## 2026-11-25 — [F] BE-20d: revisi custody vs alokasi (re-review #198, claude-design)

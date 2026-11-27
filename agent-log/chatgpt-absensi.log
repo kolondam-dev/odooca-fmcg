@@ -26,3 +26,8 @@
 - [F] Tambah uji ORM rollback saat simpan receipt gagal lalu retry UUID yang sama. Ruff, manifest, dan kompilasi Python lulus.
 - [BU] Runtime Odoo pada SHA integrasi menunggu CI.
 - Task managed by ChatGPT-ABSENSI at 2026-11-27T06:47:23+07:00
+
+[2026-11-27T07:31:25+07:00] [INFO] Sinkronkan PR #200 ke main bb84709
+- [F] Konflik dokumentasi diselesaikan dengan mempertahankan entri kedua sisi. Tidak ada perubahan implementasi attendance atau tesnya.
+- [BU] CI SHA baru menunggu.
+- Task managed by ChatGPT-ABSENSI at 2026-11-27T07:31:25+07:00

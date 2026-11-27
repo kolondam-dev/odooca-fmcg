@@ -739,6 +739,45 @@
 - Main 2cf2626. Log kedua sisi dipertahankan.
 - Task managed by codex agent at 2026-11-25T19:06:25+07:00
 
+[2026-11-25T20:55:50+07:00] [INFO] DEV-02A siapkan fixture B09 disposable
+- Basis f0b3632 dan arahan Lead e023d38.
+- Fixture HTTP Odoo dan runner cleanup siap diuji pada commit kandidat.
+- Task managed by codex agent at 2026-11-25T20:55:50+07:00
+
+[2026-11-25T20:57:14+07:00] [INFO] DEV-02A pisahkan rollover B09 dari suite wajib
+- Percobaan Odoo awal lulus seluruh assertion. Rollover memicu log retry cursor read/write.
+- Pilih tag B09 eksplisit dan terima spasi akhir pada bukti Odoo.
+- Task managed by codex agent at 2026-11-25T20:57:14+07:00
+
+[2026-11-25T21:04:40+07:00] [INFO] DEV-02A verifikasi dan serahkan checkpoint B09
+- bb6a800 lulus HTTP Odoo dan cleanup sukses/gagal, bukti tersanitasi di DEV02A_HARNESS.md.
+- Gate statis dan Gradle lulus. APK ke target disposable HTTPS tetap belum diuji.
+- Task managed by codex agent at 2026-11-25T21:04:40+07:00
+
+[2026-11-25T22:30:17+07:00] [INFO] Integrasi DEV-02A B09
+- Main 23a4108; Dev cd19d6f. HTTP disposable direview, APK/HTTPS masih terbuka.
+- Task managed by codex agent at 2026-11-25T22:30:17+07:00
+
+[2026-11-26T07:41:40+07:00] [INFO] DEV-02A siapkan bukti receipt dan replay dari APK
+- Acuan review PR #201 4663563 dan handoff Lead 90f1bbc.
+- Build dua APK dan probe ORM lulus. Runtime APK menunggu KVM dan target HTTPS disposable.
+- Task managed by codex agent at 2026-11-26T07:41:40+07:00
+
+[2026-11-26T08:22:48+07:00] [INFO] DEV-02A siapkan runner APK HTTPS B09 opt-in
+- Tambahkan job manual untuk TLS lokal, emulator, dua fase APK dan tiga audit Odoo.
+- Mutation checks menolak bukti basi, scope salah, fingerprint salah, duplikasi dan perubahan akibat replay.
+- Task managed by codex agent at 2026-11-26T08:22:48+07:00
+
+[2026-11-26T08:29:10+07:00] [INFO] DEV-02A catat pemeriksaan runner manual B09
+- Probe HTTPS dari host, checkout fixture dan cleanup startup gagal lulus.
+- CA debug terisolasi. Planner full regression 11 suite. APK tetap menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-26T08:29:10+07:00
+
+[2026-11-26T15:30:30+07:00] [INFO] DEV-02A lengkapi review XML dan cleanup B09
+- Arahan e9e4907. Listener XML dan mutasi verifier lulus pemeriksaan lokal.
+- Injeksi gagal pasca HTTPS siap membuktikan cleanup backend. APK tetap menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-26T15:30:30+07:00
+
 [2026-11-25T20:57:33+07:00] [INFO] Discovery riwayat absensi Odoo dan PWA
 - [F] Basis main f0b3632; clock-in/out PWA lokal, dispatcher belum memproses command HRIS.
 - [F] Kategori approval cuti dua tingkat tersedia; adaptor hr.leave belum ada.
@@ -779,3 +818,16 @@
 - Pemilik menjawab Setujui kedua batas. Catat UNKNOWN picking/packing, trip dan driver per DO serta K5 sebagai slice terpisah.
 - Perubahan dokumentasi saja. Verdict merge tetap pada supervisor.
 - Task managed by codex agent at 2026-11-26T15:27:06+07:00
+
+[2026-11-26T19:39:32+07:00] [INFO] Integrasi runner B09 PR 201
+- Dev 2942c9a, main 57a5cb2; konflik log dan handoff dipertahankan. Dampak test TAMBAH; menunggu runtime APK.
+- Task managed by codex agent at 2026-11-26T19:39:32+07:00
+
+[2026-11-26T22:22:37+07:00] [INFO] DEV-02A verifikasi cleanup per resource B09
+- Acuan e23a0d1 dan f9719ea. Log lama tidak mengidentifikasi resource yang gagal.
+- Probe HTTPS sukses dan fault setelah siap membuktikan cleanup gateway dan Docker. Unregister nyata menunggu runner ber-KVM.
+- Task managed by codex agent at 2026-11-26T22:22:37+07:00
+
+[2026-11-26T22:40:10+07:00] [INFO] Integrasi cleanup B09 PR 201
+- Dev bafed8d dan main 2ccfb2d. Dampak test SESUAIKAN; status per resource tetap fail closed dan runtime ditinjau ulang.
+- Task managed by codex agent at 2026-11-26T22:40:10+07:00
