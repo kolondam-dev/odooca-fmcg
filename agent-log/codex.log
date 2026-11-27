@@ -869,3 +869,8 @@
 - [F] release-fork sukses; fork-list kosong, environment tidak ditemukan; pilot tetap empat layanan SUCCESS dan dua volume. Tidak ada pilot deploy/merge.
 - [BU] API closing prematur 422 tidak tampil di layar PWA; sesi baru 0/2 Belum ditutup; exact-head transaksi/CI setelah merge main belum tuntas. Verdict HOLD.
 - Task managed by codex at 2026-11-27T19:05:00+07:00
+
+[2026-11-28T00:10:15+07:00] [INFO] Sinkronisasi PR #206 untuk re-review
+- Main 8e83a301 digabung; tes AR mengikuti main, kedua entri HANDOFF dipertahankan.
+- Kode mobile/PWA identik dengan fdc4b97. Bukti runtime pada ancestor dan batas UI dicatat di HANDOFF.
+- Task managed by codex agent at 2026-11-28T00:10:15+07:00

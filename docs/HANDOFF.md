@@ -1,3 +1,10 @@
+## PR #206 — Re-review integrasi manifest driver PWA (codex)
+
+- [F] Sinkronisasi dari `fdc4b97` dengan main `8e83a301` (PR #209 dan #210). Konflik dua file tes AR diselesaikan dengan mengambil versi main karena selisih di branch PR hanya baris kosong. Kedua riwayat HANDOFF dipertahankan.
+- [F] Diff terhadap `fdc4b97` kosong untuk `addons/id_mobile_api` dan `pwa`. CI untuk commit integrasi perlu diverifikasi tersendiri.
+- [F] Acceptance fungsional berdasarkan bukti fork: dua DO native, dua POD pada DO yang benar, satu closing final, resync tanpa duplikasi, dan cleanup fork. Transaksi browser tercatat pada `b2efacd`; resync pada `7d5fa2e`. Rangkuman acceptance pada `fdc4b97` mengacu pada bukti tersebut.
+- [BU] HTTP 422 prematur terbukti lewat API sesi driver. Klik closing prematur di UI dan pemulihan progres pada sesi baru belum terbukti. Dampak test **CUKUP** untuk sinkronisasi; batas bukti runtime tersebut tetap tersedia untuk keputusan reviewer.
+
 ## 2026-11-27T19:05:00+07:00 — [F] Fork PR #206 dilepas, pilot utuh (codex)
 
 - [F] `release-fork` untuk `pr206-acceptance` berhasil. `fork-list` kosong, environment fork tidak ditemukan; empat layanan pilot `SUCCESS` dan kedua volumenya masih terdaftar. Tidak ada merge PR/deploy pilot.
@@ -9,6 +16,31 @@
 - [F] Odoo/PWA fork SHA `7d5fa2e` sukses; browser dua sesi dan refresh membuktikan satu task per DO dengan pasangan outlet 8/9, tanpa command baru; DB tetap 2+1. Sesi baru menampilkan `0/2` dan `Belum ditutup` karena status accepted lokal tidak terpulihkan dari server. **Bukti transaksi ada di ancestor `b2efacd`, bukan exact-head.**
 - [F] Main baru `cbabfee` (PR #208) digabung; satu-satunya konflik `docs/HANDOFF.md`, riwayat kedua sisi dipertahankan. Dampak test **TAMBAH**: browser/Odoo end-to-end rekonsiliasi status accepted lintas sesi, oracle 2 POD + 1 closing tanpa duplikasi; path `pwa/**` → suite pwa. Test transport upload/hash yang ada memadai untuk upload tetapi tidak menutup status lintas sesi.
 - [BU] Verdict HOLD hingga exact-head CI dan bukti runtime/cleanup selesai; UI 422 dan pemulihan status belum dibuktikan. Dilarang merge/pilot deploy.
+
+## 2026-11-27 — Sinkronisasi dan acceptance browser HR PR #209 (ChatGPT-ABSENSI)
+
+- [F] Main `cbabfee` digabung. Konflik hanya di HANDOFF dan entri kedua sisi dipertahankan.
+- [F] Chromium pada Odoo 19 disposable di `019720b`: HR menyimpan libur bersumber, lalu ringkasan, detail harian, dan pivot cocok (960 menit terjadwal, 443 menit tercatat, 50% hadir). Non-HR ditolak lewat tautan langsung dan permintaan baca.
+- [F] Seluruh addon `id_attendance` byte-identik dengan kandidat yang diuji. Perubahan dispatcher dari main menambahkan callback opsional untuk penutupan penagihan.
+- [BU] CI pada SHA sinkronisasi menunggu hasil sebelum supervisor merge.
+
+## 2026-11-27 — Kalender kerja dan rekap absensi PWA (ChatGPT-ABSENSI)
+
+- [F] Satu PR pada `agen/absensi-kalender-rekap`. Menu Karyawan → Rekap Absensi PWA berisi jadwal native, libur dengan cakupan dan sumber, serta ringkasan dan detail harian/pivot/grafik. Jadwal mengikuti versi HR efektif dan Time Off native mengurangi kewajiban hadir.
+- [F] Upgrade Odoo 19 disposable dari addon v19.0.1.0.0 ke v19.0.2.0.0: 12 tes ORM lulus. Termasuk oracle jam istirahat, jadwal historis, libur tumpang tindih, izin parsial, WITA, checkout otomatis, dan aturan akses.
+- [A] HR mengisi tanggal awal cakupan, kebijakan kalender, dan referensi libur tahunan. Hari terbuka dan hari di luar cakupan tidak dilabel alpa. Tidak ada pengisian kalender otomatis.
+- [BU] CI exact SHA dan acceptance HR menunggu. Tidak ada perubahan deployment demo atau pilot.
+## 2026-11-27 — [BU] BE-20d PR #210 P1/P2 custody (claude-dev)
+
+- [F] P1: `record_custody_exception` tidak lagi menolak karena saldo/status faktur (lunas, tidak posted, saldo berubah, nominal melebihi saldo): receipt tetap tercatat utuh dengan alokasi `held` (saldo faktur dan klaim SJP lain tidak diubah); `reassign` mensyaratkan saldo cukup, selain itu `release`. Yang tetap ditolak: baris yang sudah punya penerimaan (validasi yang ada), nominal <= 0.
+- [F] P2: token mengikat satu operasi: `desk_fingerprint` (sha256 sheet+alasan+waktu+baris) menolak payload berbeda dengan token sama; indeks unik parsial `desk_token WHERE desk_primary` (satu receipt utama per token, lintas SJP dan metode) mencegah dua operasi paralel; pecundang mendapat UserError.
+- [F] Tes: batch metode campuran (lunas/saldo berubah/normal), replay identik vs payload/alasan berbeda, race lintas SJP dengan metode berbeda (dua transaksi PG). Bukti Odoo hanya dari CI. `collection_v2` tetap OFF.
+
+## 2026-11-27 — [BU] BE-20d custody exception AR Control (claude-dev)
+
+- [F] `id.collection.receipt.record_custody_exception(sheet_id, desk_token, reason, occurred_at, lines)` (hanya `group_ar_control`, SJP sudah lewat cutoff; menormalkan SJP via `_close_settlement_day`): uang selalu tercatat (`source=cashier_desk`, `exception=True`, alasan wajib, `desk_token` unik per metode = idempoten); baris yang fakturnya dipegang SJP/penerimaan lain `held` (tanpa `holds_invoice`, klaim B utuh), sisanya `allocated`. Lock protokol 8.4 (SJP asal -> faktur -> receivable -> baris SJP termasuk baris pengklaim lain), saldo dibaca ulang.
+- [F] `id.collection.receipt.line.resolve_held(mode, reason)`: `reassign` (B belum menagih dan tanpa pending: baris B `lapsed` "Digantikan custody X", A `allocated`) atau `release` (uang belum teralokasi); audit `resolution_*`, seam `_apply_allocation`.
+- [A] Belum: selisih kas (klaim asli vs hitungan fisik), notifikasi ke B, form UI/wizard AR Control, meja kasir reguler, validasi dan pembayaran (BE-20e), `returned` tertahan custody `held`. `collection_v2` tetap OFF. Bukti Odoo hanya dari CI.
 
 ## 2026-11-27 — [BU] BE-20d PR #208 P1: command setelah cutoff menutup SJP (claude-dev)
 
