@@ -844,3 +844,9 @@
 - [F] Lokal PASS: Ruff, manifest 16 addon, typecheck, Prettier, contracts, tiga build, check:build, hosting, serta rerun 1-worker delivery/next-policy 11 case dan snapshot retry 2 case.
 - [BU] Exact-SHA CI dan acceptance PWA-Odoo disposable belum selesai; merge/deploy tidak diotorisasi.
 - Task managed by codex agent at 2026-11-27T11:28:14+07:00
+
+[2026-11-27T11:47:29+07:00] [INFO] Perbaikan fixture pwa-browser setelah exact-SHA CI
+- [F] pwa-browser head 6e44a3a: 278 PASS, 10 FAIL; kegagalan terisolasi pada route-workflow (outlet diganti tanpa rebind manifest) dan sync-progress (alert snapshot masih mengharapkan 503).
+- [F] Manifest uji dipetakan ulang ke outlet pengganti dengan owner/hari scope; alert snapshot memakai detail server. Rerun phone 8 case PASS, typecheck dan Prettier PASS.
+- [BU] Exact-SHA CI berikutnya dan acceptance PWA-Odoo disposable masih wajib; merge/deploy tidak diotorisasi.
+- Task managed by codex agent at 2026-11-27T11:47:29+07:00

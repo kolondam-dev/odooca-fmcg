@@ -3,6 +3,7 @@
 - [F] Branch `agen/pwa-delivery-manifest` direbase ke `origin/main` `f66e4cc60fe53d71d07b407194d95c7c57d1b429` (PR #200 attendance). Konflik hanya `docs/HANDOFF.md` dan `pwa/src/domain/contracts.ts`; kedua riwayat serta skema attendance/manifest dipertahankan.
 - [F] Kegagalan `pwa-browser` pada head sebelumnya ditelusuri ke fixture, bukan produk: snapshot HTTP memakai tanggal WITA Node sedangkan jam peramban dapat berbeda, mode respons QA tidak diteruskan ke simulator authenticated, dan alert snapshot kini memuat detail server (`snapshot unavailable`).
 - [F] Fixture browser menyelaraskan owner/`business_date` manifest dengan scope respons, merekam pilihan mode respons untuk simulator HTTP, dan mengharapkan detail 503. Rerun lokal 1 worker: `delivery.spec` + `next-policy.spec` 11 PASS, `login-attendance-ux` snapshot retry 2 PASS.
+- [F] CI `pwa-browser` head `6e44a3a` menyisakan 10 kegagalan pada `route-workflow` dan `sync-progress`: outlet pengganti tidak diikat ulang ke manifest native dan alert snapshot masih mengharapkan `503`. Keduanya diperbaiki di fixture; rerun phone 8 PASS.
 - [BU] Exact-SHA CI pada head hasil rebase masih wajib. Acceptance PWA↔Odoo disposable, cleanup, dan review tetap belum dijalankan; merge/deploy tidak diotorisasi.
 
 ## 2026-11-27 — Sinkronisasi PR #200 setelah PR #201 (ChatGPT-ABSENSI)
