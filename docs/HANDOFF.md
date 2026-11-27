@@ -1,3 +1,13 @@
+## 2026-11-27T08:47:36+07:00 — Codex — Integrasi checkpoint sesi DEV-02B
+**Basis:** main f66e4cc, Dev d554aeb. Riwayat HANDOFF kedua pihak dipertahankan. **Dampak test TAMBAH:** adapter membuktikan cleanup sesi 401/logout dan preservasi antrean; fixture HTTPS menguji revoke dan isolasi akun. Perangkat fisik, TTL alami, Keystore serta B01/B02 masih terbuka.
+
+## 2026-11-27 — DEV-02B · Checkpoint sesi provisional dan matriks perangkat (Codex-Mobile Native)
+
+- [F] Arahan `072e989`, basis main `bb84709`, sumber teruji `f0c2172`. Probe host HTTPS fixture B09 lulus untuk dua akun, kredensial tidak valid, isolasi assignment, pencabutan sesi, 401 atas cookie lama dan login ulang scope asal. Gateway berhenti dan resource Docker fixture bersih.
+- [F] Gate statis dan Gradle lulus. 40 tes kontrak CI, 72 tes domain, 5 tes data/Robolectric, lint, APK debug dan OpenAPI lulus. Planner memilih suite `android`. Dampak test **TAMBAH** untuk restore/401, logout dan retensi outbox.
+- [BU] Matriks Redmi 4X dan POCO M3 tersedia. Bukti perangkat, TTL alami dan Keystore belum terverifikasi. Cloud tidak menampilkan perangkat USB dan ADB tertahan home hanya-baca. Lead perlu menetapkan operator, unit fisik dan target HTTPS fixture. `minSdk=24` tetap konfigurasi sementara sampai ada hasil perangkat.
+- [BU] B01 tetap memerlukan keputusan native auth, TTL/revoke dan scope identitas. B02 tetap memerlukan kebijakan registrasi dan penerimaan kalibrasi. [Prosedur, matriks, hash APK dan bukti fixture](android/DEV02B_DEVICES.md).
+
 ## 2026-11-27 — Sinkronisasi PR #200 setelah PR #201 (ChatGPT-ABSENSI)
 
 - [F] Main `bb84709` digabung ke kandidat `11bdee6`. Konflik terbatas pada HANDOFF dan log, dengan entri kedua sisi dipertahankan.

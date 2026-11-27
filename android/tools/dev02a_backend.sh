@@ -46,7 +46,7 @@ backend_start() {
     odoo_port=$(docker port "$backend_odoo" 8069/tcp)
     [[ "$odoo_port" =~ ^127\.0\.0\.1:([0-9]+)$ ]] || return 1
     odoo_port=${BASH_REMATCH[1]}
-    python3 android/tools/dev02a_tls.py "$odoo_port" "$scratch/server.pem" "$scratch/server.key" \
+    python3 android/tools/dev02a_tls.py "$odoo_port" "$scratch/server.pem" "$scratch/server.key" "$@" \
         > "$scratch/tls.log" 2>&1 &
     backend_tls=$!
     deadline=$((SECONDS + 480))
