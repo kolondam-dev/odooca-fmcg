@@ -19,7 +19,7 @@ Tes Robolectric memeriksa adapter Android dengan server loopback sintetis. Sesi 
 | Perangkat | OS dan build/MIUI | Android API | ABI/RAM | GNSS dan mode izin |
 | --- | --- | --- | --- | --- |
 | Redmi 4X | [BU] Unit produksi belum terhubung | [BU] | [BU] | [BU] |
-| POCO M3 | [BU] Unit produksi belum terhubung | [BU] | [BU] | [BU] |
+| POCO M3 M2010J19CG | Android 10, MIUI V12.0.7.0.QJFIDXM berdasarkan handoff Lead | 29 | [BU] | [BU] |
 
 Jalankan pada perangkat yang ditetapkan operator. Catat SHA, varian APK, SHA-256, waktu WITA, kondisi jaringan, versi OS/MIUI, build incremental, API, ABI, dan RAM. Potong laporan bila ada serial, lokasi persis, identitas akun, cookie, token, atau kredensial.
 
@@ -40,7 +40,7 @@ adb shell pm has-feature android.hardware.location.gps
 
 | Kasus | Prosedur dan bukti | Redmi 4X | POCO M3 |
 | --- | --- | --- | --- |
-| Install dan cold start bersih | Instal APK, paksa berhenti, jalankan dari launcher. Catat hasil install, layar Login yang benar-benar tampil, dan durasi start jika tersedia. | [BU] | [BU] |
+| Install dan cold start bersih | Instal APK, paksa berhenti, jalankan dari launcher. Catat hasil install, layar Login yang benar-benar tampil, dan durasi start jika tersedia. | [BU] Ditunda sebelum full deploy | APK awal lulus, Login tampil dalam 4339 ms. APK fixture [BU]. |
 | Cold start dengan sesi | Login akun TEST, seed snapshot, paksa berhenti lalu buka ulang. Catat hasil saat online dan offline, serta pemisahan cache dari hasil refresh. | [BU] | [BU] |
 | Izin ditolak atau dicabut | Tolak prompt, ulangi setelah mencabut izin lewat Settings. Catat state denied dan cara pulih setelah izin diberikan. | [BU] | [BU] |
 | Precise dan approximate | Beri izin presisi dan ukur state. Bila perangkat menawarkan approximate, ulangi pada mode itu dan catat dampaknya. Tandai tidak didukung jika opsi OS memang absen. | [BU] | [BU] |
@@ -73,4 +73,4 @@ Probe host lulus pada `f0c2172` dengan fixture `b09-dev02b-session-v1`, Odoo `19
 
 Gate pada sumber yang sama lulus dengan 40 tes kontrak CI, 72 tes domain, 5 tes data/Robolectric, lint, build debug, dan validasi OpenAPI. SHA-256 APK debug lokal `320e008987a9817fd235fae776e53a4ff1f297b12b938d257c2e6e0d4d21f534`. Build ini memakai endpoint `https://ci.invalid` dan dicatat sebagai bukti build. Tes adapter memakai cipher sintetis dan belum membuktikan Keystore perangkat.
 
-**Bukti fisik [BU]**. Cloud tidak menampilkan perangkat USB. ADB lokal berhenti saat akan membuat direktori `.android` di home yang hanya-baca. KVM juga tidak tersedia. Matriks menunggu unit Redmi 4X dan POCO M3, operator, build OS aktual, dan akses ke target fixture. TTL alami sesi masih [BU].
+Bukti POCO M3 awal dicatat pada [handoff Lead f840da4](https://github.com/kolondam-dev/odooca-fmcg/blob/f840da4/docs/android/LOCAL_WORKFLOW.md). Bukti fisik fixture tetap [BU]. Gunakan [paket POCO M3](DEV02B_POCO_PACKAGE.md) saat transport disetujui. Cloud tidak menampilkan perangkat USB. ADB lokal berhenti saat akan membuat direktori `.android` di home yang hanya-baca. KVM juga tidak tersedia. Matriks menunggu unit Redmi 4X dan POCO M3, operator, build OS aktual, dan akses ke target fixture. TTL alami sesi masih [BU].

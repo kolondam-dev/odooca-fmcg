@@ -106,3 +106,11 @@ adb uninstall com.kolondam.odooca.field.fixture
 ```
 
 Tutup forward privat. Lead menghentikan lease dan memeriksa gateway serta inventaris Docker dengan output cleanup tersanitasi. APK awal tetap terpasang. PR #207 menunggu review cakupan POCO M3 dan bukti perangkat.
+
+## Pra-verifikasi Dev
+
+Pada sumber `4832426`, fixture Odoo `19.0.20261112` dan PostgreSQL `16.16` siap lewat HTTPS loopback. Dua akun TEST lulus login, bootstrap dan snapshot. Smoke host memakai TTL 15 detik. Setelah jeda alami, klien tidak lagi mengirim cookie kedaluwarsa dan bootstrap mendapat 401 tanpa revoke manual. Penghentian lease menghapus kredensial sementara, menutup gateway, dan menyisakan nol container, volume serta network fixture.
+
+Kedua APK lokal lulus build dengan CA publik fixture tersebut. Package ID debug dan instrumentation terkonfirmasi berbeda dari APK awal. SHA-256 APK lokal `d0e5bb3fc446580943fa44f0fc05da54bd94e935e7bcaa702ce91c602b5645a4` dan APK tes `7f95b9272075a812993082358bf6a0b9e35b5cf061508a47143d756b17d19fe5`. Lease lokal telah ditutup. Operator memakai artefak CI baru yang cocok dengan lease aktif.
+
+**[BU]** Forward privat ke laptop operator, `adb reverse` dan koneksi TLS dari POCO M3 belum diuji pada checkpoint ini. Keystore, outbox, TTL perangkat, GPS dan lock/unlock menunggu hasil perangkat. TTL cookie dari host tidak membuktikan garbage collection sesi di server.

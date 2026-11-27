@@ -850,3 +850,8 @@
 - Acuan f840da4 dan PR #207 bd04026.
 - Fixture berlease, build debug berdampingan dan instrumentation Keystore/outbox/TTL.
 - Task managed by codex agent at 2026-11-27T17:29:23+07:00
+
+[2026-11-27T17:37:10+07:00] [INFO] DEV-02B catat bukti paket POCO M3
+- Build dua APK dan TTL cookie dari host lulus pada 4832426.
+- Forward Windows dan uji fisik tetap menunggu Lead. Redmi 4X ditunda.
+- Task managed by codex agent at 2026-11-27T17:37:10+07:00

@@ -1,3 +1,11 @@
+## 2026-11-27 — DEV-02B · Paket fixture POCO M3 (Codex-Mobile Native)
+
+- [F] Arahan `f840da4`, basis PR #207 `bd04026`, sumber teruji `4832426`. Fixture HTTPS B09 berlease dan job APK manual siap. Package ID `com.kolondam.odooca.field.fixture` dan APK tesnya terkonfirmasi saat build. Paket awal tetap terpisah.
+- [F] Probe host HTTPS membuktikan dua akun, scope snapshot, TTL cookie 15 detik dan 401 setelah kedaluwarsa tanpa revoke manual. Build kedua APK dengan CA yang sama lulus. Stop fixture menghapus file kredensial sementara, menutup gateway dan menyisakan nol resource Docker.
+- [F] Dampak test **TAMBAH** untuk kontrak job opt-in, Keystore, isolasi outbox dan TTL fixture. Planner memilih full regression 11 suite. [Prosedur Lead/Windows, SHA dan hash APK lokal](android/DEV02B_POCO_PACKAGE.md).
+- [BU] Lead menyiapkan forward privat dan menguji ADB/TLS dari POCO M3 sebelum operator mulai. Lease lokal sudah ditutup. Keystore, TTL perangkat, lokasi dan lock/unlock masih menunggu unit fisik. Redmi 4X ditunda ke validasi end-to-end sebelum full deploy. `minSdk=24` sementara. PR #207 tetap DRAFT/HOLD menunggu bukti dan persetujuan cakupan.
+- [F] Simulasi terhadap main `f6e2826` menunjukkan konflik di `docs/HANDOFF.md`. Lead menyinkronkan saat integrasi.
+
 ## 2026-11-27T08:47:36+07:00 — Codex — Integrasi checkpoint sesi DEV-02B
 **Basis:** main f66e4cc, Dev d554aeb. Riwayat HANDOFF kedua pihak dipertahankan. **Dampak test TAMBAH:** adapter membuktikan cleanup sesi 401/logout dan preservasi antrean; fixture HTTPS menguji revoke dan isolasi akun. Perangkat fisik, TTL alami, Keystore serta B01/B02 masih terbuka.
 
