@@ -12,6 +12,11 @@
 - [A] HR mengisi tanggal awal cakupan, kebijakan kalender, dan referensi libur tahunan. Hari terbuka dan hari di luar cakupan tidak dilabel alpa. Tidak ada pengisian kalender otomatis.
 - [BU] CI exact SHA dan acceptance HR menunggu. Tidak ada perubahan deployment demo atau pilot.
 
+## 2026-11-27 — [BU] BE-20d custody exception AR Control (claude-dev)
+
+- [F] `id.collection.receipt.record_custody_exception(sheet_id, desk_token, reason, occurred_at, lines)` (hanya `group_ar_control`, SJP sudah lewat cutoff; menormalkan SJP via `_close_settlement_day`): uang selalu tercatat (`source=cashier_desk`, `exception=True`, alasan wajib, `desk_token` unik per metode = idempoten); baris yang fakturnya dipegang SJP/penerimaan lain `held` (tanpa `holds_invoice`, klaim B utuh), sisanya `allocated`. Lock protokol 8.4 (SJP asal -> faktur -> receivable -> baris SJP termasuk baris pengklaim lain), saldo dibaca ulang.
+- [F] `id.collection.receipt.line.resolve_held(mode, reason)`: `reassign` (B belum menagih dan tanpa pending: baris B `lapsed` "Digantikan custody X", A `allocated`) atau `release` (uang belum teralokasi); audit `resolution_*`, seam `_apply_allocation`.
+- [A] Belum: selisih kas (klaim asli vs hitungan fisik), notifikasi ke B, form UI/wizard AR Control, meja kasir reguler, validasi dan pembayaran (BE-20e), `returned` tertahan custody `held`. `collection_v2` tetap OFF. Bukti Odoo hanya dari CI.
 
 ## 2026-11-27 — [BU] BE-20d PR #208 P1: command setelah cutoff menutup SJP (claude-dev)
 

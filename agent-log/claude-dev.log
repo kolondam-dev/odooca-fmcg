@@ -435,3 +435,7 @@
 [2026-11-27T18:03:33+07:00] [INFO] PR #208 P1: command setelah cutoff menutup SJP
 - CommandRejected.after (hook dispatcher) menyimpan penutupan bersama log rejected; tes process_command, replay UUID, SJP campuran, race cron vs submit 2 transaksi PG
 - Task managed by claude-dev agent at 2026-11-27T18:03:33+07:00
+
+[2026-11-27T18:41:11+07:00] [INFO] BE-20d: custody exception AR Control
+- record_custody_exception + resolve_held (reassign/release), allocation held tanpa indeks pending, token idempoten, lock protokol 8.4; tes fungsional + 2 race
+- Task managed by claude-dev agent at 2026-11-27T18:41:11+07:00
