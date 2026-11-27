@@ -469,12 +469,13 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         cr1.execute("SET LOCAL lock_timeout = '20s'")
         env1 = api.Environment(cr1, ids["control"], {})
         outcome = {}
+        args = self._custody_args(ids, "TOK-PAR")  # payload identik (termasuk waktu) pada kedua permintaan
         try:
-            first = env1["id.collection.receipt"].record_custody_exception(*self._custody_args(ids, "TOK-PAR"))
+            first = env1["id.collection.receipt"].record_custody_exception(*args)
             env1.flush_all()
 
             def again(env2):
-                receipts = env2["id.collection.receipt"].record_custody_exception(*self._custody_args(ids, "TOK-PAR"))
+                receipts = env2["id.collection.receipt"].record_custody_exception(*args)
                 env2.flush_all()
                 return receipts.ids
 
