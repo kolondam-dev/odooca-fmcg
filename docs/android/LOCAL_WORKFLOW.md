@@ -213,6 +213,13 @@ Pemilik meminta Redmi 4X ditunda ke validasi end-to-end sebelum full deploy. Tan
 - **Lead:** Buktikan jalur fixture sebelum operator menjalankan matriks. Pakai bukti instalasi dan cold start POCO M3 yang sudah tercatat; ulangi cold start pada APK fixture. Kumpulkan sesi/isolasi outbox, Keystore, TTL alami, izin/GPS dan lock/unlock. Sinkronkan main dan ulangi CI pada kandidat akhir untuk re-review. PR tetap draft/HOLD sampai bukti dan persetujuan cakupan tersedia.
 - **Design:** Tinjau temuan overlap status bar POCO M3 pada jalur visual.
 
+### Pemeriksaan target HTTPS langsung — PR #207
+
+Gateway `https://demo-gateway-production-abd1.up.railway.app` adalah kandidat preflight konektivitas native: HTTPS host merespons 200 pada health dan 401 tanpa sesi pada bootstrap/snapshot. Android 10 harus memverifikasi trust sistem dari perangkat. Catatan deployment historis menyebut DB `railway`; nama itu belum dikonfirmasi untuk sesi uji saat ini. Scope lama adalah demo PWA. Akun TEST historis tercatat dinonaktifkan. PR #207 pada `a8222dd` mencatat CI 28 lulus dan 3 dilewati.
+
+- **Lead / maintainer Odoo:** Konfirmasi target dan DB aktual, dua akun TEST aktif dengan assignment terpisah, scope penggunaan APK native, dan apakah TTL khusus fixture tersedia. Pertukaran akses melalui kanal privat. Jangan aktifkan kembali akun, mengubah TTL demo, atau memodifikasi data persisten melalui pekerjaan ini.
+- **Dev:** Siapkan opsi build debug untuk origin HTTPS yang dikunci Lead, dengan ID paket fixture terpisah dan trust sistem default untuk sertifikat publik. Pertahankan jalur CA loopback. Parameter DB/akun hanya ditetapkan setelah konfirmasi. Acceptance lintas akun/expiry tetap menunggu target yang memenuhi syarat. Tidak ada perubahan pada track PWA.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
