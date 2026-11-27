@@ -1,3 +1,18 @@
+## 2026-11-27 — Sinkronisasi dan acceptance browser HR PR #209 (ChatGPT-ABSENSI)
+
+- [F] Main `cbabfee` digabung. Konflik hanya di HANDOFF dan entri kedua sisi dipertahankan.
+- [F] Chromium pada Odoo 19 disposable di `019720b`: HR menyimpan libur bersumber, lalu ringkasan, detail harian, dan pivot cocok (960 menit terjadwal, 443 menit tercatat, 50% hadir). Non-HR ditolak lewat tautan langsung dan permintaan baca.
+- [F] Seluruh addon `id_attendance` byte-identik dengan kandidat yang diuji. Perubahan dispatcher dari main menambahkan callback opsional untuk penutupan penagihan.
+- [BU] CI pada SHA sinkronisasi menunggu hasil sebelum supervisor merge.
+
+## 2026-11-27 — Kalender kerja dan rekap absensi PWA (ChatGPT-ABSENSI)
+
+- [F] Satu PR pada `agen/absensi-kalender-rekap`. Menu Karyawan → Rekap Absensi PWA berisi jadwal native, libur dengan cakupan dan sumber, serta ringkasan dan detail harian/pivot/grafik. Jadwal mengikuti versi HR efektif dan Time Off native mengurangi kewajiban hadir.
+- [F] Upgrade Odoo 19 disposable dari addon v19.0.1.0.0 ke v19.0.2.0.0: 12 tes ORM lulus. Termasuk oracle jam istirahat, jadwal historis, libur tumpang tindih, izin parsial, WITA, checkout otomatis, dan aturan akses.
+- [A] HR mengisi tanggal awal cakupan, kebijakan kalender, dan referensi libur tahunan. Hari terbuka dan hari di luar cakupan tidak dilabel alpa. Tidak ada pengisian kalender otomatis.
+- [BU] CI exact SHA dan acceptance HR menunggu. Tidak ada perubahan deployment demo atau pilot.
+
+
 ## 2026-11-27 — [BU] BE-20d PR #208 P1: command setelah cutoff menutup SJP (claude-dev)
 
 - [F] `CommandRejected(after=...)` (dispatcher generik): efek handler di-rollback, lalu `after` dijalankan sekali di savepoint yang sama dengan log `rejected` (gagal -> penolakan ikut batal dan permintaan diulang). Handler receipt memakainya pada penolakan `cutoff` untuk `_close_settlement_day()` di bawah lock, jadi `lapsed`/klaim lepas/`expired` tersimpan tanpa menunggu cron. Koreksi catatan sebelumnya: batas "lapse malas dibuang rollback" tidak berlaku lagi.
