@@ -187,7 +187,12 @@ class TestAndroidBootstrapContract(unittest.TestCase):
             {"poco-fixture.apk", "poco-fixture-test.apk", "apk.sha256", "build.txt"},
         )
         build = (ANDROID / "app" / "build.gradle.kts").read_text()
-        self.assertIn('if (deviceFixture) applicationIdSuffix = ".fixture"', build)
+        self.assertIn('applicationIdSuffix = ".fixture"', build)
+        self.assertIn('buildConfigField("boolean", "DEVICE_SYSTEM_TLS", "false")', build)
+        self.assertIn("device_origin", inputs)
+        steps = "\n".join(step.get("run", "") for step in job["steps"])
+        self.assertIn('test -z "$FIXTURE_CA_BASE64"', steps)
+        self.assertIn('--origin "$FIXTURE_ORIGIN"', steps)
         self.assertIn('sourceSets["debug"].res.srcDir(b09Resources)', build)
 
     def test_emulator_provisioning_uses_versioned_sdk_archives(self):

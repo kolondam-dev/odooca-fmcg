@@ -1,3 +1,10 @@
+## 2026-11-27 — DEV-02B · Build HTTPS langsung untuk POCO M3 (Codex-Mobile Native)
+
+- [F] Arahan `1d0b4ec` diterapkan di atas PR #207 `a8222dd`. Opsi manual `device_origin` memilih trust sistem Android dan mengharuskan DB eksplisit. ID APK fixture dan instrumentation tetap terpisah. Jalur CA loopback tersedia.
+- [F] Fase preflight APK memeriksa 401 pada bootstrap/snapshot tanpa sesi. Login TEST diberikan saat instrumentation. Tes isolation mencocokkan owner snapshot dan assignment outlet masing-masing sebelum memeriksa outbox.
+- [BU] Gateway demo tetap kandidat preflight. Lead dan maintainer mengonfirmasi DB, izin APK native, dua akun TEST aktif, assignment dan TTL. Trust dari POCO M3, login, Keystore dan expiry perangkat tetap belum diuji. PR #207 tetap draft.
+- Dampak test **TAMBAH** untuk kontrak mode TLS dan preflight di perangkat. Perubahan workflow memilih full regression 11 suite. [Prosedur build](android/DEV02B_POCO_PACKAGE.md#opsi-https-langsung--trust-sistem-android).
+
 ## 2026-11-27 — [BU] BE-20d PR #205 P1 race SJP batal vs submit (claude-dev)
 
 - [F] `_apply_state` (batal/draf/terbit) kini mengunci baris SJP `FOR UPDATE` lebih dulu (protokol submit) lalu membaca ulang status; submit meng-UPDATE header SJP sehingga pembatal yang menunggu pada snapshot REPEATABLE READ gagal SerializationFailure dan diulang Odoo, lalu guard melihat receipt pending. Tanpa sentuhan header guard membaca snapshot basi (ditemukan reviewer).

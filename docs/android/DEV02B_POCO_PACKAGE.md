@@ -2,6 +2,20 @@
 
 Lead menggunakan prosedur ini setelah integrasi kandidat. Bukti awal untuk M2010J19CG, Android 10/API 29, MIUI V12.0.7.0.QJFIDXM ada di handoff. Ulangi install dan cold start pada APK fixture. Redmi 4X tetap [BU] sampai validasi end-to-end sebelum full deploy.
 
+## Opsi HTTPS langsung · Trust sistem Android
+
+Gunakan setelah Lead mengunci origin HTTPS dan nama database aktual. Input berupa origin DNS HTTPS tanpa path, query, fragment atau userinfo. Nama database harus diberikan secara eksplisit. Job build menolak gabungan origin langsung dan CA fixture. Artefak tetap dua APK, checksum dan metadata SHA, origin serta mode TLS. APK fixture memakai ID terpisah dan konfigurasi TLS sistem Android.
+
+```bash
+gh workflow run android.yml --ref "$INTEGRATION_BRANCH" \
+  -f ref="$INTEGRATION_SHA" -f device_fixture=true -f force_all=false \
+  -f device_origin="$APPROVED_HTTPS_ORIGIN" -f device_database="$APPROVED_DB"
+```
+
+Di Windows, cocokkan dua hash dengan artefak lalu instal dua paket fixture. Mode ini memakai jaringan HP. Lead dapat menjalankan fase preflight dari fungsi PowerShell di bawah sebelum tes login. Fase itu mengharapkan HTTP 401 untuk bootstrap dan snapshot melalui TLS Android, dengan sesi lokal kosong dan tanpa kredensial. Langkah loopback, SSH forward, CA fixture dan adb reverse hanya berlaku untuk prosedur loopback di bawah.
+
+Jalankan isolation dengan opsi Direct setelah dua nama dan password TEST serta assignment terpisah disetujui. Login uji diteruskan melalui stdin ADB. Hasil kedaluwarsa alami masih [BU] sampai TTL target diketahui dan dapat diuji tanpa revoke. Jangan gunakan TTL contoh loopback untuk gateway demo. Tidak ada perintah operator sampai Lead mengonfirmasi kesiapan.
+
 ## Lead · Fixture dan build
 
 1. Pada host Docker yang disetujui, checkout SHA integrasi. Siapkan image Odoo repo dan PostgreSQL 16. Jalankan fixture dalam terminal khusus. Lease berjalan maksimal dua jam dan berhenti dengan Ctrl+C atau SIGTERM. DB, password dan CA baru dibuat setiap kali.
@@ -56,20 +70,31 @@ Catat cold start yang benar-benar menampilkan Login. Periksa login dan logout da
 Untuk bukti Keystore dan outbox, jalankan instrumentation di APK fixture. Masukkan password TEST melalui prompt dan tulis argumen hanya ke stdin ADB. Jangan aktifkan PowerShell transcript, menyimpan teks mentah, atau membagikan perintah yang sudah berisi nilai password. Selesaikan uji UI dan logout sebelum fase isolation agar antrean sintetis tidak mengganggu catatan manual.
 
 ```powershell
-function Invoke-FixtureCase([ValidateSet('isolation','idle_begin','idle_end')][string]$Phase, [int]$IdleSeconds=180) {
+function Quote-FixtureArg([string]$Value) {
+    if ($Value -notmatch '\A[\x20-\x7E]+\z') { throw 'Argumen TEST harus berupa ASCII tercetak' }
+    "'" + $Value.Replace("'", "'" + [char]92 + "''") + "'"
+}
+function Invoke-FixtureCase([ValidateSet('preflight','isolation','idle_begin','idle_end')][string]$Phase,
+                           [int]$IdleSeconds=180, [switch]$Direct) {
     if ($IdleSeconds -lt 15 -or $IdleSeconds -gt 600) { throw 'TTL di luar batas fixture' }
     $secretArgs = ''
-    if ($Phase -ne 'idle_end') {
+    if ($Phase -in 'isolation','idle_begin') {
         $secretA = [pscredential]::new('TEST', (Read-Host 'Password TEST A' -AsSecureString))
         $a = $secretA.GetNetworkCredential().Password
-        if ($a -notmatch '\A[a-f0-9]{48}\z') { throw 'Format password fixture tidak valid' }
-        $secretArgs = "-e passwordA $a"
+        $secretArgs = "-e passwordA $(Quote-FixtureArg $a)"
+        if ($Direct) {
+            $loginA = Read-Host 'Nama akun TEST A yang disetujui'
+            $secretArgs += " -e loginA $(Quote-FixtureArg $loginA)"
+        }
     }
     if ($Phase -eq 'isolation') {
         $secretB = [pscredential]::new('TEST', (Read-Host 'Password TEST B' -AsSecureString))
         $b = $secretB.GetNetworkCredential().Password
-        if ($b -notmatch '\A[a-f0-9]{48}\z') { throw 'Format password fixture tidak valid' }
-        $secretArgs += " -e passwordB $b"
+        $secretArgs += " -e passwordB $(Quote-FixtureArg $b)"
+        if ($Direct) {
+            $loginB = Read-Host 'Nama akun TEST B yang disetujui'
+            $secretArgs += " -e loginB $(Quote-FixtureArg $loginB)"
+        }
     }
     try {
         $run = "am instrument -w -r -e class com.kolondam.odooca.field.DeviceFixtureSessionTest -e dev02b true -e phase $Phase -e idleSeconds $IdleSeconds $secretArgs com.kolondam.odooca.field.fixture.test/androidx.test.runner.AndroidJUnitRunner"
@@ -80,9 +105,12 @@ function Invoke-FixtureCase([ValidateSet('isolation','idle_begin','idle_end')][s
         if ($exitCode -ne 0 -or $marker.Count -ne 1 -or $passed.Count -ne 1) { throw "Fixture $Phase gagal atau bukti tidak lengkap" }
         "$Phase=passed"
     } finally {
-        Remove-Variable a,b,secretA,secretB,secretArgs,run,raw -ErrorAction SilentlyContinue
+        Remove-Variable a,b,secretA,secretB,loginA,loginB,secretArgs,run,raw -ErrorAction SilentlyContinue
     }
 }
+# HTTPS langsung sebelum login: Invoke-FixtureCase preflight -Direct
+# Setelah Lead menyetujui akun untuk HTTPS langsung: Invoke-FixtureCase isolation -Direct
+# Contoh loopback berikut memakai TTL fixture.
 Invoke-FixtureCase isolation
 # Ganti 180 dengan idle_seconds di ready.tsv.
 Invoke-FixtureCase idle_begin 180

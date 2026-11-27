@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,8 +9,20 @@ plugins {
 val baseUrl = (project.findProperty("odooca.baseUrl") as String?).orEmpty()
 val uiFixture = project.findProperty("odooca.uiFixture") == "true"
 val deviceFixture = project.findProperty("odooca.deviceFixture") == "true"
+val deviceSystemTls = project.findProperty("odooca.deviceSystemTls") == "true"
 val b09Resources = project.findProperty("odooca.b09Resources") as String?
 val database = (project.findProperty("odooca.database") as String?).orEmpty()
+
+require(!deviceSystemTls || deviceFixture && !uiFixture && b09Resources == null)
+if (deviceSystemTls) {
+    val origin = URI(baseUrl)
+    val host = requireNotNull(origin.host) { "Fixture requires a DNS hostname" }
+    require(origin.scheme == "https" && '.' in host && host.substringAfterLast('.').any(Char::isLetter))
+    require(origin.rawUserInfo == null && origin.rawPath == "" && origin.rawQuery == null && origin.rawFragment == null)
+    require(origin.port == -1 || origin.port in 1..65535)
+    require(origin.rawAuthority == host + if (origin.port == -1) "" else ":${origin.port}")
+    require(database.matches(Regex("[A-Za-z0-9][A-Za-z0-9_.-]{0,62}"))) { "Explicit approved fixture database required" }
+}
 
 android {
     namespace = "com.kolondam.odooca.field"
@@ -23,15 +37,16 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
-        buildConfigField("String", "DATABASE", "\"$database\"")
+        buildConfigField("String", "BASE_URL", if (deviceFixture) "\"\"" else "\"$baseUrl\"")
+        buildConfigField("String", "DATABASE", if (deviceFixture) "\"\"" else "\"$database\"")
+        buildConfigField("boolean", "DEVICE_SYSTEM_TLS", "false")
     }
 
     if (uiFixture) {
         sourceSets["debug"].res.srcDir("src/uiFixture/res")
     }
 
-    require(!deviceFixture || b09Resources != null)
+    require(!deviceFixture || b09Resources != null || deviceSystemTls)
     if (b09Resources != null) {
         require(!uiFixture && baseUrl == "https://127.0.0.1:18443" && database.startsWith("fmcg_staging_"))
         sourceSets["debug"].res.srcDir(b09Resources)
@@ -39,7 +54,12 @@ android {
 
     buildTypes {
         debug {
-            if (deviceFixture) applicationIdSuffix = ".fixture"
+            if (deviceFixture) {
+                applicationIdSuffix = ".fixture"
+                buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+                buildConfigField("String", "DATABASE", "\"$database\"")
+                buildConfigField("boolean", "DEVICE_SYSTEM_TLS", deviceSystemTls.toString())
+            }
             if (uiFixture) {
                 buildConfigField("String", "BASE_URL", "\"http://127.0.0.1:18080\"")
                 buildConfigField("String", "DATABASE", "\"ui-test\"")
