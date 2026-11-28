@@ -23,6 +23,10 @@ from scripts.ops.load_period_pack import (
 )
 from scripts.ops.verify_disposable_period_pack import (
     PeriodPackOracle,
+    _ar_cutoff_tieout,
+    _check_ar_accounts,
+    _check_ar_invoice_residuals,
+    _source_ar_residuals,
     assert_disposable_database,
     audit_period_database,
     run_period_pack_fault_injection_probes,
@@ -30,6 +34,18 @@ from scripts.ops.verify_disposable_period_pack import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 AUG_PACK_DIR = REPO_ROOT / "data" / "registers" / "periods" / "2026-08"
+
+
+class ReaderWithoutAr:
+    """Keep unrelated mock scenarios scoped to their original fixture."""
+
+    ar_collections = []
+
+    def __init__(self, reader):
+        self.reader = reader
+
+    def __getattr__(self, name):
+        return getattr(self.reader, name)
 
 
 class TestHistoricalSalesOwnership(unittest.TestCase):
@@ -349,6 +365,8 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True)
         loader.company = mock_company
+        # This test's mock fixture has no July invoice; AR has its own tests.
+        loader.reader = ReaderWithoutAr(loader.reader)
         plan = loader.evaluate_dry_run()
 
         # 1 SO should be skipped, 1239 to create
@@ -431,6 +449,7 @@ class TestGenericPeriodPackLoaderOffline(unittest.TestCase):
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, company_id=1)
         loader.company = mock_company
+        loader.reader = ReaderWithoutAr(loader.reader)
 
         # In dry run, AP should detect 1 to reconcile
         plan = loader.evaluate_dry_run()
@@ -511,6 +530,7 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
         loader.company = mock_company
+        loader.reader = ReaderWithoutAr(loader.reader)
         with self.assertRaises(StateInconsistencyError) as ctx:
             loader.evaluate_dry_run()
         self.assertIn("missing SKU", str(ctx.exception))
@@ -710,6 +730,7 @@ class TestPeriodPackDisposableRuntimeVerification(unittest.TestCase):
         env = MockEnv(mock_models)
         loader = GenericPeriodPackLoader(env=env, pack_dir=AUG_PACK_DIR, dry_run=True, strict=True)
         loader.company = mock_company
+        loader.reader = ReaderWithoutAr(loader.reader)
         with self.assertRaises(StateInconsistencyError) as ctx:
             loader.evaluate_dry_run()
         self.assertIn("debit account mismatch", str(ctx.exception))
@@ -2554,6 +2575,241 @@ class TestStockCutoff(unittest.TestCase):
 
 class TestArResolverCrossPeriod(unittest.TestCase):
     """Test AR resolver handles cross-period invoice lookup & strict fail-closed contract (BUG-1)."""
+
+    def test_source_ar_cutoff_excludes_september_carry_forward(self):
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        expected = _source_ar_residuals(oracle)
+        self.assertEqual(len(expected), 2514)  # 1,276 July + 1,238 August posted by cutoff
+        self.assertEqual(sum(value > 0 for value in expected.values()), 345)
+        self.assertEqual(sum(expected.values()), Decimal("2368135989.94"))
+        self.assertEqual(expected["INV-202607-0756"], Decimal("12066073.85"))
+        self.assertEqual(expected["INV-202608-0255"], Decimal("0.00"))
+        self.assertNotIn("INV-202608-0197", oracle.closing_state["carry_invoices"])
+        self.assertNotIn("INV-202608-1227", expected)  # September invoice, not AR at August cutoff
+
+    def test_source_ar_fails_if_closing_membership_is_tampered(self):
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        oracle.closing_state["open_invoices"] = dict(oracle.closing_state["open_invoices"])
+        oracle.closing_state["open_invoices"].pop("INV-202607-0756")
+        with self.assertRaisesRegex(ValueError, "membership"):
+            _source_ar_residuals(oracle)
+
+    def test_wrong_invoice_same_amount_keeps_ledger_green_but_source_fails(self):
+        expected = {"INV-A": Decimal("0"), "INV-B": Decimal("100")}
+        account = MockRecord(code="112000")
+        payment = MockRecord(amount=100, max_date="2026-08-20")
+
+        def invoice(number, matches):
+            return MockRecord(account_id=account, debit=100, credit=0,
+                              move_id=MockRecord(move_type="out_invoice", payment_reference=number),
+                              display_type="payment_term", matched_credit_ids=matches, matched_debit_ids=[])
+
+        credit = MockRecord(account_id=account, debit=0, credit=100,
+                            move_id=MockRecord(move_type="entry", origin_payment_id=MockRecord(id=1)),
+                            matched_credit_ids=[], matched_debit_ids=[payment])
+        good = [invoice("INV-A", [payment]), invoice("INV-B", [])]
+        bad = [invoice("INV-A", []), invoice("INV-B", [payment])]
+        for invoice_lines in (good, bad):
+            gl, residual, components, other = _ar_cutoff_tieout(
+                invoice_lines + [credit], invoice_lines, "2026-08-31", with_components=True
+            )
+            _, ledger_violations = _check_ar_accounts(gl, residual, components, other, "2026-08-31")
+            self.assertEqual(gl["112000"], Decimal(100))
+            self.assertEqual(residual["112000"], Decimal(100))
+            self.assertEqual(ledger_violations, [])
+            source_check, source_violations = _check_ar_invoice_residuals(invoice_lines, expected, "2026-08-31")
+            self.assertEqual(Decimal(source_check["expected_open_total"]), Decimal(100))
+            self.assertEqual(Decimal(source_check["observed_open_total"]), Decimal(100))
+            if invoice_lines is good:
+                self.assertEqual(source_violations, [])
+            else:
+                self.assertEqual(source_check["mismatch_count"], 2)
+                self.assertTrue(any("INV-A" in item for item in source_violations))
+                self.assertTrue(any("INV-B" in item for item in source_violations))
+
+    def test_source_ar_rejects_duplicate_paid_invoice_but_sums_multi_terms(self):
+        account = MockRecord(code="112000")
+        def term(move_id, amount, matched):
+            return MockRecord(account_id=account, debit=amount, credit=0,
+                              move_id=MockRecord(id=move_id, move_type="out_invoice",
+                                                 payment_reference="INV-A"),
+                              display_type="payment_term", matched_credit_ids=[
+                                  MockRecord(amount=matched, max_date="2026-08-20")
+                              ], matched_debit_ids=[])
+
+        expected = {"INV-A": Decimal(0)}
+        valid = [term(1, 60, 60), term(1, 40, 40)]
+        check, violations = _check_ar_invoice_residuals(valid, expected, "2026-08-31")
+        self.assertEqual(check["observed_invoice_count"], 1)
+        self.assertEqual(violations, [])
+        _, violations = _check_ar_invoice_residuals(valid + [term(2, 100, 100)], expected, "2026-08-31")
+        self.assertTrue(any("duplicate posted AR invoice INV-A" in v for v in violations))
+
+    def test_ar_f4_cutoff_per_account_cannot_hide_offsetting_errors(self):
+        def line(code, debit, credit=0, credits=(), debits=()):
+            return MockRecord(account_id=MockRecord(code=code), debit=debit, credit=credit,
+                              matched_credit_ids=credits, matched_debit_ids=debits)
+
+        matched = [MockRecord(amount=40, max_date="2026-08-12"),
+                   MockRecord(amount=20, max_date="2026-09-01")]
+        invoices = [line("11210010", 100, credits=matched), line("112000", 100)]
+        balanced_gl = [line("11210010", 60), line("112000", 100)]
+        gl, residual = _ar_cutoff_tieout(balanced_gl, invoices, "2026-08-31")
+        self.assertEqual(residual, {"11210010": Decimal(60), "112000": Decimal(100)})
+        self.assertEqual(gl, residual)
+        offset_gl = [line("11210010", 120), line("112000", 40)]
+        gl, residual = _ar_cutoff_tieout(offset_gl, invoices, "2026-08-31")
+        self.assertEqual(sum(gl.values()), sum(residual.values()))
+        self.assertNotEqual(gl["112000"], residual["112000"])
+        self.assertNotEqual(gl["11210010"], residual["11210010"])
+        parts = {code: {"invoice": value} for code, value in residual.items()}
+        _, violations = _check_ar_accounts(gl, residual, parts, {}, "2026-08-31")
+        self.assertTrue(any("112000" in item for item in violations))
+        self.assertTrue(any("11210010" in item for item in violations))
+
+    def test_ar_f4_signed_refund_unallocated_cash_and_later_reconciliation(self):
+        account = MockRecord(code="112000")
+        later = MockRecord(amount=300000, max_date="2026-09-01")
+        invoice = MockRecord(id=1, account_id=account, debit=1000000, credit=0,
+                             move_id=MockRecord(move_type="out_invoice"), display_type="payment_term",
+                             matched_credit_ids=[later], matched_debit_ids=[])
+        refund = MockRecord(id=2, account_id=account, debit=0, credit=200000,
+                            move_id=MockRecord(move_type="out_refund"), display_type="payment_term",
+                            matched_credit_ids=[], matched_debit_ids=[])
+        payment = MockRecord(id=3, account_id=account, debit=0, credit=300000,
+                             move_id=MockRecord(move_type="entry", origin_payment_id=MockRecord(id=5)),
+                             display_type="payment_term", matched_credit_ids=[], matched_debit_ids=[later])
+        gl, residual, parts, other = _ar_cutoff_tieout(
+            [invoice, refund, payment], [invoice], "2026-08-31", with_components=True
+        )
+        self.assertEqual(gl["112000"], Decimal(500000))
+        self.assertEqual(residual["112000"], Decimal(1000000))
+        self.assertEqual(parts["112000"], {"invoice": Decimal(1000000), "refund": Decimal(-200000),
+                                           "unallocated_payment": Decimal(-300000), "other": Decimal(0)})
+        self.assertEqual(sum(parts["112000"].values()), gl["112000"])
+        self.assertFalse(other)
+        report, violations = _check_ar_accounts(gl, residual, parts, other, "2026-08-31")
+        self.assertEqual(violations, [])
+        self.assertEqual(Decimal(report["112000"]["explained_open_balance"]), Decimal(500000))
+        _, residual_after, parts_after, _ = _ar_cutoff_tieout(
+            [invoice, refund, payment], [invoice], "2026-09-01", with_components=True
+        )
+        self.assertEqual(residual_after["112000"], Decimal(700000))
+        self.assertEqual(parts_after["112000"]["unallocated_payment"], Decimal(0))
+        self.assertEqual(sum(parts_after["112000"].values()), gl["112000"])
+        _, violations_after = _check_ar_accounts(gl, residual_after, parts_after, {}, "2026-09-01")
+        self.assertEqual(violations_after, [])
+
+    def test_ar_f4_other_receivable_requires_identifiable_origin(self):
+        account = MockRecord(code="11210010")
+        line = MockRecord(id=9, account_id=account, debit=100, credit=0,
+                          move_id=MockRecord(id=7, move_type="entry", ref="Opening AR", journal_id=MockRecord(id=3)),
+                          matched_credit_ids=[], matched_debit_ids=[])
+        _, _, parts, sources = _ar_cutoff_tieout([line], [], "2026-08-31", with_components=True)
+        self.assertEqual(parts["11210010"]["other"], Decimal(100))
+        self.assertTrue(sources["11210010"][0]["identified"])
+        _, violations = _check_ar_accounts({"11210010": Decimal(100)}, {}, parts, sources, "2026-08-31")
+        self.assertFalse(any("11210010" in item for item in violations))
+        line.move_id.ref = False
+        _, _, _, sources = _ar_cutoff_tieout([line], [], "2026-08-31", with_components=True)
+        self.assertFalse(sources["11210010"][0]["identified"])
+        _, violations = _check_ar_accounts({"11210010": Decimal(100)}, {}, parts, sources, "2026-08-31")
+        self.assertTrue(any("unidentified" in item for item in violations))
+
+    def test_target_account_july_and_august_and_negative_controls(self):
+        class Terms(list):
+            def filtered(self, predicate):
+                return Terms(item for item in self if predicate(item))
+
+            @property
+            def account_id(self):
+                return Accounts({line.account_id.id: line.account_id for line in self}.values())
+
+        class Accounts(list):
+            def __getattr__(self, key):
+                if len(self) != 1:
+                    raise AttributeError(key)
+                return getattr(self[0], key)
+
+        company = MockRecord(id=1)
+        partner = MockRecord(id=22, ref="CUST-MT-04")
+        july = MockRecord(id=4, code="11210010", account_type="asset_receivable", reconcile=True, _fields={})
+        august = MockRecord(id=5, code="112000", account_type="asset_receivable", reconcile=True, _fields={})
+        row = {"payment_id": "PAY-AR-00968", "invoice_number": "INV-202607-0002",
+               "customer": "CUST-MT-04 - FreshhMart", "payment_date": "2026-08-01",
+               "net_cash_collected_total": "10884784.32"}
+        invoice = MockRecord(company_id=company, state="posted", move_type="out_invoice",
+                             date="2026-07-02", partner_id=partner, amount_residual=10884784.32,
+                             line_ids=Terms([
+                                 MockRecord(display_type="payment_term", account_id=july, reconciled=False)
+                             ]))
+        loader = GenericPeriodPackLoader(env=None, pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = company
+        loader._resolve_ar_invoice = lambda _number: invoice
+        self.assertEqual(loader._validate_ar_target(row).code, "11210010")
+        loader.dry_run = False
+        self.assertEqual(loader._validate_ar_target(row, invoice).code, "11210010")
+        invoice.line_ids = Terms([
+            MockRecord(display_type="payment_term", account_id=july, reconciled=True, amount_residual=0),
+            MockRecord(display_type="payment_term", account_id=july, reconciled=False, amount_residual=40),
+        ])
+        invoice.amount_residual = 40
+        partial_row = {**row, "net_cash_collected_total": "40.00"}
+        self.assertEqual(loader._validate_ar_target(partial_row, invoice).code, "11210010")
+        loader.dry_run = True
+        self.assertEqual(loader._validate_ar_target(partial_row).code, "11210010")
+        loader.dry_run = False
+        with self.assertRaisesRegex(StateInconsistencyError, "residual"):
+            loader._validate_ar_target({**partial_row, "net_cash_collected_total": "40.02"}, invoice)
+        invoice.line_ids = Terms([MockRecord(display_type="payment_term", account_id=july, reconciled=False)])
+        invoice.amount_residual = 10884784.32
+        for mutation in (
+            {"company_id": MockRecord(id=2)}, {"date": "2026-08-02"},
+            {"partner_id": MockRecord(id=23, ref="CUST-OTHER")}, {"amount_residual": 1},
+            {"line_ids": Terms([MockRecord(display_type="payment_term", account_id=july, reconciled=False),
+                                 MockRecord(display_type="payment_term", account_id=august, reconciled=False)])},
+        ):
+            bad = MockRecord(**{**invoice.__dict__, **mutation})
+            with self.subTest(mutation=mutation), self.assertRaises(StateInconsistencyError):
+                loader._validate_ar_target(row, bad)
+        bad_account = MockRecord(id=7, code="11210010", account_type="asset_receivable",
+                                 reconcile=False, _fields={})
+        invoice.line_ids = Terms([MockRecord(display_type="payment_term", account_id=bad_account, reconciled=False)])
+        with self.assertRaises(StateInconsistencyError):
+            loader._validate_ar_target(row, invoice)
+        invoice.line_ids = Terms([MockRecord(display_type="payment_term", account_id=july, reconciled=False)])
+        august_row = {**row, "invoice_number": "INV-202608-0001"}
+        august_row.update(customer="CUST-RTL-006 - Warung Dani", payment_date="2026-08-03",
+                          net_cash_collected_total="394804.80")
+        invoice.partner_id = MockRecord(id=24, ref="CUST-RTL-006")
+        invoice.date = "2026-08-03"
+        invoice.invoice_date = "2026-08-03"
+        invoice.amount_total = 394804.80
+        invoice.amount_untaxed = 355680.00
+        invoice.amount_tax = 39124.80
+        invoice.amount_residual = 394804.80
+        with self.assertRaisesRegex(StateInconsistencyError, "receivable account"):
+            loader._validate_ar_target(august_row, invoice)
+        invoice.line_ids = Terms([MockRecord(display_type="payment_term", account_id=august, reconciled=False)])
+        self.assertEqual(loader._validate_ar_target(august_row, invoice).code, "112000")
+
+    def test_planned_august_invoice_and_missing_july_are_fail_closed(self):
+        loader = GenericPeriodPackLoader(env=None, pack_dir=AUG_PACK_DIR, dry_run=True)
+        loader.company = MockRecord(id=1)
+        loader._resolve_ar_invoice = lambda _number: None
+        account = MockRecord(id=5, code="112000", account_type="asset_receivable", reconcile=True)
+        loader._resolve_account = lambda _code: account
+        row = {"payment_id": "PAY-AR-TEST", "invoice_number": "INV-202608-0001",
+               "customer": "CUST-RTL-006 - Warung Dani", "payment_date": "2026-08-03",
+               "net_cash_collected_total": "394804.80"}
+        self.assertEqual(loader._validate_ar_target(row), account)
+        for change in ({"invoice_number": "INV-202607-1300"}, {"customer": "CUST-OTHER"},
+                       {"payment_date": "2026-08-02"}, {"net_cash_collected_total": "394805.00"}):
+            with self.subTest(change=change), self.assertRaises(StateInconsistencyError):
+                loader._validate_ar_target({**row, **change})
+        loader.dry_run = False
+        with self.assertRaises(StateInconsistencyError):
+            loader._validate_ar_target(row)
 
     def test_ar_cross_period_july_data_count(self):
         """Pack Agustus must contain exactly 1202 AR rows (339 July invoices, 863 August invoices)."""

@@ -1,3 +1,35 @@
+## 2026-11-28T19:29:21+07:00 — Integrasi main ke PR #213 (Codex-Cloud1)
+
+- [F] Integrasi main 5b216da. Konflik terbatas pada HANDOFF dan log Codex. Entri kedua cabang dipertahankan.
+- [BU] CI dan F4 pada SHA integrasi menunggu. Merge PR, deploy, dan apply tetap HOLD.
+
+## 2026-11-28T17:06:37+07:00 — Codex — Oracle AR independen PR #213 lolos F4 dua DB
+**Bukti [F]:** Kandidat `5e545ab8b49f01e933be258fff3e81576f1aa421`: F4 46127916187 PASS, Full Regression Gate 46127916276 PASS exact-SHA. Kedua audit memeriksa 2.514 invoice per cutoff, 345 terbuka, residual sumber/DB `2.368.135.989,94`, mismatch 0; A zero drift PASS, B digest MATCH, fault injection PASS. Kontrol negatif memindahkan `PAY-AR-01753` ke invoice lain bernominal sama: saldo GL/total per akun tetap, ledger tieout 0 violation, oracle per-invoice 2 mismatch, digest rollback MATCH.
+**Dampak test:** **TAMBAH** (unit counterexample + F4 savepoint ORM). Tes lokal 94 passed + 9 subtests; ruff/manifests PASS. Commit ini hanya bukti dokumentasi, tanpa perubahan source sejak `5e545ab`; gate untuk SHA dokumentasi akhir tetap perlu diikat eksplisit.
+**Batas [BU]:** PR tetap draft; acceptance reviewer, merge/deploy, clone/demo apply HOLD; Juli freeze.
+**Signature:** task managed by codex at 2026-11-28T17:06:37+07:00
+
+## 2026-11-28T15:52:44+07:00 — Codex — F4 PR #213 iterasi pertama gagal di setup probe
+**Bukti [F]:** Full Regression Gate 46123600595 PASS exact-SHA `4f3de1d7`; F4 46123600682 FAIL, artefak menyebut `AR probe company not found` pada setup kontrol negatif, sesudah Scenario B. Belum ada bukti mutasi ORM salah-alokasi berhasil. Probe direvisi untuk mengambil company dari invoice donor unik, bukan mencari nama perusahaan. Pengaman duplikasi invoice dibedakan dari multi-termin dan tes sumber closing ditambahkan. Tes lokal 94 passed + 9 subtests, ruff/manifests PASS.
+**Batas [BU]:** F4 ulang pada SHA final wajib; review PR draft, merge/deploy, clone/demo apply HOLD; Juli freeze. Dampak test **TAMBAH**.
+**Signature:** task managed by codex at 2026-11-28T15:52:44+07:00
+
+## 2026-11-28T14:57:01+07:00 — Codex — PR #213 oracle AR sumber independen
+**Temuan [F]:** Selisih sumber/GL `195.474.994,89` adalah tepat 50 carry invoice Agustus bertanggal 1 September; setelah cutoff 31 Agustus, sumber yang disetujui menghasilkan 345 invoice terbuka / `2.368.135.989,94`, sama dengan GL. Register Juli cocok checkpoint resmi 309 invoice / `2.370.371.980,58`.
+**Implementasi [F]:** Oracle per-invoice membaca register Juli berpemilik fingerprint kanonikal, pack Agustus ber-MANIFEST, koleksi dan diskon, serta memeriksa keanggotaan closing_state; ledger per akun tetap ada. Kontrol negatif akan memindahkan pembayaran bernilai sama ke invoice lain di akun 112000 dalam savepoint, mensyaratkan ledger tetap cocok namun oracle gagal dan rollback digest utuh. Tes lokal 92 passed + 9 subtests, ruff/manifests PASS; planner full 11-suite. Dampak test **TAMBAH**.
+**Batas [BU]:** F4 runtime ORM pada SHA baru dan full regression masih harus dijalankan; PR tetap draft dan review HOLD. Merge, deploy, clone/demo apply HOLD; Juli freeze.
+**Signature:** task managed by codex at 2026-11-28T14:57:01+07:00
+
+## 2026-11-28T11:04:30+07:00 — Codex — Gate exact-SHA PR #213 lulus
+**Hasil [F]:** Pada kandidat `81aa3a89b667d4e1a5a382e2155cb912585d0234` (PR #213, basis `6de45c50`), `CI` (static/install-test/init-test), `Period Pack Runtime Verification` F4 penuh, `Full Regression Gate` (`workflow_dispatch`, ref dipin ke SHA, seluruh suite + verdict exact-SHA), Seed, PWA, Finance I0, Android, Full Dataset dan Upgrade semuanya sukses. Synthetic merge `a1490390` bertree sama dengan head (`30e750ee`), diff kosong.
+**F4 [F]:** Dua DB disposable CI: `scenario_a_zero_drift` PASS; skenario B PASS dengan `digest_comparison MATCH`; audit `violations []`; fault injection PASS rollback zero drift. AR cutoff `2026-08-31` akun `112000`: GL `2.368.135.989,94` = komponen invoice `2.368.135.989,94`, refund `0`, pembayaran belum dialokasi `0,00`, other `0,00`; AP `211000` `7.666.137.600,00` = residual tagihan.
+**Batas [BU]:** Bukti runtime terikat SHA di atas; commit bukti ini hanya dokumentasi dan mengulang kedua gate. Review sumber independen serta keputusan merge/deploy tetap terpisah; apply ulang clone dan demo asli HOLD, Juli freeze.
+**Signature:** task managed by codex agent at 2026-11-28T11:04:30+07:00
+
+**Basis [F]:** PR #110 sudah MERGED; branch `agen/pr110-ar-f4-followup` dibuat dari `origin/main` `6de45c50`. Tiga file target identik byte dengan basis patch v2; patch diterapkan tanpa membawa snapshot branch lama. [Matriks bukti dan hash](reviews/PR110_AR_F4_FOLLOWUP.md) merangkum dry-run/probe rollback-only, diff tiga file, dan batas klaim. ZIP log runtime privat tidak dimasukkan git.
+**Verifikasi [F]:** Tes loader 90 passed, 9 subtests, ruff/manifests/diff check PASS; planner memilih full 11-suite, dampak test **TAMBAH** karena counterexample termin lunas sebagian, refund, kas belum dialokasi, cutoff, dan selisih lintas akun.
+**Menunggu [BU]:** CI penuh dan F4 penuh pada SHA kandidat di DB CI disposable; review sumber independen dan keputusan merge/deploy terpisah. Apply ulang clone dan demo asli HOLD; invoice Juli freeze.
+
 ## 2026-11-28 — PR #212: paginasi antrean koreksi absensi (ChatGPT-ABSENSI)
 
 - [F] Antrean tier aktif dan riwayat memakai halaman terpisah dengan kursor ID. Klien menyaring di server sebelum membatasi hasil, memakai company aktif dan aturan peserta yang sama.
