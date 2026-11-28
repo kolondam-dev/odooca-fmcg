@@ -277,7 +277,9 @@ class TestMobileRead(MobileFixture, TransactionCase):
             "user_id": self.mobile.id,
             "company_id": self.company.id,
             "status": "accepted",
-            "payload_json": json.dumps({"source": first_task}),
+            "payload_json": json.dumps({
+                "source": {**first_task, "site": {**first_task["site"], "demo_unrestricted": True}},
+            }),
         })
         # PostgreSQL audit timestamps use the database clock, independent of freezegun.
         pod.flush_recordset()
@@ -290,6 +292,12 @@ class TestMobileRead(MobileFixture, TransactionCase):
         self.assertEqual(after_pod["accepted_delivery_pods"], {first.name: uuid})
         self.assertEqual(after_pod["version"], snapshot["version"])
         self.assertEqual(after_pod["deliveries"], snapshot["deliveries"])
+        for changed in (
+            {"version": "stale"}, {"outlet_id": str(outlet2.id)},
+            {"site": {**first_task["site"], "latitude": 0, "demo_unrestricted": True}},
+        ):
+            pod.payload_json = json.dumps({"source": {**first_task, **changed}})
+            self.assertEqual(self.service()._snapshot_payload()["accepted_delivery_pods"], {})
         serialized = json.dumps(snapshot["deliveries"])
         for excluded in (
             "DO-OTHER-WAREHOUSE", "DO-OTHER-DRIVER", "DO-OTHER-OUTLET",

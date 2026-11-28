@@ -337,6 +337,11 @@ class MobileWorkday(models.Model):
                 continue
             do_id = source.get("id")
             task = manifests.get(do_id) if isinstance(do_id, str) else None
+            # The demo adapter can decorate the site for local geolocation UX.
+            site = source.get("site")
+            if isinstance(site, dict) and site.get("demo_unrestricted") is True:
+                source = {**source, "site": {key: value for key, value in site.items()
+                                             if key != "demo_unrestricted"}}
             if task and source == task:
                 accepted[task["id"]] = command.client_uuid
         return accepted

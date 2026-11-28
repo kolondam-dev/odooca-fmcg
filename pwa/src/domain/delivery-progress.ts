@@ -3,10 +3,11 @@ import type { DeliveryTask } from "./delivery-contracts";
 import { businessRejected } from "./outbox-state";
 import type { QueueItem } from "../storage/store";
 
-/**
- * DO selesai hanya bila ada POD di antrean yang bersumber manifest sama dan
- * tidak ditolak server. Aturan ini juga dipakai DeliveryWorkspace.
- */
+// Demo location policy is presentation state, outside the Odoo manifest.
+function manifestIdentity(task: DeliveryTask) {
+    const { demo_unrestricted: _demo, ...site } = task.site;
+    return JSON.stringify({ ...task, site });
+}
 export function acceptedDeliveryPod(
     snapshot: Snapshot | null | undefined,
     task: DeliveryTask,
@@ -15,7 +16,7 @@ export function acceptedDeliveryPod(
     if (
         receipt &&
         snapshot?.deliveries.some(
-            (source) => JSON.stringify(source) === JSON.stringify(task),
+            (source) => manifestIdentity(source) === manifestIdentity(task),
         )
     )
         return receipt;

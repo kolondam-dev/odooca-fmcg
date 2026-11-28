@@ -63,6 +63,13 @@ describe("delivery-progress", () => {
                 [a.id]: "11111111-1111-4111-8111-111111111111",
             },
         } as Snapshot;
+        const adapted = {
+            ...a,
+            site: { ...a.site, demo_unrestricted: true as const },
+        };
+        expect(deliveryProgress([adapted, b], [], snapshot).done).toBe(1);
+        const moved = { ...adapted, site: { ...adapted.site, latitude: 0 } };
+        expect(deliveryProgress([moved, b], [], snapshot).done).toBe(0);
         expect(deliveryProgress([a, b], [], snapshot).done).toBe(1);
         expect(deliveryProgress([a, b], [], snapshot).nextTask).toBe(b);
         expect(

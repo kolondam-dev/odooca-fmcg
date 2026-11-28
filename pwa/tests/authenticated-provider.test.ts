@@ -1,3 +1,4 @@
+import { deliveryProgress } from "../src/domain/delivery-progress";
 import { FieldStore } from "../src/storage/store";
 import { MorningSimulation } from "../src/domain/morning";
 import { expect, it, vi } from "vitest";
@@ -132,6 +133,28 @@ it.each([0, 1, 2])(
             });
             expect(task.id).toMatch(/^WH\/OUT\//);
             expect(task.lines[0].name).toContain("Native product");
+        }
+        if (count === 2) {
+            const serverSnapshot = {
+                ...raw,
+                outlets,
+                deliveries,
+                accepted_delivery_pods: {
+                    [deliveries[0].id]: "11111111-1111-4111-8111-111111111111",
+                },
+            };
+            const demo = new MockProvider("delivery", true, {
+                bootstrap: source.bootstrap,
+                snapshot: async () => serverSnapshot,
+            });
+            const restored = await demo.deliveryTasks();
+            expect(restored[0].site.demo_unrestricted).toBe(true);
+            expect(serverSnapshot.deliveries[0].site).not.toHaveProperty(
+                "demo_unrestricted",
+            );
+            const progress = deliveryProgress(restored, [], serverSnapshot);
+            expect(progress).toMatchObject({ total: 2, done: 1 });
+            expect(progress.nextTask?.id).toBe(deliveries[1].id);
         }
         outlets.reverse();
         expect(
