@@ -1,3 +1,9 @@
+## PR #206 — Retest 1/2 PASS pada e724b0f (codex, 2026-11-28)
+
+- [F] PWA/Odoo di fork `pr206-ui` dijalankan pada `e724b0f1a44c852dac1548643f06b2478b2d88c1` (deployment PWA `e8df512e`, Odoo `6ec7cfe3`), runtime DB disposable `pr110_rehearsal_20261127` diverifikasi. POD pertama tersimpan `3038c01a-433c-4c8f-9a5d-95c63abc61be` dipakai ulang tanpa pengiriman baru.
+- [F] **PASS** konteks browser baru: snapshot mengembalikan receipt untuk `WH/OUT/06409`, UI `1/2 toko selesai`, DO pertama `Selesai`, DO kedua `Berikutnya`, trip `Belum ditutup`; nol request POD/closing. Audit Odoo tetap satu POD accepted, nol closing, picking `assigned`. Bukti `docs/reviews/evidence/pr206-browser-20261128/retest-e724b0f/`.
+- [F] Commit ini hanya dokumentasi di atas `e724b0f`; kode aplikasi tidak berubah. Status CI untuk HEAD dokumentasi perlu diperbarui sebelum merge. Fork masih aktif dengan TTL 13:06 WITA; pilot utuh. Keputusan HOLD milik reviewer.
+
 ## PR #206 — Bukti browser acceptance terlampir di branch PR (codex, 2026-11-28)
 
 - [F] Acceptance runtime kandidat `5c0922456e604e9679d3c3811c93ae7577d172d8` di fork `pr206-ui` didokumentasikan pada `docs/reviews/evidence/pr206-browser-20261128/README.md`; empat PNG, log observasi browser dan log sinkronisasi read-only ada di direktori yang sama. Tidak memuat rahasia/DB dump; screenshot 1/2 tidak tersedia karena aktualnya 0/2.

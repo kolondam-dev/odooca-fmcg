@@ -930,3 +930,8 @@
 - [F] PASS penolakan closing prematur UI; FAIL snapshot sesi baru 0/2 walau satu POD accepted; mismatch manifest driver id_ID hanya site.demo_unrestricted. Dampak test TAMBAH, perbaikan produk masih menunggu implementer.
 - [F] Fork tidak dilepas atas keputusan pemilik; TTL otomatis 13:06 WITA dapat menghapusnya. Tidak ada merge/pilot deploy.
 - Task managed by codex agent at 2026-11-28T09:38:00+07:00
+[2026-11-28T10:48:00+07:00] [INFO] Retest pemulihan 1/2 PR206 pada e724b0f PASS
+- [F] PWA/Odoo fork pr206-ui pada e724b0f1a44c852dac1548643f06b2478b2d88c1; runtime DB disposable diverifikasi; POD pertama 3038c01a dipakai ulang tanpa pengiriman baru.
+- [F] Snapshot sesi baru mengembalikan receipt WH/OUT/06409; UI 1/2, DO pertama Selesai, kedua Berikutnya, trip Belum ditutup; nol request POD/closing. Audit Odoo satu POD accepted, nol closing.
+- [F] Bukti retest di docs/reviews/evidence/pr206-browser-20261128/retest-e724b0f/. Commit dokumentasi di atas e724b0f; kode tidak berubah; CI HEAD baru perlu diverifikasi. Fork TTL 13:06 WITA, pilot utuh.
+- Task managed by codex agent at 2026-11-28T10:48:00+07:00
