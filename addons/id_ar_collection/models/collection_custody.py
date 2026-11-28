@@ -57,10 +57,14 @@ class CollectionReceiptCustody(models.Model):
         if cashier and any(entry["method"] != "cash" for entry in entries):
             raise UserError(_("Meja kasir hanya untuk tunai; transfer dan giro lewat verifikasi finance."))
         # Token mengikat SATU operasi beserta payload-nya: payload berbeda dengan token sama ditolak.
-        fingerprint = hashlib.sha256(json.dumps({
-            "mode": mode, "sheet": sheet_id, "reason": reason, "occurred": occurred.isoformat(),
+        fingerprint_payload = {
+            "sheet": sheet_id, "reason": reason, "occurred": occurred.isoformat(),
             "lines": sorted(entries, key=lambda entry: entry["line_id"]),
-        }, sort_keys=True, default=str, separators=(",", ":")).encode()).hexdigest()
+        }
+        if cashier:  # custody mempertahankan bentuk lama agar token receipt #210 tetap dapat di-replay
+            fingerprint_payload["mode"] = "cashier"
+        fingerprint = hashlib.sha256(json.dumps(
+            fingerprint_payload, sort_keys=True, default=str, separators=(",", ":")).encode()).hexdigest()
         if any(entry["outcome"] == "unpaid" for entry in entries):
             raise UserError(_("Penerimaan di meja hanya untuk uang yang diterima (paid/partial)."))
 

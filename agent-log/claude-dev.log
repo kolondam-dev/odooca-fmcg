@@ -447,3 +447,7 @@
 [2026-11-28T08:09:45+07:00] [INFO] BE-20e 1/n: kasir tunai
 - group_ar_cashier, record_desk_cash (cashier_validated langsung), validate_cash (selisih beralasan), guard returned; jalur _record_desk bersama custody; tes + 2 race
 - Task managed by claude-dev agent at 2026-11-28T08:09:45+07:00
+
+[2026-11-28T09:53:00+07:00] [INFO] PR #211 HOLD: custody tunai, unpaid nol, token #210
+- validate_cash menerima tunai custody; guard returned: tunai posted berisi uang + alokasi held; unpaid nol dibebaskan; fingerprint custody dipertahankan (mode hanya untuk cashier); 3 tes
+- Task managed by claude-dev agent at 2026-11-28T09:53:00+07:00

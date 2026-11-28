@@ -743,3 +743,76 @@ class TestCollectionReceipt(TransactionCase):
         sheet.sudo()._apply_state("returned")
         self.assertEqual(sheet.state, "returned")
 
+    # ---- review #211: custody tunai, unpaid nol, kompatibilitas token #210 ----------------------------------
+    def test_custody_cash_is_validated_by_cashier_and_held_allocation_still_blocks_returned(self):
+        reported, held_move = self._invoice(), self._invoice()
+        sheet = self._sheet([reported, held_move])
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, reported)]))["status"], "accepted")
+        mobile = self._receipts(sheet)
+        cashier = self._cashier()
+        mobile.with_user(cashier).validate_cash({mobile.line_ids.id: mobile.line_ids.amount})
+        self.clock.move_to(CUTOFF_UTC)
+        sheet._close_settlement_day()
+        self._sheet([held_move], collector=self.other)  # SJP lain memegang faktur yang sama
+        control = self._control()
+        custody = self._custody(sheet, held_move, user=control)
+        line = custody.line_ids
+        self.assertEqual((custody.state, line.allocation_state), ("posted", "held"))
+        claim = line.amount
+        custody.with_user(cashier).validate_cash({line.id: claim})
+        self.assertEqual((custody.state, line.amount, line.counted_amount, line.allocation_state),
+                         ("cashier_validated", claim, claim, "held"))  # klaim dan alokasi utuh
+        with self.assertRaises(UserError):  # uang sudah dihitung, alokasi held masih menahan returned
+            sheet._apply_state("returned")
+        line.with_user(control).resolve_held("release", "faktur dipegang SJP lain")
+        sheet._apply_state("returned")
+        self.assertEqual(sheet.state, "returned")
+
+    def test_zero_unpaid_receipt_does_not_block_returned_and_mixed_receipt_counts_money_lines_only(self):
+        paid, unpaid = self._invoice(), self._invoice()
+        only_unpaid_sheet = self._sheet([unpaid])
+        self.assertEqual(self._submit(self._command(
+            only_unpaid_sheet, [self._entry(only_unpaid_sheet, unpaid, "unpaid")]))["status"], "accepted")
+        only_unpaid_sheet._apply_state("returned")  # receipt unpaid saja melewati guard
+        self.assertEqual(only_unpaid_sheet.state, "returned")
+        with self.assertRaises(UserError):  # dan memang tidak ada uang untuk dihitung
+            self._receipts(only_unpaid_sheet).with_user(self._cashier()).validate_cash({})
+        mixed_unpaid = self._invoice()
+        mixed = self._sheet([paid, mixed_unpaid])
+        self.assertEqual(self._submit(self._command(mixed, [
+            self._entry(mixed, paid), self._entry(mixed, mixed_unpaid, "unpaid")]))["status"], "accepted")
+        receipt = self._receipts(mixed)
+        money = receipt.line_ids.filtered(lambda line: line.amount > 0)
+        self.assertEqual(len(receipt.line_ids), 2)
+        with self.assertRaises(UserError):
+            mixed.sudo()._apply_state("returned")  # baris uang belum dihitung
+        receipt.with_user(self._cashier()).validate_cash({money.id: money.amount})  # unpaid tak perlu hitungan
+        self.assertEqual(receipt.state, "cashier_validated")
+        mixed.sudo()._apply_state("returned")
+
+    def test_custody_token_from_previous_release_still_replays_after_upgrade(self):
+        import hashlib
+        import json
+
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.clock.move_to(CUTOFF_UTC)
+        control = self._control()
+        receipt = self._custody(sheet, move, token="TOK-LEGACY", user=control)
+        model = self.env["id.collection.receipt"].with_user(control)
+        entries = model._parse_lines([{
+            "line_id": self._line_of(sheet, move).id, "invoice_id": move.id, "outcome": "paid",
+            "amount": move.amount_residual, "expected_balance": move.amount_residual}], self.company.currency_id)
+        legacy = hashlib.sha256(json.dumps({
+            "sheet": sheet.id, "reason": "Setoran terlambat",
+            "occurred": model._parse_occurred_at(self.CUSTODY_OCCURRED).isoformat(),
+            "lines": sorted(entries, key=lambda entry: entry["line_id"]),
+        }, sort_keys=True, default=str, separators=(",", ":")).encode()).hexdigest()  # rumus rilis #210
+        self.assertEqual(receipt.desk_fingerprint, legacy)
+        self.assertEqual(self._custody(sheet, move, token="TOK-LEGACY", user=control), receipt)  # replay identik
+        with self.assertRaises(UserError):  # payload berbeda
+            self._custody(sheet, move, token="TOK-LEGACY", user=control, outcome="partial", amount=1.0)
+        with self.assertRaises(UserError):  # mode berbeda dengan token sama
+            self.env["id.collection.receipt"].with_user(self._cashier()).record_desk_cash(
+                sheet.id, "TOK-LEGACY", self.CUSTODY_OCCURRED, [self._entry(sheet, move)])
+

@@ -45,16 +45,21 @@ class CollectionReceiptCashier(models.Model):
         self._lock_rows("id_collection_receipt_line", "receipt_id = %s", (receipt.id,), "FOR UPDATE")
         self.env.invalidate_all()
         receipt = self.sudo().browse(receipt.id)
-        if receipt.method != "cash" or receipt.source != "mobile" or receipt.state != "posted":
-            raise UserError(_("Hanya klaim tunai mobile berstatus posted yang dapat divalidasi kasir."))
-        if not isinstance(counted, dict) or {int(key) for key in counted} != set(receipt.line_ids.ids):
-            raise UserError(_("Hitungan kasir harus memuat seluruh baris penerimaan."))
+        if receipt.method != "cash" or receipt.state != "posted":
+            raise UserError(_("Hanya penerimaan tunai berstatus posted (klaim mobile atau custody) yang divalidasi."))
+        money_lines = receipt.line_ids.filtered(lambda line: line.amount > 0)
+        if not money_lines:
+            raise UserError(_("Penerimaan ini tidak memuat uang untuk dihitung."))
+        if not isinstance(counted, dict):
+            raise UserError(_("Hitungan kasir harus berupa pemetaan baris ke nominal."))
+        counted = {int(key): value for key, value in counted.items()}
+        if not set(money_lines.ids) <= set(counted) or not set(counted) <= set(receipt.line_ids.ids):
+            raise UserError(_("Hitungan kasir harus memuat seluruh baris yang berisi uang."))
         values = {}
-        for line in receipt.line_ids:
-            raw = counted[line.id] if line.id in counted else counted[str(line.id)]
-            amount = self._money(raw, "counted", currency)
-            if amount < 0:
-                raise UserError(_("Hitungan kasir tidak boleh negatif."))
+        for line in receipt.line_ids:  # baris tanpa uang (unpaid nol) tidak perlu dihitung
+            amount = 0.0 if line not in money_lines else self._money(counted[line.id], "counted", currency)
+            if amount < 0 or (line not in money_lines and counted.get(line.id)):
+                raise UserError(_("Hitungan kasir tidak valid."))
             values[line.id] = (amount, currency.round(amount - line.amount))
         if any(diff for _amount, diff in values.values()) and not note:
             raise UserError(_("Ada selisih antara klaim dan hitungan kasir: catatan wajib diisi."))
