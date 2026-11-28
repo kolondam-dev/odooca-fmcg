@@ -13,7 +13,10 @@ class Handler(BaseHTTPRequestHandler):
         self.forward({"/api/v1/me/bootstrap", "/api/v1/sync/snapshot"})
 
     def do_POST(self):
-        self.forward({"/web/session/authenticate", "/api/v1/sync/commands"})
+        paths = {"/web/session/authenticate", "/api/v1/sync/commands"}
+        if self.server.session_probe:
+            paths.add("/web/session/destroy")
+        self.forward(paths)
 
     def forward(self, paths):
         if self.path not in paths or self.headers.get("Host") != "127.0.0.1:18443":
@@ -59,12 +62,14 @@ def main():
     parser.add_argument("odoo_port", type=int)
     parser.add_argument("certificate")
     parser.add_argument("key")
+    parser.add_argument("--session-probe", action="store_true")
     args = parser.parse_args()
     tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     tls.minimum_version = ssl.TLSVersion.TLSv1_2
     tls.load_cert_chain(args.certificate, args.key)
     with ThreadingHTTPServer(("127.0.0.1", 18443), Handler) as server:
         server.odoo_port = args.odoo_port
+        server.session_probe = args.session_probe
         server.socket = tls.wrap_socket(server.socket, server_side=True)
         server.serve_forever()
 

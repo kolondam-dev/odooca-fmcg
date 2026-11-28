@@ -10,8 +10,15 @@ if [[ ${1:-} == audit ]]; then
 fi
 odoo "${opts[@]}" --no-http --without-demo=true -i id_mobile_api,id_approval --stop-after-init
 odoo shell "${opts[@]}" --no-http <<'PY'
+import os
 from pathlib import Path
 
+ttl = os.environ.get("DEV02B_IDLE_SECONDS")
+if ttl is not None:
+    if not ttl.isascii() or not ttl.isdigit() or not 15 <= int(ttl) <= 600:
+        raise ValueError("invalid disposable session TTL")
+    env["ir.config_parameter"].sudo().set_param("sessions.max_inactivity_seconds", ttl)
+    print(f"B09_SESSION_IDLE_SECONDS={ttl}")
 env.ref("base.IDR").active = True
 path = Path("/tmp/scripts/ops/provision_mobile_staging.py")
 exec(compile(path.read_text(), str(path), "exec"))

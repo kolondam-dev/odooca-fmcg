@@ -172,6 +172,29 @@ class TestAndroidBootstrapContract(unittest.TestCase):
             jobs["android-gate"]["needs"], ["changes", "guards", "domain-tests", "data-tests", "build"]
         )
 
+    def test_poco_apk_job_is_opt_in_uses_public_ca_and_keeps_required_gate(self):
+        workflow = yaml.safe_load(WORKFLOW.read_text())
+        inputs = workflow[True]["workflow_dispatch"]["inputs"]
+        self.assertIs(inputs["device_fixture"]["default"], False)
+        self.assertNotIn("device_fixture", workflow[True]["workflow_call"]["inputs"])
+        jobs = workflow["jobs"]
+        self.assertNotIn("device-fixture-apk", jobs["android-gate"]["needs"])
+        job = jobs["device-fixture-apk"]
+        self.assertEqual(job["if"], "github.event_name == 'workflow_dispatch' && inputs.device_fixture")
+        artifact = job["steps"][-1]["with"]["path"]
+        self.assertEqual(
+            {line.rsplit("/", 1)[-1] for line in artifact.splitlines()},
+            {"poco-fixture.apk", "poco-fixture-test.apk", "apk.sha256", "build.txt"},
+        )
+        build = (ANDROID / "app" / "build.gradle.kts").read_text()
+        self.assertIn('applicationIdSuffix = ".fixture"', build)
+        self.assertIn('buildConfigField("boolean", "DEVICE_SYSTEM_TLS", "false")', build)
+        self.assertIn("device_origin", inputs)
+        steps = "\n".join(step.get("run", "") for step in job["steps"])
+        self.assertIn('test -z "$FIXTURE_CA_BASE64"', steps)
+        self.assertIn('--origin "$FIXTURE_ORIGIN"', steps)
+        self.assertIn('sourceSets["debug"].res.srcDir(b09Resources)', build)
+
     def test_emulator_provisioning_uses_versioned_sdk_archives(self):
         jobs = yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))["jobs"]
         self.assertTrue(any("bash android/tools/install_emulator_sdk.sh" in step.get("run", "")

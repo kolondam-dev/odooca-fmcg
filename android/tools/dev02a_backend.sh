@@ -10,6 +10,21 @@ backend_certificate() {
         -days 2 -sha256 -extfile "$scratch/extensions" -out "$scratch/server.pem" >> "$scratch/cert.log" 2>&1
 }
 
+b09_android_resources() {
+    local res=$1
+mkdir -p "$res/xml" "$res/raw"
+cp "$2" "$res/raw/b09_ca.pem"
+cat > "$res/xml/network_security_config.xml" <<'XML'
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="false">
+        <domain>127.0.0.1</domain>
+        <trust-anchors><certificates src="@raw/b09_ca" /></trust-anchors>
+    </domain-config>
+</network-security-config>
+XML
+}
+
 backend_start() {
     local pg_image odoo_image postgres_version odoo_version odoo_port deadline untrusted_status=0
     pg_image=$(docker image inspect -f '{{.Id}}' "${DEV02A_POSTGRES_IMAGE:-postgres:16}")
@@ -38,7 +53,7 @@ backend_start() {
     backend_odoo=$(docker create --pull never --name "$run-odoo" --label "$label" --network "$backend_network" \
         --publish 127.0.0.1::8069 --tmpfs /var/lib/odoo --tmpfs /mnt/extra-addons \
         -e FMCG_STAGING_DATABASE -e FMCG_STAGING_DISPOSABLE -e DEV02A_DB_PASSWORD \
-        -e FMCG_STAGING_PASSWORD_1 -e FMCG_STAGING_PASSWORD_2 \
+        -e FMCG_STAGING_PASSWORD_1 -e FMCG_STAGING_PASSWORD_2 -e DEV02B_IDLE_SECONDS \
         --entrypoint bash "$odoo_image" /tmp/android/tools/dev02a_odoo.sh)
     git archive "$head" addons android/tools/dev02a_odoo.sh scripts/ops/provision_mobile_staging.py \
         scripts/ops/verify_mobile_dev02a_receipt.py | docker cp - "$backend_odoo:/tmp"
@@ -46,7 +61,7 @@ backend_start() {
     odoo_port=$(docker port "$backend_odoo" 8069/tcp)
     [[ "$odoo_port" =~ ^127\.0\.0\.1:([0-9]+)$ ]] || return 1
     odoo_port=${BASH_REMATCH[1]}
-    python3 android/tools/dev02a_tls.py "$odoo_port" "$scratch/server.pem" "$scratch/server.key" \
+    python3 android/tools/dev02a_tls.py "$odoo_port" "$scratch/server.pem" "$scratch/server.key" "$@" \
         > "$scratch/tls.log" 2>&1 &
     backend_tls=$!
     deadline=$((SECONDS + 480))

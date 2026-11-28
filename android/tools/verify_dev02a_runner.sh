@@ -80,18 +80,8 @@ printf 'runner_os=%s\nrunner_image_version=%s\nbusiness_date_hint=%s\n' \
 
 phase=tls_certificate
 res=$scratch/res
-mkdir -p "$res/xml" "$res/raw"
 backend_certificate
-cp "$scratch/ca.pem" "$res/raw/b09_ca.pem"
-cat > "$res/xml/network_security_config.xml" <<'XML'
-<network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
-    <domain-config cleartextTrafficPermitted="false">
-        <domain>127.0.0.1</domain>
-        <trust-anchors><certificates src="@raw/b09_ca" /></trust-anchors>
-    </domain-config>
-</network-security-config>
-XML
+b09_android_resources "$res" "$scratch/ca.pem"
 
 phase=build
 (
