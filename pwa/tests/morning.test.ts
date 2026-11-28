@@ -69,7 +69,7 @@ it("blocks offline morning opening and never converts rejected/expired scenarios
         expect(await service.restore()).toBeUndefined();
     }
 });
-it("expires at WITA midnight and isolates company/persona; driver daily sync is supported and live provider cannot open", async () => {
+it("expires at WITA midnight, isolates company/persona and permits an official live session", async () => {
     const { identity, provider, service } = await setup();
     await service.acceptAttendance();
     const session = await service.open();
@@ -88,9 +88,12 @@ it("expires at WITA midnight and isolates company/persona; driver daily sync is 
         snapshot: () => provider.snapshot(),
         submit: provider.submit.bind(provider),
     };
-    await expect(
-        new MorningSimulation(store, identity, live).acceptAttendance(),
-    ).rejects.toThrow("resmi");
+    const liveAttendance = await new MorningSimulation(
+        store,
+        identity,
+        live,
+    ).acceptAttendance();
+    expect(liveAttendance.owner).toBe(ownerKey(identity));
     vi.setSystemTime(new Date("2026-10-27T16:00:00Z"));
     expect(fieldBusinessDate()).toBe("2026-10-28");
     expect(morningReady(session, ownerKey(identity))).toBe(false);

@@ -1,3 +1,4 @@
+import { acceptedDeliveryPod } from "./delivery-progress";
 import { isDemoMode } from "./running-mode";
 import {
     TripCloseSchema,
@@ -12,6 +13,7 @@ import {
 import { CommandSchema } from "./contracts";
 import { assertPodTaskSource, podLineage, validatePodMedia } from "./delivery";
 import { distanceMeters } from "./format";
+import { businessRejected } from "./outbox-state";
 import { EvidenceIntegrityError } from "./evidence-package";
 import type { FieldStore, QueueItem } from "../storage/store";
 export function tripPods(
@@ -33,10 +35,24 @@ export function tripPods(
     )
         throw new Error("Manifest trip/hari tidak valid; perlu review.");
     return tasks.map((t) => {
+        const accepted = acceptedDeliveryPod(source.snapshot, t);
+        if (accepted) return { uuid: accepted };
         // Reject ambiguous/reused IDs rather than rewriting historic lineage.
+        if (
+            !rows.some(
+                (row) =>
+                    row.command.type === "delivery.pod.submit" &&
+                    row.command.payload.source.id === t.id,
+            )
+        )
+            throw new Error(
+                `Trip belum lengkap. DO ${t.id} masih menunggu POD.`,
+            );
         const leaf = podLineage(rows, owner, t.id).at(-1)!;
+        if (businessRejected(leaf))
+            throw new Error(`Trip belum lengkap. POD DO ${t.id} ditolak.`);
         assertPodTaskSource(leaf, t, owner);
-        return leaf;
+        return { uuid: leaf.command.client_uuid, local: leaf };
     });
 }
 export function validateTripClose(
@@ -58,7 +74,7 @@ export function validateTripClose(
     )
         throw new Error("Sumber closing kantor tidak sesuai.");
     const expected = tripPods(rows, owner, daily, p.trip_id)
-        .map((r) => r.command.client_uuid)
+        .map((r) => r.uuid)
         .sort();
     if (JSON.stringify([...p.pod_uuids].sort()) !== JSON.stringify(expected))
         throw new Error("Trip belum lengkap/POD berubah.");
@@ -106,9 +122,8 @@ export async function validateTripCloseMedia(
             JSON.stringify(item.command)
         )
             throw new Error("Pointer closing berubah.");
-        for (const id of p.pod_uuids) {
-            const row = rows.find((r) => r.command.client_uuid === id)!;
-            await validatePodMedia(row, owner, store);
+        for (const pod of tripPods(rows, owner, p.daily_source, p.trip_id)) {
+            if (pod.local) await validatePodMedia(pod.local, owner, store);
         }
         const after = await store.list(owner);
         validateTripClose(item, after, owner);

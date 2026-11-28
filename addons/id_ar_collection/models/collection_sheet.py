@@ -175,6 +175,20 @@ class CollectionSheet(models.Model):
             self.env.cr.execute(
                 'SELECT id FROM "id_collection_sheet" WHERE id IN %s ORDER BY id FOR UPDATE', (sheet_ids,))
             self.env.invalidate_all()
+        if new_state == "returned" and self.ids:
+            self.env.cr.execute(
+                "SELECT count(DISTINCT r.id) FROM id_collection_receipt r "
+                "JOIN id_collection_receipt_line l ON l.receipt_id = r.id "
+                "WHERE r.sheet_id IN %s AND r.method = 'cash' AND r.state = 'posted' AND l.amount > 0",
+                (tuple(self.ids),))
+            if self.env.cr.fetchone()[0]:
+                raise UserError(_("SJP belum dapat dikembalikan: ada uang tunai yang belum dihitung kasir."))
+            self.env.cr.execute(
+                "SELECT count(*) FROM id_collection_receipt_line l JOIN id_collection_receipt r ON r.id = l.receipt_id "
+                "WHERE r.sheet_id IN %s AND l.allocation_state = 'held' AND r.state NOT IN %s",
+                (tuple(self.ids), ("rejected", "cancelled")))
+            if self.env.cr.fetchone()[0]:
+                raise UserError(_("SJP belum dapat dikembalikan: ada alokasi custody `held` yang belum diselesaikan."))
         for sheet in self:
             if new_state not in TRANSITIONS.get(sheet.state, ()):
                 raise UserError(

@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, time, timedelta
+import json
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -94,6 +95,36 @@ class TestMobileRead(MobileFixture, TransactionCase):
         actor = user or self.mobile
         return self.env["id.mobile.workday"].with_user(actor).with_context(allowed_company_ids=actor.company_ids.ids)
 
+    def _delivery(self, name, *, warehouse=None, partner=None, user=None,
+                  company=None, scheduled_date=None, trip="TRIP-NATIVE-01", quantity=2):
+        warehouse = warehouse or self.warehouse
+        company = company or self.company
+        partner = partner or self.outlet
+        user = user or self.mobile
+        scheduled_date = scheduled_date or datetime.combine(business_date(), time(1))
+        picking = self.env["stock.picking"].sudo().with_company(company).create({
+            "name": name,
+            "origin": trip,
+            "partner_id": partner.id,
+            "picking_type_id": warehouse.out_type_id.id,
+            "location_id": warehouse.lot_stock_id.id,
+            "location_dest_id": self.env.ref("stock.stock_location_customers").id,
+            "company_id": company.id,
+            "scheduled_date": scheduled_date,
+            "user_id": user.id,
+            "move_ids": [Command.create({
+                "product_id": self.product.id,
+                "product_uom_qty": quantity,
+                "product_uom": self.product.uom_id.id,
+                "location_id": warehouse.lot_stock_id.id,
+                "location_dest_id": self.env.ref("stock.stock_location_customers").id,
+            })],
+        })
+        picking.action_confirm()
+        picking.action_assign()
+        self.assertEqual(picking.state, "assigned")
+        return picking
+
     def test_rollover_uses_past_plan_instead_of_future(self):
         day = business_date()
         self.assignment.business_date = day - timedelta(days=1)
@@ -180,6 +211,99 @@ class TestMobileRead(MobileFixture, TransactionCase):
         for secret in ("standard_price", "vat", "phone", "amount_residual", "demo_unrestricted"):
             self.assertNotIn(secret, serialized)
         self.assertEqual(snapshot["version"], self.service()._snapshot_payload()["version"])
+
+    def test_delivery_manifest_uses_native_do_lines_and_all_assignment_boundaries(self):
+        before = self.service()._snapshot_payload()
+        outlet2 = self.env["res.partner"].create({
+            "name": "API Scheduled Outlet 2", "company_id": self.company.id,
+            "partner_latitude": 1.47, "partner_longitude": 124.84,
+            "street": "Second Street",
+        })
+        self.assignment.outlet_ids = [Command.link(outlet2.id)]
+        first = self._delivery("DO-NATIVE-001", quantity=2)
+        second = self._delivery("DO-NATIVE-002", partner=outlet2, quantity=3)
+
+        # Each otherwise-plausible DO crosses exactly one authoritative boundary.
+        self._delivery("DO-OTHER-WAREHOUSE", warehouse=self.other_warehouse)
+        self._delivery("DO-OTHER-DRIVER", user=self.other)
+        unassigned = self.env["res.partner"].create({
+            "name": "Unassigned delivery outlet", "company_id": self.company.id,
+            "partner_latitude": 1.48, "partner_longitude": 124.85,
+        })
+        self._delivery("DO-OTHER-OUTLET", partner=unassigned)
+        self._delivery(
+            "DO-OTHER-DAY",
+            scheduled_date=datetime.combine(business_date() + timedelta(days=1), time(1)),
+        )
+        self.mobile.company_ids = [Command.link(self.foreign.id)]
+        foreign_partner = self.env["res.partner"].create({
+            "name": "Foreign outlet", "company_id": self.foreign.id,
+            "partner_latitude": 1.49, "partner_longitude": 124.86,
+        })
+        self._delivery(
+            "DO-OTHER-COMPANY", warehouse=self.foreign_warehouse,
+            partner=foreign_partner, company=self.foreign,
+        )
+
+        snapshot = self.service()._snapshot_payload()
+        self.assertNotEqual(snapshot["version"], before["version"])
+        self.assertEqual(
+            [row["id"] for row in snapshot["deliveries"]],
+            [first.name, second.name],
+        )
+        first_task = snapshot["deliveries"][0]
+        self.assertEqual(first_task["workflow_version"], 2)
+        self.assertEqual(first_task["trip"], "TRIP-NATIVE-01")
+        self.assertEqual(first_task["outlet_id"], str(self.outlet.id))
+        self.assertEqual(first_task["owner"], f"{self.company.id}:{self.mobile.id}")
+        self.assertEqual(first_task["business_date"], business_date().isoformat())
+        self.assertEqual(first_task["site"], {
+            "latitude": self.outlet.partner_latitude,
+            "longitude": self.outlet.partner_longitude,
+            "radius": self.assignment.outlet_radius,
+        })
+        self.assertEqual(first_task["lines"], [{
+            "id": str(first.move_ids.id),
+            "name": "[API-SKU] API Product",
+            "quantity": 2,
+            "unit": self.product.uom_id.name,
+        }])
+        self.assertTrue(first_task["version"].startswith("odoo-delivery-v1:"))
+        uuid = "11111111-1111-4111-8111-111111111111"
+        pod = self.env["id.mobile.command"].sudo().create({
+            "client_uuid": uuid,
+            "fingerprint": uuid,
+            "command_type": "delivery.pod.submit",
+            "user_id": self.mobile.id,
+            "company_id": self.company.id,
+            "status": "accepted",
+            "payload_json": json.dumps({
+                "source": {**first_task, "site": {**first_task["site"], "demo_unrestricted": True}},
+            }),
+        })
+        # PostgreSQL audit timestamps use the database clock, independent of freezegun.
+        pod.flush_recordset()
+        self.env.cr.execute(
+            "UPDATE id_mobile_command SET create_date = %s WHERE id = %s",
+            (MOBILE_TEST_UTC, pod.id),
+        )
+        pod.invalidate_recordset(["create_date"])
+        after_pod = self.service()._snapshot_payload()
+        self.assertEqual(after_pod["accepted_delivery_pods"], {first.name: uuid})
+        self.assertEqual(after_pod["version"], snapshot["version"])
+        self.assertEqual(after_pod["deliveries"], snapshot["deliveries"])
+        for changed in (
+            {"version": "stale"}, {"outlet_id": str(outlet2.id)},
+            {"site": {**first_task["site"], "latitude": 0, "demo_unrestricted": True}},
+        ):
+            pod.payload_json = json.dumps({"source": {**first_task, **changed}})
+            self.assertEqual(self.service()._snapshot_payload()["accepted_delivery_pods"], {})
+        serialized = json.dumps(snapshot["deliveries"])
+        for excluded in (
+            "DO-OTHER-WAREHOUSE", "DO-OTHER-DRIVER", "DO-OTHER-OUTLET",
+            "DO-OTHER-DAY", "DO-OTHER-COMPANY", "standard_price", "lot_id",
+        ):
+            self.assertNotIn(excluded, serialized)
 
     def test_snapshot_includes_approval_tiers_when_id_approval_installed(self):
         """BE-18: tier approval untuk pratinjau; opsional dan tanpa dependensi manifest."""

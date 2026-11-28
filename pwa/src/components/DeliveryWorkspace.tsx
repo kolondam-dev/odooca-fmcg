@@ -22,7 +22,10 @@ import { collectionV2Enabled } from "../domain/collection-settlement";
 import { PenagihanScreen } from "./PenagihanScreen";
 import { useCollectionTasks } from "./useCollectionTasks";
 import type { Snapshot } from "../domain/contracts";
-import { deliveryDoneChecker } from "../domain/delivery-progress";
+import {
+    acceptedDeliveryPod,
+    deliveryDoneChecker,
+} from "../domain/delivery-progress";
 import { useBackLayer } from "../ui/navigation";
 import { NavigationScreen } from "./NavigationScreen";
 import {
@@ -95,7 +98,6 @@ export function DeliveryWorkspace({
                 );
             const manifest = z
                 .array(DeliveryTaskSchema)
-                .min(1)
                 .parse(morning.deliveryManifest);
             if (
                 manifest.some(
@@ -114,7 +116,7 @@ export function DeliveryWorkspace({
                 // materialize the validated local projection for the first visit.
                 value = await store.createDraftIfAbsent(owner, cache, manifest);
             }
-            const parsed = z.array(DeliveryTaskSchema).min(1).parse(value);
+            const parsed = z.array(DeliveryTaskSchema).parse(value);
             if (JSON.stringify(parsed) !== JSON.stringify(manifest))
                 throw new Error(
                     "Manifest tidak cocok dengan petugas/hari ini.",
@@ -131,7 +133,7 @@ export function DeliveryWorkspace({
      * DO selesai hanya bila ada POD di antrean yang bersumber manifest sama (bukan sisa hari/manifest lain)
      * dan tidak ditolak server. POD ditolak masih butuh koreksi; koreksi valid (anak) baru menghitung selesai.
      */
-    const isDone = deliveryDoneChecker(queue);
+    const isDone = deliveryDoneChecker(queue, snapshot);
     const trips = [...new Set((tasks ?? []).map((t) => t.trip))];
     const openTrip = tripOpen
         ? tasks?.filter((t) => t.trip === tripOpen)
@@ -157,6 +159,9 @@ export function DeliveryWorkspace({
                     {error}
                 </Callout>
             )}
+            {!error && tasks?.length === 0 ? (
+                <Callout tone="neu">Tidak ada delivery order hari ini.</Callout>
+            ) : null}
             {trips.map((trip) => {
                 const rows = tasks!.filter((t) => t.trip === trip);
                 const finished = rows.filter(isDone).length;
@@ -194,7 +199,10 @@ export function DeliveryWorkspace({
                     rows={openTrip}
                     isDone={isDone}
                     next={next}
-                    open={(t) => setTaskOpen(podKey(t))}
+                    open={(t) => {
+                        if (!acceptedDeliveryPod(snapshot, t))
+                            setTaskOpen(podKey(t));
+                    }}
                     navigate={(t) => setNavOpen(podKey(t))}
                     collect={(t) => setCollectOpen(podKey(t))}
                     hasReceivables={(t) => receivablesOf(t).length > 0}
@@ -212,7 +220,7 @@ export function DeliveryWorkspace({
                     }}
                 />
             ) : null}
-            {openTask ? (
+            {openTask && !acceptedDeliveryPod(snapshot, openTask) ? (
                 <DeliveryTaskEditor
                     key={JSON.stringify(openTask)}
                     task={openTask}
@@ -295,6 +303,7 @@ function TripStores({
                 return (
                     <Card key={podKey(t)}>
                         <CardHead title={t.outlet} status={status} />
+                        <p class="ui-sub">{t.id}</p>
                         <p class="ui-sub">{t.address}</p>
                         <p class="ui-sub">
                             <Icon name="truck" size={18} /> Drop:{" "}
