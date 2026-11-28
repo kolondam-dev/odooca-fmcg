@@ -21,4 +21,19 @@ The prior validator rejected an invoice whose first term was paid and second rem
 
 **Local checks [F]:** `python -m pytest tests/test_period_pack_loader.py -q`: 90 passed, 9 subtests; `python -m ruff check .`, `python scripts/check_manifests.py`, `git diff --check` pass. The operator's earlier dry-run and native probes used a *different* disposable rehearsal DB (`pr110_restore_probe_20261127`), all rollback-only. Two-term invoice on `112000`: first term paid, second remains open and is accepted by dry/apply-path validation, then reconciles without remapping the account. Native F4 **slice** at August cutoff: posted GL `112000` Rp588,000 = open invoice Rp1,110,000 − refund Rp222,000 − unallocated payment Rp300,000; a September reconciliation does not change the August snapshot. Business/config digests returned to baseline and filestore comparison matched 1,198/1,198 files. These are **not** full F4 or permission to apply.
 
-**Pending [BU]:** Full 11-suite CI and full F4 must pass on the exact candidate commit in a disposable CI DB. Inspect each unique required PR job, logs, and runtime report; distinguish PR synthetic merge from head SHA and verify their trees or integration diff. Independently review legitimate manual AR adjustments and the canonical `112000` result on full-period data. A CI failure is a HOLD, not a reason to weaken the oracle. Clone re-apply and original demo apply remain **HOLD**; merge and deploy require separate authorization.
+## Exact-SHA gates passed at `81aa3a89b667d4e1a5a382e2155cb912585d0234`
+
+All runs below are on candidate head `81aa3a89…` (PR #213, base `6de45c50…`). The PR synthetic merge `a149039011d596e95272f43f6fc3e36d56c23b49` has the **same tree** `30e750eea03c2daf6f99e66d114544ad1ffc0e82` as the head; `git diff` between them is empty. This evidence commit only adds documentation, so the three source hashes above are unchanged.
+
+| Run | Event | Result |
+| --- | --- | --- |
+| `CI` [46099561690](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/46099561690) | pull_request | success (static, install-test, init-test) |
+| `Period Pack Runtime Verification` (full F4) [46099561792](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/46099561792) | pull_request | success |
+| `Full Regression Gate` [46099658002](https://github.com/kolondam-dev/odooca-fmcg/actions/runs/46099658002) | workflow_dispatch, `ref=81aa3a8…`, purpose release | success, all suites + `Exact-SHA full regression verdict` |
+| `Seed supervision` / `PWA quality` / `Finance I0 candidate spike` / `Android native` / `Full Dataset Runtime Verification` / `Upgrade Runtime Verification` | pull_request | success |
+
+F4 runtime report (`period-pack-runtime-report`, run `46099561792`): `scenario_a_zero_drift: PASS`; `scenario_b_continuation.status: PASS` with `digest_comparison: MATCH`; audit `violations: []`; `receipt_to_cash_slice` and `historical_commercial_slice` PASS; `rejection_trace_rollback: REJECTED_AND_RESTORED`; fault injection PASS with rollback zero drift; `STATUS: RUNTIME VERIFICATION COMPLETED SUCCESSFULLY.`
+
+Full-period AR tieout at cutoff `2026-08-31`, account `112000`: GL `2,368,135,989.94` = signed open invoice `2,368,135,989.94`, refund `0`, unallocated payment `0.00`, other `0.00`, `other_sources: []`. This answers the reviewer's full-data question: on the canonical period dataset the extra signed buckets are zero, so the canonical `112000` assertion holds unchanged, while the components would expose refund/unallocated/other differences instead of silently passing. AP `211000` GL `7,666,137,600.00` equals open bill residual.
+
+**Remaining [BU]:** independent source review and a merge/deploy decision. This evidence commit re-runs the two exact-SHA gates; results are reported in PR #213. Clone re-apply and original demo apply remain **HOLD**; July stays frozen; no dump, filestore, credential or raw probe log is in git.

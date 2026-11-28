@@ -1,4 +1,9 @@
-## 2026-11-28T09:43:15+07:00 — Codex — PR #110 tindak lanjut AR/F4 dari main
+## 2026-11-28T11:04:30+07:00 — Codex — Gate exact-SHA PR #213 lulus
+**Hasil [F]:** Pada kandidat `81aa3a89b667d4e1a5a382e2155cb912585d0234` (PR #213, basis `6de45c50`), `CI` (static/install-test/init-test), `Period Pack Runtime Verification` F4 penuh, `Full Regression Gate` (`workflow_dispatch`, ref dipin ke SHA, seluruh suite + verdict exact-SHA), Seed, PWA, Finance I0, Android, Full Dataset dan Upgrade semuanya sukses. Synthetic merge `a1490390` bertree sama dengan head (`30e750ee`), diff kosong.
+**F4 [F]:** Dua DB disposable CI: `scenario_a_zero_drift` PASS; skenario B PASS dengan `digest_comparison MATCH`; audit `violations []`; fault injection PASS rollback zero drift. AR cutoff `2026-08-31` akun `112000`: GL `2.368.135.989,94` = komponen invoice `2.368.135.989,94`, refund `0`, pembayaran belum dialokasi `0,00`, other `0,00`; AP `211000` `7.666.137.600,00` = residual tagihan.
+**Batas [BU]:** Bukti runtime terikat SHA di atas; commit bukti ini hanya dokumentasi dan mengulang kedua gate. Review sumber independen serta keputusan merge/deploy tetap terpisah; apply ulang clone dan demo asli HOLD, Juli freeze.
+**Signature:** task managed by codex agent at 2026-11-28T11:04:30+07:00
+
 **Basis [F]:** PR #110 sudah MERGED; branch `agen/pr110-ar-f4-followup` dibuat dari `origin/main` `6de45c50`. Tiga file target identik byte dengan basis patch v2; patch diterapkan tanpa membawa snapshot branch lama. [Matriks bukti dan hash](reviews/PR110_AR_F4_FOLLOWUP.md) merangkum dry-run/probe rollback-only, diff tiga file, dan batas klaim. ZIP log runtime privat tidak dimasukkan git.
 **Verifikasi [F]:** Tes loader 90 passed, 9 subtests, ruff/manifests/diff check PASS; planner memilih full 11-suite, dampak test **TAMBAH** karena counterexample termin lunas sebagian, refund, kas belum dialokasi, cutoff, dan selisih lintas akun.
 **Menunggu [BU]:** CI penuh dan F4 penuh pada SHA kandidat di DB CI disposable; review sumber independen dan keputusan merge/deploy terpisah. Apply ulang clone dan demo asli HOLD; invoice Juli freeze.

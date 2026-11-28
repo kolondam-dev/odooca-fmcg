@@ -878,3 +878,9 @@
 - [F] Safe source and rollback-only probe hashes recorded in docs/reviews/PR110_AR_F4_FOLLOWUP.md; raw runtime logs and database/filestore not committed.
 - [BU] Exact-SHA full CI and full F4 in CI disposable pending; no clone/demo apply, July frozen, merge/deploy separate.
 - Task managed by codex agent at 2026-11-28T09:43:15+07:00
+
+[2026-11-28T11:04:30+07:00] [INFO] PR213 exact-SHA CI and full F4 pass
+- [F] Candidate 81aa3a89b667d4e1a5a382e2155cb912585d0234: CI 46099561690 success; F4 46099561792 success; Full Regression 46099658002 success with exact-SHA verdict; Seed/PWA/Finance/Android/Full Dataset/Upgrade success. Synthetic merge a1490390 tree equals head 30e750ee.
+- [F] F4 report: scenario A zero drift PASS, scenario B PASS digest MATCH, audit violations empty, fault injection PASS. AR 112000 at 2026-08-31 GL 2368135989.94 = invoice 2368135989.94, refund 0, unallocated 0.00, other 0.00; AP 211000 7666137600.00.
+- [BU] Independent source review and merge/deploy decision separate; clone/demo apply HOLD, July frozen.
+- Task managed by codex agent at 2026-11-28T11:04:30+07:00
