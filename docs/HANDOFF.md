@@ -54,6 +54,12 @@
 - [F] Odoo/PWA fork SHA `7d5fa2e` sukses; browser dua sesi dan refresh membuktikan satu task per DO dengan pasangan outlet 8/9, tanpa command baru; DB tetap 2+1. Sesi baru menampilkan `0/2` dan `Belum ditutup` karena status accepted lokal tidak terpulihkan dari server. **Bukti transaksi ada di ancestor `b2efacd`, bukan exact-head.**
 - [F] Main baru `cbabfee` (PR #208) digabung; satu-satunya konflik `docs/HANDOFF.md`, riwayat kedua sisi dipertahankan. Dampak test **TAMBAH**: browser/Odoo end-to-end rekonsiliasi status accepted lintas sesi, oracle 2 POD + 1 closing tanpa duplikasi; path `pwa/**` → suite pwa. Test transport upload/hash yang ada memadai untuk upload tetapi tidak menutup status lintas sesi.
 - [BU] Verdict HOLD hingga exact-head CI dan bukti runtime/cleanup selesai; UI 422 dan pemulihan status belum dibuktikan. Dilarang merge/pilot deploy.
+## 2026-11-28 — [BU] BE-20e 2/n: validasi accounting tunai (claude-dev)
+
+- [BU] Grup `group_ar_accounting`; `accounting_validate(journal_id)` pada penerimaan tunai `cashier_validated`: akuntan harus berbeda dari kasir, semua baris uang `allocated` dengan selisih nol, jurnal kas/bank aktif satu company, saldo dibaca ulang di bawah lock 8.4 lalu satu pembayaran native per baris via `account.payment.register` (rekonsiliasi otomatis), saldo diverifikasi turun sebesar klaim, `payment_id` disimpan, state `accounting_validated`. Semua atomik.
+- [BU] `reject_receipt(reason)` untuk penerimaan belum divalidasi accounting: `rejected`, proteksi pending lepas, saldo faktur tak berubah.
+- [A] Tes fungsional ditambah; bukti CI pada SHA akhir akan dikomentari di PR. Tes dua transaksi, selisih kas, transfer/giro dan UI = K38. `collection_v2` tetap OFF.
+
 ## 2026-11-28 — [BU] BE-20e 1/n PR #211: perbaikan HOLD (claude-dev)
 
 - [F] P1: `validate_cash` kini menerima tunai `posted` dari custody (klaim dan alokasi tidak berubah); guard `returned` juga menolak selama ada alokasi `held` yang belum diselesaikan (receipt belum rejected/cancelled), walau uang sudah dihitung.

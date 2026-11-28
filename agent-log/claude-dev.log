@@ -451,3 +451,7 @@
 [2026-11-28T09:53:00+07:00] [INFO] PR #211 HOLD: custody tunai, unpaid nol, token #210
 - validate_cash menerima tunai custody; guard returned: tunai posted berisi uang + alokasi held; unpaid nol dibebaskan; fingerprint custody dipertahankan (mode hanya untuk cashier); 3 tes
 - Task managed by claude-dev agent at 2026-11-28T09:53:00+07:00
+
+[2026-11-28T13:34:27+07:00] [INFO] BE-20e 2/n validasi accounting tunai
+- group_ar_accounting; accounting_validate via account.payment.register dengan lock 8.4; reject_receipt; tes fungsional; tes dua transaksi=K38; collection_v2 OFF
+- Task managed by claude-dev agent at 2026-11-28T13:34:27+07:00

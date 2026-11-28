@@ -60,6 +60,9 @@ class CollectionReceipt(models.Model):
     exception = fields.Boolean(string="Pengecualian", readonly=True)
     cashier_id = fields.Many2one("res.users", string="Kasir", readonly=True)
     cashier_validated_at = fields.Datetime(string="Waktu Validasi Kasir", readonly=True)
+    accountant_id = fields.Many2one("res.users", string="Accounting", readonly=True)
+    accounting_at = fields.Datetime(string="Waktu Keputusan Accounting", readonly=True)
+    reject_reason = fields.Char(string="Alasan Penolakan", readonly=True)
     exception_reason = fields.Char(string="Alasan Pengecualian", readonly=True)
     desk_token = fields.Char(string="Token Idempotensi Meja/Custody", index=True, readonly=True)
     desk_fingerprint = fields.Char(string="Sidik Operasi Custody", readonly=True)
@@ -101,7 +104,9 @@ class CollectionReceipt(models.Model):
 
     def _apply_validation(self, vals):
         """Seam internal transisi validasi kasir (8.11); tidak terjangkau RPC dan hanya kolom validasi."""
-        allowed = {key: vals[key] for key in ("state", "cashier_id", "cashier_validated_at") if key in vals}
+        allowed = {key: vals[key] for key in (
+            "state", "cashier_id", "cashier_validated_at", "accountant_id", "accounting_at", "reject_reason")
+            if key in vals}
         return super().write(allowed)
 
     def unlink(self):
@@ -132,6 +137,7 @@ class CollectionReceiptLine(models.Model):
         [("allocated", "Teralokasi"), ("held", "Ditahan"), ("released", "Dilepas")],
         default="allocated", required=True,
     )
+    payment_id = fields.Many2one("account.payment", string="Pembayaran", readonly=True, copy=False, index=True)
     counted_amount = fields.Monetary(string="Dihitung Kasir", readonly=True)
     difference = fields.Monetary(string="Selisih (Hitung - Klaim)", readonly=True)
     difference_note = fields.Char(string="Catatan Selisih", readonly=True)
@@ -183,8 +189,8 @@ class CollectionReceiptLine(models.Model):
 
     def _apply_allocation(self, vals):
         """Seam internal alokasi (resolusi custody, 8.12); tidak terjangkau RPC dan hanya kolom alokasi."""
-        allowed = {key: vals[key] for key in ("allocation_state", "resolution_note", "resolution_by", "resolution_at")
-                   if key in vals}
+        allowed = {key: vals[key] for key in (
+            "allocation_state", "resolution_note", "resolution_by", "resolution_at", "payment_id") if key in vals}
         return super().write(allowed)
 
     def unlink(self):

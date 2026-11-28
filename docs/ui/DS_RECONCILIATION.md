@@ -367,3 +367,9 @@ Aturan pemilik (2026-11-23): AR outlet yang ditugaskan ke salesman aktif, jatuh 
 Daftar faktur server dipotong 50 (jatuh tempo tertua dulu). Hasil `mustCollectToday` membawa `complete`: bila daftar terpotong dan faktur termuat terakhir masih di dalam jendela, angka hanya MINIMUM dan PWA menampilkan "Minimal Rp … · N+ faktur (daftar terpotong)" (atau "Belum diketahui" bila tidak ada faktur jendela termuat), bukan total lengkap. Piutang berjalan dan jatuh tempo tetap agregat server; saldo sisa tidak diturunkan dari `outstanding_total`. Total lengkap menunggu agregat server untuk jendela (utang BE-20).
 
 **Pembaruan BE-20a:** server kini mengirim `outlet_receivables[outlet].collect_today` ({window_days, count, total, overdue_count}) dari SEMUA faktur terbuka outlet pada PJP penugasan hari itu (jatuh tempo < 7 hari dari hari bisnis WITA). PWA memakainya apa adanya (lengkap) dan hanya jatuh ke hitungan klien/label "Minimal" untuk server lama tanpa agregat. Yang tetap asumsi: penafsiran "< 7 hari" termasuk terlambat, dan "assigned ke salesman" = outlet pada penugasan hari ini (belum ada penugasan penagihan terpisah/kolektor: BE-20b).
+
+### K38 — Validasi accounting tunai (BE-20e 2/n): bukti konkurensi dan jalur lain tertunda
+
+- `accounting_validate` memakai protokol lock 8.4 dan `account.payment.register`, tetapi **belum** ada tes dua transaksi PostgreSQL (validasi vs pembatalan/penolakan, validasi vs rekonsiliasi native). Bukti saat ini: tes fungsional + CI; lock dan baca-ulang saldo diverifikasi lewat tinjauan kode saja.
+- Penerimaan dengan selisih kas diblokir (belum ada penyelesaian selisih); transfer (verifikasi finance) dan giro belum ada; jurnal kas/bank dipilih eksplisit oleh accounting (pemetaan jurnal per metode menunggu konfirmasi akuntan [BU]).
+- Belum ada UI/wizard accounting; `collection_v2` tetap OFF.

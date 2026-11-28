@@ -816,3 +816,118 @@ class TestCollectionReceipt(TransactionCase):
             self.env["id.collection.receipt"].with_user(self._cashier()).record_desk_cash(
                 sheet.id, "TOK-LEGACY", self.CUSTODY_OCCURRED, [self._entry(sheet, move)])
 
+
+    # ---- BE-20e 2/n: validasi accounting tunai (8.9) ---------------------------------------------------------
+    def _accountant(self):
+        return new_test_user(
+            self.env, login=f"rcp-acc-{uuid.uuid4().hex[:6]}", groups="id_ar_collection.group_ar_accounting",
+            company_id=self.company.id)
+
+    def _cash_journal(self):
+        journal = self.env["account.journal"].search([("code", "=", "RCPC"), ("company_id", "=", self.company.id)])
+        if journal:
+            return journal
+        cash = self._account("1110901", "Kas RCP Test", "asset_cash")
+        outstanding = self._account("1130901", "Penerimaan Outstanding RCP", "asset_current")
+        journal = self.env["account.journal"].create({
+            "name": "Kas RCP", "code": "RCPC", "type": "cash", "company_id": self.company.id,
+            "default_account_id": cash.id})
+        journal.inbound_payment_method_line_ids.payment_account_id = outstanding
+        return journal
+
+    def _cashier_receipt(self, sheet, moves, cashier=None, token="ACC-1"):
+        return self._desk(sheet, moves, token=token, user=cashier or self._cashier())
+
+    def test_accounting_validates_cash_posts_native_payment_and_releases_protection(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        receipt = self._cashier_receipt(sheet, [move])
+        line = receipt.line_ids
+        amount = line.amount
+        accountant = self._accountant()
+        self.assertTrue(receipt.with_user(accountant).accounting_validate(self._cash_journal().id))
+        self.assertEqual((receipt.state, receipt.accountant_id, bool(receipt.accounting_at)),
+                         ("accounting_validated", accountant, True))
+        self.assertTrue(line.payment_id)
+        self.assertEqual((line.payment_id.amount, line.payment_id.journal_id), (amount, self._cash_journal()))
+        self.assertEqual(self._residual(move), 0.0)
+        self.assertEqual(move.payment_state, "paid")
+        self.assertEqual((line.holds_invoice, line.holds_line), (False, True))  # proteksi pending lepas
+        with self.assertRaises(UserError):  # tidak dapat divalidasi dua kali
+            receipt.with_user(accountant).accounting_validate(self._cash_journal().id)
+        self.assertEqual(len(line.payment_id), 1)
+
+    def test_accounting_validate_requires_group_independent_actor_and_cash_journal(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        cashier = self._cashier()
+        receipt = self._cashier_receipt(sheet, [move], cashier=cashier)
+        journal = self._cash_journal()
+        with self.assertRaises(AccessError):
+            receipt.with_user(self._cashier()).accounting_validate(journal.id)
+        both = new_test_user(
+            self.env, login=f"rcp-both-{uuid.uuid4().hex[:6]}", company_id=self.company.id,
+            groups="id_ar_collection.group_ar_accounting,id_ar_collection.group_ar_cashier")
+        receipt.sudo()._apply_validation({"cashier_id": both.id})  # kasir = akuntan yang sama
+        with self.assertRaises(UserError):  # pemisahan tugas
+            receipt.with_user(both).accounting_validate(journal.id)
+        receipt.sudo()._apply_validation({"cashier_id": cashier.id})
+        accountant = self._accountant()
+        with self.assertRaises(UserError):  # jurnal penjualan bukan kas/bank
+            receipt.with_user(accountant).accounting_validate(self.journal.id)
+        with self.assertRaises(UserError):
+            receipt.with_user(accountant).accounting_validate(0)
+        self.assertEqual((receipt.state, self._residual(move)), ("cashier_validated", move.amount_total))
+        self.assertFalse(receipt.line_ids.payment_id)
+
+    def test_accounting_validate_blocks_unfinished_receipts_difference_held_and_stale_balance(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, move)]))["status"], "accepted")
+        receipt = self._receipts(sheet)
+        journal = self._cash_journal()
+        accountant = self._accountant().id
+        model = receipt.with_user(self.env["res.users"].browse(accountant))
+        with self.assertRaises(UserError):  # belum dihitung kasir (posted)
+            model.accounting_validate(journal.id)
+        line = receipt.line_ids
+        self._cashier()  # pastikan grup tersedia
+        receipt.with_user(self._cashier()).validate_cash({line.id: line.amount - 50}, "kurang 50")
+        with self.assertRaises(UserError):  # selisih kas harus diselesaikan terpisah
+            model.accounting_validate(journal.id)
+        line.sudo()._apply_counting({"counted_amount": line.amount, "difference": 0.0, "difference_note": False})
+        line.sudo()._apply_allocation({"allocation_state": "held"})
+        with self.assertRaises(UserError):  # alokasi held
+            model.accounting_validate(journal.id)
+        line.sudo()._apply_allocation({"allocation_state": "allocated"})
+        self._pay_elsewhere(move, move.amount_total - 10)  # saldo faktur berkurang lewat jalur lain
+        with self.assertRaises(UserError):
+            model.accounting_validate(journal.id)
+        self.assertEqual((receipt.state, bool(line.payment_id)), ("cashier_validated", False))
+
+    def test_accounting_rejects_open_receipt_with_reason_and_releases_protection(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        receipt = self._cashier_receipt(sheet, [move])
+        line = receipt.line_ids
+        accountant = self._accountant()
+        with self.assertRaises(AccessError):
+            receipt.with_user(self._cashier()).reject_receipt("tidak sesuai")
+        with self.assertRaises(UserError):  # alasan wajib
+            receipt.with_user(accountant).reject_receipt("  ")
+        receipt.with_user(accountant).reject_receipt("Uang tidak diterima kasir")
+        self.assertEqual((receipt.state, receipt.reject_reason, receipt.accountant_id),
+                         ("rejected", "Uang tidak diterima kasir", accountant))
+        self.assertEqual((line.holds_invoice, line.holds_line), (False, False))
+        self.assertEqual(self._residual(move), move.amount_total)  # saldo faktur tak berubah
+        with self.assertRaises(UserError):  # sudah diputuskan
+            receipt.with_user(accountant).reject_receipt("lagi")
+
+    def test_accounting_cannot_reject_a_validated_receipt(self):
+        move = self._invoice()
+        receipt = self._cashier_receipt(self._sheet([move]), [move])
+        accountant = self._accountant()
+        receipt.with_user(accountant).accounting_validate(self._cash_journal().id)
+        with self.assertRaises(UserError):
+            receipt.with_user(accountant).reject_receipt("terlambat")
+        self.assertEqual(receipt.state, "accounting_validated")
