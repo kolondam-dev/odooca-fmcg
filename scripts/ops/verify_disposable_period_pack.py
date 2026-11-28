@@ -10,7 +10,7 @@ is a mathematically and operationally correct incremental continuation of July 2
 5. Comprehensive Runtime Oracle:
    - Document counts (16 PO, 1,240 SO, 1,240 DO, 1,240 INV, 1,202 AR, 1 AP, 48 OPEX).
    - Stock Quant vs Stock-to-GL tie-out (Account 113000).
-   - AR aging & open invoices vs GL Accounts Receivable (Account 112000).
+   - AR invoice-term residual vs posted GL per receivable account at cutoff (including 112000).
    - AP settlement: July Unilever bill (Rp2,899,971,200) strictly paid.
    - Tax Code 04 DPP Nilai Lain 11/12 and PPN 12% calculation integrity.
 6. Fault-Injection Probes: Partial failure in savepoint recovers cleanly without duplicates.
@@ -66,6 +66,108 @@ from scripts.ops.load_period_pack import (  # noqa: E402
 
 ZERO = Decimal("0.00")
 CENT = Decimal("0.01")
+
+
+def _ar_cutoff_tieout(gl_lines, invoice_lines, cutoff, *, with_components=False):
+    """Tie posted receivable lines to signed open components at one cutoff.
+
+    Reconciliations after cutoff do not reduce historical open amounts. Invoice
+    residual is kept separately so the canonical 112000 assertion survives.
+    """
+    def open_at_cutoff(line):
+        matched = sum(
+            _dec(part.amount) for part in line.matched_credit_ids
+            if str(part.max_date) <= cutoff
+        ) - sum(
+            _dec(part.amount) for part in line.matched_debit_ids
+            if str(part.max_date) <= cutoff
+        )
+        return _dec(line.debit) - _dec(line.credit) - matched
+
+    gl_by_account = {}
+    components = {}
+    other_sources = {}
+    for line in gl_lines:
+        code = line.account_id.code
+        gl_by_account[code] = gl_by_account.get(code, Decimal(0)) + _dec(line.debit) - _dec(line.credit)
+        if with_components:
+            move = getattr(line, "move_id", None)
+            move_type = getattr(move, "move_type", None)
+            term = getattr(line, "display_type", None) == "payment_term"
+            if move_type == "out_invoice" and term:
+                bucket = "invoice"
+            elif move_type == "out_refund" and term:
+                bucket = "refund"
+            elif getattr(move, "origin_payment_id", False) or getattr(line, "payment_id", False):
+                bucket = "unallocated_payment"
+            else:
+                bucket = "other"
+            buckets = components.setdefault(code, {key: Decimal(0) for key in (
+                "invoice", "refund", "unallocated_payment", "other"
+            )})
+            residual = open_at_cutoff(line)
+            buckets[bucket] += residual
+            if bucket == "other" and residual:
+                # An identified posted manual journal is a legitimate AR
+                # component; any unidentified adjustment still fails closed.
+                identified = bool(move_type == "entry" and getattr(move, "ref", None)
+                                  and getattr(move, "journal_id", None))
+                other_sources.setdefault(code, []).append({
+                    "line_id": getattr(line, "id", None),
+                    "move_id": getattr(move, "id", None),
+                    "move_type": move_type,
+                    "reference": str(getattr(move, "ref", None) or getattr(move, "name", "")),
+                    "signed_open": str(residual),
+                    "identified": identified,
+                })
+    residual_by_account = {}
+    for line in invoice_lines:
+        code = line.account_id.code
+        residual_by_account[code] = residual_by_account.get(code, Decimal(0)) + open_at_cutoff(line)
+    if with_components:
+        return gl_by_account, residual_by_account, components, other_sources
+    return gl_by_account, residual_by_account
+
+
+def _check_ar_accounts(gl_by_account, invoice_by_account, components, other_sources, cutoff):
+    """Assert each receivable account independently, preserving canonical 112000."""
+    codes = sorted(set(gl_by_account) | set(invoice_by_account) | set(components) | {"112000"})
+    per_account = {}
+    violations = []
+    for code in codes:
+        parts = components.get(code, {})
+        gl_balance = gl_by_account.get(code, Decimal(0))
+        invoice_residual = invoice_by_account.get(code, Decimal(0))
+        open_total = sum(parts.values(), Decimal(0))
+        sources = other_sources.get(code, [])
+        per_account[code] = {
+            "gl_ar_balance": str(gl_balance),
+            "open_invoice_residual": str(invoice_residual),
+            "signed_open": {name: str(parts.get(name, Decimal(0))) for name in (
+                "invoice", "refund", "unallocated_payment", "other"
+            )},
+            "explained_open_balance": str(open_total),
+            "other_sources": sources,
+        }
+        if abs(parts.get("invoice", Decimal(0)) - invoice_residual) > CENT:
+            violations.append(f"AR invoice component mismatch account {code} at {cutoff}.")
+        if any(not source["identified"] for source in sources):
+            violations.append(
+                f"AR account {code} at {cutoff}: unidentified receivable entries require source review: {sources}"
+            )
+        if abs(gl_balance - open_total) > Decimal("50.00"):
+            violations.append(
+                f"AR-to-GL mismatch account {code} at {cutoff}: signed open components={open_total}, "
+                f"GL balance={gl_balance}"
+            )
+        if code == "112000" and not any(
+            parts.get(key, Decimal(0)) for key in ("refund", "unallocated_payment", "other")
+        ) and abs(gl_balance - invoice_residual) > Decimal("50.00"):
+            violations.append(
+                f"Canonical AR 112000 mismatch at {cutoff}: open invoice residual="
+                f"{invoice_residual}, GL balance={gl_balance}"
+            )
+    return per_account, violations
 
 
 def assert_disposable_database_name(db_name: str) -> str:
@@ -1285,39 +1387,39 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
                     f"Closing stock valuation mismatch: expected {oracle.expected_closing_valuation} (from closing_state), found {physical_valuation}"
                 )
 
-    # 10. AR-to-GL Audit (Account 112000 vs Open Invoices Residual)
+    # 10. AR-to-GL Audit: compare each receivable account at the same cutoff.
     ar_acc = _resolve_audit_account("112000")
     if not ar_acc:
         report["violations"].append("Mandatory GL account '112000' (Piutang Usaha) not found in database")
     else:
-        aml_ar = AccountMoveLine.search(
-            [
-                ("company_id", "=", company.id),
-                ("account_id", "=", ar_acc.id),
-                ("parent_state", "=", "posted"),
-                ("date", "<=", oracle.manifest.pack_end),
-            ]
+        cutoff = oracle.manifest.pack_end
+        aml_ar = AccountMoveLine.search([
+            ("company_id", "=", company.id), ("account_id.account_type", "=", "asset_receivable"),
+            ("parent_state", "=", "posted"), ("date", "<=", cutoff),
+        ])
+        invoice_lines = [
+            line for line in aml_ar
+            if getattr(getattr(line, "move_id", None), "move_type", None) == "out_invoice"
+            and getattr(line, "display_type", None) == "payment_term"
+        ]
+        gl_by_account, residual_by_account, components, other_sources = _ar_cutoff_tieout(
+            aml_ar, invoice_lines, cutoff, with_components=True
         )
-        gl_ar_balance = sum(_dec(getattr(line, "debit", 0)) - _dec(getattr(line, "credit", 0)) for line in aml_ar)
-        open_invoices = AccountMove.search(
-            [
-                ("company_id", "=", company.id),
-                ("move_type", "=", "out_invoice"),
-                ("state", "=", "posted"),
-                ("payment_state", "in", ["not_paid", "partial"]),
-                ("date", "<=", oracle.manifest.pack_end),
-            ]
+        # Preserve the canonical 112000 assertion while including every
+        # additional receivable account, even if it has only a GL balance.
+        per_account, ar_violations = _check_ar_accounts(
+            gl_by_account, residual_by_account, components, other_sources, cutoff
         )
-        open_inv_residual = sum(_dec(getattr(inv, "amount_residual", 0)) for inv in open_invoices)
+        gl_ar_balance = gl_by_account.get("112000", Decimal(0))
+        open_inv_residual = residual_by_account.get("112000", Decimal(0))
         report["checks"]["ar_to_gl"] = {
             "account_code": ar_acc.code,
             "gl_ar_balance": str(gl_ar_balance),
             "open_invoice_residual": str(open_inv_residual),
+            "cutoff": cutoff,
+            "per_account": per_account,
         }
-        if abs(gl_ar_balance - open_inv_residual) > Decimal("50.00"):
-            report["violations"].append(
-                f"AR-to-GL mismatch: open invoice residual={open_inv_residual}, GL {ar_acc.code} balance={gl_ar_balance}"
-            )
+        report["violations"].extend(ar_violations)
 
     # 11. AP-to-GL Audit (Account 211000 vs Open Bills Residual)
     ap_acc = _resolve_audit_account("211000")

@@ -636,6 +636,79 @@ class GenericPeriodPackLoader:
 
         return None
 
+    def _validate_ar_target(self, ar_row: Dict[str, str], invoice: Any = None) -> Any:
+        """Validate an AR destination before planning or posting a new payment.
+
+        The only permitted unposted target is an August invoice in this pack;
+        apply must resolve that invoice after import and run the same checks.
+        """
+        pay_ref = ar_row["payment_id"]
+        inv_num = ar_row["invoice_number"]
+        customer = extract_ref(ar_row.get("customer", ""))
+        amount = _dec(ar_row["net_cash_collected_total"])
+        payment_date = ar_row["payment_date"]
+        if not customer or amount <= 0 or not payment_date:
+            raise StateInconsistencyError(f"AR collection {pay_ref}: missing customer, date or positive amount.")
+
+        plans = [row for row in self.reader.invoices if row["invoice_number"] == inv_num]
+        if inv_num.startswith("INV-202608-") and (
+            len(plans) != 1 or extract_ref(plans[0].get("customer", "")) != customer
+            or plans[0]["date_invoice"] > payment_date
+            or amount > _dec(plans[0]["total_invoice_with_ppn"]) + CENT
+        ):
+            raise StateInconsistencyError(f"AR collection {pay_ref}: inconsistent planned August invoice {inv_num}.")
+
+        # Do not invoke carry-forward as a side effect of validation. The apply
+        # path imports carry-forward before reaching AR collections.
+        if invoice is None:
+            if not self.dry_run:
+                raise StateInconsistencyError(f"AR collection {pay_ref}: invoice {inv_num} not posted before apply.")
+            invoice = self._resolve_ar_invoice(inv_num)
+        if invoice:
+            if plans and inv_num.startswith("INV-202608-"):
+                self._validate_existing_invoice(invoice, plans[0])
+            if (invoice.company_id.id != self.company.id or invoice.state != "posted"
+                    or invoice.move_type != "out_invoice" or str(invoice.date) > payment_date
+                    or invoice.partner_id.ref != customer
+                    or amount > _dec(invoice.amount_residual) + CENT):
+                raise StateInconsistencyError(
+                    f"AR collection {pay_ref}: invalid invoice company, state, date, customer or residual for {inv_num}."
+                )
+            terms = invoice.line_ids.filtered(lambda line: line.display_type == "payment_term")
+            if not terms or len(terms.account_id) != 1:
+                raise StateInconsistencyError(f"AR collection {pay_ref}: ambiguous payment-term account.")
+            open_terms = terms.filtered(lambda line: not line.reconciled)
+            if not open_terms or any(line.account_id.id != terms.account_id.id for line in open_terms):
+                raise StateInconsistencyError(f"AR collection {pay_ref}: no open payment terms on the target account.")
+            # A paid instalment is valid; only remaining terms fund this payment.
+            # Native AMLs have signed residuals. Offline mocks without that field
+            # still exercise the invoice-level residual and account guards.
+            if all(getattr(line, "amount_residual", None) is not None for line in terms):
+                if any(_dec(line.amount_residual) != 0 for line in terms if line.reconciled):
+                    raise StateInconsistencyError(f"AR collection {pay_ref}: reconciled term retains residual.")
+                open_total = sum((_dec(line.amount_residual) for line in open_terms), _dec(0))
+                if open_total <= 0 or amount > open_total + CENT or abs(
+                    open_total - _dec(invoice.amount_residual)
+                ) > CENT:
+                    raise StateInconsistencyError(f"AR collection {pay_ref}: payment exceeds open terms or residual drift.")
+            account = terms.account_id
+            if (account.account_type != "asset_receivable" or not account.reconcile
+                    or ("company_ids" in account._fields and self.company not in account.company_ids)
+                    or ("company_id" in account._fields and account.company_id and account.company_id != self.company)
+                    or (inv_num.startswith("INV-202608-") and account.code != "112000")):
+                raise StateInconsistencyError(f"AR collection {pay_ref}: invalid receivable account for {inv_num}.")
+            return account
+
+        if (not self.dry_run or not inv_num.startswith("INV-202608-") or len(plans) != 1
+                or extract_ref(plans[0].get("customer", "")) != customer
+                or plans[0]["date_invoice"] > payment_date
+                or amount > _dec(plans[0]["total_invoice_with_ppn"]) + CENT):
+            raise StateInconsistencyError(f"AR collection {pay_ref}: missing or inconsistent planned invoice {inv_num}.")
+        account = self._resolve_account("112000")
+        if not account or account.account_type != "asset_receivable" or not account.reconcile:
+            raise StateInconsistencyError(f"AR collection {pay_ref}: planned August account 112000 is not reconciliable.")
+        return account
+
     # -----------------------------------------------------------------------
     # Preflight Check & Continuity Verification
     # -----------------------------------------------------------------------
@@ -1598,6 +1671,11 @@ class GenericPeriodPackLoader:
                     raise
                 self.plan["ar"]["to_skip"] += 1
             else:
+                try:
+                    self._validate_ar_target(ar_row)
+                except StateInconsistencyError:
+                    self.plan["ar"]["conflicts"] += 1
+                    raise
                 self.plan["ar"]["to_reconcile"] += 1
 
         # 5. Evaluate AP Payments
@@ -1994,6 +2072,7 @@ class GenericPeriodPackLoader:
         - Must carry authoritative Tax Code 04 / DPP Nilai Lain identity
           (rejects wrong-code same-rate tax, e.g. generic 'PPN 12%').
         - Rejects ambiguous candidates (multiple matching taxes on the same scope).
+        - Leaves company defaults and catalog taxes to the operational configuration.
         """
         if "account.tax" not in self.env:
             raise PreflightContinuityError("Model 'account.tax' not found in Odoo environment.")
@@ -2095,36 +2174,6 @@ class GenericPeriodPackLoader:
 
         if hasattr(self.env, "invalidate_all") and callable(self.env.invalidate_all):
             self.env.invalidate_all()
-
-        # Bind canonical Tax Code 04 as company default sales tax and catalog product sales tax
-        if hasattr(self, "company") and self.company:
-            comp_fields = getattr(self.company, "_fields", {}) or {}
-            if "account_sale_tax_id" in comp_fields:
-                try:
-                    self.company.sudo().write({"account_sale_tax_id": tax_rec.id})
-                except Exception:
-                    pass
-        if self.env is not None:
-            if "product.product" in self.env:
-                try:
-                    Product = self.env["product.product"].sudo()
-                    comp_id = getattr(self.company, "id", None) if hasattr(self, "company") and self.company else None
-                    p_domain = [("company_id", "in", [comp_id, False])] if comp_id else []
-                    all_prods = Product.search(p_domain)
-                    if hasattr(all_prods, "write"):
-                        all_prods.write({"taxes_id": [(6, 0, [tax_rec.id])]})
-                except Exception:
-                    pass
-            if "product.template" in self.env:
-                try:
-                    Template = self.env["product.template"].sudo()
-                    comp_id = getattr(self.company, "id", None) if hasattr(self, "company") and self.company else None
-                    t_domain = [("company_id", "in", [comp_id, False])] if comp_id else []
-                    all_tmpls = Template.search(t_domain)
-                    if hasattr(all_tmpls, "write"):
-                        all_tmpls.write({"taxes_id": [(6, 0, [tax_rec.id])]})
-                except Exception:
-                    pass
 
         return tax_rec
 
@@ -3656,17 +3705,7 @@ class GenericPeriodPackLoader:
                 )
                 continue
 
-            if getattr(getattr(self.env, "cr", None), "dbname", None):
-                customer = extract_ref(ar_row.get("customer", ""))
-                if (
-                    inv.state != "posted" or inv.move_type != "out_invoice"
-                    or str(inv.date) > ar_row["payment_date"]
-                    or (customer and inv.partner_id.ref != customer)
-                    or not 0 < _dec(amt) <= _dec(inv.amount_residual) + CENT
-                ):
-                    raise StateInconsistencyError(
-                        f"AR collection {pay_ref}: invalid target, date, customer or residual for {inv_num}."
-                    )
+            receivable = self._validate_ar_target(ar_row, inv)
 
             if bank_journal:
                 pay_vals = {
@@ -3678,11 +3717,7 @@ class GenericPeriodPackLoader:
                     "journal_id": bank_journal.id,
                     "company_id": self.company.id,
                 }
-                if getattr(getattr(self.env, "cr", None), "dbname", None):
-                    receivable = inv.line_ids.filtered(lambda line: line.display_type == "payment_term").account_id
-                    if len(receivable) != 1 or receivable.code != "112000" or receivable.account_type != "asset_receivable":
-                        raise StateInconsistencyError(f"AR collection {pay_ref}: invoice {inv_num} is outside account 112000.")
-                    pay_vals["destination_account_id"] = receivable.id
+                pay_vals["destination_account_id"] = receivable.id
                 pay_fields = getattr(AccountPayment, "_fields", None)
                 if pay_fields is None or "memo" in pay_fields:
                     pay_vals["memo"] = pay_ref
@@ -3701,10 +3736,12 @@ class GenericPeriodPackLoader:
                     lambda line: line.account_type == "asset_receivable" and not line.reconciled
                 )
                 inv_lines = inv.line_ids.filtered(
-                    lambda line: line.account_type == "asset_receivable" and not line.reconciled
+                    lambda line: line.display_type == "payment_term" and line.account_id == receivable
+                    and not line.reconciled and _dec(getattr(line, "amount_residual", amt)) > 0
                 )
-                if pay_lines and inv_lines:
-                    (pay_lines + inv_lines).reconcile()
+                if not pay_lines or not inv_lines or any(line.account_id != receivable for line in pay_lines):
+                    raise StateInconsistencyError(f"AR collection {pay_ref}: payment destination does not match invoice.")
+                (pay_lines + inv_lines).reconcile()
                 reconciled += 1
 
         return reconciled

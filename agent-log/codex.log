@@ -872,3 +872,9 @@
 [2026-11-28T01:12:48+07:00] [INFO] Sinkronkan PR 207 setelah re-review
 - Main 8e83a301; scope POCO M3 diterima. CI kandidat akhir menyusul.
 - Task managed by codex agent at 2026-11-28T01:12:48+07:00
+
+[2026-11-28T09:43:15+07:00] [INFO] PR110 AR/F4 follow-up candidate on origin/main
+- [F] PR110 merged; branch agen/pr110-ar-f4-followup at main 6de45c50, source v2 three-file patch applied and hashes verified; 90 loader tests, ruff, manifests and diff check pass. Test impact TAMBAH, full 11 suites.
+- [F] Safe source and rollback-only probe hashes recorded in docs/reviews/PR110_AR_F4_FOLLOWUP.md; raw runtime logs and database/filestore not committed.
+- [BU] Exact-SHA full CI and full F4 in CI disposable pending; no clone/demo apply, July frozen, merge/deploy separate.
+- Task managed by codex agent at 2026-11-28T09:43:15+07:00
