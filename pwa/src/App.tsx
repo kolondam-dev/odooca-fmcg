@@ -879,6 +879,14 @@ function Workspace({
                                     </div>
                                 </section>
                                 <div class="hris-actions">
+                                    {runningMode === "live" && (
+                                        <a
+                                            class="card-row"
+                                            href="/field/?attendance-approval"
+                                        >
+                                            Koreksi dan persetujuan absensi
+                                        </a>
+                                    )}
                                     <button
                                         disabled={checkedOut}
                                         class="card-row"

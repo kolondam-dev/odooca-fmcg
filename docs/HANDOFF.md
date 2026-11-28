@@ -1,3 +1,11 @@
+## 2026-11-28 — Koreksi dan persetujuan absensi lintas klien (ChatGPT-ABSENSI)
+
+- [F] Satu slice di `agen/absensi-koreksi-approval`. Pengajuan koreksi WITA berbasis karyawan sendiri, antrean tier aktif, catatan keputusan, dan riwayat tersedia di Odoo, PWA live, dan Android Compose.
+- [A] Urutan tetap atasan langsung, atasan berikutnya, lalu Direksi/Pemilik perusahaan. HR perlu menyiapkan hierarki dan awal cakupan PWA. Koreksi yang sudah disetujui penuh dihitung ketika rekap dibuat ulang. Bukti asli tetap tercatat.
+- [F] TypeScript, kontrak, build PWA, 574 tes unit PWA dan 4 tes Chromium lulus. Instalasi Odoo kosong menguji regresi approval dan attendance.
+- [BU] CI exact SHA, praktik approval dengan akun per-tier di staging, serta kompilasi dan smoke Android menunggu. Sandbox tidak dapat mengunduh Gradle.
+- [BU] Deployment menyertakan upgrade `id_attendance` dan route gateway bila /field/ memakai staging gateway. Tidak dilakukan deployment dari branch ini.
+
 ## 2026-11-28T01:12:48+07:00 — Codex — Re-review DEV-02B dan sinkronisasi PR #207
 **Basis:** main `8e83a301`, APK perangkat `5ab7088`. [Matriks DEV-02B](android/DEV02B_DEVICES.md) mencatat cakupan POCO M3 diterima, Redmi 4X sebelum full deploy, stale fix fisik di DEV-04A, dan expiry alami/idle TTL di B01. Dampak test **CUKUP** untuk checkpoint.
 **Menunggu:** CI pada kandidat integrasi dan verdict akhir. PR tetap draft.

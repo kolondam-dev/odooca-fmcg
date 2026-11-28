@@ -79,3 +79,23 @@ libur, dan Time Off.
 Laporan adalah hasil sementara per pengguna. Buat ulang laporan setelah koreksi
 data atau perubahan konfigurasi. Fitur ini menggunakan Time Off native yang
 sudah tersedia. Pengajuan PWA dan approval khusus mengikuti tahap 3.
+
+## Koreksi absensi dan approval
+
+Karyawan dengan cakupan PWA mengajukan tanggal WITA yang sudah ditutup,
+sepasang jam masuk/pulang, dan alasan. Riwayat ada di Pusat Persetujuan →
+Koreksi Absensi Saya. PWA membuka `/field/?attendance-approval` dengan sesi
+Odoo, dan Android menyediakan layar Koreksi dan Persetujuan Absensi. Approval
+dapat diakses tanpa penugasan Sales harian.
+
+Sebelum digunakan, isi dua tingkat atasan pada struktur karyawan (atasan
+langsung dan atasannya) serta anggota grup Direksi/Pemilik di perusahaan
+tersebut. Pemohon dan dua approver pertama harus berbeda. Hanya peserta
+perusahaan itu dapat melihat pengajuan dan hanya tier aktif yang dapat
+memutuskan. Pemilik hanya bertindak pada tier terakhir. Keputusan dicatat
+bersama aktor, waktu, dan catatan. Cuti/sakit/izin mengikuti Time Off.
+
+Rekap yang dibuat ulang memakai jam pengajuan terbaru yang sudah disetujui
+penuh untuk tanggal tersebut. Detail menandainya sebagai koreksi disetujui.
+Foto, GPS, dan baris clock-in/out asli tetap tersedia. Koreksi tidak dipakai
+untuk hari berjalan atau tanggal sebelum awal cakupan PWA.

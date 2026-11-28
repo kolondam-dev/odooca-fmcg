@@ -136,6 +136,7 @@
                 <field name="required_minutes" optional="hide" sum="Total"/>
                 <field name="scheduled_minutes" sum="Total"/>
                 <field name="late_minutes" sum="Total"/>
+                <field name="correction_applied" optional="hide"/>
                 <field name="early_minutes" optional="hide" sum="Total"/>
                 <field name="leave_minutes" optional="hide" sum="Total"/>
                 <field name="sick_minutes" optional="hide" sum="Total"/>
@@ -165,6 +166,7 @@
                             <field name="covered"/>
                             <field name="status"/>
                             <field name="attendance_id"/>
+                            <field name="correction_applied"/>
                             <field name="check_in"/>
                             <field name="check_out"/>
                         </group>

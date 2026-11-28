@@ -3,3 +3,5 @@ access_mobile_office_hr_manager,Mobile office read for HR management,id_mobile_a
 access_attendance_holiday_hr,Attendance holidays HR,model_id_attendance_holiday,hr.group_hr_manager,1,1,1,1
 access_attendance_report_hr,Attendance report HR,model_id_attendance_report,hr.group_hr_manager,1,1,1,1
 access_attendance_report_line_hr,Attendance report detail HR,model_id_attendance_report_line,hr.group_hr_manager,1,1,1,1
+access_attendance_correction_user,Attendance correction own,model_id_attendance_correction,base.group_user,1,0,1,0
+access_attendance_correction_decision_user,Attendance correction decision,model_id_attendance_correction_decision,base.group_user,1,1,1,1

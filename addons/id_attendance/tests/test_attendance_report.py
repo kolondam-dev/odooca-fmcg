@@ -3,7 +3,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from odoo import Command, fields
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -247,3 +247,51 @@ class TestAttendanceReport(TransactionCase):
         line = self.env["id.attendance.report.line"].with_user(owner).search(domain)
         self.assertEqual(line.status, "absent")
         self.assertFalse(line.with_user(colleague).search(domain))
+
+    def test_attendance_correction_requires_each_tier_and_preserves_evidence(self):
+        internal = self.env.ref("base.group_user")
+        director = self.env.ref("id_approval.group_fmcg_approval_director")
+        requester, supervisor, manager, owner, outsider = self.env["res.users"].create([{
+            "name": role, "login": f"report_correction_{role}",
+            "company_id": self.company.id, "company_ids": [Command.set(self.company.ids)],
+            "group_ids": [Command.set((internal | director).ids if role == "Owner" else internal.ids)],
+        } for role in ["Requester", "Supervisor", "Manager", "Owner", "Outsider"]])
+        managers = self.env["hr.employee"].create([{
+            "name": user.name, "company_id": self.company.id, "user_id": user.id,
+        } for user in (supervisor, manager)])
+        managers[0].parent_id = managers[1]
+        self.employee.write({"user_id": requester.id, "parent_id": managers[0].id})
+        attendance = self._attendance(completed=False)
+        original = (attendance.check_in, attendance.check_out, attendance.pwa_check_in_evidence_id)
+        with patch.object(fields.Datetime, "now", return_value=self.closed_clock):
+            correction = self.env["id.attendance.correction"].with_user(requester).create({
+                "business_date": self.day, "start_hour": 8, "end_hour": 17,
+                "reason": "Forgot to check out",
+            })
+        correction.action_submit()
+        request = correction.approval_id
+        self.assertFalse(request.with_user(outsider).search([("id", "=", request.id)]))
+        with self.assertRaises(AccessError):
+            request.with_user(requester).action_approve()
+        with self.assertRaises(AccessError):
+            request.with_user(owner).action_approve()
+        with self.assertRaises(AccessError):
+            request.with_user(supervisor).write({"state": "approved"})
+        self.assertFalse(self._generate()[1][self.day].correction_applied)
+
+        request.with_user(supervisor).action_approve(expected_tier=1)
+        with self.assertRaises(UserError):
+            request.with_user(manager).action_approve(expected_tier=1)
+        self.assertFalse(self._generate()[1][self.day].correction_applied)
+        request.with_user(manager).action_approve(expected_tier=2)
+        decision = request.with_user(owner).action_open_correction_decision()
+        self.env[decision["res_model"]].with_user(owner).with_context(**decision["context"]).create({
+            "notes": "Reviewed original capture",
+        }).action_approve()
+        self.assertEqual(request.line_ids[-1].notes, "Reviewed original capture")
+        self.assertEqual(request.state, "approved")
+        self.assertEqual(request.line_ids.actual_approver_id, supervisor | manager | owner)
+        row = self._generate()[1][self.day]
+        self.assertTrue(row.correction_applied)
+        self.assertEqual((row.status, row.required_minutes, row.scheduled_minutes), ("present", 480, 480))
+        self.assertEqual((attendance.check_in, attendance.check_out, attendance.pwa_check_in_evidence_id), original)

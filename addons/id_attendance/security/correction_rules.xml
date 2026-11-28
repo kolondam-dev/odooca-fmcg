@@ -1,0 +1,22 @@
+<odoo>
+    <record id="approval_category_attendance" model="fmcg.approval.category">
+        <field name="name">Attendance Correction</field>
+        <field name="code">attendance_correction</field>
+        <field name="res_model">id.attendance.correction</field>
+    </record>
+    <record id="correction_requester_rule" model="ir.rule">
+        <field name="name">Attendance corrections by requester and company</field>
+        <field name="model_id" ref="model_id_attendance_correction"/>
+        <field name="domain_force">[('requester_id', '=', user.id), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="correction_approval_scope" model="ir.rule">
+        <field name="name">Attendance approval visibility by participant and company</field>
+        <field name="model_id" ref="id_approval.model_fmcg_approval_request"/>
+        <field name="domain_force">['|', ('category_code', '!=', 'attendance_correction'), '&amp;', ('company_id', 'in', company_ids), ('attendance_participant_ids', 'in', [user.id])]</field>
+    </record>
+    <record id="correction_approval_line_scope" model="ir.rule">
+        <field name="name">Attendance approval tiers by participant and company</field>
+        <field name="model_id" ref="id_approval.model_fmcg_approval_request_line"/>
+        <field name="domain_force">['|', ('request_id.category_code', '!=', 'attendance_correction'), '&amp;', ('request_id.company_id', 'in', company_ids), ('request_id.attendance_participant_ids', 'in', [user.id])]</field>
+    </record>
+</odoo>

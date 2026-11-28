@@ -53,12 +53,21 @@ class SessionManager(
 
     private suspend fun refreshIdentityLocked(): IdentityDto {
         try {
-            val identity = api.bootstrap()
+            val identity = try {
+                api.bootstrap()
+            } catch (e: ApiException) {
+                if (e.status !in listOf(403, 422)) throw e
+                try {
+                    api.attendanceIdentity()
+                } catch (_: ApiException) {
+                    throw e
+                }
+            }
             store.identityJson = ApiJson.encodeToString(IdentityDto.serializer(), identity)
             store.csrfToken = identity.csrfToken
             _identity.value = identity
             generation++
-            onAuthenticated(identity.id)
+            if ("attendance.approval_only" !in identity.capabilities) onAuthenticated(identity.id)
             return identity
         } catch (e: ApiException) {
             if (e.status == 401) clearLocked()

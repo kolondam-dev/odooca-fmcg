@@ -11,6 +11,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.io.File
+import okhttp3.FormBody
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -89,6 +90,41 @@ class OdoocaApi(
         val (code, body) = execute(Request.Builder().url(url("/api/v1/me/bootstrap")).get().build())
         if (code !in 200..299) throw failure(code, body)
         return ApiJson.decodeFromString(IdentityDto.serializer(), body)
+    }
+
+    suspend fun attendanceIdentity(): IdentityDto =
+        ApiJson.decodeFromString(IdentityDto.serializer(), attendanceRequest("/session"))
+
+    suspend fun attendanceInbox(): AttendanceInbox =
+        ApiJson.decodeFromString(AttendanceInbox.serializer(), attendanceRequest(""))
+
+    suspend fun submitAttendanceCorrection(csrf: String, draft: AttendanceCorrectionDraft) {
+        attendanceRequest("", mapOf(
+            "csrf_token" to csrf, "client_key" to draft.key, "business_date" to draft.date,
+            "start_hour" to draft.start.toString(), "end_hour" to draft.end.toString(), "reason" to draft.reason,
+        ))
+    }
+
+    suspend fun decideAttendanceCorrection(csrf: String, item: AttendanceApproval, approve: Boolean, notes: String) {
+        attendanceRequest("/decision", mapOf(
+            "csrf_token" to csrf, "approval_id" to item.id.toString(), "tier" to item.tier.toString(),
+            "decision" to if (approve) "approve" else "reject", "notes" to notes,
+        ))
+    }
+
+    private suspend fun attendanceRequest(path: String, fields: Map<String, String>? = null): String {
+        val builder = Request.Builder().url(url("/api/v1/attendance/corrections" + path))
+        if (fields != null) {
+            builder.post(FormBody.Builder().apply { fields.forEach { (key, value) -> add(key, value) } }.build())
+        }
+        val (code, body) = execute(builder.build())
+        if (code !in 200..299) {
+            val detail = runCatching {
+                ApiJson.parseToJsonElement(body).jsonObject["error"]?.jsonPrimitive?.contentOrNull
+            }.getOrNull()
+            throw ApiException(code, detail ?: "Persetujuan tidak dapat diakses (HTTP $code)")
+        }
+        return body
     }
 
     /** Mengembalikan JSON mentah (disimpan utuh) bersama hasil parse bagian yang dipakai. */

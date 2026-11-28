@@ -1,4 +1,8 @@
 import {
+    AttendanceApprovalSchema,
+    AttendanceInboxSchema,
+} from "../src/domain/attendance-correction.ts";
+import {
     AttendanceEvidenceMetadataSchema,
     AttendanceEvidenceReceiptSchema,
     OfficialEvidenceMetadataSchema,
@@ -173,6 +177,23 @@ function evidenceResponse() {
         },
     };
 }
+function correctionForm(properties) {
+    const fields = { csrf_token: z.string(), ...properties };
+    return {
+        required: true,
+        content: {
+            "application/x-www-form-urlencoded": {
+                schema: z.toJSONSchema(z.object(fields)),
+            },
+        },
+    };
+}
+function correctionResponse(schema) {
+    return {
+        description: "Attendance correction result",
+        content: { "application/json": { schema: z.toJSONSchema(schema) } },
+    };
+}
 const spec = {
     openapi: "3.1.0",
     info: {
@@ -183,6 +204,60 @@ const spec = {
     },
     servers: [{ url: "/api/v1" }],
     paths: {
+        "/attendance/corrections/session": {
+            get: {
+                responses: {
+                    200: correctionResponse(
+                        IdentitySchema.extend({
+                            capabilities: z.tuple([
+                                z.literal("attendance.approval_only"),
+                            ]),
+                        }),
+                    ),
+                    403: { description: "Internal user required" },
+                },
+            },
+        },
+        "/attendance/corrections": {
+            get: {
+                responses: { 200: correctionResponse(AttendanceInboxSchema) },
+            },
+            post: {
+                requestBody: correctionForm({
+                    business_date: z.iso.date(),
+                    start_hour: z.string(),
+                    end_hour: z.string(),
+                    reason: z.string().max(1000),
+                    client_key: z.uuid(),
+                }),
+                responses: {
+                    200: correctionResponse(AttendanceApprovalSchema),
+                    409: {
+                        description: "Submission UUID used for another payload",
+                    },
+                    422: { description: "Correction or hierarchy invalid" },
+                },
+            },
+        },
+        "/attendance/corrections/decision": {
+            post: {
+                requestBody: correctionForm({
+                    approval_id: z.string(),
+                    tier: z.string(),
+                    decision: z.enum(["approve", "reject"]),
+                    notes: z.string().max(1000),
+                }),
+                responses: {
+                    200: correctionResponse(AttendanceApprovalSchema),
+                    403: { description: "User cannot decide the active tier" },
+                    404: {
+                        description:
+                            "No visible request in the current company",
+                    },
+                    422: { description: "Invalid decision or stale tier" },
+                },
+            },
+        },
         "/me/bootstrap": {
             get: {
                 responses: {
