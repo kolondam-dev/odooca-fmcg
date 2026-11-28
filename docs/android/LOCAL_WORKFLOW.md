@@ -228,6 +228,15 @@ Gateway `https://demo-gateway-production-abd1.up.railway.app` adalah kandidat pr
 - **Design:** Temuan judul bertumpuk status bar tetap di jalur visual DES-02/D01.
 - **Lead:** `6de45c5` menjadi acuan pascamerge DEV-02B; refresh main sebelum membuka DEV-03A.
 
+### Arahan Lead — DEV-03A Outbox (S3)
+
+Mulai [DEV-03A](DEV_SPEC.md) pada branch Dev dengan main `cbb3e780ced248b64a5af3f5b06dfff7d211d128` sebagai acuan awal. PR #207 sudah merged; refresh main saat mulai dan sebelum handoff. Gunakan kontrak Mobile API aktif dan fixture disposable B09.
+
+- **Dev:** Audit OutboxRepository, Room, scheduler/worker dan lease sesi yang ada. Reproduksi commit server diikuti putus koneksi sebelum receipt diterima; retry harus memakai UUID dan payload yang sama, memulihkan receipt, dan menghasilkan tepat satu efek server. Uji beberapa item siap saat 401 (berhenti setelah 401 pertama), worker overlap, pergantian akun, dependensi antrean, dan recovery sesudah process death serta reboot di emulator. Pertahankan urutan yang disyaratkan dan pemisahan owner serta bukti 401/logout dari DEV-02B. Perbaiki hanya celah yang dibuktikan.
+- **Bukti:** Domain/Room/HTTP dan runtime emulator, termasuk ledger/receipt Odoo disposable untuk replay, SHA/hash APK, kondisi retry dan recovery, gate lokal, hasil planner dan dampak test. Tandai [BU] untuk bukti yang belum tersedia. Push checkpoint dan handoff ke branch Dev. DEV-03B Storage mengikuti checkpoint terpisah.
+- **Design:** Lanjutkan DES-02/D01 dan tinjau state antrean/receipt untuk slice visual. DEV-03A bisa berjalan paralel; temuan status bar tetap dilacak di jalur visual.
+- **Lead:** Review checkpoint dan bukti exact SHA sebelum integrasi. Redmi 4X tetap sebelum full deploy, stale fix fisik di DEV-04A, expiry alami/idle TTL di B01.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |

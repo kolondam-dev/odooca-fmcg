@@ -1,3 +1,7 @@
+## 2026-11-28T14:37:21+07:00 — Codex — Mulai DEV-03A Outbox (S3)
+**Basis:** main `cbb3e780ced248b64a5af3f5b06dfff7d211d128`; DEV-02B selesai. [Arahan bersama](android/LOCAL_WORKFLOW.md) mematok replay, 401, worker overlap, isolasi akun/dependensi, serta recovery emulator sebagai bukti DEV-03A.
+**Menunggu:** checkpoint Dev. Design melanjutkan DES-02/D01 secara paralel.
+
 ## 2026-11-28T08:19:37+07:00 — Codex — Tutup checkpoint DEV-02B POCO M3
 **Bukti:** PR #207 merged pada `6de45c5`. Supervisor PASS/CUKUP pada `cd21a19`, CI 28 lulus dan 3 dilewati, perangkat pada APK `5ab7088`. Follow-up Redmi 4X, stale fix dan expiry/TTL dicatat di [workflow bersama](android/LOCAL_WORKFLOW.md).
 
