@@ -125,7 +125,9 @@ export function TripClosing({
                 throw new Error("Daily sync wajib sebelum closing.");
             const rows = await store.list(owner),
                 pods = tripPods(rows, owner, daily, trip);
-            for (const row of pods) await validatePodMedia(row, owner, store);
+            for (const pod of pods) {
+                if (pod.local) await validatePodMedia(pod.local, owner, store);
+            }
             const fix = await captureVisitLocation(),
                 p = TripCloseSchema.parse({
                     trip_id: trip,
@@ -133,7 +135,7 @@ export function TripClosing({
                     daily_source: daily,
                     office: DEMO_OFFICE,
                     fix,
-                    pod_uuids: pods.map((r) => r.command.client_uuid).sort(),
+                    pod_uuids: pods.map((r) => r.uuid).sort(),
                     ...(closingNote ? { note: closingNote } : {}),
                     ...(daily
                         .deliveryManifest!.filter((t) => t.trip === trip)

@@ -128,6 +128,14 @@ class AttendanceReport(models.TransientModel):
                 ("in_mode", "=", "pwa"), ("pwa_check_in_evidence_id", "!=", False),
             ])
         }
+        corrections = {}
+        for correction in env["id.attendance.correction"].sudo().search([
+            ("company_id", "=", self.company_id.id),
+            ("employee_id", "in", employees.ids),
+            ("business_date", ">=", self.date_from), ("business_date", "<=", self.date_to),
+            ("approval_id.state", "=", "approved"),
+        ], order="id asc"):
+            corrections[correction.employee_id.id, correction.business_date] = correction
         native_holidays = env["resource.calendar.leaves"].sudo().search([
             ("resource_id", "=", False), ("time_type", "=", "leave"),
             ("company_id", "in", [False, self.company_id.id]),
@@ -149,12 +157,13 @@ class AttendanceReport(models.TransientModel):
                 while next_version and next_version.date_version <= day:
                     version, next_version = next_version, next(versions, None)
                 attendance = attendances.get((employee.id, day))
+                correction = corrections.get((employee.id, day))
                 in_employment = bool(version) and (
                     (not version.contract_date_start or day >= version.contract_date_start)
                     and (not version.contract_date_end or day <= version.contract_date_end)
                     and (not employee.departure_date or day <= employee.departure_date)
                 )
-                if not attendance and not in_employment:
+                if not attendance and not correction and not in_employment:
                     continue
 
                 window = [(day_start(day), day_start(day + DAY))]
@@ -168,7 +177,7 @@ class AttendanceReport(models.TransientModel):
                     planned, calendar_known, holiday_notes = schedules[key]
                 result.append(self._day_values(
                     employee, version, day, today, attendance, planned, calendar_known,
-                    holiday_notes, leave_by_employee[employee.id], window,
+                    holiday_notes, leave_by_employee[employee.id], window, correction=correction,
                 ))
         return result
 
@@ -189,7 +198,7 @@ class AttendanceReport(models.TransientModel):
         return subtract(scheduled, holiday_time), calendar_known, notes
 
     def _day_values(self, employee, version, day, today, attendance, planned, calendar_known,
-                    holiday_notes, leaves, window):
+                    holiday_notes, leaves, window, correction=None):
         closed = day < today
         coverage = employee.pwa_attendance_report_from
         departure = employee.departure_date
@@ -197,8 +206,11 @@ class AttendanceReport(models.TransientModel):
                        and (not departure or day <= departure))
         verified_out = bool(attendance and attendance.check_out and attendance.out_mode == "pwa"
                             and attendance.pwa_check_out_evidence_id)
-        check_in = utc(attendance.check_in) if attendance else None
-        check_out = utc(attendance.check_out) if verified_out else None
+        effective_in = correction.check_in if correction else attendance.check_in if attendance else False
+        effective_out = correction.check_out if correction else attendance.check_out if verified_out else False
+        check_in = utc(effective_in) if effective_in else None
+        check_out = utc(effective_out) if effective_out else None
+        recorded = bool(effective_in)
         actual = intersect([(check_in, check_out)], window) if check_out else []
 
         # Overlapping Time Off records count once, with a stable category precedence.
@@ -221,8 +233,8 @@ class AttendanceReport(models.TransientModel):
         late = late if late > self.grace_minutes else 0
         early = early if early > self.grace_minutes else 0
 
-        if attendance:
-            status = "incomplete" if not verified_out else "present" if required else "unscheduled"
+        if recorded:
+            status = "incomplete" if not effective_out else "present" if required else "unscheduled"
         elif not calendar_known:
             status = "no_calendar"
         elif not planned:
@@ -239,7 +251,7 @@ class AttendanceReport(models.TransientModel):
             status = "absent"
 
         # Unconfirmed pending days remain outside the closed-day rate denominator.
-        required_day = int(bool(covered and closed and required and (attendance or not pending)))
+        required_day = int(bool(covered and closed and required and (recorded or not pending)))
         return {
             "report_id": self.id,
             "employee_id": employee.id,
@@ -251,8 +263,9 @@ class AttendanceReport(models.TransientModel):
             "status": status,
             "covered": covered,
             "holiday_notes": "\n".join(holiday_notes),
-            "check_in": attendance.check_in if attendance else False,
-            "check_out": attendance.check_out if verified_out else False,
+            "check_in": effective_in,
+            "check_out": effective_out,
+            "correction_applied": bool(correction),
             "attendance_id": attendance.id if attendance else False,
             "planned_minutes": minutes(planned),
             "required_minutes": minutes(required),
@@ -267,9 +280,9 @@ class AttendanceReport(models.TransientModel):
             "permission_minutes": leave_minutes["permission"],
             "pending_minutes": minutes(pending),
             "planned_days": int(bool(planned)),
-            "recorded_days": int(bool(attendance)),
+            "recorded_days": int(recorded),
             "required_days": required_day,
-            "present_days": required_day * int(bool(attendance)),
+            "present_days": required_day * int(recorded),
             "absent_days": int(status == "absent"),
             "incomplete_days": int(status == "incomplete"),
             "late_days": int(bool(late)),
@@ -298,6 +311,7 @@ class AttendanceReportLine(models.TransientModel):
     ], required=True)
     covered = fields.Boolean(string="PWA Coverage")
     holiday_notes = fields.Text()
+    correction_applied = fields.Boolean(string="Approved Correction Applied")
     check_in = fields.Datetime()
     check_out = fields.Datetime()
     attendance_id = fields.Many2one("hr.attendance", ondelete="cascade")

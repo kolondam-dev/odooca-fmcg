@@ -1,5 +1,6 @@
 import { test as base, expect, type Page } from "@playwright/test";
 import { MockProvider } from "../../src/data/mock";
+import type { Scenario } from "../../src/domain/contracts";
 import "fake-indexeddb/auto";
 (globalThis as Record<string, unknown>).__DEMO__ = true;
 const actors = new WeakMap<Page, string>();
@@ -33,6 +34,20 @@ export const test = base.extend({
             await install(options);
         };
         await page.addInitScript(() => {
+            // QA "Mode respons" only affects the local simulator. Authenticated
+            // writes go straight to /api/v1/sync/commands, so remember the last
+            // selection for the HTTP fixture (the control unmounts on navigate).
+            const state = window as unknown as { __fixtureScenario?: string };
+            state.__fixtureScenario = "normal";
+            document.addEventListener(
+                "change",
+                (event) => {
+                    const target = event.target as HTMLSelectElement | null;
+                    if (target?.getAttribute("aria-label") === "Mode respons")
+                        state.__fixtureScenario = target.value;
+                },
+                true,
+            );
             const RealDate = window.Date;
             const witaDateStr = new RealDate().toLocaleDateString("en-CA", {
                 timeZone: "Asia/Makassar",
@@ -168,6 +183,15 @@ export const test = base.extend({
             await route.fulfill({
                 json: {
                     ...snapshot,
+                    // The in-browser clock can move across WITA days while this
+                    // HTTP fixture is evaluated in the Node process. Native
+                    // manifest owner/day must follow the response scope exactly,
+                    // just as the Odoo endpoint does.
+                    deliveries: snapshot.deliveries.map((delivery) => ({
+                        ...delivery,
+                        owner: `${snapshot.scope?.company_id}:${snapshot.scope?.user_id}`,
+                        business_date: date,
+                    })),
                     ...(legacyServers.has(page) ? { features: undefined } : {}),
                     updatedAt: now,
                     scope: { ...snapshot.scope, business_date: date },
@@ -199,6 +223,15 @@ export const test = base.extend({
             const simulator = new MockProvider(
                 actors.get(page) ?? "sales",
                 true,
+            );
+            simulator.scenario = await evalRetry(
+                page,
+                () =>
+                    (
+                        window as unknown as {
+                            __fixtureScenario?: Scenario;
+                        }
+                    ).__fixtureScenario ?? "normal",
             );
             Object.defineProperty(globalThis, "navigator", {
                 configurable: true,

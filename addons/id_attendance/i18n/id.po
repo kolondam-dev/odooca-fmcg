@@ -423,3 +423,49 @@ msgstr "Jadwal dan Catatan"
 #: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_report_line_form
 msgid "Attendance Minutes"
 msgstr "Rincian Menit Absensi"
+
+#. module: id_attendance
+#: model:ir.actions.act_window,name:id_attendance.action_attendance_corrections
+#: model:ir.ui.menu,name:id_attendance.menu_attendance_corrections
+msgid "My Attendance Corrections"
+msgstr "Koreksi Absensi Saya"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_correction_form
+msgid "Submit for Approval"
+msgstr "Ajukan Persetujuan"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_correction_form
+msgid "Open Approval"
+msgstr "Buka Persetujuan"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_report_line__correction_applied
+msgid "Approved Correction Applied"
+msgstr "Koreksi Disetujui Diterapkan"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_correction__start_hour
+msgid "Corrected Check In (WITA)"
+msgstr "Koreksi Jam Masuk (WITA)"
+
+#. module: id_attendance
+#: model:ir.model.fields,field_description:id_attendance.field_id_attendance_correction__end_hour
+msgid "Corrected Check Out (WITA)"
+msgstr "Koreksi Jam Pulang (WITA)"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_approval_request
+msgid "Review Attendance Correction"
+msgstr "Tinjau Koreksi Absensi"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_decision_form
+msgid "Approve"
+msgstr "Setujui"
+
+#. module: id_attendance
+#: model_terms:ir.ui.view,arch_db:id_attendance.view_attendance_decision_form
+msgid "Reject"
+msgstr "Tolak"

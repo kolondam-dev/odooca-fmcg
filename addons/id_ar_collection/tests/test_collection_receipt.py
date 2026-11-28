@@ -339,6 +339,10 @@ class TestCollectionReceipt(TransactionCase):
         self._submit(self._command(sheet, [self._entry(sheet, move, "partial", 40000)]))
         with self.assertRaises(UserError):  # tidak dapat dibatalkan/didraf selama ada uang pending
             sheet.action_cancel()
+        receipt = self._receipts(sheet)
+        with self.assertRaises(UserError):  # tunai belum dihitung kasir: belum boleh returned (8.11)
+            sheet._apply_state("returned")
+        receipt.with_user(self._cashier()).validate_cash({receipt.line_ids.id: receipt.line_ids.amount})
         sheet._apply_state("returned")  # `returned` tidak melepas proteksi
         with self.assertRaises(ValidationError):  # faktur tidak boleh masuk SJP lain
             self._sheet([move], collector=self.other)
@@ -640,4 +644,175 @@ class TestCollectionReceipt(TransactionCase):
         with self.assertRaises(UserError):  # alasan berbeda, token sama
             self._custody(sheet, move, token="TOK-BIND", user=control, reason="alasan lain")
         self.assertEqual(self.env["id.collection.receipt"].sudo().search_count([("desk_token", "=", "TOK-BIND")]), 1)
+
+    # ---- BE-20e 1/n: kasir tunai (8.11) ----------------------------------------------------------------------
+    def _cashier(self):
+        return new_test_user(
+            self.env, login=f"rcp-cashier-{uuid.uuid4().hex[:6]}", groups="id_ar_collection.group_ar_cashier",
+            company_id=self.company.id)
+
+    def _desk(self, sheet, moves, token="DESK-1", user=None, occurred="2026-11-24T10:00:00+08:00", **extra):
+        entries = [self._entry(sheet, move, **extra) for move in moves]
+        model = self.env["id.collection.receipt"].with_user(user or self._cashier())
+        return model.record_desk_cash(sheet.id, token, occurred, entries)
+
+    def test_cashier_desk_cash_is_cashier_validated_allocated_and_idempotent(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        cashier = self._cashier()
+        receipt = self._desk(sheet, [move], user=cashier)
+        self.assertEqual((receipt.source, receipt.exception, receipt.state, receipt.method),
+                         ("cashier_desk", False, "cashier_validated", "cash"))
+        self.assertEqual((receipt.cashier_id, bool(receipt.cashier_validated_at)), (cashier, True))
+        line = receipt.line_ids
+        self.assertEqual((line.allocation_state, line.holds_invoice, line.counted_amount, line.difference),
+                         ("allocated", True, line.amount, 0.0))
+        sheet_line = self._line_of(sheet, move)
+        self.assertEqual((sheet_line.outcome, sheet_line.collected_amount), ("paid", line.amount))
+        self.assertEqual(sheet.state, "issued")
+        with self.assertRaises(ValidationError):  # proteksi pending
+            self._lock_free_candidate(move)
+        self.assertEqual(self._desk(sheet, [move], user=cashier), receipt)  # token sama, payload sama
+        self.assertEqual(self.env["id.collection.receipt"].sudo().search_count([("sheet_id", "=", sheet.id)]), 1)
+        self.clock.move_to(CUTOFF_UTC)  # penutupan tidak menyentuh baris yang sudah dilaporkan
+        sheet._close_settlement_day()
+        self.assertEqual((sheet.state, sheet_line.outcome), ("issued", "paid"))
+
+    def test_cashier_desk_rejects_wrong_actor_method_stale_balance_and_existing_claim_atomically(self):
+        first, second = self._invoice(), self._invoice()
+        sheet = self._sheet([first, second])
+        with self.assertRaises(AccessError):
+            self._desk(sheet, [first], user=self.admin)
+        with self.assertRaises(UserError):  # transfer/giro tidak memakai jalan pintas kasir
+            self._desk(sheet, [first], method="transfer", transfer={"reference": "TRX-1"})
+        stale = self._entry(sheet, second)
+        stale["expected_balance"] += 1
+        model = self.env["id.collection.receipt"].with_user(self._cashier())
+        with self.assertRaises(UserError):  # satu baris basi menolak seluruh operasi
+            model.record_desk_cash(
+                sheet.id, "DESK-ATOM", "2026-11-24T10:00:00+08:00", [self._entry(sheet, first), stale])
+        self.assertFalse(self._receipts(sheet))
+        self.assertEqual(self._line_of(sheet, first).outcome, "pending")  # tak ada efek sebagian
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, first)]))["status"], "accepted")
+        with self.assertRaises(UserError):  # sudah ada klaim mobile: validasi, bukan buat baru
+            self._desk(sheet, [first], token="DESK-2")
+        self.clock.move_to(CUTOFF_UTC)
+        with self.assertRaises(UserError):  # sesudah penutupan: custody
+            self._desk(sheet, [second], token="DESK-3", occurred="2026-11-24T23:00:00+08:00")
+
+    def test_cashier_validates_mobile_cash_claim_with_recorded_difference(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, move)]))["status"], "accepted")
+        receipt = self._receipts(sheet)
+        line = receipt.line_ids
+        claim = line.amount
+        cashier = self._cashier()
+        model = receipt.with_user(cashier)
+        with self.assertRaises(AccessError):
+            receipt.with_user(self.admin).validate_cash({line.id: claim})
+        with self.assertRaises(UserError):  # hitungan harus memuat seluruh baris
+            model.validate_cash({})
+        with self.assertRaises(UserError):  # selisih wajib catatan
+            model.validate_cash({line.id: claim - 50})
+        model.validate_cash({line.id: claim - 50}, "Kurang 50 rb, diakui kolektor")
+        self.assertEqual((receipt.state, receipt.cashier_id), ("cashier_validated", cashier))
+        self.assertEqual((line.amount, line.counted_amount, line.difference), (claim, claim - 50, -50.0))
+        self.assertEqual(line.difference_note, "Kurang 50 rb, diakui kolektor")
+        self.assertTrue(line.holds_invoice)  # klaim tetap utuh dan terproteksi
+        with self.assertRaises(UserError):  # tidak dapat divalidasi dua kali
+            model.validate_cash({line.id: claim})
+
+    def test_cashier_cannot_validate_non_cash_claims(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        entry = self._entry(sheet, move, method="transfer", transfer={"reference": "TRX-5"})
+        self.assertEqual(self._submit(self._command(sheet, [entry]))["status"], "accepted")
+        receipt = self._receipts(sheet)
+        with self.assertRaises(UserError):
+            receipt.with_user(self._cashier()).validate_cash({receipt.line_ids.id: receipt.line_ids.amount})
+
+    def test_sheet_cannot_be_returned_before_cashier_counts_cash(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, move)]))["status"], "accepted")
+        receipt = self._receipts(sheet)
+        with self.assertRaises(UserError):
+            sheet.sudo()._apply_state("returned")
+        receipt.with_user(self._cashier()).validate_cash({receipt.line_ids.id: receipt.line_ids.amount})
+        sheet.sudo()._apply_state("returned")
+        self.assertEqual(sheet.state, "returned")
+
+    # ---- review #211: custody tunai, unpaid nol, kompatibilitas token #210 ----------------------------------
+    def test_custody_cash_is_validated_by_cashier_and_held_allocation_still_blocks_returned(self):
+        reported, held_move = self._invoice(), self._invoice()
+        sheet = self._sheet([reported, held_move])
+        self.assertEqual(self._submit(self._command(sheet, [self._entry(sheet, reported)]))["status"], "accepted")
+        mobile = self._receipts(sheet)
+        cashier = self._cashier()
+        mobile.with_user(cashier).validate_cash({mobile.line_ids.id: mobile.line_ids.amount})
+        self.clock.move_to(CUTOFF_UTC)
+        sheet._close_settlement_day()
+        self._sheet([held_move], collector=self.other)  # SJP lain memegang faktur yang sama
+        control = self._control()
+        custody = self._custody(sheet, held_move, user=control)
+        line = custody.line_ids
+        self.assertEqual((custody.state, line.allocation_state), ("posted", "held"))
+        claim = line.amount
+        custody.with_user(cashier).validate_cash({line.id: claim})
+        self.assertEqual((custody.state, line.amount, line.counted_amount, line.allocation_state),
+                         ("cashier_validated", claim, claim, "held"))  # klaim dan alokasi utuh
+        with self.assertRaises(UserError):  # uang sudah dihitung, alokasi held masih menahan returned
+            sheet._apply_state("returned")
+        line.with_user(control).resolve_held("release", "faktur dipegang SJP lain")
+        sheet._apply_state("returned")
+        self.assertEqual(sheet.state, "returned")
+
+    def test_zero_unpaid_receipt_does_not_block_returned_and_mixed_receipt_counts_money_lines_only(self):
+        paid, unpaid = self._invoice(), self._invoice()
+        only_unpaid_sheet = self._sheet([unpaid])
+        self.assertEqual(self._submit(self._command(
+            only_unpaid_sheet, [self._entry(only_unpaid_sheet, unpaid, "unpaid")]))["status"], "accepted")
+        only_unpaid_sheet._apply_state("returned")  # receipt unpaid saja melewati guard
+        self.assertEqual(only_unpaid_sheet.state, "returned")
+        with self.assertRaises(UserError):  # dan memang tidak ada uang untuk dihitung
+            self._receipts(only_unpaid_sheet).with_user(self._cashier()).validate_cash({})
+        mixed_unpaid = self._invoice()
+        mixed = self._sheet([paid, mixed_unpaid])
+        self.assertEqual(self._submit(self._command(mixed, [
+            self._entry(mixed, paid), self._entry(mixed, mixed_unpaid, "unpaid")]))["status"], "accepted")
+        receipt = self._receipts(mixed)
+        money = receipt.line_ids.filtered(lambda line: line.amount > 0)
+        self.assertEqual(len(receipt.line_ids), 2)
+        with self.assertRaises(UserError):
+            mixed.sudo()._apply_state("returned")  # baris uang belum dihitung
+        receipt.with_user(self._cashier()).validate_cash({money.id: money.amount})  # unpaid tak perlu hitungan
+        self.assertEqual(receipt.state, "cashier_validated")
+        mixed.sudo()._apply_state("returned")
+
+    def test_custody_token_from_previous_release_still_replays_after_upgrade(self):
+        import hashlib
+        import json
+
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.clock.move_to(CUTOFF_UTC)
+        control = self._control()
+        receipt = self._custody(sheet, move, token="TOK-LEGACY", user=control)
+        model = self.env["id.collection.receipt"].with_user(control)
+        entries = model._parse_lines([{
+            "line_id": self._line_of(sheet, move).id, "invoice_id": move.id, "outcome": "paid",
+            "amount": move.amount_residual, "expected_balance": move.amount_residual}], self.company.currency_id)
+        legacy = hashlib.sha256(json.dumps({
+            "sheet": sheet.id, "reason": "Setoran terlambat",
+            "occurred": model._parse_occurred_at(self.CUSTODY_OCCURRED).isoformat(),
+            "lines": sorted(entries, key=lambda entry: entry["line_id"]),
+        }, sort_keys=True, default=str, separators=(",", ":")).encode()).hexdigest()  # rumus rilis #210
+        self.assertEqual(receipt.desk_fingerprint, legacy)
+        self.assertEqual(self._custody(sheet, move, token="TOK-LEGACY", user=control), receipt)  # replay identik
+        with self.assertRaises(UserError):  # payload berbeda
+            self._custody(sheet, move, token="TOK-LEGACY", user=control, outcome="partial", amount=1.0)
+        with self.assertRaises(UserError):  # mode berbeda dengan token sama
+            self.env["id.collection.receipt"].with_user(self._cashier()).record_desk_cash(
+                sheet.id, "TOK-LEGACY", self.CUSTODY_OCCURRED, [self._entry(sheet, move)])
 

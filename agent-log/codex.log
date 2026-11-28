@@ -831,6 +831,54 @@
 [2026-11-26T22:40:10+07:00] [INFO] Integrasi cleanup B09 PR 201
 - Dev bafed8d dan main 2ccfb2d. Dampak test SESUAIKAN; status per resource tetap fail closed dan runtime ditinjau ulang.
 - Task managed by codex agent at 2026-11-26T22:40:10+07:00
+[2026-11-27T07:59:40+07:00] [INFO] Manifest DO native PWA siap exact-SHA CI
+- [F] Resolver manifest bersama membatasi DO berdasarkan company, warehouse, driver, outlet, trip, status, dan hari WITA; snapshot membawa task dan stock move native.
+- [F] PWA authenticated memakai outlet_id, tidak membuat fallback sintetis, mempertahankan [] resmi, dan meneruskan POD/closing lewat HTTP outbox/idempotensi.
+- [F] Lokal PASS: Ruff, compile, manifest, Vitest 574, typecheck, format, contracts, tiga build, hosting, dan browser manifest 4 case.
+- [BU] Odoo runtime/exact-SHA CI, acceptance disposable, cleanup, review, merge, dan deploy belum selesai/diotorisasi.
+- Task managed by codex agent at 2026-11-27T07:59:40+07:00
+
+[2026-11-27T11:28:14+07:00] [INFO] Rebase PR 206 dan stabilisasi fixture browser
+- [F] Rebase `agen/pwa-delivery-manifest` ke `origin/main` f66e4cc; konflik HANDOFF dan kontrak Zod diselesaikan dengan mempertahankan attendance serta manifest native.
+- [F] Fixture HTTP menyelaraskan owner/business_date manifest dengan scope peramban, meneruskan mode respons QA ke simulator, dan alert snapshot memakai detail 503 server.
+- [F] Lokal PASS: Ruff, manifest 16 addon, typecheck, Prettier, contracts, tiga build, check:build, hosting, serta rerun 1-worker delivery/next-policy 11 case dan snapshot retry 2 case.
+- [BU] Exact-SHA CI dan acceptance PWA-Odoo disposable belum selesai; merge/deploy tidak diotorisasi.
+- Task managed by codex agent at 2026-11-27T11:28:14+07:00
+
+[2026-11-27T11:47:29+07:00] [INFO] Perbaikan fixture pwa-browser setelah exact-SHA CI
+- [F] pwa-browser head 6e44a3a: 278 PASS, 10 FAIL; kegagalan terisolasi pada route-workflow (outlet diganti tanpa rebind manifest) dan sync-progress (alert snapshot masih mengharapkan 503).
+- [F] Manifest uji dipetakan ulang ke outlet pengganti dengan owner/hari scope; alert snapshot memakai detail server. Rerun phone 8 case PASS, typecheck dan Prettier PASS.
+- [BU] Exact-SHA CI berikutnya dan acceptance PWA-Odoo disposable masih wajib; merge/deploy tidak diotorisasi.
+- Task managed by codex agent at 2026-11-27T11:47:29+07:00
+
+[2026-11-27T18:18:55+07:00] [INFO] Runtime fork PR206 menemukan evidence POD tidak terunggah
+- [F] Fork pr206-acceptance terpisah: Odoo/PWA/gateway dan Postgres sehat; dua stock picking native dan assignment hari ini di-seed melalui ORM pada fork saja.
+- [F] Browser driver: snapshot/layar dua DO benar; POD A dari PWA ditolak Odoo 422 karena `/api/v1/evidence` tidak dipanggil. Ini bukan acceptance PASS.
+- [F] Fix in-progress menambahkan upload foto resmi + hash server sebelum command, tes transport/outbox; dampak test TAMBAH.
+- [BU] CI fix, POD B/closing/resync/cleanup tertunda; jangan merge/deploy pilot.
+- Task managed by codex agent at 2026-11-27T18:18:55+07:00
+
+[2026-11-27T19:02:00+07:00] [INFO] Bukti browser fork PR206 dan merge main PR208
+- [F] Browser PWA ancestor b2efacd: 2 POD diterima (full 06409, partial 06410 alasan item) dan closing final HTTP 200; closing prematur API HTTP 422 dari sesi browser, bukan UI 422.
+- [F] Fork deploy 7d5fa2e; dua login/refresh membuktikan pasangan manifest outlet 8/9 dan tepat satu task per DO tanpa command duplikat, audit read-only tetap dua POD dan satu closing. Sesi baru 0/2 dan Belum ditutup: progres lokal belum direkonsiliasi.
+- [F] Merge main cbabfee PR208, konflik hanya handoff dan sejarah kedua pihak dipertahankan. Dampak test TAMBAH browser + DB oracle status lintas sesi, trigger pwa/** -> pwa.
+- [BU] Exact SHA hasil merge, CI, dan cleanup fork masih harus dibuktikan. Merge/deploy pilot tidak diotorisasi.
+- Task managed by codex at 2026-11-27T19:02:00+07:00
+
+[2026-11-27T19:05:00+07:00] [INFO] Release fork PR206 dan verdict HOLD
+- [F] release-fork sukses; fork-list kosong, environment tidak ditemukan; pilot tetap empat layanan SUCCESS dan dua volume. Tidak ada pilot deploy/merge.
+- [BU] API closing prematur 422 tidak tampil di layar PWA; sesi baru 0/2 Belum ditutup; exact-head transaksi/CI setelah merge main belum tuntas. Verdict HOLD.
+- Task managed by codex at 2026-11-27T19:05:00+07:00
+
+[2026-11-28T00:10:15+07:00] [INFO] Sinkronisasi PR #206 untuk re-review
+- Main 8e83a301 digabung; tes AR mengikuti main, kedua entri HANDOFF dipertahankan.
+- Kode mobile/PWA identik dengan fdc4b97. Bukti runtime pada ancestor dan batas UI dicatat di HANDOFF.
+- Task managed by codex agent at 2026-11-28T00:10:15+07:00
+
+[2026-11-28T01:17:05+07:00] [INFO] Tindak lanjut review PR #206
+- Pulihkan POD dari snapshot dan tampilkan DO yang belum lengkap pada percobaan closing.
+- Tes unit 579 lulus; tambah oracle ORM dan browser. Acceptance disposable belum dijalankan.
+- Task managed by codex agent at 2026-11-28T01:17:05+07:00
 
 [2026-11-27T07:09:17+07:00] [INFO] DEV-02B siapkan tes sesi dan matriks perangkat
 - Acuan Lead 072e989 dan main bb84709.
@@ -902,3 +950,23 @@
 - [F] Probe shifted PAY-AR-01753 from INV-202608-0255 to equal-amount INV-202608-0197; GL and per-account invoice total unchanged, ledger violations 0, independent invoice mismatches 2; rollback digest MATCH. Scenario A zero drift PASS, B digest MATCH, fault injection PASS. Impact TAMBAH, local 94 tests + 9 subtests.
 - [BU] Draft PR, independent acceptance and merge/deploy separate; clone/demo apply HOLD and July frozen. Documentation-only follow-up head needs exact-SHA evidence.
 - Task managed by codex at 2026-11-28T17:06:37+07:00
+
+[2026-11-28T08:12:07+07:00] [INFO] Sinkronisasi PR #206 dengan main 6de45c5
+- Pertahankan kedua rangkaian entri pada HANDOFF dan log Codex.
+- Acceptance runtime tetap terbuka.
+- Task managed by codex agent at 2026-11-28T08:12:07+07:00
+[2026-11-28T09:38:00+07:00] [INFO] Lampirkan bukti browser acceptance PR206 di git
+- [F] Kandidat PWA/Odoo 5c092245, fork pr206-ui; laporan, empat PNG dan log observasi tanpa kredensial di docs/reviews/evidence/pr206-browser-20261128/.
+- [F] PASS penolakan closing prematur UI; FAIL snapshot sesi baru 0/2 walau satu POD accepted; mismatch manifest driver id_ID hanya site.demo_unrestricted. Dampak test TAMBAH, perbaikan produk masih menunggu implementer.
+- [F] Fork tidak dilepas atas keputusan pemilik; TTL otomatis 13:06 WITA dapat menghapusnya. Tidak ada merge/pilot deploy.
+- Task managed by codex agent at 2026-11-28T09:38:00+07:00
+[2026-11-28T10:48:00+07:00] [INFO] Retest pemulihan 1/2 PR206 pada e724b0f PASS
+- [F] PWA/Odoo fork pr206-ui pada e724b0f1a44c852dac1548643f06b2478b2d88c1; runtime DB disposable diverifikasi; POD pertama 3038c01a dipakai ulang tanpa pengiriman baru.
+- [F] Snapshot sesi baru mengembalikan receipt WH/OUT/06409; UI 1/2, DO pertama Selesai, kedua Berikutnya, trip Belum ditutup; nol request POD/closing. Audit Odoo satu POD accepted, nol closing.
+- [F] Bukti retest di docs/reviews/evidence/pr206-browser-20261128/retest-e724b0f/. Commit dokumentasi di atas e724b0f; kode tidak berubah; CI HEAD baru perlu diverifikasi. Fork TTL 13:06 WITA, pilot utuh.
+- Task managed by codex agent at 2026-11-28T10:48:00+07:00
+
+[2026-11-28T19:29:21+07:00] [INFO] Integrasikan main ke PR #213
+- Konflik HANDOFF dan log selesai dengan mempertahankan entri kedua cabang.
+- Merge PR, deploy dan apply tetap HOLD.
+- Task managed by codex agent at 2026-11-28T19:29:21+07:00

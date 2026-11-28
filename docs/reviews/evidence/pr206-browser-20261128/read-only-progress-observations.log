@@ -1,0 +1,9 @@
+SNAPSHOT {"label":"read-only","status":200,"scope":{"company_id":"1","user_id":"40","warehouse_id":"1","business_date":"2026-11-28"},"pairs":[["WH/OUT/06409","8"],["WH/OUT/06410","9"]],"accepted":{},"trips":["TRIP-ACC-20261128-01","TRIP-ACC-20261128-01"]}
+SNAPSHOT {"label":"read-only","status":200,"scope":{"company_id":"1","user_id":"40","warehouse_id":"1","business_date":"2026-11-28"},"pairs":[["WH/OUT/06409","8"],["WH/OUT/06410","9"]],"accepted":{},"trips":["TRIP-ACC-20261128-01","TRIP-ACC-20261128-01"]}
+SNAPSHOT {"label":"read-only","status":200,"scope":{"company_id":"1","user_id":"40","warehouse_id":"1","business_date":"2026-11-28"},"pairs":[["WH/OUT/06409","8"],["WH/OUT/06410","9"]],"accepted":{},"trips":["TRIP-ACC-20261128-01","TRIP-ACC-20261128-01"]}
+NEW_CONTEXT_TRIP_LIST Delivery
+TRIP-ACC-20261128-01
+0/2 toko selesai
+TRIP-ACC-20261128-01
+Belum ditutup
+SCREENSHOT failure-new-context-0-of-2.png

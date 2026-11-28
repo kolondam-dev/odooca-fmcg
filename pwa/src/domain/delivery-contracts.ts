@@ -58,7 +58,11 @@ export const DeliveryTaskSchema = z
                     .object({
                         id: z.string().min(1),
                         name: z.string().min(1),
-                        quantity: z.number().int().positive().max(9999),
+                        quantity: z
+                            .number()
+                            .int()
+                            .positive()
+                            .max(1_000_000_000),
                         unit: z.string().min(1),
                     })
                     .strict(),
@@ -91,7 +95,11 @@ export const DeliveryPodSchema = z
                 z
                     .object({
                         id: z.string().min(1),
-                        received: z.number().int().nonnegative().max(9999),
+                        received: z
+                            .number()
+                            .int()
+                            .nonnegative()
+                            .max(1_000_000_000),
                         reason: z.string().trim().max(500).optional(),
                         item_reason: DeliveryItemReasonSchema.optional(),
                         item_note: z.string().trim().max(500).optional(),

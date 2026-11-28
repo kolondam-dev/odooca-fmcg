@@ -42,3 +42,12 @@
 - Konflik HANDOFF diselesaikan dengan mempertahankan entri kedua sisi. Addon id_attendance byte-identik dengan 019720b.
 - Chromium: HR menyimpan libur, 960 menit terjadwal / 443 menit tercatat / 50% hadir cocok; akses non-HR ditolak.
 - Task managed by ChatGPT-ABSENSI at 2026-11-27T18:52:15+07:00
+
+[2026-11-28T09:00:48+07:00] [INFO] Koreksi absensi dan approval lintas klien
+- Odoo Approval Center, PWA live, dan Android Compose memakai tier supervisor, manager, dan owner yang sama. Rekap menerapkan koreksi final tanpa mengubah clock-in/out asli.
+- Tes PWA lulus; Android lokal tertahan download Gradle. Gate CI dan acceptance staging masih terbuka.
+- Task managed by ChatGPT-ABSENSI at 2026-11-28T09:00:48+07:00
+
+[2026-11-28T13:33:13+07:00] [INFO] PR #212: pisahkan antrean aktif dan riwayat
+- Paginasi kursor 50 per halaman pada PWA dan Android. Odoo dan Chromium lulus dengan lebih dari 100 pengajuan.
+- Task managed by ChatGPT-ABSENSI at 2026-11-28T13:33:13+07:00
