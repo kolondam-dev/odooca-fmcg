@@ -443,3 +443,7 @@
 [2026-11-27T19:14:42+07:00] [INFO] PR #210 P1/P2: custody held saat saldo berubah; token mengikat operasi
 - Uang tetap tercatat held bila faktur lunas/saldo berubah; fingerprint+indeks token utama lintas SJP/metode; tes campuran, binding, race lintas SJP
 - Task managed by claude-dev agent at 2026-11-27T19:14:42+07:00
+
+[2026-11-28T08:09:45+07:00] [INFO] BE-20e 1/n: kasir tunai
+- group_ar_cashier, record_desk_cash (cashier_validated langsung), validate_cash (selisih beralasan), guard returned; jalur _record_desk bersama custody; tes + 2 race
+- Task managed by claude-dev agent at 2026-11-28T08:09:45+07:00
