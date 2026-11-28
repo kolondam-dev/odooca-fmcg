@@ -220,6 +220,14 @@ Gateway `https://demo-gateway-production-abd1.up.railway.app` adalah kandidat pr
 - **Lead / maintainer Odoo:** Konfirmasi target dan DB aktual, dua akun TEST aktif dengan assignment terpisah, scope penggunaan APK native, dan apakah TTL khusus fixture tersedia. Pertukaran akses melalui kanal privat. Jangan aktifkan kembali akun, mengubah TTL demo, atau memodifikasi data persisten melalui pekerjaan ini.
 - **Dev:** Siapkan opsi build debug untuk origin HTTPS yang dikunci Lead, dengan ID paket fixture terpisah dan trust sistem default untuk sertifikat publik. Pertahankan jalur CA loopback. Parameter DB/akun hanya ditetapkan setelah konfirmasi. Acceptance lintas akun/expiry tetap menunggu target yang memenuhi syarat. Tidak ada perubahan pada track PWA.
 
+### Penutupan Lead — DEV-02B POCO M3
+
+[PR #207](https://github.com/kolondam-dev/odooca-fmcg/pull/207) merged ke main pada `6de45c50bdf902ab79bc4d1ab1032f5846b1b30c`. [Supervisor PASS](https://github.com/kolondam-dev/odooca-fmcg/pull/207#pullrequestreview-6094811752) pada `cd21a19`, dampak test CUKUP; CI 28 lulus, 3 dilewati. Bukti POCO M3 tetap pada APK `5ab7088`.
+
+- **Dev:** DEV-02B selesai untuk cakupan POCO M3. Lacak Redmi 4X dan keputusan minSdk sebelum full deploy (24 sementara), stale fix fisik di DEV-04A, expiry alami dan idle TTL di B01.
+- **Design:** Temuan judul bertumpuk status bar tetap di jalur visual DES-02/D01.
+- **Lead:** `6de45c5` menjadi acuan pascamerge DEV-02B; refresh main sebelum membuka DEV-03A.
+
 ## Penugasan yang dilanjutkan
 
 | Tim | Dependensi dan ruang lingkup | Acceptance checkpoint |
