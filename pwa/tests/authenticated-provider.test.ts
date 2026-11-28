@@ -1,3 +1,4 @@
+import { deliveryProgress } from "../src/domain/delivery-progress";
 import { FieldStore } from "../src/storage/store";
 import { MorningSimulation } from "../src/domain/morning";
 import { expect, it, vi } from "vitest";
@@ -51,7 +52,7 @@ it("never falls back to a persona or catalog when authenticated reads fail", asy
     await expect(workflow.bootstrap()).rejects.toThrow("Session ended");
     await expect(workflow.snapshot()).rejects.toThrow("Session ended");
 });
-it("supplies demo delivery manifest when authenticated driver has empty server deliveries", async () => {
+it("keeps an authenticated empty server manifest empty", async () => {
     const fixture = new MockProvider("delivery");
     const raw = await fixture.snapshot();
     const rawWithoutDeliveries = { ...raw, deliveries: [] };
@@ -68,34 +69,55 @@ it("supplies demo delivery manifest when authenticated driver has empty server d
     };
     const workflow = new MockProvider("delivery", true, source);
     const snapshot = await workflow.snapshot();
-    expect(snapshot.deliveries.length).toBeGreaterThan(0);
-    expect(snapshot.deliveries[0].id).toBe(
-        `DEMO-DO-OUTLET-${raw.outlets[0].id}`,
-    );
-    const tasks = await workflow.deliveryTasks();
-    expect(tasks.length).toBe(raw.outlets.length);
-    expect(tasks[0].id).toBe(`DEMO-DO-OUTLET-${raw.outlets[0].id}`);
+    expect(snapshot.deliveries).toEqual([]);
+    expect(await workflow.deliveryTasks()).toEqual([]);
 });
 
 it.each([0, 1, 2])(
-    "binds fallback DOs to all %i assigned outlets and opens the driver workday",
+    "binds %i native DOs by outlet_id, independent of outlet array order",
     async (count) => {
         const fixture = new MockProvider("delivery");
         const raw = await fixture.snapshot();
         const identity = await fixture.bootstrap();
-        const outlets = raw.outlets.slice(0, count).map((outlet, i) => ({
-            ...outlet,
-            id: `assigned/${i}`,
-            name: `Assigned ${i}`,
-            address: `Address ${i}`,
-            latitude: 1 + i,
-            longitude: 120 + i,
-        }));
+        const outlets = raw.outlets
+            .slice(0, Math.max(1, count))
+            .map((outlet, i) => ({
+                ...outlet,
+                id: `assigned/${i}`,
+                name: `Assigned ${i}`,
+                address: `Address ${i}`,
+                latitude: 1 + i,
+                longitude: 120 + i,
+            }));
+        const deliveries = raw.deliveries
+            .slice(0, count)
+            .map((delivery, i) => ({
+                ...delivery,
+                id: `WH/OUT/${String(i + 1).padStart(5, "0")}`,
+                outlet_id: outlets[i].id,
+                outlet: outlets[i].name,
+                address: outlets[i].address,
+                owner: `${identity.companyId}:${identity.id}`,
+                business_date: identity.businessDate,
+                site: {
+                    latitude: outlets[i].latitude,
+                    longitude: outlets[i].longitude,
+                    radius: outlets[i].radius,
+                },
+                lines: [
+                    {
+                        id: `stock-move-${i + 1}`,
+                        name: `[SKU-${i + 1}] Native product ${i + 1}`,
+                        quantity: i + 2,
+                        unit: "Units",
+                    },
+                ],
+            }));
         const source = {
             bootstrap: async () => identity,
-            snapshot: async () => ({ ...raw, outlets, deliveries: [] }),
+            snapshot: async () => ({ ...raw, outlets, deliveries }),
         };
-        const provider = new MockProvider("delivery", true, source);
+        const provider = new MockProvider("delivery", false, source);
         const tasks = await provider.deliveryTasks();
         expect(tasks).toHaveLength(count);
         for (const task of tasks) {
@@ -109,6 +131,30 @@ it.each([0, 1, 2])(
                 longitude: outlet.longitude,
                 radius: outlet.radius,
             });
+            expect(task.id).toMatch(/^WH\/OUT\//);
+            expect(task.lines[0].name).toContain("Native product");
+        }
+        if (count === 2) {
+            const serverSnapshot = {
+                ...raw,
+                outlets,
+                deliveries,
+                accepted_delivery_pods: {
+                    [deliveries[0].id]: "11111111-1111-4111-8111-111111111111",
+                },
+            };
+            const demo = new MockProvider("delivery", true, {
+                bootstrap: source.bootstrap,
+                snapshot: async () => serverSnapshot,
+            });
+            const restored = await demo.deliveryTasks();
+            expect(restored[0].site.demo_unrestricted).toBe(true);
+            expect(serverSnapshot.deliveries[0].site).not.toHaveProperty(
+                "demo_unrestricted",
+            );
+            const progress = deliveryProgress(restored, [], serverSnapshot);
+            expect(progress).toMatchObject({ total: 2, done: 1 });
+            expect(progress.nextTask?.id).toBe(deliveries[1].id);
         }
         outlets.reverse();
         expect(
@@ -116,13 +162,12 @@ it.each([0, 1, 2])(
                 a.id.localeCompare(b.id),
             ),
         ).toEqual(tasks.sort((a, b) => a.id.localeCompare(b.id)));
-        if (count === 0) return; // No assignment must not invent deliveries.
         const store = new FieldStore(crypto.randomUUID());
         try {
             const morning = new MorningSimulation(store, identity, provider);
             vi.stubGlobal("navigator", { onLine: true });
             const session = await morning.openDay();
-            expect(session.deliveryManifest).toHaveLength(count);
+            expect(session.deliveryManifest).toEqual(tasks);
         } finally {
             await store.close();
             vi.unstubAllGlobals();
@@ -138,7 +183,7 @@ it("preserves a nonempty server manifest and does not supply sales fallback DOs"
         snapshot: async () => raw,
     };
     expect(
-        (await new MockProvider("delivery", true, source).snapshot())
+        (await new MockProvider("delivery", false, source).snapshot())
             .deliveries,
     ).toEqual(raw.deliveries);
     source.snapshot = async () => ({ ...raw, deliveries: [] });
@@ -182,11 +227,19 @@ it("forwards live sales.order.submit to authenticated.submit when available", as
     }
 });
 
-it("keeps local simulation for delivery workflow while deliveries [] is unassigned on backend", async () => {
+it("forwards authenticated POD and trip closing with their idempotency UUIDs", async () => {
     vi.stubGlobal("navigator", { onLine: true });
     try {
         const fixture = new MockProvider("delivery");
-        const submitSpy = vi.fn();
+        const submitSpy = vi.fn(async (command: any) => ({
+            client_uuid: command.client_uuid,
+            status: "accepted" as const,
+            message: "Accepted by Odoo",
+            reference:
+                command.type === "delivery.pod.submit"
+                    ? "POD-OFFICIAL"
+                    : "TRIP-OFFICIAL",
+        }));
         const source = {
             bootstrap: () => fixture.bootstrap(),
             snapshot: () => fixture.snapshot(),
@@ -194,7 +247,7 @@ it("keeps local simulation for delivery workflow while deliveries [] is unassign
         };
         const provider = new MockProvider("delivery", true, source as any);
 
-        // 1. POD should be handled locally in simulator without calling backend
+        // Both writes preserve the UUID generated by the outbox command.
         const podCmd = {
             schema_version: 1 as const,
             client_uuid: "pod-demo-1",
@@ -206,10 +259,9 @@ it("keeps local simulation for delivery workflow while deliveries [] is unassign
             },
         };
         const podReceipt = await provider.submit(podCmd as any);
-        expect(submitSpy).not.toHaveBeenCalled();
-        expect(podReceipt.reference).toBe("DEMO-POD-DEMO");
+        expect(submitSpy).toHaveBeenCalledWith(podCmd);
+        expect(podReceipt.reference).toBe("POD-OFFICIAL");
 
-        // 2. Trip close should also be simulated locally so trip closes reliably
         const closeCmd = {
             schema_version: 1 as const,
             client_uuid: "trip-close-1",
@@ -221,8 +273,9 @@ it("keeps local simulation for delivery workflow while deliveries [] is unassign
             },
         };
         const closeReceipt = await provider.submit(closeCmd as any);
-        expect(submitSpy).not.toHaveBeenCalled();
-        expect(closeReceipt.reference).toBe("DEMO-TRIP-CLO");
+        expect(submitSpy).toHaveBeenCalledWith(closeCmd);
+        expect(closeReceipt.reference).toBe("TRIP-OFFICIAL");
+        expect(submitSpy).toHaveBeenCalledTimes(2);
     } finally {
         vi.unstubAllGlobals();
     }

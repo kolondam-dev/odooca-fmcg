@@ -36,11 +36,16 @@ Admin sistem mengelola scope melalui ACL khusus; tidak ada auto assignment/seed.
 
 Bootstrap hanya identity sendiri, company, role `sales`, businessDate WITA dan
 CSRF token Odoo bagi session tersebut. Token tidak mengaktifkan endpoint write.
-Snapshot mengirim scope company/user/warehouse/hari, katalog SKU dan daftar outlet
-terjadwal. ID adalah native variant/principal/partner ID dalam string; kode SKU
-berasal dari default_code, bukan nama sebagai foreign key. `deliveries=[]` secara
-eksplisit karena mapping assignment delivery/picking belum menjadi scope tahap ini.
-Tidak mengklaim manifest pengiriman/HRIS/approval/accounting sudah terintegrasi.
+Snapshot mengirim scope company/user/warehouse/hari, katalog SKU, daftar outlet
+terjadwal, dan manifest delivery native untuk driver. ID katalog adalah native
+variant/principal/partner ID dalam string; kode SKU berasal dari default_code,
+bukan nama sebagai foreign key. Setiap delivery memakai nama DO dan origin trip
+native, `outlet_id` eksplisit, serta demand stock move dalam base unit. Manifest
+hanya memuat outgoing picking berstatus assigned/done yang sama company,
+warehouse, driver, outlet assignment, dan tanggal operasional WITA. Bila tidak
+ada DO yang cocok, `deliveries=[]` tetap kosong dan klien resmi tidak membuat DO
+sintetis. Manifest tidak mengembalikan lot, cost, margin, telepon, VAT, atau quant
+individual.
 
 Harga berasal dari pricelist yang ditetapkan, untuk referensi pembelian1karton
 pada tanggal bisnis WITA, dikonversi dari base pcs lalu dikeluarkan pajak termasuk

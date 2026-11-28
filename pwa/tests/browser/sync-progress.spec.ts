@@ -67,7 +67,7 @@ async function attendThenReload(
         .getByRole("region", { name: "Absensi foto dan lokasi" })
         .getByRole("button", { name: "Absen masuk", exact: true })
         .click();
-    await expect(page.getByRole("alert")).toContainText("503");
+    await expect(page.getByRole("alert")).toContainText("snapshot unavailable");
     mode.fail = false;
     await page.reload();
     // Draf absen dipulihkan di dialog; tutup agar Beranda terlihat.

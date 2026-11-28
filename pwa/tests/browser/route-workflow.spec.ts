@@ -14,13 +14,22 @@ test("outlet list alone scrolls, full search filters dynamically and dismissal r
 }) => {
     const provider = new MockProvider("sales", true),
         snapshot = await provider.snapshot();
+    const meta = freshSnapshotMeta();
     snapshot.outlets = Array.from({ length: 120 }, (_, i) => ({
         ...snapshot.outlets[0],
         id: `outlet-${i}`,
         name: `Toko ${i}`,
         address: `Alamat ${i}, Manado`,
     }));
-    const meta = freshSnapshotMeta();
+    // Manifest native wajib tetap terikat ke outlet dan hari snapshot yang
+    // dikirim, termasuk saat daftar outlet diganti untuk uji pencarian.
+    snapshot.deliveries = snapshot.deliveries.map((delivery, index) => ({
+        ...delivery,
+        outlet_id: snapshot.outlets[index]?.id ?? snapshot.outlets[0].id,
+        outlet: snapshot.outlets[index]?.name ?? snapshot.outlets[0].name,
+        owner: `${snapshot.scope?.company_id}:${snapshot.scope?.user_id}`,
+        business_date: meta.businessDate,
+    }));
     await page.route("**/api/v1/sync/snapshot", (route) =>
         route.fulfill({
             json: {

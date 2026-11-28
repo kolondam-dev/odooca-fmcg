@@ -4,6 +4,7 @@ import {
     loadSummary,
     navigationUrl,
 } from "../src/domain/delivery-progress";
+import type { Snapshot } from "../src/domain/contracts";
 import type { DeliveryTask } from "../src/domain/delivery-contracts";
 import type { QueueItem } from "../src/storage/store";
 
@@ -54,6 +55,27 @@ describe("delivery-progress", () => {
         expect(p).toMatchObject({ total: 3, stores: 2, done: 1 });
         expect(p.nextTask?.id).toBe("DO-2");
         expect(p.nextTrip).toMatchObject({ name: "T1", finished: 1 });
+    });
+    it("memulihkan POD hanya untuk sumber manifest yang sama", () => {
+        const snapshot = {
+            deliveries: [a, b],
+            accepted_delivery_pods: {
+                [a.id]: "11111111-1111-4111-8111-111111111111",
+            },
+        } as Snapshot;
+        const adapted = {
+            ...a,
+            site: { ...a.site, demo_unrestricted: true as const },
+        };
+        expect(deliveryProgress([adapted, b], [], snapshot).done).toBe(1);
+        const moved = { ...adapted, site: { ...adapted.site, latitude: 0 } };
+        expect(deliveryProgress([moved, b], [], snapshot).done).toBe(0);
+        expect(deliveryProgress([a, b], [], snapshot).done).toBe(1);
+        expect(deliveryProgress([a, b], [], snapshot).nextTask).toBe(b);
+        expect(
+            deliveryProgress([{ ...a, version: "changed" }, b], [], snapshot)
+                .done,
+        ).toBe(0);
     });
     it("POD ditolak server (bisnis) tidak dihitung selesai", () => {
         const uuid = "11111111-1111-4111-8111-111111111111";

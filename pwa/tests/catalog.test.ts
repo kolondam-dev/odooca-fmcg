@@ -220,6 +220,89 @@ it("HTTP snapshot requires bootstrap and catalog v2, accepts an authorized compl
     expect(await provider.snapshot()).toEqual(snapshot);
     await expect(provider.snapshot()).rejects.toMatchObject({ status: 422 });
 });
+it("HTTP provider exposes native delivery tasks and preserves a server 422 message", async () => {
+    const identity = {
+        id: "u",
+        companyId: "c",
+        name: "Driver",
+        title: "Driver",
+        roles: ["delivery"],
+        businessDate: "2026-10-29",
+        csrfToken: "csrf",
+    };
+    const outlet = {
+        id: "outlet-8",
+        name: "FreshMart Bahu",
+        channel: "GT",
+        address: "Bahu",
+        distance: "",
+        time: "",
+        latitude: 1.465,
+        longitude: 124.833,
+        radius: 100,
+    };
+    const delivery = {
+        workflow_version: 2 as const,
+        id: "WH/OUT/06409",
+        trip: "TRIP-ACC-01",
+        vehicle: "DB 8123 QA",
+        outlet: outlet.name,
+        outlet_id: outlet.id,
+        address: outlet.address,
+        owner: "c:u",
+        business_date: identity.businessDate,
+        version: "odoo-delivery-v1:abc",
+        site: {
+            latitude: outlet.latitude,
+            longitude: outlet.longitude,
+            radius: outlet.radius,
+        },
+        lines: [
+            {
+                id: "13612",
+                name: "[MYR-RMA-01] Roma Kelapa 300g",
+                quantity: 60,
+                unit: "Units",
+            },
+        ],
+    };
+    const snapshot = {
+        ...catalog(),
+        outlets: [outlet],
+        deliveries: [delivery],
+    };
+    vi.stubGlobal(
+        "fetch",
+        vi
+            .fn()
+            .mockResolvedValueOnce(Response.json(identity))
+            .mockResolvedValueOnce(Response.json(snapshot))
+            .mockResolvedValueOnce(
+                Response.json(
+                    {
+                        error: "DO kedua belum memiliki POD yang diterima hari ini.",
+                    },
+                    { status: 422 },
+                ),
+            ),
+    );
+    const provider = new HttpProvider();
+    await provider.bootstrap();
+    expect(await provider.snapshot()).toEqual(snapshot);
+    expect(await provider.deliveryTasks()).toEqual([delivery]);
+    await expect(
+        provider.submit({
+            schema_version: 1,
+            client_uuid: crypto.randomUUID(),
+            occurred_at: new Date().toISOString(),
+            type: "delivery.trip.close",
+            payload: {},
+        } as never),
+    ).rejects.toMatchObject({
+        status: 422,
+        message: "DO kedua belum memiliki POD yang diterima hari ini.",
+    });
+});
 it("a cached v2 morning bundle cannot cross owner/day scope", async () => {
     const provider = new MockProvider("sales", true),
         identity = await provider.bootstrap(),

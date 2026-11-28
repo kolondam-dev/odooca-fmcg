@@ -1,3 +1,43 @@
+## PR #206 — Retest 1/2 PASS pada e724b0f (codex, 2026-11-28)
+
+- [F] PWA/Odoo di fork `pr206-ui` dijalankan pada `e724b0f1a44c852dac1548643f06b2478b2d88c1` (deployment PWA `e8df512e`, Odoo `6ec7cfe3`), runtime DB disposable `pr110_rehearsal_20261127` diverifikasi. POD pertama tersimpan `3038c01a-433c-4c8f-9a5d-95c63abc61be` dipakai ulang tanpa pengiriman baru.
+- [F] **PASS** konteks browser baru: snapshot mengembalikan receipt untuk `WH/OUT/06409`, UI `1/2 toko selesai`, DO pertama `Selesai`, DO kedua `Berikutnya`, trip `Belum ditutup`; nol request POD/closing. Audit Odoo tetap satu POD accepted, nol closing, picking `assigned`. Bukti `docs/reviews/evidence/pr206-browser-20261128/retest-e724b0f/`.
+- [F] Commit ini hanya dokumentasi di atas `e724b0f`; kode aplikasi tidak berubah. Status CI untuk HEAD dokumentasi perlu diperbarui sebelum merge. Fork masih aktif dengan TTL 13:06 WITA; pilot utuh. Keputusan HOLD milik reviewer.
+
+## PR #206 — Bukti browser acceptance terlampir di branch PR (codex, 2026-11-28)
+
+- [F] Acceptance runtime kandidat `5c0922456e604e9679d3c3811c93ae7577d172d8` di fork `pr206-ui` didokumentasikan pada `docs/reviews/evidence/pr206-browser-20261128/README.md`; empat PNG, log observasi browser dan log sinkronisasi read-only ada di direktori yang sama. Tidak memuat rahasia/DB dump; screenshot 1/2 tidak tersedia karena aktualnya 0/2.
+- [F] PASS UI menolak closing prematur setelah POD 06409 accepted (`POD-3038c01a`), menyebut DO 06410; nol command closing. FAIL pemulihan sesi baru: snapshot accepted map kosong meski audit fork menemukan tepat satu POD accepted. Dalam bahasa driver id_ID hanya `site.demo_unrestricted` lokal PWA yang membedakan source POD dan manifest Odoo.
+- [F] Dampak test **TAMBAH**, cross-layer authenticated-demo manifest → Odoo snapshot → browser baru; tidak ada perubahan produk, merge, atau deploy pilot. Fork **dipertahankan atas permintaan pemilik**, tetapi TTL otomatis 13:06 WITA 28 November dapat menghapusnya sebelum merge; screenshot/log pada commit tetap ada. Selector CI saat PR pada base `origin/main`: android, mobile, odoo_install, pwa, upgrade; tidak dijalankan ulang khusus dokumentasi ini.
+
+## PR #206 — Sinkronisasi dengan main 6de45c5 (codex)
+
+- Konflik hanya di HANDOFF dan log Codex. Entri kedua sisi dipertahankan.
+- CI pada kandidat baru dan acceptance langsung PWA ke Odoo pada database disposable masih diperlukan sebelum re-review.
+
+## PR #206 — Tindak lanjut acceptance driver (codex)
+
+- Snapshot driver memulihkan UUID POD accepted pada manifest yang sama. Progres sesi baru dan referensi closing memakai receipt Odoo. Saat POD belum lengkap, UI menyebut nomor DO yang masih menunggu dan trip tetap terbuka.
+- Dampak tes **TAMBAH**: regresi snapshot Odoo, progres PWA, dan browser untuk sesi baru dengan satu POD serta percobaan closing. Bukti runtime Odoo → PWA pada salinan disposable masih diperlukan.
+
+## PR #206 — Re-review integrasi manifest driver PWA (codex)
+
+- [F] Sinkronisasi dari `fdc4b97` dengan main `8e83a301` (PR #209 dan #210). Konflik dua file tes AR diselesaikan dengan mengambil versi main karena selisih di branch PR hanya baris kosong. Kedua riwayat HANDOFF dipertahankan.
+- [F] Diff terhadap `fdc4b97` kosong untuk `addons/id_mobile_api` dan `pwa`. CI untuk commit integrasi perlu diverifikasi tersendiri.
+- [F] Acceptance fungsional berdasarkan bukti fork: dua DO native, dua POD pada DO yang benar, satu closing final, resync tanpa duplikasi, dan cleanup fork. Transaksi browser tercatat pada `b2efacd`; resync pada `7d5fa2e`. Rangkuman acceptance pada `fdc4b97` mengacu pada bukti tersebut.
+- [BU] HTTP 422 prematur terbukti lewat API sesi driver. Klik closing prematur di UI dan pemulihan progres pada sesi baru belum terbukti. Dampak test **CUKUP** untuk sinkronisasi; batas bukti runtime tersebut tetap tersedia untuk keputusan reviewer.
+
+## 2026-11-27T19:05:00+07:00 — [F] Fork PR #206 dilepas, pilot utuh (codex)
+
+- [F] `release-fork` untuk `pr206-acceptance` berhasil. `fork-list` kosong, environment fork tidak ditemukan; empat layanan pilot `SUCCESS` dan kedua volumenya masih terdaftar. Tidak ada merge PR/deploy pilot.
+- [BU] Verdict PR **HOLD**: API 422 bukan UI 422; browser baru tidak memulihkan progres 2 POD dan closing; transaksi sukses terjadi pada ancestor `b2efacd`, bukan SHA final. CI SHA setelah main PR #208 belum terbukti tuntas.
+
+## 2026-11-27T19:02:00+07:00 — [BU] PR #206 browser acceptance dan sinkronisasi main #208 (codex)
+
+- [F] Fork `pr206-acceptance`: browser PWA build `b2efacd` mengirim full POD 06409 HTTP 200 (`411fc337`), partial POD 06410 HTTP 200 (`f0dc6ee1`, 90+110 dengan alasan item `QTY TERLALU BANYAK`), dan closing final HTTP 200 (`69d542b7`, kedua POD). API closing prematur dari sesi browser yang sama HTTP 422; **bukan** tampilan 422 di layar PWA. Audit DB tepat 2 POD + 1 closing accepted, stock pickings tetap `assigned`.
+- [F] Odoo/PWA fork SHA `7d5fa2e` sukses; browser dua sesi dan refresh membuktikan satu task per DO dengan pasangan outlet 8/9, tanpa command baru; DB tetap 2+1. Sesi baru menampilkan `0/2` dan `Belum ditutup` karena status accepted lokal tidak terpulihkan dari server. **Bukti transaksi ada di ancestor `b2efacd`, bukan exact-head.**
+- [F] Main baru `cbabfee` (PR #208) digabung; satu-satunya konflik `docs/HANDOFF.md`, riwayat kedua sisi dipertahankan. Dampak test **TAMBAH**: browser/Odoo end-to-end rekonsiliasi status accepted lintas sesi, oracle 2 POD + 1 closing tanpa duplikasi; path `pwa/**` → suite pwa. Test transport upload/hash yang ada memadai untuk upload tetapi tidak menutup status lintas sesi.
+- [BU] Verdict HOLD hingga exact-head CI dan bukti runtime/cleanup selesai; UI 422 dan pemulihan status belum dibuktikan. Dilarang merge/pilot deploy.
 ## 2026-11-28 — [BU] BE-20e 1/n PR #211: perbaikan HOLD (claude-dev)
 
 - [F] P1: `validate_cash` kini menerima tunai `posted` dari custody (klaim dan alokasi tidak berubah); guard `returned` juga menolak selama ada alokasi `held` yang belum diselesaikan (receipt belum rejected/cancelled), walau uang sudah dihitung.
@@ -52,6 +92,17 @@
 - [F] Enum `outcome` snapshot PWA + openapi menambah `lapsed`. 4 tes Odoo baru (belum diverifikasi CI).
 - [A] Batas jujur: command setelah cutoff tetap `rejected` (rollback savepoint membuang lapse malas); penutupan efektif lewat cron/entrypoint non-command (meja kasir). Belum: custody exception/`held`, meja kasir, BE-20e. FE-8b: PWA harus menampilkan `lapsed`/`expired`. `collection_v2` tetap OFF.
 
+## 2026-11-27T18:24:00+07:00 — [BU] Sinkronisasi PR #206 dengan main PR #205 (codex)
+
+- [F] Main `f6e2826` digabung ke branch PR #206, termasuk BE-20d. Konflik hanya `docs/HANDOFF.md`; kedua entri dan log agen dipertahankan.
+- [BU] Head hasil merge harus menjalankan CI exact-SHA; runtime acceptance masih terbuka dan layanan fork belum dilepas. Merge/pilot deploy tidak diotorisasi.
+
+## 2026-11-27T18:18:55+07:00 — [BU] PR #206: runtime fork menemukan upload bukti POD hilang (codex)
+
+- [F] Fork `pr206-acceptance` (`76986ccf-843e-4084-b67a-c357717c3c5e`) memuat layanan Odoo/PWA/gateway SHA awal `b2a9076`, Postgres serta volume copy-on-write; pilot tidak dimutasi. Sumber fork tidak memiliki dua DO target; dua DO native 06409/06410 dan assignment driver 27 Nov dibuat dengan ORM di fork saja.
+- [F] Browser driver login, snapshot 200 dan UI menampilkan dua DO asli dengan outlet 8/9, kuantitas 60+160/90+320. POD penuh di PWA ditolak Odoo 422 karena foto belum masuk `/api/v1/evidence`; command tanpa bukti tidak dicatat.
+- [F] Fix in-progress: upload dua media POD resmi sebelum command, validasi receipt+hash, lalu kirim command UUID tetap; tes transport dan outbox ditambah. Dampak test **TAMBAH**: counterexample command tanpa evidence harus fail-closed, upload ditolak tidak boleh memposting, hash lokal tidak boleh mencemari payload resmi. Trigger `pwa/**` memilih suite `pwa` lewat `.ci/test-impact.yml`.
+- [BU] CI exact-SHA fix, acceptance POD parsial/closing/resync, dan cleanup belum terbukti. Merge/pilot deploy tidak diotorisasi.
 ## 2026-11-27 — DEV-02B · Build HTTPS langsung untuk POCO M3 (Codex-Mobile Native)
 
 - [F] Arahan `1d0b4ec` diterapkan di atas PR #207 `a8222dd`. Opsi manual `device_origin` memilih trust sistem Android dan mengharuskan DB eksplisit. ID APK fixture dan instrumentation tetap terpisah. Jalur CA loopback tersedia.
@@ -66,6 +117,13 @@
 - [F] Tes: submit menang -> batal ditolak, SJP tetap `issued`; batal menang -> submit `rejected sheet_state`, tanpa receipt. Sesi pemblokir dibuktikan via `pg_blocking_pids`. Fixture membatasi penghapusan `account_full_reconcile` ke ID fixture; snapshot dengan/tanpa receipt di-assert.
 - [BU] Bukti Odoo hanya dari CI pada SHA akhir. Identitas log/commit dikoreksi ke `claude-dev` (append-only). `collection_v2` tetap OFF.
 
+## 2026-11-27T13:05:00+07:00 — [BU] Manifest DO native PWA disinkronkan ke main terbaru (codex)
+
+- [F] Branch `agen/pwa-delivery-manifest` direbase ke `origin/main` `f66e4cc60fe53d71d07b407194d95c7c57d1b429` (PR #200 attendance). Konflik hanya `docs/HANDOFF.md` dan `pwa/src/domain/contracts.ts`; kedua riwayat serta skema attendance/manifest dipertahankan.
+- [F] Kegagalan `pwa-browser` pada head sebelumnya ditelusuri ke fixture, bukan produk: snapshot HTTP memakai tanggal WITA Node sedangkan jam peramban dapat berbeda, mode respons QA tidak diteruskan ke simulator authenticated, dan alert snapshot kini memuat detail server (`snapshot unavailable`).
+- [F] Fixture browser menyelaraskan owner/`business_date` manifest dengan scope respons, merekam pilihan mode respons untuk simulator HTTP, dan mengharapkan detail 503. Rerun lokal 1 worker: `delivery.spec` + `next-policy.spec` 11 PASS, `login-attendance-ux` snapshot retry 2 PASS.
+- [F] CI `pwa-browser` head `6e44a3a` menyisakan 10 kegagalan pada `route-workflow` dan `sync-progress`: outlet pengganti tidak diikat ulang ke manifest native dan alert snapshot masih mengharapkan `503`. Keduanya diperbaiki di fixture; rerun phone 8 PASS.
+- [BU] Exact-SHA CI pada head hasil rebase masih wajib. Acceptance PWA↔Odoo disposable, cleanup, dan review tetap belum dijalankan; merge/deploy tidak diotorisasi.
 ## 2026-11-27 — DEV-02B · Paket fixture POCO M3 (Codex-Mobile Native)
 
 - [F] Arahan `f840da4`, basis PR #207 `bd04026`, sumber teruji `4832426`. Fixture HTTPS B09 berlease dan job APK manual siap. Package ID `com.kolondam.odooca.field.fixture` dan APK tesnya terkonfirmasi saat build. Paket awal tetap terpisah.

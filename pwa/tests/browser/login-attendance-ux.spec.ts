@@ -345,7 +345,9 @@ for (const retake of [false, true])
             .getByRole("region", { name: "Absensi foto dan lokasi" })
             .getByRole("button", { name: "Absen masuk", exact: true })
             .click();
-        await expect(page.getByRole("alert")).toContainText("503");
+        await expect(page.getByRole("alert")).toContainText(
+            "snapshot unavailable",
+        );
         const a = await pending();
         expect(a.sessionId).toBeNull();
         expect(a.attendanceEvidence.packageHash).toMatch(/^[a-f0-9]{64}$/);

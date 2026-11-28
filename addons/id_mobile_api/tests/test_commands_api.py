@@ -785,24 +785,8 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
             })
 
         # 2. Prepare valid picking manifest and evidence in database
-        picking_type = self.env["stock.picking.type"].search([
-            ("company_id", "=", self.company.id),
-            ("code", "=", "outgoing"),
-        ], limit=1)
-        if not picking_type:
-            picking_type = self.env["stock.picking.type"].create({
-                "name": "Delivery Orders",
-                "sequence_code": "OUT",
-                "code": "outgoing",
-                "company_id": self.company.id,
-            })
-        location_src = self.env["stock.location"].search([("company_id", "=", self.company.id)], limit=1)
-        if not location_src:
-            location_src = self.env["stock.location"].create({
-                "name": "Stock Location",
-                "usage": "internal",
-                "company_id": self.company.id,
-            })
+        picking_type = self.warehouse.out_type_id
+        location_src = self.warehouse.lot_stock_id
         location_dest = self.env.ref("stock.stock_location_customers")
 
         # Create 2 delivery orders under the same trip TRIP-01
@@ -900,6 +884,18 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
 
         # Assign outlet2 to mobile workday
         self.assignment.outlet_ids = [Command.link(outlet2.id)]
+
+        # Counterexample: a valid DO cannot be accepted without explicit outlet_id binding.
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.pod.submit",
+                "payload": {
+                    "source": {"trip": "TRIP-01", "id": picking1.name},
+                    "recipient": "Budi",
+                    "evidence": {"id": pod_evidence_uuid1, "packageHash": "pod-hash-01"},
+                },
+            })
 
         # Counterexample: Submitting DO 2 with evidence created for Outlet 1 -> UserError
         with self.assertRaises(UserError):
@@ -1131,6 +1127,19 @@ class TestMobileCommandsApi(MobileFixture, TransactionCase):
         })
         self.assertEqual(rc_pod2["status"], "accepted")
         self._set_command_fixture_date(pod_uuid2)
+
+        # Counterexample: accepted PODs in storage do not allow the closing
+        # payload to omit the UUID covering one required DO.
+        with self.assertRaises(UserError):
+            model.process_command({
+                "client_uuid": str(uuid.uuid4()),
+                "type": "delivery.trip.close",
+                "payload": {
+                    "trip_id": "TRIP-01",
+                    "business_date": day_str,
+                    "pod_uuids": [pod_uuid1],
+                },
+            })
 
         # 5. Trip close without PODs or nonexistent trip -> rejected
         with self.assertRaises(UserError):

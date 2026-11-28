@@ -25,7 +25,7 @@ export const MorningRecordSchema = z
         sessionId: z.string().uuid().nullable(),
         openedAt: z.iso.datetime().nullable(),
         snapshot: SnapshotSchema.nullable(),
-        deliveryManifest: z.array(DeliveryTaskSchema).min(1).optional(),
+        deliveryManifest: z.array(DeliveryTaskSchema).optional(),
         demo_unrestricted: z.boolean().optional(),
     })
     .strict();
@@ -138,13 +138,15 @@ export class MorningSimulation {
         );
     }
     private async checkConnection() {
-        if (this.provider.mode !== "demo")
-            throw new Error("Sesi resmi belum tersedia.");
         if (!navigator.onLine)
             throw new Error(
                 "Sesi pagi wajib dibuka online. Hubungkan perangkat lalu coba lagi.",
             );
-        if (this.provider.scenario && this.provider.scenario !== "normal")
+        if (
+            this.provider.mode === "demo" &&
+            this.provider.scenario &&
+            this.provider.scenario !== "normal"
+        )
             throw new Error(
                 "Sesi ditolak atau belum diterima. Pilih mode Normal untuk melanjutkan.",
             );
@@ -291,7 +293,7 @@ export class MorningSimulation {
         onStage?.("validate");
         const snapshot = SnapshotSchema.parse(received);
         const deliveryManifest = this.identity.roles.includes("delivery")
-            ? z.array(DeliveryTaskSchema).min(1).parse(receivedTasks)
+            ? z.array(DeliveryTaskSchema).parse(receivedTasks ?? [])
             : undefined;
         if (
             !isDemo &&
@@ -315,7 +317,7 @@ export class MorningSimulation {
             sessionId: crypto.randomUUID(),
             openedAt: new Date().toISOString(),
             snapshot,
-            ...(deliveryManifest ? { deliveryManifest } : {}),
+            ...(deliveryManifest !== undefined ? { deliveryManifest } : {}),
             ...(isDemo || attendance.demo_unrestricted
                 ? { demo_unrestricted: true }
                 : {}),
