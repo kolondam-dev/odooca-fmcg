@@ -44,6 +44,16 @@ class TestCollectionReceiptConcurrency(TransactionCase):
                 "name": "Sales RCP Conc", "code": "RCC", "type": "sale", "company_id": company.id})
             general = env["account.journal"].create({
                 "name": "General RCP Conc", "code": "RCG", "type": "general", "company_id": company.id})
+            cash_account = env["account.account"].create({
+                "name": "Kas RCP Conc", "code": "999813", "account_type": "asset_cash",
+                "company_ids": [Command.set(company.ids)]})
+            outstanding = env["account.account"].create({
+                "name": "Outstanding RCP Conc", "code": "999814", "account_type": "asset_current",
+                "company_ids": [Command.set(company.ids)]})
+            cash = env["account.journal"].create({
+                "name": "Kas RCP Conc", "code": "RCH", "type": "cash", "company_id": company.id,
+                "default_account_id": cash_account.id})
+            cash.inbound_payment_method_line_ids.payment_account_id = outstanding
             partner = env["res.partner"].create({"name": "RCP Conc Customer", "is_company": True})
             partner.with_company(company).property_account_receivable_id = receivable
             collector = new_test_user(
@@ -52,6 +62,9 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             control = new_test_user(
                 env, login=f"rcp-ctl-{uuid.uuid4().hex[:10]}", groups="id_ar_collection.group_ar_control",
                 company_id=company.id)
+            accountants = [new_test_user(
+                env, login=f"rcp-acc-{uuid.uuid4().hex[:10]}", groups="id_ar_collection.group_ar_accounting",
+                company_id=company.id) for _ in range(2)]
             moves = env["account.move"]
             for _ in range(3):
                 move = env["account.move"].create({
@@ -72,7 +85,9 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             sheet2.action_issue()
             return {
                 "company": company.id, "receivable": receivable.id, "income": income.id, "general": general.id,
-                "journals": (sales | general).ids, "accounts": (receivable | income).ids, "partner": partner.id,
+                "journals": (sales | general | cash).ids, "cash_journal": cash.id,
+                "accounts": (receivable | income | cash_account | outstanding).ids, "partner": partner.id,
+                "accountants": [user.id for user in accountants],
                 "collector": collector.id, "control": control.id, "moves": sorted(moves.ids)[:2], "sheet": sheet.id,
                 "lines": {line.move_id.id: line.id for line in sheet.line_ids},
                 "sheet2": sheet2.id, "move2": moves[2].id, "line2": sheet2.line_ids.id,
@@ -85,6 +100,8 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             cr.execute("SET LOCAL lock_timeout = '20s'")
             sheets = [ids["sheet"], ids["sheet2"]]
             cr.execute("DELETE FROM id_collection_receipt_line WHERE move_id = ANY(%s)", (ids["all_moves_fixture"],))
+            cr.execute("DELETE FROM account_payment_register WHERE partner_id = %s", (ids["partner"],))  # wizard sisa
+            cr.execute("DELETE FROM account_payment WHERE partner_id = %s", (ids["partner"],))
             cr.execute("DELETE FROM id_collection_receipt WHERE sheet_id = ANY(%s)", (sheets,))
             cr.execute("DELETE FROM id_mobile_command WHERE user_id = %s", (ids["collector"],))
             cr.execute("DELETE FROM id_collection_sheet_line WHERE sheet_id = ANY(%s)", (sheets,))
@@ -106,7 +123,7 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             env = api.Environment(cr, SUPERUSER_ID, {})
             env["account.journal"].browse(ids["journals"]).unlink()
             cr.execute("UPDATE res_users SET active = FALSE WHERE id = ANY(%s)",
-                       ([ids["collector"], ids["control"]],))  # arsip, tanpa hapus
+                       ([ids["collector"], ids["control"], *ids["accountants"]],))  # arsip, tanpa hapus
             env["res.partner"].browse(ids["partner"]).unlink()  # sebelum akun: properti piutang menunjuk akun
             env["account.account"].browse(ids["accounts"]).unlink()
 
@@ -617,3 +634,74 @@ class TestCollectionReceiptConcurrency(TransactionCase):
         self.assertIsInstance(outcome.get("error"), UserError, "baris sudah punya klaim mobile: validasi, bukan baru")
         self.assertEqual(self._db_state(db, ids), (1, {"accepted": 1}))
 
+
+    # ---- (g) validasi accounting vs penolakan / validasi ganda (BE-20e 2/n) ----------------------------------
+    def _desk_receipt(self, db, ids):
+        """Receipt tunai meja kasir ter-commit (state cashier_validated); kembalikan id."""
+        with db.cursor() as cr:
+            env = api.Environment(cr, ids["control"], {})
+            receipt = env["id.collection.receipt"].record_desk_cash(*self._desk_args(ids))
+            env.flush_all()
+            receipt_id = receipt.id
+            cr.commit()
+        return receipt_id
+
+    def _accounting_state(self, db, ids, receipt_id):
+        with db.cursor() as cr:
+            cr.execute("SELECT state FROM id_collection_receipt WHERE id = %s", (receipt_id,))
+            state = cr.fetchone()[0]
+            cr.execute("SELECT count(*) FROM account_payment WHERE partner_id = %s", (ids["partner"],))
+            payments = cr.fetchone()[0]
+            cr.execute("SELECT COALESCE(SUM(amount_residual), 0) FROM account_move_line "
+                       "WHERE move_id = %s AND display_type = 'payment_term'", (ids["moves"][0],))
+            residual = float(cr.fetchone()[0])
+            cr.execute("SELECT count(*) FROM id_collection_receipt_line WHERE receipt_id = %s AND holds_invoice",
+                       (receipt_id,))
+            holds = cr.fetchone()[0]
+        return state, payments, residual, holds
+
+    def _race_accounting(self, first, second, expect_state, expect_payments, expect_residual, expect_holds):
+        """`first` ditahan terbuka oleh transaksi 1; `second` berjalan di thread dan harus MENUNGGU lalu gagal."""
+        db, ids = self._setup()
+        receipt_id = self._desk_receipt(db, ids)
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, ids["accountants"][0], {})
+        outcome = {}
+        try:
+            first(env1, ids, receipt_id)
+            env1.flush_all()
+
+            def work(env2):
+                second(env2, ids, receipt_id)
+                env2.flush_all()
+
+            thread = self._run_in_thread(db, work, outcome, ids["accountants"][1])
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "transaksi kedua harus menunggu yang belum commit")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertIsInstance(outcome.get("error"), UserError, outcome)  # yang kalah ditolak setelah baca ulang
+        self.assertEqual(
+            self._accounting_state(db, ids, receipt_id), (expect_state, expect_payments, expect_residual, expect_holds))
+
+    @staticmethod
+    def _validate(env, ids, receipt_id):
+        env["id.collection.receipt"].browse(receipt_id).accounting_validate(ids["cash_journal"])
+
+    @staticmethod
+    def _reject(env, ids, receipt_id):
+        env["id.collection.receipt"].browse(receipt_id).reject_receipt("Uang tidak diterima")
+
+    def test_validation_wins_then_reject_waits_and_is_refused_with_exactly_one_payment(self):
+        self._race_accounting(self._validate, self._reject, "accounting_validated", 1, 0.0, 0)
+
+    def test_reject_wins_then_validation_waits_and_posts_no_payment(self):
+        self._race_accounting(self._reject, self._validate, "rejected", 0, 1000.0, 0)
+
+    def test_double_validation_posts_exactly_one_payment(self):
+        self._race_accounting(self._validate, self._validate, "accounting_validated", 1, 0.0, 0)

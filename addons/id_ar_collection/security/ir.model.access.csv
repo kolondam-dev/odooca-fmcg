@@ -12,3 +12,7 @@ access_collection_sheet_cashier,SJP kasir baca,model_id_collection_sheet,group_a
 access_collection_sheet_line_cashier,Baris SJP kasir baca,model_id_collection_sheet_line,group_ar_cashier,1,0,0,0
 access_collection_receipt_cashier,Penerimaan kasir baca,model_id_collection_receipt,group_ar_cashier,1,0,0,0
 access_collection_receipt_line_cashier,Baris penerimaan kasir baca,model_id_collection_receipt_line,group_ar_cashier,1,0,0,0
+access_collection_sheet_accounting,SJP accounting baca,model_id_collection_sheet,group_ar_accounting,1,0,0,0
+access_collection_sheet_line_accounting,Baris SJP accounting baca,model_id_collection_sheet_line,group_ar_accounting,1,0,0,0
+access_collection_receipt_accounting,Penerimaan accounting baca,model_id_collection_receipt,group_ar_accounting,1,0,0,0
+access_collection_receipt_line_accounting,Baris penerimaan accounting baca,model_id_collection_receipt_line,group_ar_accounting,1,0,0,0

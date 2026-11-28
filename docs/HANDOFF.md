@@ -1,3 +1,7 @@
+## 2026-11-28 — [BU] BE-20e 2/n PR #214: sinkron main 5b216da (claude-dev)
+
+- [F] Rebase di atas main `5b216da` (konflik nol; planner `unknown` kosong). CI wajib diulang pada HEAD baru. Konkurensi dan rollback sudah ditutup di `a899e25`; yang tersisa: konfirmasi Finance atas aturan tanggal posting kas custody terlambat [BU] (hari terima WITA, periode terkunci ditolak). `collection_v2` tetap OFF.
+
 ## 2026-11-28 — PR #212: paginasi antrean koreksi absensi (ChatGPT-ABSENSI)
 
 - [F] Antrean tier aktif dan riwayat memakai halaman terpisah dengan kursor ID. Klien menyaring di server sebelum membatasi hasil, memakai company aktif dan aturan peserta yang sama.
@@ -42,6 +46,17 @@
 - [F] Diff terhadap `fdc4b97` kosong untuk `addons/id_mobile_api` dan `pwa`. CI untuk commit integrasi perlu diverifikasi tersendiri.
 - [F] Acceptance fungsional berdasarkan bukti fork: dua DO native, dua POD pada DO yang benar, satu closing final, resync tanpa duplikasi, dan cleanup fork. Transaksi browser tercatat pada `b2efacd`; resync pada `7d5fa2e`. Rangkuman acceptance pada `fdc4b97` mengacu pada bukti tersebut.
 - [BU] HTTP 422 prematur terbukti lewat API sesi driver. Klik closing prematur di UI dan pemulihan progres pada sesi baru belum terbukti. Dampak test **CUKUP** untuk sinkronisasi; batas bukti runtime tersebut tetap tersedia untuk keputusan reviewer.
+
+## 2026-11-28 — [BU] BE-20e 2/n PR #214: perbaikan HOLD (claude-dev)
+
+- [F] Tes dua transaksi PostgreSQL: validasi menang vs tolak, tolak menang vs validasi, validasi ganda (penunggu terbukti diblokir via `pg_blocking_pids`, tepat satu pembayaran / nol pembayaran, proteksi lepas). Tes rollback multibaris: baris kedua dipaksa gagal setelah baris pertama diposting; pembayaran, jurnal, rekonsiliasi, saldo, state kembali awal.
+- [BU] Tanggal jurnal kini hari uang diterima (WITA dari `occurred_at`), bukan `collect_date`; periode terkunci ditolak eksplisit. Menunggu konfirmasi Finance. `collection_v2` tetap OFF.
+
+## 2026-11-28 — [BU] BE-20e 2/n: validasi accounting tunai (claude-dev)
+
+- [BU] Grup `group_ar_accounting`; `accounting_validate(journal_id)` pada penerimaan tunai `cashier_validated`: akuntan harus berbeda dari kasir, semua baris uang `allocated` dengan selisih nol, jurnal kas/bank aktif satu company, saldo dibaca ulang di bawah lock 8.4 lalu satu pembayaran native per baris via `account.payment.register` (rekonsiliasi otomatis), saldo diverifikasi turun sebesar klaim, `payment_id` disimpan, state `accounting_validated`. Semua atomik.
+- [BU] `reject_receipt(reason)` untuk penerimaan belum divalidasi accounting: `rejected`, proteksi pending lepas, saldo faktur tak berubah.
+- [A] Tes fungsional ditambah; bukti CI pada SHA akhir akan dikomentari di PR. Tes dua transaksi, selisih kas, transfer/giro dan UI = K38. `collection_v2` tetap OFF.
 
 ## 2026-11-27T19:05:00+07:00 — [F] Fork PR #206 dilepas, pilot utuh (codex)
 
