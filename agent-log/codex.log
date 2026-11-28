@@ -896,3 +896,9 @@
 - [F] Follow-up derives company from unique posted donor invoice, scopes target/payment to same company, detects duplicate paid invoice without rejecting multi-term, verifies closing-state membership. 94 tests + 9 subtests, ruff, manifests pass.
 - [BU] Rerun F4 on final SHA; draft review, merge/deploy and clone/demo apply HOLD, July frozen. Impact TAMBAH.
 - Task managed by codex at 2026-11-28T15:52:44+07:00
+
+[2026-11-28T17:06:37+07:00] [INFO] PR213 source-backed AR oracle and ORM wrong-allocation F4 PASS
+- [F] At exact SHA 5e545ab8b49f01e933be258fff3e81576f1aa421, F4 46127916187 passed on both disposable DBs and Full Regression Gate 46127916276 passed its exact-SHA verdict. Audits: 2514 cutoff invoices / 345 open, source and DB 2368135989.94, mismatch 0.
+- [F] Probe shifted PAY-AR-01753 from INV-202608-0255 to equal-amount INV-202608-0197; GL and per-account invoice total unchanged, ledger violations 0, independent invoice mismatches 2; rollback digest MATCH. Scenario A zero drift PASS, B digest MATCH, fault injection PASS. Impact TAMBAH, local 94 tests + 9 subtests.
+- [BU] Draft PR, independent acceptance and merge/deploy separate; clone/demo apply HOLD and July frozen. Documentation-only follow-up head needs exact-SHA evidence.
+- Task managed by codex at 2026-11-28T17:06:37+07:00

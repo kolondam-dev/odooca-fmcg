@@ -1,3 +1,9 @@
+## 2026-11-28T17:06:37+07:00 — Codex — Oracle AR independen PR #213 lolos F4 dua DB
+**Bukti [F]:** Kandidat `5e545ab8b49f01e933be258fff3e81576f1aa421`: F4 46127916187 PASS, Full Regression Gate 46127916276 PASS exact-SHA. Kedua audit memeriksa 2.514 invoice per cutoff, 345 terbuka, residual sumber/DB `2.368.135.989,94`, mismatch 0; A zero drift PASS, B digest MATCH, fault injection PASS. Kontrol negatif memindahkan `PAY-AR-01753` ke invoice lain bernominal sama: saldo GL/total per akun tetap, ledger tieout 0 violation, oracle per-invoice 2 mismatch, digest rollback MATCH.
+**Dampak test:** **TAMBAH** (unit counterexample + F4 savepoint ORM). Tes lokal 94 passed + 9 subtests; ruff/manifests PASS. Commit ini hanya bukti dokumentasi, tanpa perubahan source sejak `5e545ab`; gate untuk SHA dokumentasi akhir tetap perlu diikat eksplisit.
+**Batas [BU]:** PR tetap draft; acceptance reviewer, merge/deploy, clone/demo apply HOLD; Juli freeze.
+**Signature:** task managed by codex at 2026-11-28T17:06:37+07:00
+
 ## 2026-11-28T15:52:44+07:00 — Codex — F4 PR #213 iterasi pertama gagal di setup probe
 **Bukti [F]:** Full Regression Gate 46123600595 PASS exact-SHA `4f3de1d7`; F4 46123600682 FAIL, artefak menyebut `AR probe company not found` pada setup kontrol negatif, sesudah Scenario B. Belum ada bukti mutasi ORM salah-alokasi berhasil. Probe direvisi untuk mengambil company dari invoice donor unik, bukan mencari nama perusahaan. Pengaman duplikasi invoice dibedakan dari multi-termin dan tes sumber closing ditambahkan. Tes lokal 94 passed + 9 subtests, ruff/manifests PASS.
 **Batas [BU]:** F4 ulang pada SHA final wajib; review PR draft, merge/deploy, clone/demo apply HOLD; Juli freeze. Dampak test **TAMBAH**.
