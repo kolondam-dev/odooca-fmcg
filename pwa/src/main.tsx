@@ -7,6 +7,14 @@ if (import.meta.env.DEV && location.hash === "#ui") {
     import("./ui/Gallery").then(({ Gallery }) =>
         render(<Gallery />, document.getElementById("app")!),
     );
+} else if (
+    !__READ_ONLY__ &&
+    new URLSearchParams(location.search).has("attendance-approval")
+) {
+    import("./components/AttendanceCorrections").then(
+        ({ AttendanceCorrections }) =>
+            render(<AttendanceCorrections />, document.getElementById("app")!),
+    );
 } else if (__READ_ONLY__) {
     // Retire any previous /field/ shell before connecting a real session.
     async function openReadApp() {

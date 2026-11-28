@@ -100,6 +100,9 @@ export function Login({
             >
                 Ganti akun / keluar dari sesi sebelumnya
             </a>
+            <a class="ui-login__link" href="/field/?attendance-approval">
+                Buka koreksi dan persetujuan absensi
+            </a>
             {sheet ? (
                 <BottomSheet
                     title="Sesi berakhir"

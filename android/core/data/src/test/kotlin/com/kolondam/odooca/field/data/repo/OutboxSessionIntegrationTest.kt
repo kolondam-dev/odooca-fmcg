@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.kolondam.odooca.field.data.db.OdoocaDatabase
 import com.kolondam.odooca.field.data.network.ApiConfig
 import com.kolondam.odooca.field.data.network.ApiException
+import com.kolondam.odooca.field.data.network.AttendanceQueue
 import com.kolondam.odooca.field.data.network.OdoocaApi
 import com.kolondam.odooca.field.data.network.PersistentCookieJar
 import com.kolondam.odooca.field.data.security.SecretCipher
@@ -76,6 +77,23 @@ class OutboxSessionIntegrationTest {
     fun tearDown() {
         database.close()
         backend.stop()
+    }
+
+    @Test
+    fun attendanceQueueUsesSessionCursorAndDecidesOlderRequest(): Unit = runBlocking {
+        session.login("A", "pw")
+        val first = api.attendanceInbox(AttendanceQueue.ACTIONABLE)
+        val second = api.attendanceInbox(AttendanceQueue.ACTIONABLE, first.nextBefore)
+        val third = api.attendanceInbox(AttendanceQueue.ACTIONABLE, second.nextBefore)
+        assertEquals(50, first.items.size)
+        assertEquals(50, second.items.size)
+        val item = third.items.single()
+        assertEquals(1L, item.id)
+        assertNull(third.nextBefore)
+        assertTrue(item.canDecide)
+        api.decideAttendanceCorrection(third.csrfToken, item, approve = true, notes = "Valid")
+        session.login("B", "pw")
+        assertTrue(api.attendanceInbox(AttendanceQueue.ACTIONABLE).items.isEmpty())
     }
 
     @Test
@@ -313,6 +331,29 @@ class OutboxSessionIntegrationTest {
                             "\"businessDate\":\"2026-11-19\",\"csrfToken\":\"csrf-$owner\"}",
                     )
                 }
+            }
+            "/api/v1/attendance/corrections?queue=actionable",
+            "/api/v1/attendance/corrections?queue=actionable&before=52",
+            "/api/v1/attendance/corrections?queue=actionable&before=2",
+            -> {
+                val ids = when {
+                    ownerOf(cookie) != "A" -> emptyList()
+                    path.endsWith("before=2") -> listOf(1)
+                    path.endsWith("before=52") -> (51 downTo 2).toList()
+                    else -> (101 downTo 52).toList()
+                }
+                val cursor = ids.lastOrNull()?.takeIf { it > 1 }
+                val items = ids.joinToString(",") { id ->
+                    """{"id":$id,"reference":"Correction","reason":"Fixture","state":"pending","tier":1,"canDecide":true,"mine":false,"steps":[]}"""
+                }
+                Reply(200, """{"items":[$items],"nextBefore":$cursor,"csrfToken":"csrf-${ownerOf(cookie)}"}""")
+            }
+            "/api/v1/attendance/corrections/decision" -> {
+                val fields = body.split("&").toSet()
+                val expected = setOf(
+                    "approval_id=1", "tier=1", "decision=approve", "csrf_token=csrf-A", "notes=Valid",
+                )
+                if (ownerOf(cookie) == "A" && fields == expected) Reply(200, "{}") else Reply(400, "{}")
             }
             "/api/v1/sync/commands" -> {
                 val uuid = Regex("\"client_uuid\":\"([^\"]+)\"").find(body)?.groupValues?.get(1) ?: "missing"

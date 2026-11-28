@@ -94,7 +94,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
 }
 
 @Composable
-fun HomeScreen(container: AppContainer, onOpenCalibration: () -> Unit) {
+fun HomeScreen(container: AppContainer, onOpenCalibration: () -> Unit, onOpenApproval: () -> Unit) {
     val vm: HomeViewModel = viewModel(factory = viewModelFactory { initializer { HomeViewModel(container) } })
     val identity by container.session.identity.collectAsStateWithLifecycle()
     val outlets by vm.outlets.collectAsStateWithLifecycle()
@@ -124,6 +124,7 @@ fun HomeScreen(container: AppContainer, onOpenCalibration: () -> Unit) {
                 onClick = vm::refresh,
                 enabled = !ui.refreshing,
             )
+            TextButton(onClick = onOpenApproval) { Text("Koreksi dan persetujuan absensi") }
             if (pending > 0) {
                 TextButton(onClick = { OutboxScheduler.kick(context, vm.ownerId) }) { Text("Kirim antrean sekarang") }
             }

@@ -1,3 +1,19 @@
+## 2026-11-28 — PR #212: paginasi antrean koreksi absensi (ChatGPT-ABSENSI)
+
+- [F] Antrean tier aktif dan riwayat memakai halaman terpisah dengan kursor ID. Klien menyaring di server sebelum membatasi hasil, memakai company aktif dan aturan peserta yang sama.
+- [F] Odoo 19 disposable: 61 tes lulus, termasuk 101 entri riwayat, 102 pengajuan aktif, tier lain, akun di luar peserta dan perusahaan lain. Chromium: enam skenario ponsel/tablet lulus, termasuk keputusan pada halaman ketiga.
+- [F] Smoke Chromium terhubung ke Odoo disposable: pemohon PWA, supervisor Web Odoo, manajer dan owner PWA. Owner sebelum tier aktif ditolak. Rekap berubah dari 0 menjadi 480 menit setelah final; sumber clock-in/out dan bukti tetap sama.
+- [BU] Tes transport Android untuk kursor lintas tiga halaman masuk CI. Acceptance APK terhadap Odoo disposable masih terbuka karena sandbox tidak menyediakan Android SDK, ADB, atau perangkat emulator.
+
+## 2026-11-28 — Koreksi dan persetujuan absensi lintas klien (ChatGPT-ABSENSI)
+
+- [F] Satu slice di `agen/absensi-koreksi-approval`. Pengajuan koreksi WITA berbasis karyawan sendiri, antrean tier aktif, catatan keputusan, dan riwayat tersedia di Odoo, PWA live, dan Android Compose.
+- [A] Urutan tetap atasan langsung, atasan berikutnya, lalu Direksi/Pemilik perusahaan. HR perlu menyiapkan hierarki dan awal cakupan PWA. Koreksi yang sudah disetujui penuh dihitung ketika rekap dibuat ulang. Bukti asli tetap tercatat.
+- [F] TypeScript, kontrak, build PWA, 574 tes unit PWA dan 4 tes Chromium lulus. Instalasi Odoo kosong menguji regresi approval dan attendance.
+- [BU] CI exact SHA, praktik approval dengan akun per-tier di staging, serta kompilasi dan smoke Android menunggu. Sandbox tidak dapat mengunduh Gradle.
+- [BU] Deployment menyertakan upgrade `id_attendance` dan route gateway bila /field/ memakai staging gateway. Tidak dilakukan deployment dari branch ini.
+
+
 ## PR #206 — Retest 1/2 PASS pada e724b0f (codex, 2026-11-28)
 
 - [F] PWA/Odoo di fork `pr206-ui` dijalankan pada `e724b0f1a44c852dac1548643f06b2478b2d88c1` (deployment PWA `e8df512e`, Odoo `6ec7cfe3`), runtime DB disposable `pr110_rehearsal_20261127` diverifikasi. POD pertama tersimpan `3038c01a-433c-4c8f-9a5d-95c63abc61be` dipakai ulang tanpa pengiriman baru.

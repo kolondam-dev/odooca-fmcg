@@ -3,7 +3,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from odoo import Command, fields
-from odoo.exceptions import AccessError
+from odoo.exceptions import AccessError, UserError
 from odoo.tests import TransactionCase, tagged
 
 
@@ -247,3 +247,89 @@ class TestAttendanceReport(TransactionCase):
         line = self.env["id.attendance.report.line"].with_user(owner).search(domain)
         self.assertEqual(line.status, "absent")
         self.assertFalse(line.with_user(colleague).search(domain))
+
+    def test_attendance_correction_requires_each_tier_and_preserves_evidence(self):
+        internal = self.env.ref("base.group_user")
+        director = self.env.ref("id_approval.group_fmcg_approval_director")
+        requester, supervisor, manager, owner, outsider = self.env["res.users"].create([{
+            "name": role, "login": f"report_correction_{role}",
+            "company_id": self.company.id, "company_ids": [Command.set(self.company.ids)],
+            "group_ids": [Command.set((internal | director).ids if role == "Owner" else internal.ids)],
+        } for role in ["Requester", "Supervisor", "Manager", "Owner", "Outsider"]])
+        managers = self.env["hr.employee"].create([{
+            "name": user.name, "company_id": self.company.id, "user_id": user.id,
+        } for user in (supervisor, manager)])
+        managers[0].parent_id = managers[1]
+        self.employee.write({"user_id": requester.id, "parent_id": managers[0].id})
+        attendance = self._attendance(completed=False)
+        original = (attendance.check_in, attendance.check_out, attendance.pwa_check_in_evidence_id)
+        with patch.object(fields.Datetime, "now", return_value=self.closed_clock):
+            correction = self.env["id.attendance.correction"].with_user(requester).create({
+                "business_date": self.day, "start_hour": 8, "end_hour": 17,
+                "reason": "Forgot to check out",
+            })
+        correction.action_submit()
+        request = correction.approval_id
+        self.assertFalse(request.with_user(outsider).search([("id", "=", request.id)]))
+        with self.assertRaises(AccessError):
+            request.with_user(requester).action_approve()
+        with self.assertRaises(AccessError):
+            request.with_user(owner).action_approve()
+        with self.assertRaises(AccessError):
+            request.with_user(supervisor).write({"state": "approved"})
+        self.assertFalse(self._generate()[1][self.day].correction_applied)
+
+        # More than two inbox pages and more than the former mixed-endpoint cap.
+        model = request.env[request._name].sudo().with_context(tracking_disable=True)
+        common = {
+            "category_id": request.category_id.id, "res_model": request.res_model,
+            "res_id": request.res_id, "company_id": self.company.id,
+            "requested_by": requester.id, "reference_document": "Queue fixture", "reason": "Queue fixture",
+            "attendance_participant_ids": [Command.set((requester | supervisor | manager | owner).ids)],
+        }
+
+        def pending(approver):
+            return {**common, "state": "pending", "line_ids": [Command.create({
+                "tier_sequence": 1, "tier_name": "Fixture active tier", "state": "pending",
+                "approver_type": "user", "user_id": approver.id,
+            })]}
+
+        model.create([{"state": "approved", **common} for _ in range(101)])
+        model.create([pending(manager)])
+        inbox = model.with_user(supervisor)
+        page, cursor = inbox._attendance_correction_page("actionable", None)
+        self.assertEqual((page.ids, cursor), ([request.id], None))
+        history, cursor = inbox._attendance_correction_page("history", None)
+        self.assertEqual(len(history), 50)
+        self.assertTrue(cursor)
+        self.assertNotIn(request.id, history.ids)
+
+        active = model.create([pending(supervisor) for _ in range(101)])
+        foreign = self.env["res.company"].sudo().create({"name": "Foreign approval fixture"})
+        model.create([{**pending(supervisor), "company_id": foreign.id}])
+        self.assertFalse(model.with_user(outsider)._attendance_correction_page("actionable", None)[0])
+        seen = []
+        cursor = None
+        for expected_count in (50, 50, 2):
+            page, cursor = inbox._attendance_correction_page("actionable", cursor)
+            self.assertEqual(len(page), expected_count)
+            seen.extend(page.ids)
+        self.assertIsNone(cursor)
+        self.assertEqual(seen, sorted([request.id, *active.ids], reverse=True))
+
+        request.with_user(supervisor).action_approve(expected_tier=1)
+        with self.assertRaises(UserError):
+            request.with_user(manager).action_approve(expected_tier=1)
+        self.assertFalse(self._generate()[1][self.day].correction_applied)
+        request.with_user(manager).action_approve(expected_tier=2)
+        decision = request.with_user(owner).action_open_correction_decision()
+        self.env[decision["res_model"]].with_user(owner).with_context(**decision["context"]).create({
+            "notes": "Reviewed original capture",
+        }).action_approve()
+        self.assertEqual(request.line_ids[-1].notes, "Reviewed original capture")
+        self.assertEqual(request.state, "approved")
+        self.assertEqual(request.line_ids.actual_approver_id, supervisor | manager | owner)
+        row = self._generate()[1][self.day]
+        self.assertTrue(row.correction_applied)
+        self.assertEqual((row.status, row.required_minutes, row.scheduled_minutes), ("present", 480, 480))
+        self.assertEqual((attendance.check_in, attendance.check_out, attendance.pwa_check_in_evidence_id), original)

@@ -73,35 +73,49 @@ class FmcgApprovalRequest(models.Model):
 
     commercial_fingerprint = fields.Char(readonly=True, copy=False)
 
+    def _server_owned_category(self):
+        self.ensure_one()
+        return self.category_id.code in self._server_owned_category_codes()
+
+    @api.model
+    def _server_owned_category_codes(self):
+        return COMMERCIAL_CATEGORIES
+
+    @api.model
+    def _server_owned_extra_fields(self):
+        return set()
+
     @api.model_create_multi
     def create(self, vals_list):
         if not self.env.su:
+            default_category = self.default_get(["category_id"]).get("category_id")
             categories = self.env["fmcg.approval.category"].browse([
-                vals["category_id"] for vals in vals_list if vals.get("category_id")
+                vals.get("category_id", default_category) for vals in vals_list
+                if vals.get("category_id", default_category)
             ])
-            if any(category.code in COMMERCIAL_CATEGORIES for category in categories):
+            if any(category.code in self._server_owned_category_codes() for category in categories):
                 raise AccessError("Ajukan persetujuan komersial dari penawaran terkait.")
         return super().create(vals_list)
 
     def write(self, vals):
         protected = {"commercial_fingerprint", "state", "line_ids", "current_tier_sequence",
-                     "category_id", "res_model", "res_id", "requested_by", "principal_id",
+                     "category_id", "category_code", "res_model", "res_id", "requested_by", "principal_id",
                      "principal_decided", "amount", "discount_percent", "snapshot_taken",
-                     "manual_discount_amount", "program_discount_amount"}
+                     "manual_discount_amount", "program_discount_amount"} | self._server_owned_extra_fields()
         if not self.env.su and protected.intersection(vals):
             categories = self.category_id | self.env["fmcg.approval.category"].browse(vals.get("category_id") or [])
-            if any(category.code in COMMERCIAL_CATEGORIES for category in categories):
+            if any(category.code in self._server_owned_category_codes() for category in categories):
                 raise AccessError("Keputusan dan snapshot komersial hanya dapat ditetapkan oleh action server.")
         return super().write(vals)
 
     def unlink(self):
-        if not self.env.su and any(code in COMMERCIAL_CATEGORIES for code in self.mapped("category_code")):
+        if not self.env.su and any(request._server_owned_category() for request in self):
             raise AccessError("Riwayat persetujuan komersial tidak dapat dihapus.")
         return super().unlink()
 
     def _decision_writer(self):
         self.ensure_one()
-        return self.sudo() if self.category_code in COMMERCIAL_CATEGORIES else self
+        return self.sudo() if self._server_owned_category() else self
 
     snapshot_taken = fields.Boolean(
         string="Snapshot Diskon Tersimpan",
@@ -368,22 +382,24 @@ class FmcgApprovalRequestLine(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         if not self.env.su:
+            default_request = self.default_get(["request_id"]).get("request_id")
             requests = self.env["fmcg.approval.request"].browse([
-                vals["request_id"] for vals in vals_list if vals.get("request_id")
+                vals.get("request_id", default_request) for vals in vals_list
+                if vals.get("request_id", default_request)
             ])
-            if any(request.category_code in COMMERCIAL_CATEGORIES for request in requests):
+            if any(request._server_owned_category() for request in requests):
                 raise AccessError("Tier persetujuan komersial hanya dapat dibuat oleh server.")
         return super().create(vals_list)
 
     def write(self, vals):
         if not self.env.su:
             request = self.env["fmcg.approval.request"].browse(vals.get("request_id") or [])
-            if any(item.category_code in COMMERCIAL_CATEGORIES for item in self.request_id | request):
+            if any(item._server_owned_category() for item in self.request_id | request):
                 raise AccessError("Keputusan tier komersial harus melalui action persetujuan.")
         return super().write(vals)
 
     def unlink(self):
-        if not self.env.su and any(code in COMMERCIAL_CATEGORIES for code in self.request_id.mapped("category_code")):
+        if not self.env.su and any(request._server_owned_category() for request in self.request_id):
             raise AccessError("Riwayat tier komersial tidak dapat dihapus.")
         return super().unlink()
 
