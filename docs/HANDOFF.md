@@ -1,3 +1,8 @@
+## 2026-11-28T15:52:44+07:00 — Codex — F4 PR #213 iterasi pertama gagal di setup probe
+**Bukti [F]:** Full Regression Gate 46123600595 PASS exact-SHA `4f3de1d7`; F4 46123600682 FAIL, artefak menyebut `AR probe company not found` pada setup kontrol negatif, sesudah Scenario B. Belum ada bukti mutasi ORM salah-alokasi berhasil. Probe direvisi untuk mengambil company dari invoice donor unik, bukan mencari nama perusahaan. Pengaman duplikasi invoice dibedakan dari multi-termin dan tes sumber closing ditambahkan. Tes lokal 94 passed + 9 subtests, ruff/manifests PASS.
+**Batas [BU]:** F4 ulang pada SHA final wajib; review PR draft, merge/deploy, clone/demo apply HOLD; Juli freeze. Dampak test **TAMBAH**.
+**Signature:** task managed by codex at 2026-11-28T15:52:44+07:00
+
 ## 2026-11-28T14:57:01+07:00 — Codex — PR #213 oracle AR sumber independen
 **Temuan [F]:** Selisih sumber/GL `195.474.994,89` adalah tepat 50 carry invoice Agustus bertanggal 1 September; setelah cutoff 31 Agustus, sumber yang disetujui menghasilkan 345 invoice terbuka / `2.368.135.989,94`, sama dengan GL. Register Juli cocok checkpoint resmi 309 invoice / `2.370.371.980,58`.
 **Implementasi [F]:** Oracle per-invoice membaca register Juli berpemilik fingerprint kanonikal, pack Agustus ber-MANIFEST, koleksi dan diskon, serta memeriksa keanggotaan closing_state; ledger per akun tetap ada. Kontrol negatif akan memindahkan pembayaran bernilai sama ke invoice lain di akun 112000 dalam savepoint, mensyaratkan ledger tetap cocok namun oracle gagal dan rollback digest utuh. Tes lokal 92 passed + 9 subtests, ruff/manifests PASS; planner full 11-suite. Dampak test **TAMBAH**.

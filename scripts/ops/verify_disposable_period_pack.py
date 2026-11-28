@@ -257,6 +257,7 @@ def _check_ar_invoice_residuals(invoice_lines, expected, cutoff):
     """Compare every posted invoice's cutoff terms with source, including paid zeroes."""
     observed = {}
     duplicates = []
+    move_ids = {}
     for line in invoice_lines:
         move = line.move_id
         number = str(getattr(move, "payment_reference", None) or getattr(move, "ref", None) or "")
@@ -266,6 +267,10 @@ def _check_ar_invoice_residuals(invoice_lines, expected, cutoff):
         if number not in expected:
             duplicates.append(f"unrecognized posted AR invoice {number or move.id}")
             continue
+        move_id = getattr(move, "id", None)
+        if number in move_ids and move_ids[number] != move_id:
+            duplicates.append(f"duplicate posted AR invoice {number}")
+        move_ids[number] = move_id
         matched = sum((_dec(p.amount) for p in line.matched_credit_ids if str(p.max_date) <= cutoff), ZERO)
         matched -= sum((_dec(p.amount) for p in line.matched_debit_ids if str(p.max_date) <= cutoff), ZERO)
         observed[number] = observed.get(number, ZERO) + _dec(line.debit) - _dec(line.credit) - matched
@@ -309,13 +314,13 @@ def probe_ar_wrong_invoice_allocation(env, oracle):
     Move = env["account.move"].sudo()
     AML = env["account.move.line"].sudo()
     Payment = env["account.payment"].sudo()
-    company = env["res.company"].sudo().search([("name", "ilike", "PT Salva Inti Mandiri")], limit=1)
-    if not company:
-        raise RuntimeError("AR probe company not found")
-    domain = [("company_id", "=", company.id), ("move_type", "=", "out_invoice"),
-              ("state", "=", "posted")]
+    domain = [("move_type", "=", "out_invoice"), ("state", "=", "posted")]
     donor = Move.search(domain + [("payment_reference", "=", donor_ref)])
-    target = Move.search(domain + [("payment_reference", "=", target_ref)])
+    if len(donor) != 1:
+        raise RuntimeError("AR probe donor must resolve uniquely")
+    company = donor.company_id
+    target = Move.search(domain + [("company_id", "=", company.id),
+                                   ("payment_reference", "=", target_ref)])
     payment = _find_payment(Payment, company.id, [pay_ref], payment_type="inbound")
     if len(donor) != 1 or len(target) != 1 or not payment:
         raise RuntimeError("AR probe invoice/payment must resolve uniquely")

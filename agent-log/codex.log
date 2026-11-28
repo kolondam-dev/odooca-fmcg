@@ -890,3 +890,9 @@
 - [F] Retain per-account signed ledger breakdown; verify every posted-by-cutoff invoice against approved registers/pack/closing-state. Wrong-invoice equal-amount payment probe in savepoint must preserve GL and account totals, fail invoice oracle, and roll back with matching digest. Unit counterexample: 92 passed, 9 subtests; ruff and manifests pass. Impact TAMBAH / full suite.
 - [BU] F4 ORM and exact-SHA full regression pending; draft PR, merge/deploy, clone/demo apply HOLD and July frozen.
 - Task managed by codex at 2026-11-28T14:57:01+07:00
+
+[2026-11-28T15:52:44+07:00] [INFO] PR213 first F4 failure isolated to probe company resolution
+- [F] Full regression 46123600595 passed exact SHA 4f3de1d7; F4 46123600682 failed after Scenario B with RuntimeError: AR probe company not found. No ORM wrong-allocation proof claimed.
+- [F] Follow-up derives company from unique posted donor invoice, scopes target/payment to same company, detects duplicate paid invoice without rejecting multi-term, verifies closing-state membership. 94 tests + 9 subtests, ruff, manifests pass.
+- [BU] Rerun F4 on final SHA; draft review, merge/deploy and clone/demo apply HOLD, July frozen. Impact TAMBAH.
+- Task managed by codex at 2026-11-28T15:52:44+07:00

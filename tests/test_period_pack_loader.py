@@ -2587,6 +2587,13 @@ class TestArResolverCrossPeriod(unittest.TestCase):
         self.assertNotIn("INV-202608-0197", oracle.closing_state["carry_invoices"])
         self.assertNotIn("INV-202608-1227", expected)  # September invoice, not AR at August cutoff
 
+    def test_source_ar_fails_if_closing_membership_is_tampered(self):
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        oracle.closing_state["open_invoices"] = dict(oracle.closing_state["open_invoices"])
+        oracle.closing_state["open_invoices"].pop("INV-202607-0756")
+        with self.assertRaisesRegex(ValueError, "membership"):
+            _source_ar_residuals(oracle)
+
     def test_wrong_invoice_same_amount_keeps_ledger_green_but_source_fails(self):
         expected = {"INV-A": Decimal("0"), "INV-B": Decimal("100")}
         account = MockRecord(code="112000")
@@ -2619,6 +2626,24 @@ class TestArResolverCrossPeriod(unittest.TestCase):
                 self.assertEqual(source_check["mismatch_count"], 2)
                 self.assertTrue(any("INV-A" in item for item in source_violations))
                 self.assertTrue(any("INV-B" in item for item in source_violations))
+
+    def test_source_ar_rejects_duplicate_paid_invoice_but_sums_multi_terms(self):
+        account = MockRecord(code="112000")
+        def term(move_id, amount, matched):
+            return MockRecord(account_id=account, debit=amount, credit=0,
+                              move_id=MockRecord(id=move_id, move_type="out_invoice",
+                                                 payment_reference="INV-A"),
+                              display_type="payment_term", matched_credit_ids=[
+                                  MockRecord(amount=matched, max_date="2026-08-20")
+                              ], matched_debit_ids=[])
+
+        expected = {"INV-A": Decimal(0)}
+        valid = [term(1, 60, 60), term(1, 40, 40)]
+        check, violations = _check_ar_invoice_residuals(valid, expected, "2026-08-31")
+        self.assertEqual(check["observed_invoice_count"], 1)
+        self.assertEqual(violations, [])
+        _, violations = _check_ar_invoice_residuals(valid + [term(2, 100, 100)], expected, "2026-08-31")
+        self.assertTrue(any("duplicate posted AR invoice INV-A" in v for v in violations))
 
     def test_ar_f4_cutoff_per_account_cannot_hide_offsetting_errors(self):
         def line(code, debit, credit=0, credits=(), debits=()):
