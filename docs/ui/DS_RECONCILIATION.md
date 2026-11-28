@@ -370,6 +370,7 @@ Daftar faktur server dipotong 50 (jatuh tempo tertua dulu). Hasil `mustCollectTo
 
 ### K38 — Validasi accounting tunai (BE-20e 2/n): bukti konkurensi dan jalur lain tertunda
 
-- `accounting_validate` memakai protokol lock 8.4 dan `account.payment.register`, tetapi **belum** ada tes dua transaksi PostgreSQL (validasi vs pembatalan/penolakan, validasi vs rekonsiliasi native). Bukti saat ini: tes fungsional + CI; lock dan baca-ulang saldo diverifikasi lewat tinjauan kode saja.
+- `accounting_validate` memakai protokol lock 8.4 dan `account.payment.register`. Bukti dua transaksi PostgreSQL ada untuk validasi vs tolak (kedua urutan) dan validasi ganda; **belum** ada untuk validasi vs rekonsiliasi native/pembatalan SJP.
+- Tanggal jurnal = hari uang diterima (WITA dari `occurred_at`), bukan `collect_date`; periode terkunci (fiscalyear/hard) ditolak eksplisit tanpa digeser. Aturan ini **menunggu konfirmasi Finance [BU]**.
 - Penerimaan dengan selisih kas diblokir (belum ada penyelesaian selisih); transfer (verifikasi finance) dan giro belum ada; jurnal kas/bank dipilih eksplisit oleh accounting (pemetaan jurnal per metode menunggu konfirmasi akuntan [BU]).
 - Belum ada UI/wizard accounting; `collection_v2` tetap OFF.

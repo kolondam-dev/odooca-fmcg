@@ -4,6 +4,8 @@ pembayaran native lewat `account.payment.register` (yang juga merekonsiliasi) da
 Protokol lock 8.4: SJP -> faktur -> baris receivable -> baris SJP; saldo dibaca ulang dari DB di bawah lock sebelum
 memposting. Satu transaksi: kegagalan di mana pun membatalkan seluruh pembayaran dan transisi (tanpa setengah jadi).
 """
+from datetime import timedelta
+
 from odoo import _, fields, models
 from odoo.exceptions import AccessError, UserError
 
@@ -33,6 +35,22 @@ class CollectionReceiptAccounting(models.Model):
         self.env.flush_all()
         self.env.invalidate_all()
         return self.sudo().browse(receipt.id)
+
+    def _posting_date(self, receipt, company):
+        """Tanggal jurnal = hari uang benar-benar diterima (kalender WITA dari `occurred_at`), bukan hari SJP.
+
+        Untuk custody terlambat tanggalnya jatuh setelah `collect_date`. Aturan ini menunggu konfirmasi Finance [BU].
+        Periode terkunci ditolak eksplisit (tidak digeser diam-diam): accounting harus menyelesaikannya dengan Finance.
+        """
+        occurred = receipt.occurred_at or fields.Datetime.now()
+        day = (occurred + timedelta(hours=8)).date()
+        violated = company._get_lock_date_violations(
+            day, fiscalyear=True, sale=False, purchase=False, tax=False, hard=True)
+        if violated:
+            raise UserError(_(
+                "Tanggal penerimaan %(day)s berada pada periode terkunci (%(locks)s); hubungi Finance.",
+                day=day, locks=company._format_lock_dates(violated)))
+        return day
 
     def accounting_validate(self, journal_id):
         """Validasi accounting atas penerimaan tunai yang sudah dihitung kasir: posting pembayaran + rekonsiliasi.
@@ -68,13 +86,14 @@ class CollectionReceiptAccounting(models.Model):
             balance = balances.get(line.move_id.id, 0.0)
             if line.move_id.state != "posted" or currency.compare_amounts(line.amount, balance) > 0:
                 raise UserError(_("Saldo faktur %s berubah dan tidak lagi cukup; tolak penerimaan.", line.move_id.name))
+        payment_date = self._posting_date(receipt, company)
         self.env.cr.execute(
             "UPDATE id_collection_sheet SET write_date = (NOW() AT TIME ZONE 'UTC') WHERE id = %s", (sheet.id,))
         Register = self.env["account.payment.register"].sudo().with_company(company)
         for line in money_lines:
             move = line.move_id
             payments = Register.with_context(active_model="account.move", active_ids=move.ids).create({
-                "amount": line.amount, "payment_date": sheet.collect_date, "journal_id": journal.id,
+                "amount": line.amount, "payment_date": payment_date, "journal_id": journal.id,
                 "communication": f"{receipt.name} {sheet.name}", "group_payment": False,
             })._create_payments()
             if len(payments) != 1 or payments.state not in ("paid", "in_process"):

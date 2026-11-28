@@ -1,6 +1,7 @@
 """BE-20d: command `collection.receipt.submit` melalui dispatcher produksi (`process_command`)."""
 import uuid
 from datetime import timedelta
+from unittest.mock import patch
 
 from freezegun import freeze_time
 from psycopg2 import IntegrityError
@@ -931,3 +932,63 @@ class TestCollectionReceipt(TransactionCase):
         with self.assertRaises(UserError):
             receipt.with_user(accountant).reject_receipt("terlambat")
         self.assertEqual(receipt.state, "accounting_validated")
+
+    def test_accounting_multi_line_failure_rolls_back_every_payment_and_state(self):
+        first, second = self._invoice(), self._invoice()
+        sheet = self._sheet([first, second])
+        receipt = self._cashier_receipt(sheet, [first, second])
+        journal = self._cash_journal()
+        accountant = self._accountant()
+        payments_before = self.env["account.payment"].search_count([("partner_id", "=", self.partner.id)])
+        moves_before = self.env["account.move"].search_count([("company_id", "=", self.company.id)])
+        register = type(self.env["account.payment.register"])
+        original, calls = register._create_payments, []
+
+        def flaky(wizard):
+            calls.append(1)
+            if len(calls) == 2:  # baris pertama sudah diposting dan direkonsiliasi
+                raise UserError("gagal paksa pada baris kedua")
+            return original(wizard)
+
+        with patch.object(register, "_create_payments", flaky), self.assertRaises(UserError):
+            receipt.with_user(accountant).accounting_validate(journal.id)
+        self.assertEqual(len(calls), 2)
+        self.env.invalidate_all()
+        self.assertEqual(receipt.state, "cashier_validated")
+        self.assertFalse(receipt.line_ids.payment_id)
+        self.assertFalse(receipt.accountant_id)
+        self.assertEqual(self.env["account.payment"].search_count([("partner_id", "=", self.partner.id)]),
+                         payments_before)
+        self.assertEqual(self.env["account.move"].search_count([("company_id", "=", self.company.id)]), moves_before)
+        for move in (first, second):
+            self.assertEqual((self._residual(move), move.payment_state), (move.amount_total, "not_paid"))
+            self.assertFalse(self.env["account.partial.reconcile"].search([
+                "|", ("debit_move_id.move_id", "=", move.id), ("credit_move_id.move_id", "=", move.id)]))
+        self.assertTrue(all(line.holds_invoice for line in receipt.line_ids))  # proteksi pending tetap utuh
+        receipt.with_user(accountant).accounting_validate(journal.id)  # tanpa gangguan: berhasil utuh
+        self.assertEqual((receipt.state, len(receipt.line_ids.payment_id)), ("accounting_validated", 2))
+
+    def test_accounting_posting_date_is_cash_received_day_not_sheet_day_and_locked_period_is_refused(self):
+        move = self._invoice()
+        sheet = self._sheet([move])
+        self.clock.move_to("2026-11-25 02:00:00")  # setelah cutoff SJP 24 Nov; hari WITA 25 Nov
+        control = self._control()
+        entry = {"line_id": self._line_of(sheet, move).id, "invoice_id": move.id, "outcome": "paid",
+                 "amount": move.amount_residual, "expected_balance": move.amount_residual}
+        receipt = self.env["id.collection.receipt"].with_user(control).record_custody_exception(
+            sheet.id, "TOK-DATE", "Setoran terlambat", "2026-11-25T09:00:00+08:00", [entry])
+        line = receipt.line_ids
+        receipt.with_user(self._cashier()).validate_cash({line.id: line.amount})
+        journal = self._cash_journal()
+        accountant = self._accountant()
+        self.company.fiscalyear_lock_date = "2026-11-25"  # periode tanggal terima terkunci
+        with self.assertRaises(UserError):
+            receipt.with_user(accountant).accounting_validate(journal.id)
+        self.env.invalidate_all()
+        self.assertEqual((receipt.state, bool(line.payment_id), self._residual(move)),
+                         ("cashier_validated", False, move.amount_total))
+        self.company.fiscalyear_lock_date = "2026-11-24"  # hari SJP terkunci tetapi hari terima terbuka
+        receipt.with_user(accountant).accounting_validate(journal.id)
+        self.assertEqual(str(line.payment_id.date), "2026-11-25")  # bukan collect_date (24 Nov)
+        self.assertEqual(str(line.payment_id.move_id.date), "2026-11-25")
+        self.assertEqual(str(sheet.collect_date), "2026-11-24")

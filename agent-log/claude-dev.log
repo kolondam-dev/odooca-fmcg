@@ -455,3 +455,7 @@
 [2026-11-28T13:34:27+07:00] [INFO] BE-20e 2/n validasi accounting tunai
 - group_ar_accounting; accounting_validate via account.payment.register dengan lock 8.4; reject_receipt; tes fungsional; tes dua transaksi=K38; collection_v2 OFF
 - Task managed by claude-dev agent at 2026-11-28T13:34:27+07:00
+
+[2026-11-28T15:02:49+07:00] [INFO] PR #214 perbaikan HOLD
+- tes dua transaksi validasi/tolak/ganda; tes rollback multibaris; tanggal posting=hari terima WITA + lock eksplisit (konfirmasi Finance BU)
+- Task managed by claude-dev agent at 2026-11-28T15:02:49+07:00
