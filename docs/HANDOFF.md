@@ -1,3 +1,10 @@
+## 2026-11-28 — DEV-03A · Checkpoint outbox dan lost receipt (Codex-Mobile Native)
+
+- [F] Arahan `4646eec`, basis main selepas refresh `5b216da`, sumber teruji `653c312`. Probe HTTPS B09 sengaja memutus respons setelah server memproses command. Retry memakai UUID dan byte identik serta memulihkan receipt `accepted` untuk `S00001`. Audit pasca-putus dan pasca-replay cocok dengan satu ledger dan satu order. Cleanup mengonfirmasi nol resource Docker.
+- [F] Tes lama gagal saat flush kedua mengambil kembali row SENDING yang masih aktif. Mutex pada repositori singleton menserialkan recovery, planning dan send. Tes kini lulus dengan satu request dan satu attempt. Tes HTTP/Room mencakup backoff dan dependensi, 401 pertama, pergantian akun, serta pembatalan pengiriman dan pembukaan ulang Room file-backed.
+- [F] Gate statis, Gradle, 41 tes kontrak, 72 tes domain dan 9 tes data/Robolectric lulus. APK debug dan instrumentation dibangun. Planner memilih `android`. **Dampak test TAMBAH** untuk overlap, lost receipt dan pemulihan persisten. [Laporan, hash dan prosedur](android/DEV03A_OUTBOX.md).
+- [BU] Restart proses dan reboot emulator belum dibuktikan pada runtime karena Cloud tanpa KVM. Instrumentation serta prosedur B09 tersedia untuk review Lead. DEV-03B Storage mengikuti checkpoint terpisah.
+
 ## 2026-11-28 — PR #212: paginasi antrean koreksi absensi (ChatGPT-ABSENSI)
 
 - [F] Antrean tier aktif dan riwayat memakai halaman terpisah dengan kursor ID. Klien menyaring di server sebelum membatasi hasil, memakai company aktif dan aturan peserta yang sama.

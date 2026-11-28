@@ -940,3 +940,8 @@
 - Acuan 4646eec dan main 5b216da.
 - Tambah uji overlap, respons putus, dependensi, Room reopen dan probe Odoo disposable.
 - Task managed by codex agent at 2026-11-28T19:17:29+07:00
+
+[2026-11-28T19:21:11+07:00] [INFO] DEV-03A catat checkpoint bukti outbox
+- 653c312 lulus probe lost receipt Odoo, gate Gradle dan build instrumentation.
+- Runtime force-stop/reboot menunggu KVM. DEV-03B di luar checkpoint.
+- Task managed by codex agent at 2026-11-28T19:21:11+07:00

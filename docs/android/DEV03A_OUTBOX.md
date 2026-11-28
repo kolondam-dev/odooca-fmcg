@@ -34,3 +34,17 @@ Gunakan emulator dan fixture disposable baru dari kandidat yang sama. Reuse prov
 4. Pengujian file-backed Room menutup skenario `SENDING` akibat pembatalan sebelum receipt diproses. Bila menguji penghentian APK sewaktu request masih aktif, laporkan sebagai skenario terpisah dan buktikan row SENDING serta ledger pasca-putus.
 
 Satu proses aplikasi memiliki satu repositori outbox yang dipakai WorkManager. WorkManager menjadwalkan unique work per owner. Mutex repositori melindungi pembacaan rencana, recovery, dan pengiriman pada pemanggilan yang bertumpuk. Lease sesi tetap menjaga owner dan generation. Status resmi berasal dari receipt Odoo yang cocok dengan UUID.
+
+## Hasil Cloud
+
+Sumber `653c312`, fixture `b09-dev03a-loss-v1`. Odoo `19.0.20261112`, PostgreSQL `16.16`, `id_mobile_api` `19.0.1.5.0`, `id_base` `19.0.1.3.5` dan `id_approval` `19.0.1.0.0`.
+
+| Pemeriksaan | Hasil teramati |
+| --- | --- |
+| Lost receipt | Respons pertama terpotong dan klien belum mendapat receipt. Audit setelah putus menemukan ledger dan sales order. |
+| Retry | UUID `17222333-6caf-49ef-93d2-dd95f785ab56`, SHA-256 payload `18bc68c49bb33bfdb3ed7e5f9a2be4dbf64858550778077de594665e466106b5`. Receipt `accepted`, referensi `S00001`, tepat satu ledger dan satu order. Checkpoint tidak berubah setelah replay. |
+| Cleanup | Gateway ditutup. Tersisa nol container, volume dan network fixture. |
+| Reproduksi overlap | Sebelum perbaikan, tes mengamati row SENDING yang diambil kembali ketika receipt pertama masih ditahan. Setelah perbaikan, tes lulus dengan satu request dan satu attempt. |
+| Gate | 41 tes kontrak CI, 72 tes domain, 9 tes data/Robolectric, lint, build debug dan validasi OpenAPI lulus. Planner memilih suite Android. |
+
+Build lokal memakai `https://ci.invalid`. SHA-256 APK debug `4caa29c15117237414058cff1f3a998318cd7e4dff2438cafc03eacc14c6c3b7`. SHA-256 APK instrumentation `48c91de225f64909d10e071f463bb1710e25c9d10dc248ef6d6a864109e61c78`. Bukti ini mencatat build. Hubungan APK ke B09 dan pemulihan setelah force-stop/reboot emulator menunggu runner ber-KVM.
