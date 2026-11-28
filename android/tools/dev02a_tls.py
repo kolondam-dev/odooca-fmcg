@@ -3,6 +3,7 @@ import argparse
 from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ssl
+from threading import Lock
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -54,6 +55,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header(key, value)
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
+        if self.path == "/api/v1/sync/commands" and response.status == 200:
+            with self.server.fault_lock:
+                if self.server.drop_first_command_receipt:
+                    self.server.drop_first_command_receipt = False
+                    # The upstream transaction has returned its body. Close downstream with the
+                    # advertised Content-Length still pending, so the caller loses the receipt.
+                    self.close_connection = True
+                    print("command_receipt_truncated=1", flush=True)
+                    return
         self.wfile.write(content)
 
 
@@ -62,6 +72,7 @@ def main():
     parser.add_argument("odoo_port", type=int)
     parser.add_argument("certificate")
     parser.add_argument("key")
+    parser.add_argument("--drop-first-command-receipt", action="store_true")
     parser.add_argument("--session-probe", action="store_true")
     args = parser.parse_args()
     tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -70,6 +81,8 @@ def main():
     with ThreadingHTTPServer(("127.0.0.1", 18443), Handler) as server:
         server.odoo_port = args.odoo_port
         server.session_probe = args.session_probe
+        server.drop_first_command_receipt = args.drop_first_command_receipt
+        server.fault_lock = Lock()
         server.socket = tls.wrap_socket(server.socket, server_side=True)
         server.serve_forever()
 

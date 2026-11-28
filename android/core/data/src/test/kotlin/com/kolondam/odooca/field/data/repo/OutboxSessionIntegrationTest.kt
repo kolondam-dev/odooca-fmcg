@@ -32,7 +32,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -212,6 +218,104 @@ class OutboxSessionIntegrationTest {
         assertTrue(backend.snapshot().isEmpty())
     }
 
+    @Test
+    fun missingReceiptRetriesIdenticalPayloadBeforeSendingDependent(): Unit = runBlocking {
+        session.login("A", "pw")
+        enqueue("A", "first", 2)
+        repository.enqueueCommand("A", "dependent", """{"client_uuid":"dependent"}""", listOf("first"), 1)
+        backend.dropNextReceipt.set(true)
+        val first = repository.flush("A") { 100L }
+        assertEquals(1, first.sent)
+        assertTrue(first.retryLater)
+        assertEquals(CommandState.QUEUED.name, entity("first").state)
+        assertEquals(1, backend.effects())
+        assertNull(entity("first").receiptReference)
+        val retryAt = entity("first").nextAttemptAtMs
+        assertEquals(0, repository.flush("A") { retryAt - 1 }.sent)
+
+        assertEquals(2, repository.flush("A") { retryAt }.sent)
+        assertEquals(listOf("first", "first", "dependent"), backend.snapshot().map { it.uuid })
+        assertEquals(backend.payloads()[0], backend.payloads()[1])
+        assertEquals(2, backend.effects())
+        assertEquals("R-first", entity("first").receiptReference)
+        assertEquals(CommandState.ACCEPTED.name, entity("dependent").state)
+    }
+
+    @Test
+    fun overlappingFlushWaitsForLiveSendWithoutResendingItsItem(): Unit = runBlocking {
+        session.login("A", "pw")
+        enqueue("A", "first", 1)
+        backend.holdNextReceipt.set(true)
+        val first = async(Dispatchers.Default) { repository.flush("A") }
+        try {
+            awaitServerCommit()
+            assertEquals(CommandState.SENDING.name, entity("first").state)
+            val overlap = async(Dispatchers.Default) { repository.flush("A") }
+            // With the old implementation the second flush recovers this live SENDING row.
+            val reclaimed = withTimeoutOrNull(1_000) {
+                while (entity("first").state == CommandState.SENDING.name) delay(10)
+                true
+            }
+            backend.releaseReceipt.countDown()
+            assertEquals(1, first.await().sent)
+            assertEquals(null, reclaimed, "a live SENDING row must not be recovered")
+            assertEquals(0, overlap.await().sent)
+        } finally {
+            backend.releaseReceipt.countDown()
+        }
+
+        assertEquals(listOf("first"), backend.snapshot().map { it.uuid })
+        assertEquals(1, entity("first").attempts)
+    }
+
+    @Test
+    fun cancelledSendIsRecoveredFromFileBackedRoomAfterRepositoryReopens(): Unit = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "outbox-recovery.db"
+        context.deleteDatabase(name)
+        database.close()
+        fun open() = Room.databaseBuilder(context, OdoocaDatabase::class.java, name).build()
+        database = open()
+        repository = OutboxRepository(database, api, session)
+        activeOutbox = repository
+        try {
+            session.login("A", "pw")
+            enqueue("A", "first", 1)
+            backend.holdNextReceipt.set(true)
+            val interrupted = async(Dispatchers.Default) { repository.flush("A") }
+            try {
+                awaitServerCommit()
+                interrupted.cancel()
+            } finally {
+                backend.releaseReceipt.countDown()
+            }
+            interrupted.cancelAndJoin()
+            assertEquals(CommandState.SENDING.name, entity("first").state)
+            assertNull(entity("first").receiptReference)
+            assertEquals(1, backend.effects())
+            database.close()
+            database = open()
+
+            val (restored, store) = reopenSession()
+            assertEquals("A", restored.ownerId)
+            val client = OdoocaApi(ApiConfig(backend.start(), null), PersistentCookieJar(store), store)
+            val recovered = OutboxRepository(database, client, restored)
+            assertEquals(1, recovered.flush("A").sent)
+            assertEquals(listOf("first", "first"), backend.snapshot().map { it.uuid })
+            assertEquals(1, backend.payloads().distinct().size)
+            assertEquals(1, backend.effects())
+            assertEquals("R-first", entity("first").receiptReference)
+            assertEquals(2, entity("first").attempts)
+        } finally {
+            database.close()
+            context.deleteDatabase(name)
+        }
+    }
+
+    private suspend fun awaitServerCommit() {
+        assertTrue(withContext(Dispatchers.IO) { backend.commandCommitted.await(5, TimeUnit.SECONDS) })
+    }
+
     private fun reopenSession(): Pair<SessionManager, SessionStore> {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val store = SessionStore(context, PlainCipher)
@@ -277,6 +381,12 @@ class OutboxSessionIntegrationTest {
      */
     private class SessionBackend {
         private val commands = ConcurrentLinkedQueue<CommandRequest>()
+        private val rawBodies = ConcurrentLinkedQueue<String>()
+        private val ledger = java.util.concurrent.ConcurrentHashMap<String, String>()
+        val dropNextReceipt = AtomicBoolean(false)
+        val holdNextReceipt = AtomicBoolean(false)
+        val commandCommitted = CountDownLatch(1)
+        val releaseReceipt = CountDownLatch(1)
         private val socket = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
         private val worker = thread(isDaemon = true, name = "session-backend") { serve() }
         val rejectNextCommand = AtomicBoolean(false)
@@ -290,6 +400,8 @@ class OutboxSessionIntegrationTest {
         }
 
         fun snapshot(): List<CommandRequest> = commands.toList()
+        fun payloads(): List<String> = rawBodies.toList()
+        fun effects(): Int = ledger.size
 
         private fun serve() {
             while (!socket.isClosed) {
@@ -307,7 +419,7 @@ class OutboxSessionIntegrationTest {
                 val headers = readHeaders(input)
                 val body = readBody(input, headers["content-length"]?.toIntOrNull() ?: 0)
                 val reply = route(path, body, headers["cookie"], headers["x-csrf-token"])
-                write(connection.getOutputStream(), reply.status, reply.body, reply.cookie)
+                write(connection.getOutputStream(), reply)
             }
         }
 
@@ -358,13 +470,24 @@ class OutboxSessionIntegrationTest {
             "/api/v1/sync/commands" -> {
                 val uuid = Regex("\"client_uuid\":\"([^\"]+)\"").find(body)?.groupValues?.get(1) ?: "missing"
                 commands += CommandRequest(uuid, ownerOf(cookie), csrf)
+                rawBodies += body
                 if (rejectNextCommand.compareAndSet(true, false)) {
                     Reply(401, "{}")
                 } else {
-                    Reply(
-                        200,
-                        "{\"client_uuid\":\"$uuid\",\"status\":\"accepted\",\"reference\":\"R-$uuid\"}",
-                    )
+                    val firstPayload = ledger.putIfAbsent("${ownerOf(cookie)}:$uuid", body)
+                    if (firstPayload != null && firstPayload != body) {
+                        Reply(409, "{}")
+                    } else {
+                        if (holdNextReceipt.compareAndSet(true, false)) {
+                            commandCommitted.countDown()
+                            check(releaseReceipt.await(8, TimeUnit.SECONDS))
+                        }
+                        Reply(
+                            200,
+                            "{\"client_uuid\":\"$uuid\",\"status\":\"accepted\",\"reference\":\"R-$uuid\"}",
+                            truncate = dropNextReceipt.compareAndSet(true, false),
+                        )
+                    }
                 }
             }
             else -> Reply(404, "{}")
@@ -409,7 +532,8 @@ class OutboxSessionIntegrationTest {
             return String(bytes, 0, offset, Charsets.UTF_8)
         }
 
-        private fun write(output: OutputStream, status: Int, body: String, cookie: String? = null) {
+        private fun write(output: OutputStream, reply: Reply) {
+            val (status, body, cookie, truncate) = reply
             val bytes = body.toByteArray(Charsets.UTF_8)
             val reason = when (status) {
                 200 -> "OK"
@@ -425,7 +549,7 @@ class OutboxSessionIntegrationTest {
                 append("Connection: close\r\n\r\n")
             }
             output.write(head.toByteArray(Charsets.US_ASCII))
-            output.write(bytes)
+            if (!truncate) output.write(bytes)
             output.flush()
         }
 
@@ -436,7 +560,9 @@ class OutboxSessionIntegrationTest {
             ?.substringAfter('=')
             ?.takeIf { it.isNotBlank() }
 
-        private data class Reply(val status: Int, val body: String, val cookie: String? = null)
+        private data class Reply(
+            val status: Int, val body: String, val cookie: String? = null, val truncate: Boolean = false,
+        )
     }
 
     private object PlainCipher : SecretCipher {

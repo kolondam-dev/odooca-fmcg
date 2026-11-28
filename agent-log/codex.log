@@ -935,3 +935,8 @@
 - [F] Snapshot sesi baru mengembalikan receipt WH/OUT/06409; UI 1/2, DO pertama Selesai, kedua Berikutnya, trip Belum ditutup; nol request POD/closing. Audit Odoo satu POD accepted, nol closing.
 - [F] Bukti retest di docs/reviews/evidence/pr206-browser-20261128/retest-e724b0f/. Commit dokumentasi di atas e724b0f; kode tidak berubah; CI HEAD baru perlu diverifikasi. Fork TTL 13:06 WITA, pilot utuh.
 - Task managed by codex agent at 2026-11-28T10:48:00+07:00
+
+[2026-11-28T19:17:29+07:00] [INFO] DEV-03A reproduksi dan serialisasi flush outbox
+- Acuan 4646eec dan main 5b216da.
+- Tambah uji overlap, respons putus, dependensi, Room reopen dan probe Odoo disposable.
+- Task managed by codex agent at 2026-11-28T19:17:29+07:00

@@ -15,6 +15,8 @@ import com.kolondam.odooca.field.domain.sync.SendClassifier
 import com.kolondam.odooca.field.domain.sync.SendOutcome
 import java.io.File
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -33,6 +35,7 @@ class OutboxRepository(
     private val api: OdoocaApi,
     private val session: SessionRequestGate,
 ) {
+    private val flushMutex = Mutex()
     private val dao get() = db.outbox()
     private val idsSerializer = ListSerializer(String.serializer())
 
@@ -87,7 +90,11 @@ class OutboxRepository(
         )
     }
 
-    suspend fun flush(ownerId: String, nowMs: () -> Long = System::currentTimeMillis): FlushResult {
+    suspend fun flush(ownerId: String, nowMs: () -> Long = System::currentTimeMillis): FlushResult =
+        flushMutex.withLock { flushQueued(ownerId, nowMs) }
+
+    private suspend fun flushQueued(ownerId: String, nowMs: () -> Long): FlushResult {
+        // Recovery and planning share the same lock as sending, so recovery cannot reclaim a live send.
         recoverInterrupted(ownerId)
         var sent = 0
         while (true) {
