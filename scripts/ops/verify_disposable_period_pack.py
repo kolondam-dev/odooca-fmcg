@@ -170,6 +170,214 @@ def _check_ar_accounts(gl_by_account, invoice_by_account, components, other_sour
     return per_account, violations
 
 
+def _source_ar_residuals(oracle):
+    """Independent invoice expectations from the approved July register and August pack.
+
+    Never use journal entries or DB reconciliation links to derive the target.
+    Invoice dates (not pack membership) determine the accounting cutoff.
+    """
+    cutoff = oracle.manifest.pack_end
+    register_dir = oracle.pack_dir.parent.parent
+    recon_path = register_dir / "canonical_financial_reconciliation_july_2026.json"
+    recon = json.loads(recon_path.read_text(encoding="utf-8"))
+
+    def july_csv(name):
+        path = register_dir / name
+        expected_hash = recon["input_dataset_sha256"][name]
+        # The canonical reconciliation pins the July source, not the live DB.
+        from scripts.ops.load_period_pack import compute_sha256_lf
+
+        if compute_sha256_lf(path) != expected_hash:
+            raise ValueError(f"Canonical July AR source fingerprint mismatch: {name}")
+        with path.open(encoding="utf-8-sig", newline="") as stream:
+            return list(csv.DictReader(stream))
+
+    oracle.manifest.verify_checksums()
+    july_invoices = july_csv("perpetual_invoices.csv")
+    july_payments = july_csv("perpetual_ar_collections.csv")
+    invoices = {}
+    for row in july_invoices + oracle.reader.invoices:
+        number = row["invoice_number"]
+        if number in invoices:
+            raise ValueError(f"Duplicate source AR invoice {number}")
+        invoices[number] = row
+
+    paid = {}
+    for row in july_payments + oracle.reader.ar_collections:
+        number = row["invoice_number"]
+        if number not in invoices or row["payment_date"] > cutoff:
+            if number not in invoices:
+                raise ValueError(f"AR collection targets unknown source invoice {number}")
+            continue
+        paid[number] = paid.get(number, ZERO) + _dec(row["net_cash_collected_total"])
+        paid[number] += _dec(row.get("early_payment_discount") or 0)
+
+    expected = {}
+    for number, row in invoices.items():
+        if row["date_invoice"] > cutoff:
+            if paid.get(number, ZERO):
+                raise ValueError(f"Payment before invoice cutoff for {number}")
+            continue
+        residual = _dec(row["total_invoice_with_ppn"]) - paid.get(number, ZERO)
+        if residual < -CENT:
+            raise ValueError(f"Source AR overpayment {number}: {residual}")
+        expected[number] = residual
+
+    july_at_close = {
+        row["invoice_number"]: _dec(row["total_invoice_with_ppn"]) - sum(
+            (_dec(p["net_cash_collected_total"]) + _dec(p.get("early_payment_discount") or 0)
+             for p in july_payments if p["invoice_number"] == row["invoice_number"]
+             and p["payment_date"] <= "2026-07-31"), ZERO
+        )
+        for row in july_invoices if row["date_invoice"] <= "2026-07-31"
+    }
+    july_open = {k: v for k, v in july_at_close.items() if v > CENT}
+    approved = recon["accounts_receivable_and_cash"]
+    if (len(july_open) != int(approved["open_ar_july_invoices_count"])
+            or abs(sum(july_open.values(), ZERO) - _dec(approved["open_ar_july_total_with_ppn"])) > CENT):
+        raise ValueError("July AR register does not match approved canonical reconciliation")
+
+    closing = oracle.closing_state
+    closing_open = closing["open_invoices"]
+    future_carry = closing["carry_invoices"]
+    if any(invoices[k]["date_invoice"] <= cutoff for k in future_carry):
+        raise ValueError("Future carry-forward invoices are posted by AR cutoff")
+    open_expected = {k for k, v in expected.items() if v > CENT}
+    if open_expected != set(closing_open):
+        raise ValueError(f"Source AR open membership differs from approved closing state: "
+                         f"missing={sorted(set(closing_open) - open_expected)[:5]}, "
+                         f"extra={sorted(open_expected - set(closing_open))[:5]}")
+    for number, row in closing_open.items():
+        if abs(expected[number] - _dec(row["total_invoice_with_ppn"])) > CENT:
+            raise ValueError(f"Source AR closing amount differs for {number}")
+    return expected
+
+
+def _check_ar_invoice_residuals(invoice_lines, expected, cutoff):
+    """Compare every posted invoice's cutoff terms with source, including paid zeroes."""
+    observed = {}
+    duplicates = []
+    for line in invoice_lines:
+        move = line.move_id
+        number = str(getattr(move, "payment_reference", None) or getattr(move, "ref", None) or "")
+        # July uses ref, August payment_reference; refuse ambiguous provenance.
+        if number not in expected and getattr(move, "ref", None) in expected:
+            number = move.ref
+        if number not in expected:
+            duplicates.append(f"unrecognized posted AR invoice {number or move.id}")
+            continue
+        matched = sum((_dec(p.amount) for p in line.matched_credit_ids if str(p.max_date) <= cutoff), ZERO)
+        matched -= sum((_dec(p.amount) for p in line.matched_debit_ids if str(p.max_date) <= cutoff), ZERO)
+        observed[number] = observed.get(number, ZERO) + _dec(line.debit) - _dec(line.credit) - matched
+    violations = duplicates
+    for number in sorted(set(expected) | set(observed)):
+        actual = observed.get(number)
+        if actual is None or abs(actual - expected[number]) > CENT:
+            violations.append(f"Source AR invoice residual mismatch {number} at {cutoff}: "
+                              f"expected={expected.get(number)}, observed={actual}")
+    return {
+        "expected_open_count": sum(v > CENT for v in expected.values()),
+        "observed_invoice_count": len(observed),
+        "expected_open_total": str(sum((v for v in expected.values() if v > CENT), ZERO)),
+        "observed_open_total": str(sum((v for v in observed.values() if v > CENT), ZERO)),
+        "mismatch_count": len(violations),
+        "mismatch_examples": violations[:10],
+    }, violations
+
+
+def probe_ar_wrong_invoice_allocation(env, oracle):
+    """Redirect one real, equal-amount payment inside a rollback-only savepoint.
+
+    A paid August invoice and an open August invoice are drawn from the
+    approved pack. Their customer differs, deliberately testing an otherwise
+    journal-valid wrong-invoice allocation within the *same* 112000 account.
+    """
+    assert_disposable_database(env)
+    if oracle.manifest.period != "2026-08" or not callable(getattr(env.cr, "savepoint", None)):
+        raise RuntimeError("AR allocation probe requires the August disposable DB savepoint")
+    cutoff = oracle.manifest.pack_end
+    expected = _source_ar_residuals(oracle)
+    donor_ref, target_ref, pay_ref = "INV-202608-0255", "INV-202608-0197", "PAY-AR-01753"
+    source_invoices = {r["invoice_number"]: r for r in oracle.reader.invoices}
+    payments = [r for r in oracle.reader.ar_collections if r["payment_id"] == pay_ref]
+    if (len(payments) != 1 or payments[0]["invoice_number"] != donor_ref
+            or _dec(payments[0]["net_cash_collected_total"]) != expected[target_ref]
+            or expected[donor_ref] != ZERO or source_invoices[target_ref]["date_invoice"] > cutoff
+            or source_invoices[donor_ref]["customer"] == source_invoices[target_ref]["customer"]):
+        raise RuntimeError("Approved AR wrong-invoice probe pair has changed")
+
+    Move = env["account.move"].sudo()
+    AML = env["account.move.line"].sudo()
+    Payment = env["account.payment"].sudo()
+    company = env["res.company"].sudo().search([("name", "ilike", "PT Salva Inti Mandiri")], limit=1)
+    if not company:
+        raise RuntimeError("AR probe company not found")
+    domain = [("company_id", "=", company.id), ("move_type", "=", "out_invoice"),
+              ("state", "=", "posted")]
+    donor = Move.search(domain + [("payment_reference", "=", donor_ref)])
+    target = Move.search(domain + [("payment_reference", "=", target_ref)])
+    payment = _find_payment(Payment, company.id, [pay_ref], payment_type="inbound")
+    if len(donor) != 1 or len(target) != 1 or not payment:
+        raise RuntimeError("AR probe invoice/payment must resolve uniquely")
+    def term(move):
+        lines = move.line_ids.filtered(lambda line: line.display_type == "payment_term"
+                                       and line.account_id.code == "112000")
+        if len(lines) != 1:
+            raise RuntimeError(f"AR probe requires exactly one canonical term: {move.ref}")
+        return lines
+
+    donor_line, target_line = term(donor), term(target)
+    partials = donor_line.matched_credit_ids.filtered(
+        lambda p: str(p.max_date) <= cutoff and p.credit_move_id.move_id.origin_payment_id.id == payment.id
+    )
+    if (len(partials) != 1 or abs(_dec(partials.amount) - expected[target_ref]) > CENT
+            or target_line.matched_credit_ids or donor_line.account_id != target_line.account_id):
+        raise RuntimeError("AR probe pair does not have an isolated equal-amount reconciliation")
+    credit_line = partials.credit_move_id
+
+    def state():
+        lines = AML.search([("company_id", "=", company.id),
+                            ("account_id.account_type", "=", "asset_receivable"),
+                            ("parent_state", "=", "posted"), ("date", "<=", cutoff)])
+        invoice_lines = [line for line in lines if line.move_id.move_type == "out_invoice"
+                         and line.display_type == "payment_term"]
+        gl, invoice, parts, other = _ar_cutoff_tieout(lines, invoice_lines, cutoff, with_components=True)
+        _, ledger_violations = _check_ar_accounts(gl, invoice, parts, other, cutoff)
+        _, source_violations = _check_ar_invoice_residuals(invoice_lines, expected, cutoff)
+        return gl, invoice, ledger_violations, source_violations
+
+    before = state()
+    if before[2] or before[3]:
+        raise RuntimeError("Baseline AR must pass both ledger and independent source assertions")
+    digest_before = capture_period_state_snapshot(env)["digest"]
+
+    class RollbackProbe(Exception):
+        pass
+
+    observed = None
+    try:
+        with env.cr.savepoint():
+            partials.unlink()
+            (target_line | credit_line).reconcile()
+            after = state()
+            if (after[0] != before[0] or after[1] != before[1] or after[2]
+                    or not any(donor_ref in msg for msg in after[3])
+                    or not any(target_ref in msg for msg in after[3])):
+                raise RuntimeError("Wrong-invoice probe failed to preserve ledger or trigger invoice oracle")
+            observed = {"gl_unchanged": True, "account_invoice_total_unchanged": True,
+                        "ledger_tieout_violations": 0, "source_invoice_mismatches": len(after[3]),
+                        "donor": donor_ref, "wrong_target": target_ref, "payment": pay_ref}
+            raise RollbackProbe()
+    except RollbackProbe:
+        pass
+    if hasattr(env, "invalidate_all"):
+        env.invalidate_all()
+    digest_after = capture_period_state_snapshot(env)["digest"]
+    if observed is None or digest_before != digest_after or state() != before:
+        raise RuntimeError("Wrong-invoice probe did not restore its baseline after rollback")
+    return {"status": "PASS", **observed, "rollback_digest_match": True}
+
+
 def assert_disposable_database_name(db_name: str) -> str:
     """Safety guard: validates database name string against forbidden keywords and allowed patterns."""
     if not db_name:
@@ -1420,6 +1628,11 @@ def audit_period_database(env: Any, oracle: PeriodPackOracle) -> Dict[str, Any]:
             "per_account": per_account,
         }
         report["violations"].extend(ar_violations)
+        if oracle.manifest.period == "2026-08":
+            expected = _source_ar_residuals(oracle)
+            source_check, source_violations = _check_ar_invoice_residuals(invoice_lines, expected, cutoff)
+            report["checks"]["ar_source_invoice_residuals"] = source_check
+            report["violations"].extend(source_violations)
 
     # 11. AP-to-GL Audit (Account 211000 vs Open Bills Residual)
     ap_acc = _resolve_audit_account("211000")
@@ -2336,6 +2549,7 @@ def run_full_disposable_period_verification(
         "scenario_a_zero_drift": "NOT_RUN",
         "scenario_b_continuation": {"status": "NOT_RUN"},
         "fault_injection": {"status": "NOT_RUN"},
+        "ar_wrong_invoice_probe": {"status": "NOT_RUN"},
         "audit": {"status": "NOT_RUN"},
     }
 
@@ -2388,6 +2602,8 @@ def run_full_disposable_period_verification(
     # 3. Comprehensive Oracle Audit
     if scenario in ("all", "A"):
         report["audit"] = audit_period_database(env, oracle)
+        if report["audit"]["status"] == "PASS" and oracle.manifest.period == "2026-08":
+            report["ar_wrong_invoice_probe"] = probe_ar_wrong_invoice_allocation(env, oracle)
 
     return report
 
@@ -2472,9 +2688,10 @@ def main():
         sc_b_pass = sc_b_status in ("PASS", "NOT_RUN")
         fi_status = report.get("fault_injection", {}).get("status")
         fi_pass = fi_status in ("PASS", "NOT_RUN")
+        ar_probe_pass = report.get("ar_wrong_invoice_probe", {}).get("status") in ("PASS", "NOT_RUN")
         audit_pass = report.get("audit", {}).get("status") == "PASS" and not bool(report.get("audit", {}).get("violations"))
 
-        if not (sc_a_pass and sc_b_pass and fi_pass and audit_pass):
+        if not (sc_a_pass and sc_b_pass and fi_pass and audit_pass and ar_probe_pass):
             print("[FATAL] Runtime verification checks failed!", file=sys.stderr)
             sys.exit(2)
         print("STATUS: RUNTIME VERIFICATION COMPLETED SUCCESSFULLY.")

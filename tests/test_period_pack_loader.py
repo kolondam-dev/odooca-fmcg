@@ -25,6 +25,8 @@ from scripts.ops.verify_disposable_period_pack import (
     PeriodPackOracle,
     _ar_cutoff_tieout,
     _check_ar_accounts,
+    _check_ar_invoice_residuals,
+    _source_ar_residuals,
     assert_disposable_database,
     audit_period_database,
     run_period_pack_fault_injection_probes,
@@ -2573,6 +2575,50 @@ class TestStockCutoff(unittest.TestCase):
 
 class TestArResolverCrossPeriod(unittest.TestCase):
     """Test AR resolver handles cross-period invoice lookup & strict fail-closed contract (BUG-1)."""
+
+    def test_source_ar_cutoff_excludes_september_carry_forward(self):
+        oracle = PeriodPackOracle(AUG_PACK_DIR)
+        expected = _source_ar_residuals(oracle)
+        self.assertEqual(len(expected), 2514)  # 1,276 July + 1,238 August posted by cutoff
+        self.assertEqual(sum(value > 0 for value in expected.values()), 345)
+        self.assertEqual(sum(expected.values()), Decimal("2368135989.94"))
+        self.assertEqual(expected["INV-202607-0756"], Decimal("12066073.85"))
+        self.assertEqual(expected["INV-202608-0255"], Decimal("0.00"))
+        self.assertNotIn("INV-202608-0197", oracle.closing_state["carry_invoices"])
+        self.assertNotIn("INV-202608-1227", expected)  # September invoice, not AR at August cutoff
+
+    def test_wrong_invoice_same_amount_keeps_ledger_green_but_source_fails(self):
+        expected = {"INV-A": Decimal("0"), "INV-B": Decimal("100")}
+        account = MockRecord(code="112000")
+        payment = MockRecord(amount=100, max_date="2026-08-20")
+
+        def invoice(number, matches):
+            return MockRecord(account_id=account, debit=100, credit=0,
+                              move_id=MockRecord(move_type="out_invoice", payment_reference=number),
+                              display_type="payment_term", matched_credit_ids=matches, matched_debit_ids=[])
+
+        credit = MockRecord(account_id=account, debit=0, credit=100,
+                            move_id=MockRecord(move_type="entry", origin_payment_id=MockRecord(id=1)),
+                            matched_credit_ids=[], matched_debit_ids=[payment])
+        good = [invoice("INV-A", [payment]), invoice("INV-B", [])]
+        bad = [invoice("INV-A", []), invoice("INV-B", [payment])]
+        for invoice_lines in (good, bad):
+            gl, residual, components, other = _ar_cutoff_tieout(
+                invoice_lines + [credit], invoice_lines, "2026-08-31", with_components=True
+            )
+            _, ledger_violations = _check_ar_accounts(gl, residual, components, other, "2026-08-31")
+            self.assertEqual(gl["112000"], Decimal(100))
+            self.assertEqual(residual["112000"], Decimal(100))
+            self.assertEqual(ledger_violations, [])
+            source_check, source_violations = _check_ar_invoice_residuals(invoice_lines, expected, "2026-08-31")
+            self.assertEqual(Decimal(source_check["expected_open_total"]), Decimal(100))
+            self.assertEqual(Decimal(source_check["observed_open_total"]), Decimal(100))
+            if invoice_lines is good:
+                self.assertEqual(source_violations, [])
+            else:
+                self.assertEqual(source_check["mismatch_count"], 2)
+                self.assertTrue(any("INV-A" in item for item in source_violations))
+                self.assertTrue(any("INV-B" in item for item in source_violations))
 
     def test_ar_f4_cutoff_per_account_cannot_hide_offsetting_errors(self):
         def line(code, debit, credit=0, credits=(), debits=()):

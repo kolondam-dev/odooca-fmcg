@@ -884,3 +884,9 @@
 - [F] F4 report: scenario A zero drift PASS, scenario B PASS digest MATCH, audit violations empty, fault injection PASS. AR 112000 at 2026-08-31 GL 2368135989.94 = invoice 2368135989.94, refund 0, unallocated 0.00, other 0.00; AP 211000 7666137600.00.
 - [BU] Independent source review and merge/deploy decision separate; clone/demo apply HOLD, July frozen.
 - Task managed by codex agent at 2026-11-28T11:04:30+07:00
+
+[2026-11-28T14:57:01+07:00] [INFO] PR213 independent source AR oracle and wrong-allocation control
+- [F] Source gap 195474994.89 equals 50 September-dated carry-forward invoices; cutoff August 31 source expectation 345 open invoices / 2368135989.94. Approved July July-31 checkpoint 309 invoices / 2370371980.58.
+- [F] Retain per-account signed ledger breakdown; verify every posted-by-cutoff invoice against approved registers/pack/closing-state. Wrong-invoice equal-amount payment probe in savepoint must preserve GL and account totals, fail invoice oracle, and roll back with matching digest. Unit counterexample: 92 passed, 9 subtests; ruff and manifests pass. Impact TAMBAH / full suite.
+- [BU] F4 ORM and exact-SHA full regression pending; draft PR, merge/deploy, clone/demo apply HOLD and July frozen.
+- Task managed by codex at 2026-11-28T14:57:01+07:00
