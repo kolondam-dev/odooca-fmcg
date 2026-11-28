@@ -27,6 +27,7 @@ import com.kolondam.odooca.field.AppContainer
 import com.kolondam.odooca.field.data.network.AttendanceApproval
 import com.kolondam.odooca.field.data.network.AttendanceCorrectionDraft
 import com.kolondam.odooca.field.data.network.AttendanceInbox
+import com.kolondam.odooca.field.data.network.AttendanceQueue
 import com.kolondam.odooca.field.data.repo.SessionAccess
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -53,6 +54,7 @@ private fun status(value: String): String = when (value) {
 fun AttendanceApprovalScreen(container: AppContainer, ownerId: String, onExit: () -> Unit, exitLabel: String) {
     val scope = rememberCoroutineScope()
     var inbox by remember(ownerId) { mutableStateOf<AttendanceInbox?>(null) }
+    var queue by remember(ownerId) { mutableStateOf(AttendanceQueue.ACTIONABLE) }
     var busy by remember(ownerId) { mutableStateOf(false) }
     var message by remember(ownerId) { mutableStateOf("") }
     var date by remember(ownerId) { mutableStateOf("") }
@@ -61,7 +63,7 @@ fun AttendanceApprovalScreen(container: AppContainer, ownerId: String, onExit: (
     var reason by remember(ownerId) { mutableStateOf("") }
     var pending by remember(ownerId) { mutableStateOf<AttendanceCorrectionDraft?>(null) }
 
-    fun run(action: (suspend (String) -> Unit)? = null) {
+    fun run(target: AttendanceQueue = queue, before: Long? = null, action: (suspend (String) -> Unit)? = null) {
         if (busy) return
         busy = true
         message = ""
@@ -69,10 +71,13 @@ fun AttendanceApprovalScreen(container: AppContainer, ownerId: String, onExit: (
             try {
                 val result = container.session.withOwner(ownerId) {
                     if (action != null) action(checkNotNull(inbox).csrfToken)
-                    container.api.attendanceInbox()
+                    container.api.attendanceInbox(target, before)
                 }
                 inbox = when (result) {
-                    is SessionAccess.Granted -> result.value
+                    is SessionAccess.Granted -> {
+                        queue = target
+                        result.value
+                    }
                     SessionAccess.Denied -> null
                 }
                 if (inbox == null) message = "Sesi berubah. Masuk kembali."
@@ -124,17 +129,24 @@ fun AttendanceApprovalScreen(container: AppContainer, ownerId: String, onExit: (
                     }
                 }) { Text("Kirim pengajuan") }
             }
-            val actionable = data.items.filter { it.canDecide }
-            item { Text("Perlu keputusan Anda", style = MaterialTheme.typography.titleMedium) }
-            if (actionable.isEmpty()) item { Text("Belum ada pengajuan.") }
-            items(actionable, key = { it.id }) { entry ->
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    for (target in AttendanceQueue.entries) {
+                        TextButton(onClick = { run(target) }, enabled = !busy) { Text(target.label) }
+                    }
+                }
+                Text(queue.label, style = MaterialTheme.typography.titleMedium)
+            }
+            if (data.items.isEmpty()) item { Text("Belum ada pengajuan.") }
+            items(data.items, key = { it.id }) { entry ->
                 ApprovalCard(entry, busy) { approved, notes ->
                     run { csrf -> container.api.decideAttendanceCorrection(csrf, entry, approved, notes) }
                 }
             }
-            item { Text("Pengajuan dan riwayat", style = MaterialTheme.typography.titleMedium) }
-            items(data.items.filterNot { it.canDecide }, key = { it.id }) { entry ->
-                ApprovalCard(entry, busy) { _, _ -> }
+            data.nextBefore?.let { cursor ->
+                item {
+                    Button(onClick = { run(before = cursor) }, enabled = !busy) { Text("Halaman berikutnya") }
+                }
             }
         }
     }

@@ -19,4 +19,5 @@ export const AttendanceApprovalSchema = z.object({
 export const AttendanceInboxSchema = z.object({
     items: z.array(AttendanceApprovalSchema),
     csrfToken: z.string(),
+    nextBefore: z.number().int().positive().nullable().optional(),
 });

@@ -279,6 +279,44 @@ class TestAttendanceReport(TransactionCase):
             request.with_user(supervisor).write({"state": "approved"})
         self.assertFalse(self._generate()[1][self.day].correction_applied)
 
+        # More than two inbox pages and more than the former mixed-endpoint cap.
+        model = request.env[request._name].sudo().with_context(tracking_disable=True)
+        common = {
+            "category_id": request.category_id.id, "res_model": request.res_model,
+            "res_id": request.res_id, "company_id": self.company.id,
+            "requested_by": requester.id, "reference_document": "Queue fixture", "reason": "Queue fixture",
+            "attendance_participant_ids": [Command.set((requester | supervisor | manager | owner).ids)],
+        }
+
+        def pending(approver):
+            return {**common, "state": "pending", "line_ids": [Command.create({
+                "tier_sequence": 1, "tier_name": "Fixture active tier", "state": "pending",
+                "approver_type": "user", "user_id": approver.id,
+            })]}
+
+        model.create([{"state": "approved", **common} for _ in range(101)])
+        model.create([pending(manager)])
+        inbox = model.with_user(supervisor)
+        page, cursor = inbox._attendance_correction_page("actionable", None)
+        self.assertEqual((page.ids, cursor), ([request.id], None))
+        history, cursor = inbox._attendance_correction_page("history", None)
+        self.assertEqual(len(history), 50)
+        self.assertTrue(cursor)
+        self.assertNotIn(request.id, history.ids)
+
+        active = model.create([pending(supervisor) for _ in range(101)])
+        foreign = self.env["res.company"].sudo().create({"name": "Foreign approval fixture"})
+        model.create([{**pending(supervisor), "company_id": foreign.id}])
+        self.assertFalse(model.with_user(outsider)._attendance_correction_page("actionable", None)[0])
+        seen = []
+        cursor = None
+        for expected_count in (50, 50, 2):
+            page, cursor = inbox._attendance_correction_page("actionable", cursor)
+            self.assertEqual(len(page), expected_count)
+            seen.extend(page.ids)
+        self.assertIsNone(cursor)
+        self.assertEqual(seen, sorted([request.id, *active.ids], reverse=True))
+
         request.with_user(supervisor).action_approve(expected_tier=1)
         with self.assertRaises(UserError):
             request.with_user(manager).action_approve(expected_tier=1)

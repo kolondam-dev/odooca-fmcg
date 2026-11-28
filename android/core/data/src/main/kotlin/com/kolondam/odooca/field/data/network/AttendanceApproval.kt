@@ -18,7 +18,12 @@ data class AttendanceApproval(
 )
 
 @Serializable
-data class AttendanceInbox(val items: List<AttendanceApproval>, val csrfToken: String)
+data class AttendanceInbox(val items: List<AttendanceApproval>, val csrfToken: String, val nextBefore: Long? = null)
+
+enum class AttendanceQueue(val query: String, val label: String) {
+    ACTIONABLE("actionable", "Perlu keputusan Anda"),
+    HISTORY("history", "Pengajuan dan riwayat"),
+}
 
 data class AttendanceCorrectionDraft(
     val key: String,

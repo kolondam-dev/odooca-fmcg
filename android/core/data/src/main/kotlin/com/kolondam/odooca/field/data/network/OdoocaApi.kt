@@ -95,8 +95,10 @@ class OdoocaApi(
     suspend fun attendanceIdentity(): IdentityDto =
         ApiJson.decodeFromString(IdentityDto.serializer(), attendanceRequest("/session"))
 
-    suspend fun attendanceInbox(): AttendanceInbox =
-        ApiJson.decodeFromString(AttendanceInbox.serializer(), attendanceRequest(""))
+    suspend fun attendanceInbox(queue: AttendanceQueue, before: Long? = null): AttendanceInbox {
+        val cursor = before?.let { "&before=$it" }.orEmpty()
+        return ApiJson.decodeFromString(AttendanceInbox.serializer(), attendanceRequest("?queue=${queue.query}$cursor"))
+    }
 
     suspend fun submitAttendanceCorrection(csrf: String, draft: AttendanceCorrectionDraft) {
         attendanceRequest("", mapOf(

@@ -42,14 +42,26 @@ class AttendanceCorrectionController(http.Controller):
         })
 
     @http.route("/api/v1/attendance/corrections", type="http", auth="user", methods=["GET"])
-    def list_corrections(self):
+    def list_corrections(self, queue="all", before=None):
         if not request.env.user._is_internal():
             return response({"error": "Forbidden"}, 403)
-        approvals = request.env[REQUEST].search([
-            ("category_code", "=", CODE), ("company_id", "=", request.env.company.id),
-        ], limit=100)
-        return response({"items": [approval_data(approval) for approval in approvals],
-                         "csrfToken": request.csrf_token()})
+        try:
+            cursor = int(before) if before is not None else None
+            if (queue not in ("all", "actionable", "history")
+                    or (cursor is not None and (not 0 < cursor <= 2_147_483_647 or queue == "all"))):
+                raise ValueError
+        except (TypeError, ValueError):
+            return response({"error": "Invalid approval queue or cursor."}, 422)
+        approvals = request.env[REQUEST]
+        if queue == "all":
+            # Compatibility for clients predating pagination.
+            active, _ = approvals._attendance_correction_page("actionable", None)
+            history, _ = approvals._attendance_correction_page("history", None)
+            page, next_before = active + history, None
+        else:
+            page, next_before = approvals._attendance_correction_page(queue, cursor)
+        return response({"items": [approval_data(approval) for approval in page],
+                         "nextBefore": next_before, "csrfToken": request.csrf_token()})
 
     @http.route("/api/v1/attendance/corrections", type="http", auth="user", methods=["POST"], csrf=True)
     def submit_correction(self, business_date="", start_hour="", end_hour="", reason="", client_key="", **kwargs):

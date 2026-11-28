@@ -1,3 +1,9 @@
+## 2026-11-28 — PR #212: paginasi antrean koreksi absensi (ChatGPT-ABSENSI)
+
+- [F] Antrean tier aktif dan riwayat memakai halaman terpisah dengan kursor ID. Klien menyaring di server sebelum membatasi hasil, memakai company aktif dan aturan peserta yang sama.
+- [F] Odoo 19 disposable: 61 tes lulus, termasuk 101 entri riwayat, 102 pengajuan aktif, tier lain, akun di luar peserta dan perusahaan lain. Chromium: enam skenario ponsel/tablet lulus, termasuk keputusan pada halaman ketiga.
+- [BU] Tes transport Android untuk kursor lintas tiga halaman masuk CI. Acceptance APK terhadap Odoo disposable masih terbuka karena sandbox tidak menyediakan Android SDK, ADB, atau perangkat emulator.
+
 ## 2026-11-28 — Koreksi dan persetujuan absensi lintas klien (ChatGPT-ABSENSI)
 
 - [F] Satu slice di `agen/absensi-koreksi-approval`. Pengajuan koreksi WITA berbasis karyawan sendiri, antrean tier aktif, catatan keputusan, dan riwayat tersedia di Odoo, PWA live, dan Android Compose.

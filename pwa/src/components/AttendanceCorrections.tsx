@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { z } from "zod";
 import { AttendanceInboxSchema } from "../domain/attendance-correction";
 
+const queues = {
+    actionable: "Perlu keputusan Anda",
+    history: "Pengajuan dan riwayat",
+} as const;
+type Queue = keyof typeof queues;
+
 const endpoint = "/api/v1/attendance/corrections";
 const status: Record<string, string> = {
     pending: "Menunggu persetujuan",
@@ -33,20 +39,31 @@ async function request(path: string, form?: URLSearchParams) {
 
 export function AttendanceCorrections() {
     const [data, setData] = useState<z.infer<typeof AttendanceInboxSchema>>();
+    const [queue, setQueue] = useState<Queue>("actionable");
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState("");
     const pending = useRef<{ fingerprint: string; key: string } | undefined>(
         undefined,
     );
     const active = useRef(false);
-    async function run(action?: () => Promise<unknown>) {
+    async function run(
+        action?: () => Promise<unknown>,
+        target = queue,
+        before?: number,
+    ) {
         if (active.current) return;
         active.current = true;
         setBusy(true);
         setMessage("");
         try {
             if (action) await action();
-            setData(AttendanceInboxSchema.parse(await request("")));
+            const params = new URLSearchParams({ queue: target });
+            if (before !== undefined) params.set("before", String(before));
+            const page = AttendanceInboxSchema.parse(
+                await request(`?${params}`),
+            );
+            setQueue(target);
+            setData(page);
         } catch (error) {
             setMessage(
                 error instanceof Error ? error.message : "Permintaan gagal.",
@@ -132,103 +149,102 @@ export function AttendanceCorrections() {
                         </label>{" "}
                         <button disabled={busy}>Kirim pengajuan</button>
                     </form>
-                    {[
-                        {
-                            title: "Perlu keputusan Anda",
-                            items: data.items.filter(
-                                (entry) => entry.canDecide,
-                            ),
-                        },
-                        {
-                            title: "Pengajuan dan riwayat",
-                            items: data.items.filter(
-                                (entry) => !entry.canDecide,
-                            ),
-                        },
-                    ].map((section) => (
-                        <section key={section.title}>
-                            <h2>{section.title}</h2>
-                            {section.items.length === 0 && (
-                                <p>Belum ada pengajuan.</p>
-                            )}
-                            {section.items.map((entry) => (
-                                <article class="read-card" key={entry.id}>
-                                    <h3>{entry.reference}</h3>
-                                    <p>
-                                        {entry.mine ? "Pengajuan saya · " : ""}
-                                        {status[entry.state] ?? entry.state}
-                                    </p>
-                                    <p>{entry.reason}</p>
-                                    <ol>
-                                        {entry.steps.map((tier) => (
-                                            <li key={tier.name}>
-                                                {tier.name} ·{" "}
-                                                {status[tier.state] ??
-                                                    tier.state}
-                                                {tier.actor &&
-                                                    ` · ${tier.actor}`}
-                                                {tier.notes &&
-                                                    ` · ${tier.notes}`}
-                                            </li>
-                                        ))}
-                                    </ol>
-                                    {entry.canDecide && (
-                                        <form
-                                            onSubmit={(event) => {
-                                                event.preventDefault();
-                                                const fields = new FormData(
-                                                    event.currentTarget,
-                                                    event.submitter,
-                                                );
-                                                void run(() =>
-                                                    post("/decision", {
-                                                        approval_id: String(
-                                                            entry.id,
-                                                        ),
-                                                        tier: String(
-                                                            entry.tier,
-                                                        ),
-                                                        decision: String(
-                                                            fields.get(
-                                                                "decision",
-                                                            ),
-                                                        ),
-                                                        notes: String(
-                                                            fields.get(
-                                                                "notes",
-                                                            ) ?? "",
-                                                        ),
-                                                    }),
-                                                );
-                                            }}
+                    <nav class="read-actions" aria-label="Antrean koreksi">
+                        {(Object.keys(queues) as Queue[]).map((target) => (
+                            <button
+                                key={target}
+                                type="button"
+                                disabled={busy}
+                                aria-pressed={queue === target}
+                                onClick={() => void run(undefined, target)}
+                            >
+                                {queues[target]}
+                            </button>
+                        ))}
+                    </nav>
+                    <section>
+                        <h2>{queues[queue]}</h2>
+                        {data.items.length === 0 && <p>Belum ada pengajuan.</p>}
+                        {data.items.map((entry) => (
+                            <article class="read-card" key={entry.id}>
+                                <h3>{entry.reference}</h3>
+                                <p>
+                                    {entry.mine ? "Pengajuan saya · " : ""}
+                                    {status[entry.state] ?? entry.state}
+                                </p>
+                                <p>{entry.reason}</p>
+                                <ol>
+                                    {entry.steps.map((tier) => (
+                                        <li key={tier.name}>
+                                            {tier.name} ·{" "}
+                                            {status[tier.state] ?? tier.state}
+                                            {tier.actor && ` · ${tier.actor}`}
+                                            {tier.notes && ` · ${tier.notes}`}
+                                        </li>
+                                    ))}
+                                </ol>
+                                {entry.canDecide && (
+                                    <form
+                                        onSubmit={(event) => {
+                                            event.preventDefault();
+                                            const fields = new FormData(
+                                                event.currentTarget,
+                                                event.submitter,
+                                            );
+                                            void run(() =>
+                                                post("/decision", {
+                                                    approval_id: String(
+                                                        entry.id,
+                                                    ),
+                                                    tier: String(entry.tier),
+                                                    decision: String(
+                                                        fields.get("decision"),
+                                                    ),
+                                                    notes: String(
+                                                        fields.get("notes") ??
+                                                            "",
+                                                    ),
+                                                }),
+                                            );
+                                        }}
+                                    >
+                                        <label>
+                                            Catatan{" "}
+                                            <textarea
+                                                name="notes"
+                                                maxLength={1000}
+                                            />
+                                        </label>{" "}
+                                        <button
+                                            name="decision"
+                                            value="approve"
+                                            disabled={busy}
                                         >
-                                            <label>
-                                                Catatan{" "}
-                                                <textarea
-                                                    name="notes"
-                                                    maxLength={1000}
-                                                />
-                                            </label>{" "}
-                                            <button
-                                                name="decision"
-                                                value="approve"
-                                                disabled={busy}
-                                            >
-                                                Setujui
-                                            </button>{" "}
-                                            <button
-                                                name="decision"
-                                                value="reject"
-                                                disabled={busy}
-                                            >
-                                                Tolak
-                                            </button>
-                                        </form>
-                                    )}
-                                </article>
-                            ))}
-                        </section>
-                    ))}
+                                            Setujui
+                                        </button>{" "}
+                                        <button
+                                            name="decision"
+                                            value="reject"
+                                            disabled={busy}
+                                        >
+                                            Tolak
+                                        </button>
+                                    </form>
+                                )}
+                            </article>
+                        ))}
+                        {data.nextBefore != null && (
+                            <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() =>
+                                    void run(undefined, queue, data.nextBefore!)
+                                }
+                            >
+                                Halaman berikutnya
+                            </button>
+                        )}
+                    </section>
                 </>
             )}
         </main>

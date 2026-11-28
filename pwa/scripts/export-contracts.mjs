@@ -220,6 +220,28 @@ const spec = {
         },
         "/attendance/corrections": {
             get: {
+                parameters: [
+                    {
+                        name: "queue",
+                        in: "query",
+                        schema: {
+                            type: "string",
+                            enum: ["actionable", "history", "all"],
+                            default: "all",
+                        },
+                    },
+                    {
+                        name: "before",
+                        in: "query",
+                        description:
+                            "Cursor returned by the same scoped queue.",
+                        schema: {
+                            type: "integer",
+                            minimum: 1,
+                            maximum: 2147483647,
+                        },
+                    },
+                ],
                 responses: { 200: correctionResponse(AttendanceInboxSchema) },
             },
             post: {

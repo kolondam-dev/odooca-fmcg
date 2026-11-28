@@ -198,6 +198,23 @@ class ApprovalRequest(models.Model):
                 ids.discard(req.id)
         return [("id", domain[0][1], list(ids))]
 
+    @api.model
+    def _attendance_correction_page(self, queue, before):
+        limit = 50
+        domain = [
+            ("category_code", "=", CODE),
+            ("company_id", "=", self.env.company.id),
+        ]
+        if before is not None:
+            domain.append(("id", "<", before))
+        active = self.search([*domain, ("state", "=", "pending")]).filtered(
+            lambda approval: approval._correction_can_decide()
+        )
+        domain.append(("id", "in" if queue == "actionable" else "not in", active.ids))
+        records = self.search(domain, order="id desc", limit=limit + 1)
+        page = records[:limit]
+        return page, page[-1].id if len(records) > limit else None
+
     def _check_correction_decision(self, expected_tier=None):
         for req in self.filtered(lambda item: item.category_code == CODE):
             req.check_access("read")
