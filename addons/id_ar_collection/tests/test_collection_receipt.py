@@ -339,6 +339,10 @@ class TestCollectionReceipt(TransactionCase):
         self._submit(self._command(sheet, [self._entry(sheet, move, "partial", 40000)]))
         with self.assertRaises(UserError):  # tidak dapat dibatalkan/didraf selama ada uang pending
             sheet.action_cancel()
+        receipt = self._receipts(sheet)
+        with self.assertRaises(UserError):  # tunai belum dihitung kasir: belum boleh returned (8.11)
+            sheet._apply_state("returned")
+        receipt.with_user(self._cashier()).validate_cash({receipt.line_ids.id: receipt.line_ids.amount})
         sheet._apply_state("returned")  # `returned` tidak melepas proteksi
         with self.assertRaises(ValidationError):  # faktur tidak boleh masuk SJP lain
             self._sheet([move], collector=self.other)
