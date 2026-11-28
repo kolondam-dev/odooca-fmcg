@@ -831,3 +831,44 @@
 [2026-11-26T22:40:10+07:00] [INFO] Integrasi cleanup B09 PR 201
 - Dev bafed8d dan main 2ccfb2d. Dampak test SESUAIKAN; status per resource tetap fail closed dan runtime ditinjau ulang.
 - Task managed by codex agent at 2026-11-26T22:40:10+07:00
+
+[2026-11-27T07:09:17+07:00] [INFO] DEV-02B siapkan tes sesi dan matriks perangkat
+- Acuan Lead 072e989 dan main bb84709.
+- Tambah probe HTTPS B09, tes adapter, serta matriks Redmi 4X dan POCO M3.
+- Task managed by codex agent at 2026-11-27T07:09:17+07:00
+
+[2026-11-27T07:12:05+07:00] [INFO] DEV-02B catat checkpoint sesi dan matriks perangkat
+- Host HTTPS fixture B09 serta tes adapter lulus pada f0c2172.
+- Redmi 4X/POCO M3 menunggu akses fisik. Keputusan minSdk, native auth dan aktivasi masih terbuka.
+- Task managed by codex agent at 2026-11-27T07:12:05+07:00
+
+[2026-11-27T08:47:36+07:00] [INFO] Integrasi checkpoint DEV-02B
+- Main f66e4cc, Dev d554aeb. Bukti fisik masih terbuka.
+- Task managed by codex agent at 2026-11-27T08:47:36+07:00
+
+[2026-11-27T17:29:23+07:00] [INFO] DEV-02B siapkan paket POCO M3
+- Acuan f840da4 dan PR #207 bd04026.
+- Fixture berlease, build debug berdampingan dan instrumentation Keystore/outbox/TTL.
+- Task managed by codex agent at 2026-11-27T17:29:23+07:00
+
+[2026-11-27T17:37:10+07:00] [INFO] DEV-02B catat bukti paket POCO M3
+- Build dua APK dan TTL cookie dari host lulus pada 4832426.
+- Forward Windows dan uji fisik tetap menunggu Lead. Redmi 4X ditunda.
+- Task managed by codex agent at 2026-11-27T17:37:10+07:00
+
+[2026-11-27T18:00:16+07:00] [INFO] Integrasi paket fixture POCO M3 PR 207
+- Dev fb3c92d dan main f6e2826. Konflik HANDOFF dipertahankan. Dampak test TAMBAH untuk bukti Keystore, outbox dan idle expiry di perangkat.
+- Task managed by codex agent at 2026-11-27T18:00:16+07:00
+
+[2026-11-27T18:58:50+07:00] [INFO] DEV-02B siapkan opsi HTTPS langsung
+- Acuan 1d0b4ec dan PR #207 a8222dd. Trust Android default pada APK fixture debug.
+- Gateway hanya kandidat preflight. Build target dan akses akun menunggu Lead.
+- Task managed by codex agent at 2026-11-27T18:58:50+07:00
+
+[2026-11-27T19:03:42+07:00] [INFO] Integrasi mode HTTPS langsung POCO M3
+- Dev fadb335, main cbabfee. Dampak test TAMBAH untuk batas TLS fixture dan preflight native; database aktual belum dikonfirmasi.
+- Task managed by codex agent at 2026-11-27T19:03:42+07:00
+
+[2026-11-28T01:12:48+07:00] [INFO] Sinkronkan PR 207 setelah re-review
+- Main 8e83a301; scope POCO M3 diterima. CI kandidat akhir menyusul.
+- Task managed by codex agent at 2026-11-28T01:12:48+07:00

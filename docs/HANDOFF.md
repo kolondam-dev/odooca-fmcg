@@ -1,3 +1,7 @@
+## 2026-11-28T01:12:48+07:00 — Codex — Re-review DEV-02B dan sinkronisasi PR #207
+**Basis:** main `8e83a301`, APK perangkat `5ab7088`. [Matriks DEV-02B](android/DEV02B_DEVICES.md) mencatat cakupan POCO M3 diterima, Redmi 4X sebelum full deploy, stale fix fisik di DEV-04A, dan expiry alami/idle TTL di B01. Dampak test **CUKUP** untuk checkpoint.
+**Menunggu:** CI pada kandidat integrasi dan verdict akhir. PR tetap draft.
+
 ## 2026-11-27 — Sinkronisasi dan acceptance browser HR PR #209 (ChatGPT-ABSENSI)
 
 - [F] Main `cbabfee` digabung. Konflik hanya di HANDOFF dan entri kedua sisi dipertahankan.
@@ -35,11 +39,37 @@
 - [F] Enum `outcome` snapshot PWA + openapi menambah `lapsed`. 4 tes Odoo baru (belum diverifikasi CI).
 - [A] Batas jujur: command setelah cutoff tetap `rejected` (rollback savepoint membuang lapse malas); penutupan efektif lewat cron/entrypoint non-command (meja kasir). Belum: custody exception/`held`, meja kasir, BE-20e. FE-8b: PWA harus menampilkan `lapsed`/`expired`. `collection_v2` tetap OFF.
 
+## 2026-11-27 — DEV-02B · Build HTTPS langsung untuk POCO M3 (Codex-Mobile Native)
+
+- [F] Arahan `1d0b4ec` diterapkan di atas PR #207 `a8222dd`. Opsi manual `device_origin` memilih trust sistem Android dan mengharuskan DB eksplisit. ID APK fixture dan instrumentation tetap terpisah. Jalur CA loopback tersedia.
+- [F] Fase preflight APK memeriksa 401 pada bootstrap/snapshot tanpa sesi. Login TEST diberikan saat instrumentation. Tes isolation mencocokkan owner snapshot dan assignment outlet masing-masing sebelum memeriksa outbox.
+- [F] Build lokal pada `ebf34e2` memakai origin sintetis. Kedua mode menghasilkan dua APK. Pemeriksaan resource membuktikan pemisahan CA, dan konfigurasi origin/DB fixture kosong pada release. Origin ber-path ditolak. Gate statis, 41 tes kontrak, Gradle, lint dan build debug lulus.
+- [BU] Gateway demo tetap kandidat preflight. Lead dan maintainer mengonfirmasi DB, izin APK native, dua akun TEST aktif, assignment dan TTL. Trust dari POCO M3, login, Keystore dan expiry perangkat tetap belum diuji. PR #207 tetap draft.
+- Dampak test **TAMBAH** untuk kontrak mode TLS dan preflight di perangkat. Perubahan workflow memilih full regression 11 suite. [Prosedur build](android/DEV02B_POCO_PACKAGE.md#opsi-https-langsung--trust-sistem-android).
+
 ## 2026-11-27 — [BU] BE-20d PR #205 P1 race SJP batal vs submit (claude-dev)
 
 - [F] `_apply_state` (batal/draf/terbit) kini mengunci baris SJP `FOR UPDATE` lebih dulu (protokol submit) lalu membaca ulang status; submit meng-UPDATE header SJP sehingga pembatal yang menunggu pada snapshot REPEATABLE READ gagal SerializationFailure dan diulang Odoo, lalu guard melihat receipt pending. Tanpa sentuhan header guard membaca snapshot basi (ditemukan reviewer).
 - [F] Tes: submit menang -> batal ditolak, SJP tetap `issued`; batal menang -> submit `rejected sheet_state`, tanpa receipt. Sesi pemblokir dibuktikan via `pg_blocking_pids`. Fixture membatasi penghapusan `account_full_reconcile` ke ID fixture; snapshot dengan/tanpa receipt di-assert.
 - [BU] Bukti Odoo hanya dari CI pada SHA akhir. Identitas log/commit dikoreksi ke `claude-dev` (append-only). `collection_v2` tetap OFF.
+
+## 2026-11-27 — DEV-02B · Paket fixture POCO M3 (Codex-Mobile Native)
+
+- [F] Arahan `f840da4`, basis PR #207 `bd04026`, sumber teruji `4832426`. Fixture HTTPS B09 berlease dan job APK manual siap. Package ID `com.kolondam.odooca.field.fixture` dan APK tesnya terkonfirmasi saat build. Paket awal tetap terpisah.
+- [F] Probe host HTTPS membuktikan dua akun, scope snapshot, TTL cookie 15 detik dan 401 setelah kedaluwarsa tanpa revoke manual. Build kedua APK dengan CA yang sama lulus. Stop fixture menghapus file kredensial sementara, menutup gateway dan menyisakan nol resource Docker.
+- [F] Dampak test **TAMBAH** untuk kontrak job opt-in, Keystore, isolasi outbox dan TTL fixture. Planner memilih full regression 11 suite. [Prosedur Lead/Windows, SHA dan hash APK lokal](android/DEV02B_POCO_PACKAGE.md).
+- [BU] Lead menyiapkan forward privat dan menguji ADB/TLS dari POCO M3 sebelum operator mulai. Lease lokal sudah ditutup. Keystore, TTL perangkat, lokasi dan lock/unlock masih menunggu unit fisik. Redmi 4X ditunda ke validasi end-to-end sebelum full deploy. `minSdk=24` sementara. PR #207 tetap DRAFT/HOLD menunggu bukti dan persetujuan cakupan.
+- [F] Simulasi terhadap main `f6e2826` menunjukkan konflik di `docs/HANDOFF.md`. Lead menyinkronkan saat integrasi.
+
+## 2026-11-27T08:47:36+07:00 — Codex — Integrasi checkpoint sesi DEV-02B
+**Basis:** main f66e4cc, Dev d554aeb. Riwayat HANDOFF kedua pihak dipertahankan. **Dampak test TAMBAH:** adapter membuktikan cleanup sesi 401/logout dan preservasi antrean; fixture HTTPS menguji revoke dan isolasi akun. Perangkat fisik, TTL alami, Keystore serta B01/B02 masih terbuka.
+
+## 2026-11-27 — DEV-02B · Checkpoint sesi provisional dan matriks perangkat (Codex-Mobile Native)
+
+- [F] Arahan `072e989`, basis main `bb84709`, sumber teruji `f0c2172`. Probe host HTTPS fixture B09 lulus untuk dua akun, kredensial tidak valid, isolasi assignment, pencabutan sesi, 401 atas cookie lama dan login ulang scope asal. Gateway berhenti dan resource Docker fixture bersih.
+- [F] Gate statis dan Gradle lulus. 40 tes kontrak CI, 72 tes domain, 5 tes data/Robolectric, lint, APK debug dan OpenAPI lulus. Planner memilih suite `android`. Dampak test **TAMBAH** untuk restore/401, logout dan retensi outbox.
+- [BU] Matriks Redmi 4X dan POCO M3 tersedia. Bukti perangkat, TTL alami dan Keystore belum terverifikasi. Cloud tidak menampilkan perangkat USB dan ADB tertahan home hanya-baca. Lead perlu menetapkan operator, unit fisik dan target HTTPS fixture. `minSdk=24` tetap konfigurasi sementara sampai ada hasil perangkat.
+- [BU] B01 tetap memerlukan keputusan native auth, TTL/revoke dan scope identitas. B02 tetap memerlukan kebijakan registrasi dan penerimaan kalibrasi. [Prosedur, matriks, hash APK dan bukti fixture](android/DEV02B_DEVICES.md).
 
 ## 2026-11-27 — Sinkronisasi PR #200 setelah PR #201 (ChatGPT-ABSENSI)
 

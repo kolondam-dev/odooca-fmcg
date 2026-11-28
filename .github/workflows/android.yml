@@ -38,6 +38,19 @@ on:
         type: choice
         default: '35'
         options: ['35', '24']
+      device_fixture:
+        description: Build the POCO M3 fixture APKs
+        type: boolean
+        default: false
+      device_database:
+        description: Disposable database from the fixture handoff
+        type: string
+      device_ca_base64:
+        description: Base64 of the fixture PUBLIC CA PEM certificate
+        type: string
+      device_origin:
+        description: Approved direct HTTPS origin for system TLS; leave empty for loopback
+        type: string
   pull_request:
   push:
     branches: [main]
@@ -378,3 +391,61 @@ jobs:
             ${{ runner.temp }}/b09-evidence/verifier.json
           if-no-files-found: error
           retention-days: 14
+
+  device-fixture-apk:
+    name: Optional POCO M3 fixture APKs
+    if: github.event_name == 'workflow_dispatch' && inputs.device_fixture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Validate exact workflow revision
+        env:
+          FIXTURE_SHA: ${{ inputs.ref }}
+          WORKFLOW_SHA: ${{ github.workflow_sha }}
+        run: |
+          [[ "$FIXTURE_SHA" =~ ^[a-f0-9]{40}$ && "$FIXTURE_SHA" == "$WORKFLOW_SHA" ]]
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17.0.17+10'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ""
+      - run: sdkmanager "platforms;android-37.0" "build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: true
+      - name: Build fixture APKs
+        env:
+          FIXTURE_SHA: ${{ inputs.ref }}
+          FIXTURE_DB: ${{ inputs.device_database }}
+          FIXTURE_CA_BASE64: ${{ inputs.device_ca_base64 }}
+          FIXTURE_ORIGIN: ${{ inputs.device_origin }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$FIXTURE_SHA"
+          umask 077
+          if [[ -n "$FIXTURE_ORIGIN" ]]; then
+            test -z "$FIXTURE_CA_BASE64"
+            bash android/tools/build_dev02b_device_apk.sh --origin "$FIXTURE_ORIGIN" \
+              "$FIXTURE_DB" "$RUNNER_TEMP/poco-apk"
+          else
+            test -n "$FIXTURE_CA_BASE64"
+            ca=$(mktemp)
+            trap 'rm -f -- "$ca"' EXIT
+            printf '%s' "$FIXTURE_CA_BASE64" | base64 --decode > "$ca"
+            bash android/tools/build_dev02b_device_apk.sh "$FIXTURE_DB" "$ca" "$RUNNER_TEMP/poco-apk"
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: poco-fixture-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/poco-apk/poco-fixture.apk
+            ${{ runner.temp }}/poco-apk/poco-fixture-test.apk
+            ${{ runner.temp }}/poco-apk/apk.sha256
+            ${{ runner.temp }}/poco-apk/build.txt
+          if-no-files-found: error
+          retention-days: 3
