@@ -1,3 +1,9 @@
+## PR #206 — Bukti browser acceptance terlampir di branch PR (codex, 2026-11-28)
+
+- [F] Acceptance runtime kandidat `5c0922456e604e9679d3c3811c93ae7577d172d8` di fork `pr206-ui` didokumentasikan pada `docs/reviews/evidence/pr206-browser-20261128/README.md`; empat PNG, log observasi browser dan log sinkronisasi read-only ada di direktori yang sama. Tidak memuat rahasia/DB dump; screenshot 1/2 tidak tersedia karena aktualnya 0/2.
+- [F] PASS UI menolak closing prematur setelah POD 06409 accepted (`POD-3038c01a`), menyebut DO 06410; nol command closing. FAIL pemulihan sesi baru: snapshot accepted map kosong meski audit fork menemukan tepat satu POD accepted. Dalam bahasa driver id_ID hanya `site.demo_unrestricted` lokal PWA yang membedakan source POD dan manifest Odoo.
+- [F] Dampak test **TAMBAH**, cross-layer authenticated-demo manifest → Odoo snapshot → browser baru; tidak ada perubahan produk, merge, atau deploy pilot. Fork **dipertahankan atas permintaan pemilik**, tetapi TTL otomatis 13:06 WITA 28 November dapat menghapusnya sebelum merge; screenshot/log pada commit tetap ada. Selector CI saat PR pada base `origin/main`: android, mobile, odoo_install, pwa, upgrade; tidak dijalankan ulang khusus dokumentasi ini.
+
 ## PR #206 — Sinkronisasi dengan main 6de45c5 (codex)
 
 - Konflik hanya di HANDOFF dan log Codex. Entri kedua sisi dipertahankan.
