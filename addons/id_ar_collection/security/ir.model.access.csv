@@ -8,3 +8,7 @@ access_collection_receipt_admin,Penerimaan admin AR baca,model_id_collection_rec
 access_collection_receipt_collector,Penerimaan kolektor baca,model_id_collection_receipt,id_mobile_api.group_mobile_sales,1,0,0,0
 access_collection_receipt_line_admin,Baris penerimaan admin AR baca,model_id_collection_receipt_line,group_ar_admin,1,0,0,0
 access_collection_receipt_line_collector,Baris penerimaan kolektor baca,model_id_collection_receipt_line,id_mobile_api.group_mobile_sales,1,0,0,0
+access_collection_sheet_cashier,SJP kasir baca,model_id_collection_sheet,group_ar_cashier,1,0,0,0
+access_collection_sheet_line_cashier,Baris SJP kasir baca,model_id_collection_sheet_line,group_ar_cashier,1,0,0,0
+access_collection_receipt_cashier,Penerimaan kasir baca,model_id_collection_receipt,group_ar_cashier,1,0,0,0
+access_collection_receipt_line_cashier,Baris penerimaan kasir baca,model_id_collection_receipt_line,group_ar_cashier,1,0,0,0
