@@ -1,3 +1,16 @@
+## 2026-11-28 — [BU] BE-20e 1/n PR #211: perbaikan HOLD (claude-dev)
+
+- [F] P1: `validate_cash` kini menerima tunai `posted` dari custody (klaim dan alokasi tidak berubah); guard `returned` juga menolak selama ada alokasi `held` yang belum diselesaikan (receipt belum rejected/cancelled), walau uang sudah dihitung.
+- [F] P2: guard `returned` hanya menghitung receipt tunai `posted` yang punya baris uang (>0); `validate_cash` hanya menuntut hitungan untuk baris berisi uang (unpaid nol dibebaskan; receipt tanpa uang ditolak).
+- [F] P2: sidik token custody kembali ke bentuk rilis #210 (tanpa kunci `mode`); `mode` hanya ditambahkan untuk meja kasir, sehingga token lama tetap replay dan lintas mode ditolak. Tes memakai salinan rumus lama.
+- [A] Bukti Odoo hanya dari CI. `collection_v2` tetap OFF.
+
+## 2026-11-28 — [BU] BE-20e 1/n: kasir tunai (claude-dev)
+
+- [F] Grup `group_ar_cashier` (baca SJP/penerimaan). `record_desk_cash(sheet_id, desk_token, occurred_at, lines)` (kasir atau AR Control): tunai saja, SJP `issued` sebelum cutoff; receipt `source=cashier_desk` langsung `cashier_validated` (kasir menghitung uang fisik; `counted_amount`, `difference=0`, `cashier_id`), hasil baris SJP tercatat seperti command mobile. Konflik/saldo basi/klaim mobile yang ada menolak seluruh operasi tanpa receipt. Satu jalur `_record_desk` dengan custody (lock 8.4, token + sidik payload).
+- [F] `validate_cash(counted, note)`: kasir memvalidasi klaim tunai `mobile` (`posted` -> `cashier_validated`); selisih (hitungan - klaim) per baris wajib bercatatan, nominal klaim tidak diubah, proteksi pending tetap. SJP tidak dapat `returned` selama ada receipt tunai `posted`.
+- [A] Belum di 20e: validasi accounting + `account.payment`/rekonsiliasi, transfer (finance), giro (register), laporan uang di tangan kolektor, kontrol uang bermalam, form/wizard UI kasir, penanganan selisih kas (jurnal), `returned` aksi publik. `collection_v2` tetap OFF. Bukti Odoo hanya dari CI.
+
 ## 2026-11-28T01:12:48+07:00 — Codex — Re-review DEV-02B dan sinkronisasi PR #207
 **Basis:** main `8e83a301`, APK perangkat `5ab7088`. [Matriks DEV-02B](android/DEV02B_DEVICES.md) mencatat cakupan POCO M3 diterima, Redmi 4X sebelum full deploy, stale fix fisik di DEV-04A, dan expiry alami/idle TTL di B01. Dampak test **CUKUP** untuk checkpoint.
 **Menunggu:** CI pada kandidat integrasi dan verdict akhir. PR tetap draft.

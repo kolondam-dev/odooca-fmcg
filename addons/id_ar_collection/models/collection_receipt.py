@@ -58,6 +58,8 @@ class CollectionReceipt(models.Model):
         default="mobile", required=True, readonly=True,
     )
     exception = fields.Boolean(string="Pengecualian", readonly=True)
+    cashier_id = fields.Many2one("res.users", string="Kasir", readonly=True)
+    cashier_validated_at = fields.Datetime(string="Waktu Validasi Kasir", readonly=True)
     exception_reason = fields.Char(string="Alasan Pengecualian", readonly=True)
     desk_token = fields.Char(string="Token Idempotensi Meja/Custody", index=True, readonly=True)
     desk_fingerprint = fields.Char(string="Sidik Operasi Custody", readonly=True)
@@ -97,6 +99,11 @@ class CollectionReceipt(models.Model):
     def write(self, vals):
         raise UserError(_("Penerimaan tidak dapat diubah langsung; status hanya berubah lewat alur validasi."))
 
+    def _apply_validation(self, vals):
+        """Seam internal transisi validasi kasir (8.11); tidak terjangkau RPC dan hanya kolom validasi."""
+        allowed = {key: vals[key] for key in ("state", "cashier_id", "cashier_validated_at") if key in vals}
+        return super().write(allowed)
+
     def unlink(self):
         raise UserError(_("Penerimaan tidak dapat dihapus."))
 
@@ -125,6 +132,9 @@ class CollectionReceiptLine(models.Model):
         [("allocated", "Teralokasi"), ("held", "Ditahan"), ("released", "Dilepas")],
         default="allocated", required=True,
     )
+    counted_amount = fields.Monetary(string="Dihitung Kasir", readonly=True)
+    difference = fields.Monetary(string="Selisih (Hitung - Klaim)", readonly=True)
+    difference_note = fields.Char(string="Catatan Selisih", readonly=True)
     resolution_note = fields.Char(string="Catatan Resolusi", readonly=True)
     resolution_by = fields.Many2one("res.users", string="Diselesaikan Oleh", readonly=True)
     resolution_at = fields.Datetime(string="Waktu Resolusi", readonly=True)
@@ -165,6 +175,11 @@ class CollectionReceiptLine(models.Model):
 
     def write(self, vals):
         raise UserError(_("Baris penerimaan tidak dapat diubah langsung."))
+
+    def _apply_counting(self, vals):
+        """Seam internal hitung kasir per baris (8.11); hanya kolom hitung/selisih."""
+        allowed = {key: vals[key] for key in ("counted_amount", "difference", "difference_note") if key in vals}
+        return super().write(allowed)
 
     def _apply_allocation(self, vals):
         """Seam internal alokasi (resolusi custody, 8.12); tidak terjangkau RPC dan hanya kolom alokasi."""

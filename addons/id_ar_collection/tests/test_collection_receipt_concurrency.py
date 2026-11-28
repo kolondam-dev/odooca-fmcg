@@ -555,3 +555,65 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             cr.execute("SELECT count(*) FROM id_collection_receipt WHERE desk_token = 'TOK-X'")
             self.assertEqual(cr.fetchone()[0], 1)
 
+    # ---- (f) meja kasir tunai vs command mobile pada faktur yang sama: satu menang ------------------------
+    def _desk_args(self, ids, token="DESK-RACE"):
+        return (ids["sheet"], token, datetime.now(timezone.utc).isoformat(), [{
+            "line_id": ids["lines"][ids["moves"][0]], "invoice_id": ids["moves"][0], "outcome": "paid",
+            "amount": 1000, "expected_balance": 1000}])
+
+    def test_cashier_desk_holds_lock_then_mobile_command_waits_and_is_rejected(self):
+        db, ids = self._setup()
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, ids["control"], {})
+        outcome = {}
+        try:
+            receipt = env1["id.collection.receipt"].record_desk_cash(*self._desk_args(ids))
+            self.assertEqual(receipt.state, "cashier_validated")
+            env1.flush_all()
+
+            def submit(env2):
+                result = env2["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+                env2.flush_all()
+                return result
+
+            thread = self._run_in_thread(db, submit, outcome, ids["collector"])
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "command mobile harus menunggu meja kasir yang belum commit")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertNotIn("error", outcome, outcome.get("error"))
+        self.assertEqual(outcome["result"]["status"], "rejected")
+        self.assertEqual(self._db_state(db, ids), (1, {"rejected": 1}))  # satu menang: receipt meja kasir
+
+    def test_mobile_command_holds_lock_then_cashier_desk_waits_and_is_rejected(self):
+        db, ids = self._setup()
+        cr1 = db.cursor()
+        cr1.execute("SET LOCAL lock_timeout = '20s'")
+        env1 = api.Environment(cr1, ids["collector"], {})
+        outcome = {}
+        try:
+            result = env1["id.mobile.command"].process_command(self._command(ids, [ids["moves"][0]]))
+            self.assertEqual(result["status"], "accepted")
+            env1.flush_all()
+
+            def desk(env2):
+                env2["id.collection.receipt"].record_desk_cash(*self._desk_args(ids))
+                env2.flush_all()
+
+            thread = self._run_in_thread(db, desk, outcome, ids["control"])
+            time.sleep(WAIT)
+            self.assertTrue(thread.is_alive(), "meja kasir harus menunggu command mobile yang belum commit")
+            self._assert_blocked_by(db, outcome["pid"], cr1._cnx.get_backend_pid())
+            cr1.commit()
+        finally:
+            cr1.close()
+        thread.join(JOIN)
+        self.assertFalse(thread.is_alive(), "menggantung" + self._hang_report(db, thread))
+        self.assertIsInstance(outcome.get("error"), UserError, "baris sudah punya klaim mobile: validasi, bukan baru")
+        self.assertEqual(self._db_state(db, ids), (1, {"accepted": 1}))
+
