@@ -80,6 +80,7 @@ class CollectionReceiptAccounting(models.Model):
             if len(payments) != 1 or payments.state not in ("paid", "in_process"):
                 raise UserError(_("Pembayaran faktur %s tidak terbentuk.", move.name))
             line._apply_allocation({"payment_id": payments.id})
+        self.env.flush_all()  # residual dihitung ORM saat posting/rekonsiliasi; tulis dulu sebelum dibaca via SQL
         after = self._read_balances(money_lines.move_id.ids, currency)
         for line in money_lines:
             if currency.compare_amounts(balances[line.move_id.id] - after.get(line.move_id.id, 0.0), line.amount):
@@ -95,6 +96,8 @@ class CollectionReceiptAccounting(models.Model):
         if len(self) != 1:
             raise UserError(_("Penolakan dilakukan satu penerimaan per kali."))
         reason = self._text(reason, "reason", 255, required=True)
+        if not reason:
+            raise UserError(_("Alasan penolakan wajib diisi."))
         receipt = self.sudo()
         if receipt.sheet_id.company_id != self.env.user.company_id:
             raise AccessError(_("Penerimaan tidak ditemukan."))
