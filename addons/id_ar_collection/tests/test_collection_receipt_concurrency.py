@@ -100,6 +100,7 @@ class TestCollectionReceiptConcurrency(TransactionCase):
             cr.execute("SET LOCAL lock_timeout = '20s'")
             sheets = [ids["sheet"], ids["sheet2"]]
             cr.execute("DELETE FROM id_collection_receipt_line WHERE move_id = ANY(%s)", (ids["all_moves_fixture"],))
+            cr.execute("DELETE FROM account_payment_register WHERE partner_id = %s", (ids["partner"],))  # wizard sisa
             cr.execute("DELETE FROM account_payment WHERE partner_id = %s", (ids["partner"],))
             cr.execute("DELETE FROM id_collection_receipt WHERE sheet_id = ANY(%s)", (sheets,))
             cr.execute("DELETE FROM id_mobile_command WHERE user_id = %s", (ids["collector"],))
