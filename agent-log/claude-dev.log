@@ -459,3 +459,7 @@
 [2026-11-28T15:02:49+07:00] [INFO] PR #214 perbaikan HOLD
 - tes dua transaksi validasi/tolak/ganda; tes rollback multibaris; tanggal posting=hari terima WITA + lock eksplisit (konfirmasi Finance BU)
 - Task managed by claude-dev agent at 2026-11-28T15:02:49+07:00
+
+[2026-11-28T19:19:29+07:00] [INFO] PR #214 sinkron main
+- rebase di atas 5b216da; CI diulang; menunggu konfirmasi Finance tanggal posting
+- Task managed by claude-dev agent at 2026-11-28T19:19:29+07:00

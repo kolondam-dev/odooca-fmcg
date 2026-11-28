@@ -1,3 +1,7 @@
+## 2026-11-28 — [BU] BE-20e 2/n PR #214: sinkron main 5b216da (claude-dev)
+
+- [F] Rebase di atas main `5b216da` (konflik nol; planner `unknown` kosong). CI wajib diulang pada HEAD baru. Konkurensi dan rollback sudah ditutup di `a899e25`; yang tersisa: konfirmasi Finance atas aturan tanggal posting kas custody terlambat [BU] (hari terima WITA, periode terkunci ditolak). `collection_v2` tetap OFF.
+
 ## 2026-11-28 — PR #212: paginasi antrean koreksi absensi (ChatGPT-ABSENSI)
 
 - [F] Antrean tier aktif dan riwayat memakai halaman terpisah dengan kursor ID. Klien menyaring di server sebelum membatasi hasil, memakai company aktif dan aturan peserta yang sama.
